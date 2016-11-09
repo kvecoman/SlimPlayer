@@ -45,6 +45,7 @@
 
     <!--Add to playlist screen-->
     <string name="playlist_create">Create new playlist...</string>
+    <string name="playlist_default_name">New Playlist</string>
     <string name="playlist_add_succes">songs added to playlist.</string>
 
 

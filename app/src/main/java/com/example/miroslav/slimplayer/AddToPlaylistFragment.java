@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -95,10 +96,16 @@ public class AddToPlaylistFragment extends CategoryListFragment{
         {
 
             //Create new playlist
-            final EditText editText = new EditText(mContext);
 
-            //TODO - set hint text for playlist title
-            new AlertDialog.Builder(mContext)
+            //TODO - make it that first letter is capitalized in editText
+            //Set up edit text that will be used in alert dialog
+            final EditText editText = new EditText(mContext);
+            editText.setText(R.string.playlist_default_name);
+            editText.selectAll();
+
+
+            //Build alert dialog that will take name of new playlist
+            AlertDialog dialog = new AlertDialog.Builder(mContext)
                     .setTitle("Create new playlist")
                     .setMessage("Enter playlist name!")
                     .setView(editText)
@@ -130,7 +137,18 @@ public class AddToPlaylistFragment extends CategoryListFragment{
                         public void onClick(DialogInterface dialog, int which) {
 
                         }
-                    }).show();
+                    }).create();
+
+            dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+                @Override
+                public void onShow(DialogInterface dialog) {
+                    //Code to automatically show soft keyboard when dialog is shown
+                    InputMethodManager imm = (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT,0);
+                }
+            });
+
+            dialog.show();
 
 
 

@@ -1,0 +1,55 @@
+<resources>
+    <string name="app_name">SlimPlayer</string>
+
+    <!--Options menu titles -->
+    <string name="options_title_settings">Settings</string>
+    <string name="options_title_exit">Exit</string>
+    <string name="options_title_playlist_add">Add to playlist...</string>
+
+    <!--options menu IDs-->
+    <string name="options_id_playlist_add">playlist_add</string>
+
+    <!--Titles used in settings screen -->
+    <string name="pref_title_tabs">Available screens</string>
+    <string name="pref_title_home">Home screen</string>
+    <string name="pref_title_all">All songs screen</string>
+    <string name="pref_title_playlists">Playlists screen</string>
+    <string name="pref_title_albums">Albums screen</string>
+    <string name="pref_title_artists">Artists screen</string>
+    <string name="pref_title_genres">Genres screen</string>
+
+    <string name="pref_title_refresh">Refresh</string>
+
+    <!--Keys used in preferences and possibly in some other cases-->
+    <string name="pref_key_tabs">pref_key_tabs</string>
+
+    <string name="pref_key_home_screen">pref_key_home_screen</string>
+    <string name="pref_key_all_screen">pref_key_all_screen</string>
+    <string name="pref_key_playlists_screen">pref_key_playlists_screen</string>
+    <string name="pref_key_albums_screen">pref_key_albums_screen</string>
+    <string name="pref_key_artists_screen">pref_key_artists_screen</string>
+    <string name="pref_key_genres_screen">pref_key_genres_screen</string>
+
+    <string name="pref_key_screens_set">pref_key_screens_set</string>
+    <string name="pref_key_directories_set">pref_key_directories_set</string>
+
+    <string name="pref_key_refresh">pref_key_refresht</string>
+
+    <!--Directory select dialog -->
+    <string name="directory_pref_button_select">Select...</string>
+    <string name="directory_pref_button_delete">Delete</string>
+
+    <!--Directory select dialog -->
+    <string name="directory_dialog_button_select">Select directory</string>
+    <string name="directory_dialog_button_cancel">Cancel</string>
+
+    <!--Add to playlist screen-->
+    <string name="playlist_create">Create new playlist...</string>
+    <string name="playlist_add_succes">songs added to playlist.</string>
+
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+
+</resources>

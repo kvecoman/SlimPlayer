@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <bool name="pref_home_screen_default">true</bool>
+    <bool name="pref_all_default">true</bool>
+    <bool name="pref_playlists_default">true</bool>
+    <bool name="pref_albums_default">true</bool>
+    <bool name="pref_artists_default">true</bool>
+    <bool name="pref_genres_default">true</bool>
+</resources>

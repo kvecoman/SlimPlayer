@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <com.example.miroslav.slimplayer.DirectorySelectPreference
+        android:key="@string/pref_key_directories_set"
+        android:title="Music directories"
+        />
+
+    <PreferenceCategory
+            android:title="@string/pref_title_tabs"
+            android:key="@string/pref_key_tabs"
+        >
+
+        <CheckBoxPreference
+            android:key="@string/pref_key_home_screen"
+            android:title="@string/pref_title_home"
+            android:defaultValue="true"/>
+
+        <CheckBoxPreference
+            android:key="@string/pref_key_all_screen"
+            android:title="@string/pref_title_all"
+            android:defaultValue="true"/>
+
+        <CheckBoxPreference
+            android:key="@string/pref_key_playlists_screen"
+            android:title="@string/pref_title_playlists"
+            android:defaultValue="true"/>
+
+        <CheckBoxPreference
+            android:key="@string/pref_key_albums_screen"
+            android:title="@string/pref_title_albums"
+            android:defaultValue="true"/>
+
+        <CheckBoxPreference
+            android:key="@string/pref_key_artists_screen"
+            android:title="@string/pref_title_artists"
+            android:defaultValue="true"/>
+
+        <CheckBoxPreference
+            android:key="@string/pref_key_genres_screen"
+            android:title="@string/pref_title_genres"
+            android:defaultValue="true"/>
+
+
+    </PreferenceCategory>
+
+    <Preference android:key="@string/pref_key_refresh"  android:title="@string/pref_title_refresh"/>
+
+    <!-- android:layout="@android:layout/simple_list_item_1" -->
+
+</PreferenceScreen>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+
+    <array name="pref_screens_set_default">
+        <item>@string/pref_key_home_screen</item>
+        <item>@string/pref_key_all_screen</item>
+        <item>@string/pref_key_playlists_screen</item>
+        <item>@string/pref_key_albums_screen</item>
+        <item>@string/pref_key_artists_screen</item>
+        <item>@string/pref_key_genres_screen</item>
+    </array>
+</resources>

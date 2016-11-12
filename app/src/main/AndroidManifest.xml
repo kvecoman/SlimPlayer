@@ -31,7 +31,8 @@
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".AddToPlaylistActivity"></activity>
+        <activity android:name=".AddToPlaylistActivity" />
+        <activity android:name=".BackHandledFragmentActivity"></activity>
     </application>
 
 </manifest>

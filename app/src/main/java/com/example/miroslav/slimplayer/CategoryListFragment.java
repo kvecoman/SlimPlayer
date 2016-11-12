@@ -77,4 +77,10 @@ public class CategoryListFragment extends SlimListFragment {
         startActivity(intent);
 
     }
+
+
+    @Override
+    public boolean onBackPressed() {
+        return false;
+    }
 }

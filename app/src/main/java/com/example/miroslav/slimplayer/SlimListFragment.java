@@ -38,7 +38,7 @@ import java.util.Set;
  */
 
 //TODO - close cursor when needed
-public abstract class SlimListFragment extends ListFragment implements ListView.OnItemClickListener, LoaderManager.LoaderCallbacks<Cursor> {
+public abstract class SlimListFragment extends BackHandledListFragment implements ListView.OnItemClickListener, LoaderManager.LoaderCallbacks<Cursor> {
 
     public static final String CURSOR_SCREEN_KEY = "cursor_screen";
 

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.provider.Settings;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -14,6 +15,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -35,7 +37,8 @@ import java.util.Set;
 //TODO - take care of first time shared preferences init for list of screens - DONE
 //TODO - clean errors and create apropriate fragments in MainScreenPagerAdapter
 
-public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener{
+public class MainActivity extends BackHandledFragmentActivity implements SharedPreferences.OnSharedPreferenceChangeListener,
+                                                                        ViewPager.OnPageChangeListener {
 
     private ViewPager mPager;
     private PagerAdapter mPagerAdapter;
@@ -50,8 +53,19 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         mPagerAdapter = new MainScreenPagerAdapter(getSupportFragmentManager(),this);
         mPager.setAdapter(mPagerAdapter);
 
+        mPager.addOnPageChangeListener(this);
+
         //Register this activity as listener for changed preferences
         PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        //TODO - continue here - set first time BackHandled fragment
+        //We call this to set first fragment that needs to handle back button press
+        //onPageSelected(mPager.getCurrentItem());
     }
 
     @Override
@@ -122,8 +136,32 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
         pEditor.putStringSet(getString(R.string.pref_key_screens_set),screensSet);
 
-
     }
 
 
+    //Pager listener implementations
+
+
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+    }
+
+    @Override
+    public void onPageSelected(int position) {
+
+        //TODO - this could break stuff in the future really bad, also check call to this function in onStart event of this activity
+        //This is horrible idea
+        //Here we use FragmentManager to get current active fragment from ViewPager
+        //Coincidentally, position from ViewPager matches position in list of fragments from fragment manager
+        //We do this only so we could get current fragment that needs to handle back button, if we find another way, then
+        //... we dont need this
+        //TODO - find another way of setting fragment that needs to handle back button press
+        setBackHandledFragment((BackHandledListFragment) getSupportFragmentManager().getFragments().get(position));
+    }
+
+    @Override
+    public void onPageScrollStateChanged(int state) {
+
+    }
 }

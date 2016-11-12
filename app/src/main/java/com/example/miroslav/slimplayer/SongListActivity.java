@@ -10,7 +10,7 @@ import android.view.Menu;
  * @author Miroslav Mihaljević
  */
 
-public class SongListActivity extends AppCompatActivity {
+public class SongListActivity extends BackHandledFragmentActivity {
 
     //Key for bundle that is intended to be sent with SlimListFragmet
     public static final String FRAGMENT_BUNDLE_KEY = "fragment_bundle";

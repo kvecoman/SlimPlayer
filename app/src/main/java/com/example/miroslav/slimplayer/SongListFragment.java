@@ -38,7 +38,7 @@ public class SongListFragment extends SlimListFragment {
     //TODO - move this somewhere sane
     protected MediaPlayerService mPlayerService;
     protected boolean mServiceBound = false;
-
+    //TODO - continue here- discover why this is false when the back button is pressed
     protected boolean mSelectMode = false;
 
     protected MenuItem mMenuItemPlaylistAdd = null;
@@ -81,6 +81,7 @@ public class SongListFragment extends SlimListFragment {
         Intent playerServiceIntent = new Intent(mContext, MediaPlayerService.class);
         mContext.bindService(playerServiceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
 
+
         //Handler for long click
         getListView().setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
@@ -113,6 +114,24 @@ public class SongListFragment extends SlimListFragment {
             mPlayerService.play(position);
         }
 
+    }
+
+    @Override
+    public boolean onBackPressed() {
+
+        //Here we store if the back button event is consumed
+        boolean backConsumed = false;
+
+        if (mSelectMode)
+        {
+            mSelectMode = false;
+            getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+            getListView().clearChoices();
+            getListView().requestLayout();
+            backConsumed = true;
+        }
+
+        return backConsumed;
     }
 
     @Override

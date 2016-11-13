@@ -13,6 +13,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.List;
 
 //TODO - add intent filter so we can run any song
 public class MediaPlayerService extends Service implements MediaPlayer.OnCompletionListener {
@@ -21,7 +22,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     public MediaPlayer mPlayer;
 
-    private Cursor mCursor;
+   // private Cursor mCursor;
+    private List<Song> mSongList;
     private int mPosition;
     private int mCount;
 
@@ -66,7 +68,32 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     public void play(int position)
     {
+        mPosition = position;
+        Song song = mSongList.get(mPosition);
+        Toast.makeText(getApplicationContext(),song.getData(),Toast.LENGTH_SHORT).show();
+
         try
+        {
+            mPlayer.reset();
+            mPlayer.setDataSource(song.getData());
+            mPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                //This is called when media player is prepared with its data source
+                @Override
+                public void onPrepared(MediaPlayer mp) {
+                    mp.start();
+                }
+            });
+            mPlayer.setOnCompletionListener(this);
+            mPlayer.prepareAsync();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
+
+        //Old code for playing from cursor
+       /* try
         {
             if (mCursor == null)
             {
@@ -100,7 +127,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         catch(IOException e)
         {
             e.printStackTrace();
-        }
+        }*/
     }
 
     //This is called when song is finished playing
@@ -123,7 +150,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         }
     }
 
-    public void setCursor(Cursor cursor)
+   /* public void setCursor(Cursor cursor)
     {
         //TODO - maybe work with actual position from cursor
         //Whenever cursor is changed, we set position to -1
@@ -140,6 +167,23 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             mCount = mCursor.getCount();
         }
 
+
+    }*/
+
+    public void setSongList(List<Song> songList)
+    {
+        mPosition = -1;
+
+        if (songList != null)
+        {
+            mCount = songList.size();
+            mSongList = songList;
+        }
+        else
+        {
+            mCount = 0;
+            mSongList = null;
+        }
 
     }
 

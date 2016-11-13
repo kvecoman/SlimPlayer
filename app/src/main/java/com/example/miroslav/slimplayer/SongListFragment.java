@@ -11,6 +11,7 @@ import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
+import android.support.v4.content.Loader;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
@@ -38,10 +39,11 @@ public class SongListFragment extends SlimListFragment {
     //TODO - move this somewhere sane
     protected MediaPlayerService mPlayerService;
     protected boolean mServiceBound = false;
-    //TODO - continue here- discover why this is false when the back button is pressed
+
     protected boolean mSelectMode = false;
 
-    protected MenuItem mMenuItemPlaylistAdd = null;
+    protected List<Song> mSongList;
+
 
     protected ServiceConnection mServiceConnection = new ServiceConnection(){
         @Override
@@ -82,6 +84,7 @@ public class SongListFragment extends SlimListFragment {
         mContext.bindService(playerServiceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
 
 
+
         //Handler for long click
         getListView().setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
@@ -99,6 +102,16 @@ public class SongListFragment extends SlimListFragment {
         });
     }
 
+    //Here we load all songs in songList when Cursor loader is finished
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        super.onLoadFinished(loader, data);
+
+        Log.d("slim",mCurrentScreen + " - onLoadFinished()");
+
+        mSongList = getSongListFromCursor(data);
+    }
+
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id)
     {
@@ -110,7 +123,8 @@ public class SongListFragment extends SlimListFragment {
         else
         {
             //Here we try to play song
-            mPlayerService.setCursor(mCursorAdapter.getCursor());
+            //TODO - continue here - make it play songs from mSongList
+            mPlayerService.setSongList(mSongList);
             mPlayerService.play(position);
         }
 
@@ -138,21 +152,22 @@ public class SongListFragment extends SlimListFragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
 
-        //Here we get menu item for later use
-        mMenuItemPlaylistAdd = menu.findItem(R.id.playlist_add);
+        //TODO - maybe delete this override, isnt used for anything
     }
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
 
+        MenuItem playlistAddMenuItem = menu.findItem(R.id.playlist_add);
+
         if (mSelectMode)
         {
             //If we are selecting items then we want option to add them to playlist
-            mMenuItemPlaylistAdd.setVisible(true);
+            playlistAddMenuItem.setVisible(true);
         }
         else
         {
-            mMenuItemPlaylistAdd.setVisible(false);
+            playlistAddMenuItem.setVisible(false);
         }
 
         super.onPrepareOptionsMenu(menu);
@@ -165,7 +180,7 @@ public class SongListFragment extends SlimListFragment {
 
         if (mSelectMode)
         {
-            if (item.getItemId() == mMenuItemPlaylistAdd.getItemId())
+            if (item.getItemId() == R.id.playlist_add)
             {
                 Bundle bundle = new Bundle();
                 SparseBooleanArray checkedPositions = getListView().getCheckedItemPositions();
@@ -201,5 +216,30 @@ public class SongListFragment extends SlimListFragment {
             mContext.unbindService(mServiceConnection);
 
         super.onDestroy();
+    }
+
+    //Here we create an ArrayList of all songs from cursor
+    public List<Song> getSongListFromCursor(Cursor cursor)
+    {
+        List<Song> songList = new ArrayList<>();
+        Song song;
+
+        cursor.moveToFirst();
+        do
+        {
+            song = new Song(
+                    cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID)),
+                    cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
+                    cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)),
+                    cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM)),
+                    cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION)),
+                    cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA)));
+
+            songList.add(song);
+
+        }
+        while (cursor.moveToNext());
+
+        return songList;
     }
 }

@@ -78,6 +78,11 @@ public final class ScreenCursors {
         String [] selectionArgs = null;
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
 
+        if (BuildConfig.DEBUG)
+        {
+            sortOrder = MediaStore.Audio.Media.DURATION + " ASC";
+        }
+
 
         bundle.putString(SlimListFragment.CURSOR_SCREEN_KEY,cursorScreen);
         bundle.putString(SlimListFragment.CURSOR_URI_KEY,uri);

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <com.example.miroslav.slimplayer.DirectorySelectPreference
+    <mihaljevic.miroslav.foundry.slimplayer.DirectorySelectPreference
         android:key="@string/pref_key_directories_set"
         android:title="Music directories"
         />

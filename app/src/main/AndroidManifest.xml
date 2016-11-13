@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.miroslav.slimplayer">
+    package="mihaljevic.miroslav.foundry.slimplayer">
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -13,7 +13,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name="mihaljevic.miroslav.foundry.slimplayer.MainActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -22,17 +22,17 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SettingsActivity"
+            android:name="mihaljevic.miroslav.foundry.slimplayer.SettingsActivity"
             android:screenOrientation="portrait" />
-        <activity android:name=".SongListActivity" />
+        <activity android:name="mihaljevic.miroslav.foundry.slimplayer.SongListActivity" />
 
         <service
-            android:name=".MediaPlayerService"
+            android:name="mihaljevic.miroslav.foundry.slimplayer.MediaPlayerService"
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".AddToPlaylistActivity" />
-        <activity android:name=".BackHandledFragmentActivity"></activity>
+        <activity android:name="mihaljevic.miroslav.foundry.slimplayer.AddToPlaylistActivity" />
+        <activity android:name="mihaljevic.miroslav.foundry.slimplayer.BackHandledFragmentActivity"></activity>
     </application>
 
 </manifest>

@@ -223,6 +223,10 @@ public class SongListFragment extends SlimListFragment {
         List<Song> songList = new ArrayList<>();
         Song song;
 
+        //If there are nothing in cursor just remove empty list
+        if (cursor.getCount() == 0)
+            return songList;
+
         //Transfer all data from cursor to ArrayList of songs
         cursor.moveToFirst();
         do

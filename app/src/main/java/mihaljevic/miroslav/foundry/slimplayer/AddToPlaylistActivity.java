@@ -19,7 +19,7 @@ public class AddToPlaylistActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_add_to_playlist);
+        setContentView(R.layout.activity_fragment_holder);
 
         //Acquire bundle to query all playlists
         Bundle fragmentBundle = ScreenCursors.getPlaylistsBundle(this);
@@ -30,7 +30,7 @@ public class AddToPlaylistActivity extends AppCompatActivity {
             AddToPlaylistFragment fragment = new AddToPlaylistFragment();
             fragment.setArguments(fragmentBundle);
 
-            getSupportFragmentManager().beginTransaction().replace(R.id.playlist_fragment_container,fragment).commit();
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,fragment).commit();
         }
     }
 }

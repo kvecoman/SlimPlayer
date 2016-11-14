@@ -17,7 +17,7 @@ public class SongListActivity extends BackHandledFragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_list);
+        setContentView(R.layout.activity_fragment_holder);
 
         //Retrive bundle intended to be sent with SlimListFragment
         Bundle fragmentBundle = getIntent().getBundleExtra(FRAGMENT_BUNDLE_KEY);
@@ -28,7 +28,7 @@ public class SongListActivity extends BackHandledFragmentActivity {
             SongListFragment fragment = new SongListFragment();
             fragment.setArguments(fragmentBundle);
 
-            getSupportFragmentManager().beginTransaction().replace(R.id.list_fragment_container,fragment).commit();
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,fragment).commit();
         }
     }
 

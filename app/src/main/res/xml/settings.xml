@@ -4,6 +4,7 @@
     <mihaljevic.miroslav.foundry.slimplayer.DirectorySelectPreference
         android:key="@string/pref_key_directories_set"
         android:title="Music directories"
+        android:summary="Directories from which to load music"
         />
 
     <PreferenceCategory

@@ -11,6 +11,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -77,6 +78,10 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
         mListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 
         mListView.setItemsCanFocus(false);
+
+        //Set preference title and summary
+        ((TextView)holder.findViewById(android.R.id.title)).setText(getTitle());
+        ((TextView)holder.findViewById(android.R.id.summary)).setText(getSummary());
 
 
         //Handler for when LayoutChildren is called, and it is called on almost every kind of ListView update

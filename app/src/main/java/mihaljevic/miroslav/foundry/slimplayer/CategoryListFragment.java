@@ -34,9 +34,7 @@ public class CategoryListFragment extends SlimListFragment {
     public void onActivityCreated(Bundle savedInstanceState)
     {
         super.onActivityCreated(savedInstanceState);
-
-
-
+        //TODO - remove this override?
     }
 
     @Override

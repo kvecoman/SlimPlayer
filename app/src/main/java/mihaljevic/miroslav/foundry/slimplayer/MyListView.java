@@ -14,6 +14,8 @@ import android.widget.ListView;
  * and then checking if everything is really de-selected.
  * We do this because layoutChildren is called when click outside of ListView occurs.
  *
+ * We use this class for settings screen, to de-select music directories
+ *
  * @author Miroslav Mihaljević
  */
 public class MyListView extends ListView {

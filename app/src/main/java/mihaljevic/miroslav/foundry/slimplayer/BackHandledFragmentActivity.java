@@ -12,8 +12,10 @@ import android.support.v7.app.AppCompatActivity;
 
 public class BackHandledFragmentActivity extends AppCompatActivity implements BackHandledListFragment.BackHandlerInterface {
 
+    //Fragment which needs to handle back button press
     protected BackHandledListFragment mBackHandledListFragment;
 
+    //Setter for BackHandled fragment
     @Override
     public void setBackHandledFragment(BackHandledListFragment backHandledFragment) {
         mBackHandledListFragment = backHandledFragment;
@@ -22,7 +24,11 @@ public class BackHandledFragmentActivity extends AppCompatActivity implements Ba
     @Override
     public void onBackPressed() {
 
-        //TODO - this "if" might generate null-pointer exception
+
+
+
+        //TODO - this "if" might generate null-pointer exception (or maybe not)
+        //Allow fragment to handle back button press
         if (mBackHandledListFragment == null || !mBackHandledListFragment.onBackPressed())
         {
             //Back press was not consumed, so we let system to do what it wants

@@ -18,6 +18,7 @@ import android.widget.TextView;
  */
 public class SongCursorAdapter extends CursorAdapter {
 
+    //Used to identify which field from cursor we need to show in ListView (sometimes its Title, sometimes Artist and so on)
     private String mDisplayField;
 
     public SongCursorAdapter(Context context, Cursor c, boolean autoRequery, String displayField) {
@@ -33,12 +34,14 @@ public class SongCursorAdapter extends CursorAdapter {
 
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
+        //Inflate a row in ListView
         LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         return inflater.inflate(android.R.layout.simple_list_item_activated_1,null);
     }
 
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
+        //Acquire text view and set text to it
         TextView textView = (TextView)view.findViewById(android.R.id.text1);
         String text = cursor.getString(cursor.getColumnIndex(mDisplayField));
 

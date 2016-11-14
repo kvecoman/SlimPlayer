@@ -74,7 +74,7 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
 
         Log.d("slim","Number of screens: " + mNumScreens + "");
 
-
+        //TODO - do something when none of the screens are selected
 
         Log.d("slim","MainScreenPagerAdapter - end of constructor");
 

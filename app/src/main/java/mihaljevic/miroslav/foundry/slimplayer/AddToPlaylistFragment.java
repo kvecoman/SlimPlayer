@@ -78,7 +78,7 @@ public class AddToPlaylistFragment extends CategoryListFragment{
             List<String> idList = getActivity().getIntent().getStringArrayListExtra(AddToPlaylistActivity.ID_LIST_KEY);
             ContentValues[] values = new ContentValues[idList.size()];
 
-            //Create values for everysong we are adding
+            //Create values for every song we are adding
             for(int i = 0;i < idList.size();i++)
             {
                 values[i] =  new ContentValues();
@@ -86,9 +86,11 @@ public class AddToPlaylistFragment extends CategoryListFragment{
                 values[i].put(MediaStore.Audio.Playlists.Members.PLAY_ORDER,i + count);
             }
 
+            //Insert all select songs values in playlist
             ContentResolver resolver = mContext.getContentResolver();
             int result = resolver.bulkInsert(uri, values);
             resolver.notifyChange(uri,null);
+
             Log.d("slim","Number of items added " + result + "");
             Toast.makeText(mContext,result + " " + getString(R.string.playlist_add_succes),Toast.LENGTH_SHORT).show();
         }
@@ -98,7 +100,7 @@ public class AddToPlaylistFragment extends CategoryListFragment{
             //Create new playlist
 
             //TODO - make it that first letter is capitalized in editText
-            //Set up edit text that will be used in alert dialog
+            //Set up edit text that will be used in alert dialog to get playlist name
             final EditText editText = new EditText(mContext);
             editText.setText(R.string.playlist_default_name);
             editText.selectAll();
@@ -118,12 +120,16 @@ public class AddToPlaylistFragment extends CategoryListFragment{
 
                             playlistName = editText.getText().toString();
 
+                            //Create content values with new playlist info
                             ContentValues inserts = new ContentValues();
                             inserts.put(MediaStore.Audio.Playlists.NAME, playlistName);
                             inserts.put(MediaStore.Audio.Playlists.DATE_ADDED, System.currentTimeMillis());
                             inserts.put(MediaStore.Audio.Playlists.DATE_MODIFIED, System.currentTimeMillis());
+
+                            //Insert new playlist values
                             Uri uri = mContext.getContentResolver().insert(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,inserts);
 
+                            //Get ID of newly created playlist
                             Cursor c = mContext.getContentResolver().query(uri, new String[]{MediaStore.Audio.Playlists._ID},null,null,null);
                             c.moveToFirst();
                             int pId = c.getInt(0);

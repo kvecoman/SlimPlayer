@@ -26,14 +26,10 @@ import java.util.Set;
 //TODO - make the app
 //TODO - $$_PROFIT_$$
 
-//TODO - prevent screen rotation - done
-//TODO - finish settings screen
-//TODO - take care of first time shared preferences init for list of screens - DONE
-//TODO - clean errors and create apropriate fragments in MainScreenPagerAdapter
 
 public class MainActivity extends BackHandledFragmentActivity implements SharedPreferences.OnSharedPreferenceChangeListener,
                                                                         ViewPager.OnPageChangeListener {
-
+    //Pager that hold different screens (All music, Playlists etc)
     private ViewPager mPager;
     private PagerAdapter mPagerAdapter;
 
@@ -57,7 +53,7 @@ public class MainActivity extends BackHandledFragmentActivity implements SharedP
     protected void onResume() {
         super.onResume();
 
-        //TODO - continue here - set first time BackHandled fragment
+        //TODO - remove this override
         //We call this to set first fragment that needs to handle back button press
         //onPageSelected(mPager.getCurrentItem());
     }
@@ -65,6 +61,7 @@ public class MainActivity extends BackHandledFragmentActivity implements SharedP
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
+        //Inflate options menu
         getMenuInflater().inflate(R.menu.options_menu,menu);
         return true;
     }
@@ -134,8 +131,6 @@ public class MainActivity extends BackHandledFragmentActivity implements SharedP
 
 
     //Pager listener implementations
-
-
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
 

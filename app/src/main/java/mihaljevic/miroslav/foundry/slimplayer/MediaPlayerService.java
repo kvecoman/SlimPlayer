@@ -70,6 +70,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
         try
         {
+            //Set up media player and start playing when ready
             mPlayer.reset();
             mPlayer.setDataSource(song.getData());
             mPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
@@ -166,17 +167,21 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     }*/
 
+    //Setter for song list
     public void setSongList(List<Song> songList)
     {
+        //This is starting position before we find out anything
         mPosition = -1;
 
         if (songList != null)
         {
+            //Get song count and song list
             mCount = songList.size();
             mSongList = songList;
         }
         else
         {
+            //We have nothing, respond appropriately
             mCount = 0;
             mSongList = null;
         }

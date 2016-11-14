@@ -31,6 +31,7 @@ import android.widget.ListView;
 //TODO - close cursor when needed
 public abstract class SlimListFragment extends BackHandledListFragment implements ListView.OnItemClickListener, LoaderManager.LoaderCallbacks<Cursor> {
 
+    //Keys that are used when transfering data about diferrent screens from ScreenCursors
     public static final String CURSOR_SCREEN_KEY = "cursor_screen";
 
     public static final String CURSOR_URI_KEY = "cursor_uri";
@@ -89,6 +90,7 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        //Create query that will fetch songs that we need for this screen
         Uri uri = Uri.parse(args.getString(CURSOR_URI_KEY));
         String [] projection = args.getStringArray(CURSOR_PROJECTION_KEY);
         String selection = args.getString(CURSOR_SELECTION_KEY);
@@ -100,6 +102,7 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        //Update cursor when loading is finished
         mCursorAdapter.swapCursor(data);
     }
 

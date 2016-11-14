@@ -21,10 +21,12 @@ public class AddToPlaylistActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_to_playlist);
 
+        //Acquire bundle to query all playlists
         Bundle fragmentBundle = ScreenCursors.getPlaylistsBundle(this);
 
         if (fragmentBundle != null)
         {
+            //Create add to playlist fragment
             AddToPlaylistFragment fragment = new AddToPlaylistFragment();
             fragment.setArguments(fragmentBundle);
 

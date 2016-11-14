@@ -31,7 +31,7 @@ import java.util.List;
  */
 public class SongListFragment extends SlimListFragment {
 
-    //TODO - move this somewhere sane
+    //TODO - move this somewhere sane (idk)
     protected MediaPlayerService mPlayerService;
     protected boolean mServiceBound = false;
 
@@ -39,7 +39,7 @@ public class SongListFragment extends SlimListFragment {
 
     protected List<Song> mSongList;
 
-
+    //Here we set-up service connection that is used when service is started
     protected ServiceConnection mServiceConnection = new ServiceConnection(){
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -117,8 +117,7 @@ public class SongListFragment extends SlimListFragment {
         }
         else
         {
-            //Here we try to play song
-            //TODO - continue here - make it play songs from mSongList
+            //Pass list of songs from which we play and play current position
             mPlayerService.setSongList(mSongList);
             mPlayerService.play(position);
         }
@@ -133,6 +132,7 @@ public class SongListFragment extends SlimListFragment {
 
         if (mSelectMode)
         {
+            //Deselect everything
             mSelectMode = false;
             getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
             getListView().clearChoices();
@@ -162,6 +162,7 @@ public class SongListFragment extends SlimListFragment {
         }
         else
         {
+            //Hide option to add to playlist
             playlistAddMenuItem.setVisible(false);
         }
 
@@ -177,13 +178,16 @@ public class SongListFragment extends SlimListFragment {
         {
             if (item.getItemId() == R.id.playlist_add)
             {
-                Bundle bundle = new Bundle();
+
+                //Get all checked positions
                 SparseBooleanArray checkedPositions = getListView().getCheckedItemPositions();
 
                 Log.d("slim", getListView().getCount() + " of list items ----- " + checkedPositions.size() + " of items in boolean array");
+
                 Cursor cursor = mCursorAdapter.getCursor();
                 List<String> idList = new ArrayList<>(checkedPositions.size());
 
+                //Transfer IDs from selected songs to ID list
                 for (int i = 0; i < checkedPositions.size();i++)
                 {
                     int position = checkedPositions.keyAt(i);
@@ -193,7 +197,7 @@ public class SongListFragment extends SlimListFragment {
                     idList.add(cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media._ID)));
 
                 }
-                //Here we call add to playlists activity
+                //Here we call add to playlists activity and pass ID list
                 Intent intent = new Intent(mContext,AddToPlaylistActivity.class);
                 intent.putExtra(AddToPlaylistActivity.ID_LIST_KEY,(ArrayList)idList);
                 startActivity(intent);
@@ -219,6 +223,7 @@ public class SongListFragment extends SlimListFragment {
         List<Song> songList = new ArrayList<>();
         Song song;
 
+        //Transfer all data from cursor to ArrayList of songs
         cursor.moveToFirst();
         do
         {

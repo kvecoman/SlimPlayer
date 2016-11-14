@@ -17,6 +17,7 @@ public class Song {
     protected String mData;
 
     public Song(long mId, String mTitle, String mArtist, String mAlbum, int mDuration, String mData) {
+        //Just assign everything
         this.mId = mId;
         this.mTitle = mTitle;
         this.mArtist = mArtist;

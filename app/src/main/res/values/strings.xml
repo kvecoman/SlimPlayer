@@ -33,7 +33,7 @@
     <string name="pref_key_screens_set">pref_key_screens_set</string>
     <string name="pref_key_directories_set">pref_key_directories_set</string>
 
-    <string name="pref_key_refresh">pref_key_refresht</string>
+    <string name="pref_key_refresh">pref_key_refresh</string>
 
     <!--Directory select dialog -->
     <string name="directory_pref_button_select">Select...</string>

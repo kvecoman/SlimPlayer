@@ -118,8 +118,13 @@ public class SongListFragment extends SlimListFragment {
         else
         {
             //Pass list of songs from which we play and play current position
+            //TODO - maybe optimize this?
             mPlayerService.setSongList(mSongList);
             mPlayerService.play(position);
+
+            Intent intent = new Intent(mContext,NowPlayingActivity.class);
+
+            startActivity(intent);
         }
 
     }

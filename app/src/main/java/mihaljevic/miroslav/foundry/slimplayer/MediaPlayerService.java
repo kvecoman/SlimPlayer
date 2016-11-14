@@ -18,6 +18,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     public MediaPlayer mPlayer;
 
+    private boolean mPlaying = false;
+
    // private Cursor mCursor;
     private List<Song> mSongList;
     private int mPosition;
@@ -25,6 +27,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     //TODO - Init this somewhere else
     private boolean mRepeatPlaylist = true;
+
+    private MediaPlayerListener mPlayerListener;
 
     public MediaPlayerService() {
     }
@@ -78,6 +82,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 @Override
                 public void onPrepared(MediaPlayer mp) {
                     mp.start();
+                    mPlaying = true;
+
+                    //Notify NowPlayingActivity (actually fragment) that we changed playing song
+                    if (mPlayerListener != null)
+                        mPlayerListener.onSongChanged(mSongList,mPosition);
                 }
             });
             mPlayer.setOnCompletionListener(this);
@@ -186,6 +195,32 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             mSongList = null;
         }
 
+    }
+
+    //Used to send info when NowPlayingActivity is starting to ge up to date with player service
+    public void requestCurrentPlayInfo()
+    {
+        //Check if we have something in this service
+        if (mCount > 0 && mPosition >= 0 && mSongList != null && mPlayerListener != null)
+        {
+            mPlayerListener.onSongChanged(mSongList,mPosition);
+        }
+    }
+
+    public boolean isPlaying()
+    {
+        return mPlaying;
+    }
+
+    public void setMediaPlayerListener(MediaPlayerListener listener)
+    {
+        mPlayerListener = listener;
+    }
+
+
+    public interface MediaPlayerListener
+    {
+        void onSongChanged(List<Song> songList, int position);
     }
 
 

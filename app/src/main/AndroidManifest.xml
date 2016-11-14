@@ -13,7 +13,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name="mihaljevic.miroslav.foundry.slimplayer.MainActivity"
+            android:name=".MainActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -22,17 +22,18 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="mihaljevic.miroslav.foundry.slimplayer.SettingsActivity"
+            android:name=".SettingsActivity"
             android:screenOrientation="portrait" />
-        <activity android:name="mihaljevic.miroslav.foundry.slimplayer.SongListActivity" />
+        <activity android:name=".SongListActivity" />
 
         <service
-            android:name="mihaljevic.miroslav.foundry.slimplayer.MediaPlayerService"
+            android:name=".MediaPlayerService"
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name="mihaljevic.miroslav.foundry.slimplayer.AddToPlaylistActivity" />
-        <activity android:name="mihaljevic.miroslav.foundry.slimplayer.BackHandledFragmentActivity"></activity>
+        <activity android:name=".AddToPlaylistActivity" />
+        <activity android:name=".BackHandledFragmentActivity" />
+        <activity android:name=".NowPlayingActivity"></activity>
     </application>
 
 </manifest>

@@ -13,10 +13,10 @@ public class Song {
     protected String mTitle;
     protected String mArtist;
     protected String mAlbum;
-    protected int mDuration;
+    protected long mDuration;
     protected String mData;
 
-    public Song(long mId, String mTitle, String mArtist, String mAlbum, int mDuration, String mData) {
+    public Song(long mId, String mTitle, String mArtist, String mAlbum, long mDuration, String mData) {
         //Just assign everything
         this.mId = mId;
         this.mTitle = mTitle;
@@ -42,7 +42,7 @@ public class Song {
         return mAlbum;
     }
 
-    public int getDuration() {
+    public long getDuration() {
         return mDuration;
     }
 

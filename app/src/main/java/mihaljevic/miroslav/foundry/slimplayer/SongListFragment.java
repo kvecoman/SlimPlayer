@@ -241,7 +241,7 @@ public class SongListFragment extends SlimListFragment {
                     cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
                     cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)),
                     cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM)),
-                    cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION)),
+                    cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION)),
                     cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA)));
 
             songList.add(song);

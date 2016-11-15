@@ -48,6 +48,8 @@ public class MainActivity extends BackHandledFragmentActivity implements SharedP
 
         //Register this activity as listener for changed preferences
         PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
+
+
     }
 
     @Override

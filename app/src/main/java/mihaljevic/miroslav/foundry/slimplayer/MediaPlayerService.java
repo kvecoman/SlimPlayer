@@ -6,6 +6,7 @@ import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.util.Log;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -45,22 +46,28 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         super.onCreate();
         mPlayer = new MediaPlayer();
         mPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+
+        Log.d("slim","MediaPlayerService - onCreate()");
     }
 
     //NOTE - THIS IS CALLED WHEN SERVICE IS CALLED WHILE IT IS ALREADY RUNNING
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d("slim","MediaPlayerService - onStartCommand()");
+
         return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
     public boolean onUnbind(Intent intent)
     {
+        Log.d("slim","MediaPlayerService - onUnbind()");
         return super.onUnbind(intent);
     }
 
     public class MediaPlayerBinder extends Binder {
         MediaPlayerService getService(){
+            Log.d("slim","MediaPlayerService - getService()");
             return MediaPlayerService.this;
         }
     }
@@ -96,7 +103,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         {
             e.printStackTrace();
         }
-
+        Log.d("slim","MediaPlayerService - play()");
 
         //Old code for playing from cursor
        /* try
@@ -154,6 +161,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             //Play next song
             MediaPlayerService.this.play(mPosition + 1);
         }
+
+        Log.d("slim","MediaPlayerService - onCompletion()");
     }
 
    /* public void setCursor(Cursor cursor)
@@ -195,6 +204,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             mSongList = null;
         }
 
+        Log.d("slim","MediaPlayerService - setSongList()");
     }
 
     //Used to send info when NowPlayingActivity is starting to ge up to date with player service
@@ -205,6 +215,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         {
             mPlayerListener.onSongChanged(mSongList,mPosition);
         }
+        Log.d("slim","MediaPlayerService - requestCurrentPlayInfo()");
+    }
+
+    public MediaPlayer getMediaPlayer()
+    {
+        return mPlayer;
     }
 
     public boolean isPlaying()

@@ -45,7 +45,7 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
     //Array of screen names/keys that user selected
     private List<String> mScreensList;
 
-    //Collection of fragments for diferent screens
+    //Collection of fragments for different screens
     private Map<String, ListFragment> mFragmentMap;
 
     //Activity where this adapter is used

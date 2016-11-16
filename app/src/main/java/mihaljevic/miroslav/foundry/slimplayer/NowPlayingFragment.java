@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -20,7 +19,6 @@ import android.widget.TextView;
 
 import java.util.List;
 
-//TODO - continue here - make seek bar work when playing song, and swithching songs with swipe left/right
 /**
  *
  * Fragment that displays info about current song that is played by media service
@@ -29,12 +27,18 @@ import java.util.List;
  */
 public class NowPlayingFragment extends Fragment implements MediaPlayerService.MediaPlayerListener, SeekBar.OnSeekBarChangeListener {
 
+    public static final String SONG_POSITION_KEY = "song_position";
+
     private Song mSong;
     private List<Song> mSongList;
     private int mPosition;
     private int mCount;
 
+    private LayoutInflater mInflater;
     private View mParentView;
+    private View mContentView;
+    private View mLeftView;
+    private View mRightView;
     private SeekBar mSeekBar;
 
     private MediaPlayerService mPlayerService;
@@ -54,7 +58,9 @@ public class NowPlayingFragment extends Fragment implements MediaPlayerService.M
 
             //When we are connected request current play info
             mPlayerService.setMediaPlayerListener(NowPlayingFragment.this);
-            mPlayerService.requestCurrentPlayInfo();
+            mPlayerService.setCurrentPlayInfoToListener();
+
+            loadSongInfo();
 
             Log.d("slim","NowPlayingFragment - onServiceConnected()");
 
@@ -83,9 +89,12 @@ public class NowPlayingFragment extends Fragment implements MediaPlayerService.M
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+
+
         // Inflate the layout for this fragment
-        mParentView = inflater.inflate(R.layout.fragment_now_playing, container, false);
-        return mParentView;
+        mContentView = inflater.inflate(R.layout.fragment_now_playing, container, false);
+        return mContentView;
     }
 
     //Here is usually place for most of the init
@@ -98,8 +107,16 @@ public class NowPlayingFragment extends Fragment implements MediaPlayerService.M
         Intent playerServiceIntent = new Intent(getContext(), MediaPlayerService.class);
         getContext().bindService(playerServiceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
 
-        mSeekBar = (SeekBar) mParentView.findViewById(R.id.seek_bar);
+        mSeekBar = (SeekBar) mContentView.findViewById(R.id.seek_bar);
         mSeekBar.setOnSeekBarChangeListener(this);
+
+        //Get song position that this fragment represents
+        Bundle args = getArguments();
+        if (args != null)
+        {
+            mPosition = args.getInt(SONG_POSITION_KEY);
+        }
+
 
         Log.d("slim","NowPlayingFragment - onActivityCreated()");
     }
@@ -108,12 +125,6 @@ public class NowPlayingFragment extends Fragment implements MediaPlayerService.M
     public void onStart() {
         super.onStart();
 
-        if (mServiceBound)
-        {
-            //TODO - check the flow of all callback (log them all)
-            mPlayerService.setMediaPlayerListener(this);
-            mPlayerService.requestCurrentPlayInfo();
-        }
 
         Log.d("slim","NowPlayingFragment - onStart()");
     }
@@ -142,7 +153,7 @@ public class NowPlayingFragment extends Fragment implements MediaPlayerService.M
 
     @Override
     public void onSongChanged(List<Song> songList, int position) {
-        mSongList = songList;
+       /* mSongList = songList;
         mPosition = position;
 
         mCount = songList.size();
@@ -166,11 +177,75 @@ public class NowPlayingFragment extends Fragment implements MediaPlayerService.M
         });
 
         //Update text views with new info
-        ((TextView)mParentView.findViewById(R.id.song_title)).setText(mSong.getTitle());
-        ((TextView)mParentView.findViewById(R.id.song_artist)).setText(mSong.getArtist());
+        ((TextView) mContentView.findViewById(R.id.song_title)).setText(mSong.getTitle());
+        ((TextView) mContentView.findViewById(R.id.song_artist)).setText(mSong.getArtist());
 
-        Log.d("slim","NowPlayingFragment - onSongChanged()");
+
+        Log.d("slim","NowPlayingFragment - onSongChanged()");*/
     }
+
+    public void loadSongInfo()
+    {
+        //Set a lot of member variables and update views with it (from MediaPlayerService)
+        if (mServiceBound)
+        {
+            mCount = mPlayerService.getCount();
+            mSong = mPlayerService.getSong(mPosition);
+
+            mSeekBar.setMax(((int) mSong.getDuration()));
+
+
+            //Update text views with new info
+            ((TextView) mContentView.findViewById(R.id.song_title)).setText(mSong.getTitle());
+            ((TextView) mContentView.findViewById(R.id.song_artist)).setText(mSong.getArtist());
+
+
+            Log.d("slim","NowPlayingFragment - loadSongInfo()");
+        }
+    }
+
+    //TODO - CONTINUE HERE - swiping screens works, now find way to call this when fragment is made active(maybe onStart method)
+    //This connects seek bar to current song that is played by media player service
+    public void bindSeekBarToPlayer()
+    {
+        mPlayer = mPlayerService.getMediaPlayer();
+
+        mSeekBarHandler = new Handler();
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (mPlayer != null)
+                {
+                    int position = mPlayer.getCurrentPosition();
+                    mSeekBar.setProgress(position);
+                }
+                mSeekBarHandler.postDelayed(this, 1000);
+            }
+        });
+    }
+
+    /*
+    CODE FOR CUSTOM SWIPING WITHOUT VIEW PAGER
+    public void prepareSwipeViews()
+    {
+        if (mPosition > 0)
+        {
+            updateContentView(mLeftView, mSongList.get(mPosition-1));
+        }
+
+        if (mPosition < (mCount - 1))
+        {
+            updateContentView(mRightView, mSongList.get(mPosition+1));
+        }
+    }
+
+    public void updateContentView(View contentView, Song song)
+    {
+        ((TextView) contentView.findViewById(R.id.song_title)).setText(song.getTitle());
+        ((TextView) contentView.findViewById(R.id.song_artist)).setText(song.getArtist());
+    }
+*/
+
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {

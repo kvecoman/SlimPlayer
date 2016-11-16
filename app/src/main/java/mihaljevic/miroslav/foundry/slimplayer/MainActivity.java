@@ -37,7 +37,7 @@ public class MainActivity extends BackHandledFragmentActivity implements SharedP
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_pager);
 
         //Set up pager and adapter to show list screens
         mPager = (ViewPager)findViewById(R.id.pager);

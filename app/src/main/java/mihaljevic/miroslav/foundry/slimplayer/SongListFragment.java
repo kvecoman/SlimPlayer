@@ -122,7 +122,11 @@ public class SongListFragment extends SlimListFragment {
             mPlayerService.setSongList(mSongList);
             mPlayerService.play(position);
 
+            //Use bundle to send some starting info to NowPlayingActivity
             Intent intent = new Intent(mContext,NowPlayingActivity.class);
+
+            intent.putExtra(NowPlayingActivity.SONG_COUNT_KEY,mSongList.size());
+            intent.putExtra(NowPlayingActivity.SONG_POSITION_KEY,position);
 
             startActivity(intent);
         }

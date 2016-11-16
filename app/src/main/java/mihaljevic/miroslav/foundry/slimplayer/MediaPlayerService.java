@@ -208,19 +208,45 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     }
 
     //Used to send info when NowPlayingActivity is starting to ge up to date with player service
-    public void requestCurrentPlayInfo()
+    public void setCurrentPlayInfoToListener()
     {
         //Check if we have something in this service
         if (mCount > 0 && mPosition >= 0 && mSongList != null && mPlayerListener != null)
         {
             mPlayerListener.onSongChanged(mSongList,mPosition);
         }
-        Log.d("slim","MediaPlayerService - requestCurrentPlayInfo()");
+        Log.d("slim","MediaPlayerService - setCurrentPlayInfoToListener()");
     }
 
     public MediaPlayer getMediaPlayer()
     {
         return mPlayer;
+    }
+
+    public Song getCurrentSong()
+    {
+        if (mPosition < 0 || mPosition >= mCount)
+            return null;
+
+        return mSongList.get(mPosition);
+
+    }
+
+    public Song getSong(int position)
+    {
+        if (position < 0 || position >= mCount)
+            return null;
+
+        return mSongList.get(position);
+
+    }
+
+    public int getPosition() {
+        return mPosition;
+    }
+
+    public int getCount() {
+        return mCount;
     }
 
     public boolean isPlaying()

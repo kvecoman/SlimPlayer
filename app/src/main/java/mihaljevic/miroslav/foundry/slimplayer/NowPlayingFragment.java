@@ -12,6 +12,8 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.SeekBar;
@@ -47,6 +49,8 @@ public class NowPlayingFragment extends Fragment implements MediaPlayerService.M
     private MediaPlayer mPlayer;
 
     private Handler mSeekBarHandler;
+    private boolean mSeekBarBound;
+    private boolean mOnCreateOptionsCalled;
 
     //Here we set-up service connection that is used when service is started
     protected ServiceConnection mServiceConnection = new ServiceConnection(){
@@ -61,6 +65,11 @@ public class NowPlayingFragment extends Fragment implements MediaPlayerService.M
             mPlayerService.setCurrentPlayInfoToListener();
 
             loadSongInfo();
+
+            //This is a occurance that happens if this fragment is the first one after NowPlayingActivity loads
+            //This is connected to flow of code in OnCreateOptionsMenu()
+            if (mOnCreateOptionsCalled && !mSeekBarBound)
+                bindSeekBarToPlayer();
 
             Log.d("slim","NowPlayingFragment - onServiceConnected()");
 
@@ -84,6 +93,7 @@ public class NowPlayingFragment extends Fragment implements MediaPlayerService.M
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+
     }
 
     @Override
@@ -91,6 +101,7 @@ public class NowPlayingFragment extends Fragment implements MediaPlayerService.M
                              Bundle savedInstanceState) {
 
 
+        setHasOptionsMenu(true);
 
         // Inflate the layout for this fragment
         mContentView = inflater.inflate(R.layout.fragment_now_playing, container, false);
@@ -126,7 +137,36 @@ public class NowPlayingFragment extends Fragment implements MediaPlayerService.M
         super.onStart();
 
 
+
         Log.d("slim","NowPlayingFragment - onStart()");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        Log.d("slim","NowPlayingFragment - onResume()");
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+
+
+        if (mServiceBound)
+        {
+            //TODO - find better way?
+            //Explanation - onCreateOptionsMenu is almost only function that is called ONLY when fragment is REALLY
+            //... visible and not while he is created and cached, and we need that because only one fragment can be
+            //connected to media player so the SeekBar would work and it has to be current selected fragment in view pager
+            //Connect seek bar to media player
+            bindSeekBarToPlayer();
+        }
+
+
+        mOnCreateOptionsCalled = true;
+
+        Log.d("slim","NowPlayingFragment - onCreateOptionsMenu()");
     }
 
     @Override
@@ -135,6 +175,8 @@ public class NowPlayingFragment extends Fragment implements MediaPlayerService.M
 
         if (mServiceBound)
             mPlayerService.setMediaPlayerListener(null);
+
+
 
         Log.d("slim","NowPlayingFragment - onStop()");
     }
@@ -222,6 +264,8 @@ public class NowPlayingFragment extends Fragment implements MediaPlayerService.M
                 mSeekBarHandler.postDelayed(this, 1000);
             }
         });
+
+        mSeekBarBound = true;
     }
 
     /*

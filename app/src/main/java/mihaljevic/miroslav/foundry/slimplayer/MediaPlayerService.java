@@ -207,7 +207,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         Log.d("slim","MediaPlayerService - setSongList()");
     }
 
-    //Used to send info when NowPlayingActivity is starting to ge up to date with player service
+    //Used to send info when NowPlayingActivity is starting to get up to date with player service
     public void setCurrentPlayInfoToListener()
     {
         //Check if we have something in this service

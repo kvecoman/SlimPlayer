@@ -26,7 +26,7 @@ import java.util.Set;
 //TODO - make the app
 //TODO - $$_PROFIT_$$
 
-//TODO - add notification player
+//TODO - CONTINUE HERE - add notification player
 
 public class MainActivity extends BackHandledFragmentActivity implements SharedPreferences.OnSharedPreferenceChangeListener,
                                                                         ViewPager.OnPageChangeListener {

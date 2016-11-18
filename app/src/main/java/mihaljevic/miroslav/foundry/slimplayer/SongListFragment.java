@@ -1,6 +1,8 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -8,7 +10,9 @@ import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.ContactsContract;
 import android.provider.MediaStore;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.Loader;
 import android.util.Log;
 import android.util.SparseBooleanArray;
@@ -20,6 +24,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.RemoteViews;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -121,6 +126,15 @@ public class SongListFragment extends SlimListFragment {
             //TODO - maybe optimize this?
             mPlayerService.setSongList(mSongList);
             mPlayerService.play(position);
+
+            //TODO - continue here - custom view not showing
+            //TODO - move this - notification stuff
+            RemoteViews notificationView = new RemoteViews(getContext().getPackageName(),R.layout.notification_player);
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(getContext());
+            builder.setContent(notificationView).setSmallIcon(R.mipmap.ic_launcher).setAutoCancel(true).setTicker("Playing");
+            Notification notification = builder.build();
+            NotificationManager notificationManager = (NotificationManager)getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.notify(1,notification);
 
             //Use bundle to send some starting info to NowPlayingActivity
             Intent intent = new Intent(mContext,NowPlayingActivity.class);

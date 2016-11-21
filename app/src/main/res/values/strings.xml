@@ -47,6 +47,14 @@
     <string name="playlist_create">Create new playlist...</string>
     <string name="playlist_default_name">New Playlist</string>
     <string name="playlist_add_succes">songs added to playlist.</string>
+    
+    <!--Icon codes-->
+    <string name="icon_play">\uE800</string>
+    <string name="icon_stop">\uE801</string>
+    <string name="icon_pause">\uE802</string>
+    <string name="icon_previous">\uE803</string>
+    <string name="icon_next">\uE804</string>
+    <string name="icon_close">\uE805</string>
 
 
     <!-- TODO: Remove or change this placeholder text -->

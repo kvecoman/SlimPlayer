@@ -3,6 +3,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -25,6 +26,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.RemoteViews;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -127,14 +129,21 @@ public class SongListFragment extends SlimListFragment {
             mPlayerService.setSongList(mSongList);
             mPlayerService.play(position);
 
-            //TODO - continue here - custom view not showing
+
             //TODO - move this - notification stuff
-            RemoteViews notificationView = new RemoteViews(getContext().getPackageName(),R.layout.notification_player);
+            RemoteViews notificationView = new RemoteViews(getContext().getPackageName(),R.layout.notification_player2);
             NotificationCompat.Builder builder = new NotificationCompat.Builder(getContext());
-            builder.setContent(notificationView).setSmallIcon(R.mipmap.ic_launcher).setAutoCancel(true).setTicker("Playing");
+
+           /* builder.setOngoing(true);
+            builder.setSmallIcon(R.mipmap.ic_launcher).setContentTitle("Content title").setContentText("Content text");
+            builder.setContentIntent(PendingIntent.getActivity(getContext(),0,new Intent(getContext(),NowPlayingActivity.class),0));
+            builder.setTicker("Playing").setAutoCancel(true).setContent(notificationView);*/
+
+            builder.setSmallIcon(R.mipmap.ic_launcher).setContent(notificationView).setContentIntent(PendingIntent.getActivity(getContext(),0,new Intent(getContext(),NowPlayingActivity.class),0));
+
             Notification notification = builder.build();
             NotificationManager notificationManager = (NotificationManager)getContext().getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.notify(1,notification);
+            notificationManager.notify(5,notification);
 
             //Use bundle to send some starting info to NowPlayingActivity
             Intent intent = new Intent(mContext,NowPlayingActivity.class);

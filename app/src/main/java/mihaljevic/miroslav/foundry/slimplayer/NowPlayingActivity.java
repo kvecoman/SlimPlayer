@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 
+//TODO - now playing screen doesnt update when song is changed from MediaPlayerService
 public class NowPlayingActivity extends BackHandledFragmentActivity implements ViewPager.OnPageChangeListener {
 
     public static final String SONG_COUNT_KEY = "song_count";

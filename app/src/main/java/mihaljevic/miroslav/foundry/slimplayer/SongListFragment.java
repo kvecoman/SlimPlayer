@@ -9,6 +9,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.ContactsContract;
@@ -17,6 +22,7 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.Loader;
 import android.util.Log;
 import android.util.SparseBooleanArray;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -130,9 +136,17 @@ public class SongListFragment extends SlimListFragment {
             mPlayerService.play(position);
 
 
-            //TODO - move this - notification stuff
-            RemoteViews notificationView = new RemoteViews(getContext().getPackageName(),R.layout.notification_player2);
+            //TODO - continue here -  move this - notification stuff
+            RemoteViews notificationView = new RemoteViews(getContext().getPackageName(),R.layout.notification_player4);
             NotificationCompat.Builder builder = new NotificationCompat.Builder(getContext());
+
+            notificationView.setTextViewText(R.id.notification_title,mSongList.get(position).getTitle());
+
+            int fontSize = 20;
+            notificationView.setImageViewBitmap(R.id.notification_close,renderFont(getContext(), getString(R.string.icon_close), Color.LTGRAY,fontSize));
+            notificationView.setImageViewBitmap(R.id.notification_previous,renderFont(getContext(), getString(R.string.icon_previous), Color.LTGRAY,fontSize));
+            notificationView.setImageViewBitmap(R.id.notification_play,renderFont(getContext(), getString(R.string.icon_play), Color.LTGRAY,fontSize));
+            notificationView.setImageViewBitmap(R.id.notification_next,renderFont(getContext(), getString(R.string.icon_next), Color.LTGRAY,fontSize));
 
            /* builder.setOngoing(true);
             builder.setSmallIcon(R.mipmap.ic_launcher).setContentTitle("Content title").setContentText("Content text");
@@ -154,6 +168,35 @@ public class SongListFragment extends SlimListFragment {
             startActivity(intent);
         }
 
+    }
+
+    //TODO - this function is for notification player, move somewhere else
+    public Bitmap renderFont(Context context, String text, int color, float fontSizeSP)
+    {
+        int fontSizePX = convertDipToPix(context, fontSizeSP);
+        int pad = (fontSizePX / 9);
+        Paint paint = new Paint();
+        Typeface typeface = Typeface.createFromAsset(context.getAssets(), "fonts/icons.ttf");
+        paint.setAntiAlias(true);
+        paint.setTypeface(typeface);
+        paint.setColor(color);
+        paint.setTextSize(fontSizePX);
+
+        int textWidth = (int) (paint.measureText(text) + pad*2);
+        int height = (int) (fontSizePX / 0.75);
+        Bitmap bitmap = Bitmap.createBitmap(textWidth, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        float xOriginal = pad;
+        canvas.drawText(text, xOriginal, fontSizePX, paint);
+        return bitmap;
+
+    }
+
+    //TODO - used in renderFont(), also move
+    public int convertDipToPix(Context context,float dip)
+    {
+        int value = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, context.getResources().getDisplayMetrics());
+        return value;
     }
 
     @Override

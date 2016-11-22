@@ -56,6 +56,12 @@ public class MainActivity extends BackHandledFragmentActivity implements SharedP
     protected void onResume() {
         super.onResume();
 
+        /*if (BuildConfig.DEBUG)
+        {
+            Intent intent = new Intent(this,TestActivity.class);
+            startActivity(intent);
+        }*/
+
         //TODO - remove this override
         //We call this to set first fragment that needs to handle back button press
         //onPageSelected(mPager.getCurrentItem());

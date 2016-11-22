@@ -8,7 +8,9 @@ import android.util.AttributeSet;
 import android.widget.Button;
 
 /**
- * Created by Miroslav on 21.11.2016..
+ * Button that displays font icon
+ *
+ * @author Miroslav Mihaljević
  */
 public class IconButton extends Button {
 
@@ -33,11 +35,10 @@ public class IconButton extends Button {
         updateTypeface();
     }
 
-    //TODO - continue here - layout not working, create test activity with notification layout and icons to see if it works
 
     public void updateTypeface()
     {
-        Typeface typeface = Typeface.createFromAsset(getContext().getAssets(),"icons");
+        Typeface typeface = Typeface.createFromAsset(getContext().getAssets(), "fonts/icons.ttf");
         setTypeface(typeface);
     }
 }

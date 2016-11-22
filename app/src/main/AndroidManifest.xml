@@ -7,12 +7,12 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
+        android:name=".SlimPlayerApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar"
-        android:name=".SlimPlayerApplication">
+        android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar">
         <activity
             android:name=".MainActivity"
             android:screenOrientation="portrait">
@@ -34,7 +34,8 @@
 
         <activity android:name=".AddToPlaylistActivity" />
         <activity android:name=".BackHandledFragmentActivity" />
-        <activity android:name=".NowPlayingActivity"></activity>
+        <activity android:name=".NowPlayingActivity" />
+        <activity android:name=".TestActivity"></activity>
     </application>
 
 </manifest>

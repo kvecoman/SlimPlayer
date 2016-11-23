@@ -22,7 +22,15 @@ import java.util.List;
 //TODO - add intent filter so we can run any song
 public class MediaPlayerService extends Service implements MediaPlayer.OnCompletionListener {
 
+    //Notification ID
     public static final int NOTIFICATION_PLAYER_ID = 1;
+
+    public static final String  NOTIFICATION_ACTION_CLOSE = "mihaljevic.miroslav.foundry.slimplayer.action.close";
+    public static final String  NOTIFICATION_ACTION_PREVIOUS = "mihaljevic.miroslav.foundry.slimplayer.action.previous";
+    public static final String  NOTIFICATION_ACTION_PLAY = "mihaljevic.miroslav.foundry.slimplayer.action.play";
+    public static final String  NOTIFICATION_ACTION_PAUSE = "mihaljevic.miroslav.foundry.slimplayer.action.pause";
+    public static final String  NOTIFICATION_ACTION_NEXT = "mihaljevic.miroslav.foundry.slimplayer.action.next";
+
 
     //Points to location of our custom font file
     public static final String ICON_FONT_PATH = "fonts/icons.ttf";
@@ -206,6 +214,36 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 .setOngoing(true)
                 .setContent(notificationView)
                 .setContentIntent(PendingIntent.getActivity(this,0,new Intent(this,NowPlayingActivity.class),0));
+
+        //Set-up control actions
+        Intent intent;
+        PendingIntent pendingIntent;
+
+        //TODO - continue here - actions are set-up, now handle them in onStartCommand
+
+        //Close action
+        intent = new Intent(this,this.getClass());
+        intent.setAction(NOTIFICATION_ACTION_CLOSE);
+        pendingIntent = PendingIntent.getService(this,0,intent,0);
+        notificationView.setOnClickPendingIntent(R.id.notification_close, pendingIntent);
+
+        //Previous song action
+        intent = new Intent(this,this.getClass());
+        intent.setAction(NOTIFICATION_ACTION_PREVIOUS);
+        pendingIntent = PendingIntent.getService(this,0,intent,0);
+        notificationView.setOnClickPendingIntent(R.id.notification_previous, pendingIntent);
+
+        //Pause song action
+        intent = new Intent(this,this.getClass());
+        intent.setAction(NOTIFICATION_ACTION_PAUSE);
+        pendingIntent = PendingIntent.getService(this,0,intent,0);
+        notificationView.setOnClickPendingIntent(R.id.notification_play, pendingIntent);
+
+        //Next song action
+        intent = new Intent(this,this.getClass());
+        intent.setAction(NOTIFICATION_ACTION_NEXT);
+        pendingIntent = PendingIntent.getService(this,0,intent,0);
+        notificationView.setOnClickPendingIntent(R.id.notification_next, pendingIntent);
 
         //Build and show notification
         Notification notification = builder.build();

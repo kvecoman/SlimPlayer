@@ -12,14 +12,17 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 
+import java.util.List;
+
 //TODO - now playing screen doesnt update when song is changed from MediaPlayerService
-public class NowPlayingActivity extends BackHandledFragmentActivity implements ViewPager.OnPageChangeListener {
+public class NowPlayingActivity extends BackHandledFragmentActivity implements MediaPlayerService.MediaPlayerListener, ViewPager.OnPageChangeListener {
 
     public static final String SONG_COUNT_KEY = "song_count";
     public static final String SONG_POSITION_KEY = "song_position";
 
     private ViewPager mPager;
     private NowPlayingPagerAdapter mPagerAdapter;
+
 
     private MediaPlayerService mPlayerService;
     private boolean mServiceBound;
@@ -29,6 +32,8 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements V
         @Override
         public void onServiceConnected(ComponentName name, IBinder service)
         {
+            Log.d("slim","NowPlayingActivity - onServiceConnected()");
+
             MediaPlayerService.MediaPlayerBinder playerBinder = (MediaPlayerService.MediaPlayerBinder)service;
             NowPlayingActivity.this.mPlayerService = playerBinder.getService();
             NowPlayingActivity.this.mServiceBound = true;
@@ -42,14 +47,20 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements V
                 mPager.setCurrentItem(mPlayerService.getPosition());
             }
 
-            Log.d("slim","NowPlayingActivity - onServiceConnected()");
+            //When we are connected request current play info
+            mPlayerService.setMediaPlayerListener(NowPlayingActivity.this);
+            mPlayerService.setCurrentPlayInfoToListener();
+
+
 
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            NowPlayingActivity.this.mServiceBound = false;
             Log.d("slim","NowPlayingActivity - onServiceDisconnected()");
+
+            NowPlayingActivity.this.mServiceBound = false;
+
         }
     };
 
@@ -83,6 +94,15 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements V
         return true;
     }
 
+    @Override
+    public void onSongChanged(List<Song> songList, int position) {
+        Log.d("slim","NowPlayingActivity - onSongChanged()");
+
+        mPager.setCurrentItem(position,true);
+
+
+    }
+
     public MediaPlayerService getPlayerService() {
         return mPlayerService;
     }
@@ -98,7 +118,14 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements V
 
     @Override
     public void onPageSelected(int position) {
+        Log.d("slim","NowPlayingActivity - onPageSelected()");
+
+        //If this song is already playing no need to start it again
+        //(case when you change song outside of this activity)
         mPlayerService.play(position);
+
+
+
     }
 
     @Override

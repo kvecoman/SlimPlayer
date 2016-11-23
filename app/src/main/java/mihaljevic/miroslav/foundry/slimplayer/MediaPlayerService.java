@@ -1,12 +1,19 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.RemoteViews;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -14,6 +21,13 @@ import java.util.List;
 
 //TODO - add intent filter so we can run any song
 public class MediaPlayerService extends Service implements MediaPlayer.OnCompletionListener {
+
+    public static final int NOTIFICATION_PLAYER_ID = 1;
+
+    //Points to location of our custom font file
+    public static final String ICON_FONT_PATH = "fonts/icons.ttf";
+
+    public static final int ICON_FONT_SIZE_SP = 20;
 
     private MediaPlayerBinder mBinder = new MediaPlayerBinder();
 
@@ -44,16 +58,15 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public void onCreate()
     {
         super.onCreate();
+
         mPlayer = new MediaPlayer();
         mPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
 
-        Log.d("slim","MediaPlayerService - onCreate()");
     }
 
     //NOTE - THIS IS CALLED WHEN SERVICE IS CALLED WHILE IT IS ALREADY RUNNING
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("slim","MediaPlayerService - onStartCommand()");
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -61,13 +74,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public boolean onUnbind(Intent intent)
     {
-        Log.d("slim","MediaPlayerService - onUnbind()");
         return super.onUnbind(intent);
     }
 
     public class MediaPlayerBinder extends Binder {
         MediaPlayerService getService(){
-            Log.d("slim","MediaPlayerService - getService()");
             return MediaPlayerService.this;
         }
     }
@@ -75,6 +86,13 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     public void play(int position)
     {
+        Log.d("slim","MediaPlayerService - play()");
+        //TODO - think of better solution
+        //play() method can be called two times in row from NowPlayingActivity->onPageChanged()
+        //we fix this here
+        if (mPosition == position)
+            return;
+
         mPosition = position;
         Song song = mSongList.get(mPosition);
         Toast.makeText(getApplicationContext(),song.getData(),Toast.LENGTH_SHORT).show();
@@ -91,19 +109,21 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                     mp.start();
                     mPlaying = true;
 
-                    //Notify NowPlayingActivity (actually fragment) that we changed playing song
+                    //Notify NowPlayingActivity that we changed playing song
                     if (mPlayerListener != null)
                         mPlayerListener.onSongChanged(mSongList,mPosition);
                 }
             });
             mPlayer.setOnCompletionListener(this);
             mPlayer.prepareAsync();
+
+            showNotification();
         }
         catch (IOException e)
         {
             e.printStackTrace();
         }
-        Log.d("slim","MediaPlayerService - play()");
+
 
         //Old code for playing from cursor
        /* try
@@ -146,6 +166,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     //This is called when song is finished playing
     @Override
     public void onCompletion(MediaPlayer mp) {
+        Log.d("slim","MediaPlayerService - onCompletion()");
 
         if (mPosition == mCount - 1)
         {
@@ -162,7 +183,35 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             MediaPlayerService.this.play(mPosition + 1);
         }
 
-        Log.d("slim","MediaPlayerService - onCompletion()");
+
+    }
+
+    //TODO - when notification is pressed, make sure it doesnt restart the song
+    //Display notification player for this service
+    public void showNotification()
+    {
+        RemoteViews notificationView = new RemoteViews(getPackageName(),R.layout.notification_player4);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+
+        notificationView.setTextViewText(R.id.notification_title,mSongList.get(mPosition).getTitle());
+
+        //Render font icons in scale with current device screen density
+        notificationView.setImageViewBitmap(R.id.notification_close,    Utils.renderFont(this, getString(R.string.icon_close),      Color.LTGRAY,ICON_FONT_SIZE_SP, ICON_FONT_PATH));
+        notificationView.setImageViewBitmap(R.id.notification_previous, Utils.renderFont(this, getString(R.string.icon_previous),   Color.LTGRAY,ICON_FONT_SIZE_SP, ICON_FONT_PATH));
+        notificationView.setImageViewBitmap(R.id.notification_play,     Utils.renderFont(this, getString(R.string.icon_play),       Color.LTGRAY,ICON_FONT_SIZE_SP, ICON_FONT_PATH));
+        notificationView.setImageViewBitmap(R.id.notification_next,     Utils.renderFont(this, getString(R.string.icon_next),       Color.LTGRAY,ICON_FONT_SIZE_SP, ICON_FONT_PATH));
+
+        //Set-up notification
+        builder.setSmallIcon(R.mipmap.ic_launcher)
+                .setOngoing(true)
+                .setContent(notificationView)
+                .setContentIntent(PendingIntent.getActivity(this,0,new Intent(this,NowPlayingActivity.class),0));
+
+        //Build and show notification
+        Notification notification = builder.build();
+        //NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+        startForeground(NOTIFICATION_PLAYER_ID,notification);
+
     }
 
    /* public void setCursor(Cursor cursor)
@@ -204,18 +253,18 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             mSongList = null;
         }
 
-        Log.d("slim","MediaPlayerService - setSongList()");
     }
 
     //Used to send info when NowPlayingActivity is starting to get up to date with player service
     public void setCurrentPlayInfoToListener()
     {
+        Log.d("slim","MediaPlayerService - setCurrentPlayInfoToListener()");
         //Check if we have something in this service
         if (mCount > 0 && mPosition >= 0 && mSongList != null && mPlayerListener != null)
         {
             mPlayerListener.onSongChanged(mSongList,mPosition);
         }
-        Log.d("slim","MediaPlayerService - setCurrentPlayInfoToListener()");
+
     }
 
     public MediaPlayer getMediaPlayer()

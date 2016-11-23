@@ -27,7 +27,7 @@ import java.util.List;
  *
  * @author Miroslav Mihaljević
  */
-public class NowPlayingFragment extends Fragment implements MediaPlayerService.MediaPlayerListener, SeekBar.OnSeekBarChangeListener {
+public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarChangeListener {
 
     public static final String SONG_POSITION_KEY = "song_position";
 
@@ -56,13 +56,11 @@ public class NowPlayingFragment extends Fragment implements MediaPlayerService.M
     protected ServiceConnection mServiceConnection = new ServiceConnection(){
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d("slim","NowPlayingFragment - onServiceConnected()");
+
             MediaPlayerService.MediaPlayerBinder playerBinder = (MediaPlayerService.MediaPlayerBinder)service;
             NowPlayingFragment.this.mPlayerService = playerBinder.getService();
             NowPlayingFragment.this.mServiceBound = true;
-
-            //When we are connected request current play info
-            mPlayerService.setMediaPlayerListener(NowPlayingFragment.this);
-            mPlayerService.setCurrentPlayInfoToListener();
 
             loadSongInfo();
 
@@ -71,14 +69,16 @@ public class NowPlayingFragment extends Fragment implements MediaPlayerService.M
             if (mOnCreateOptionsCalled && !mSeekBarBound)
                 bindSeekBarToPlayer();
 
-            Log.d("slim","NowPlayingFragment - onServiceConnected()");
+
 
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            NowPlayingFragment.this.mServiceBound = false;
             Log.d("slim","NowPlayingFragment - onServiceDisconnected()");
+
+            NowPlayingFragment.this.mServiceBound = false;
+
         }
     };
 
@@ -129,7 +129,6 @@ public class NowPlayingFragment extends Fragment implements MediaPlayerService.M
         }
 
 
-        Log.d("slim","NowPlayingFragment - onActivityCreated()");
     }
 
     @Override
@@ -138,14 +137,12 @@ public class NowPlayingFragment extends Fragment implements MediaPlayerService.M
 
 
 
-        Log.d("slim","NowPlayingFragment - onStart()");
     }
 
     @Override
     public void onResume() {
         super.onResume();
 
-        Log.d("slim","NowPlayingFragment - onResume()");
     }
 
     @Override
@@ -166,19 +163,12 @@ public class NowPlayingFragment extends Fragment implements MediaPlayerService.M
 
         mOnCreateOptionsCalled = true;
 
-        Log.d("slim","NowPlayingFragment - onCreateOptionsMenu()");
     }
 
     @Override
     public void onStop() {
         super.onStop();
 
-        if (mServiceBound)
-            mPlayerService.setMediaPlayerListener(null);
-
-
-
-        Log.d("slim","NowPlayingFragment - onStop()");
     }
 
     @Override
@@ -190,12 +180,11 @@ public class NowPlayingFragment extends Fragment implements MediaPlayerService.M
 
         super.onDestroy();
 
-        Log.d("slim","NowPlayingFragment - onDestroy()");
     }
 
-    @Override
+   /* @Override
     public void onSongChanged(List<Song> songList, int position) {
-       /* mSongList = songList;
+       mSongList = songList;
         mPosition = position;
 
         mCount = songList.size();
@@ -223,11 +212,13 @@ public class NowPlayingFragment extends Fragment implements MediaPlayerService.M
         ((TextView) mContentView.findViewById(R.id.song_artist)).setText(mSong.getArtist());
 
 
-        Log.d("slim","NowPlayingFragment - onSongChanged()");*/
-    }
+        Log.d("slim","NowPlayingFragment - onSongChanged()");
+    }*/
 
     public void loadSongInfo()
     {
+        Log.d("slim","NowPlayingFragment - loadSongInfo()");
+
         //Set a lot of member variables and update views with it (from MediaPlayerService)
         if (mServiceBound)
         {
@@ -242,11 +233,10 @@ public class NowPlayingFragment extends Fragment implements MediaPlayerService.M
             ((TextView) mContentView.findViewById(R.id.song_artist)).setText(mSong.getArtist());
 
 
-            Log.d("slim","NowPlayingFragment - loadSongInfo()");
+
         }
     }
 
-    //TODO - CONTINUE HERE - swiping screens works, now find way to call this when fragment is made active(maybe onStart method)
     //This connects seek bar to current song that is played by media player service
     public void bindSeekBarToPlayer()
     {

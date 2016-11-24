@@ -242,11 +242,12 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     {
         mPlayer = mPlayerService.getMediaPlayer();
 
+        //TODO - chekc if this handler is run more than necessary
         mSeekBarHandler = new Handler();
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if (mPlayer != null)
+                if (mPlayer != null && mPlayerService.isPlaying())
                 {
                     int position = mPlayer.getCurrentPosition();
                     mSeekBar.setProgress(position);

@@ -27,8 +27,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     public static final String  NOTIFICATION_ACTION_CLOSE = "mihaljevic.miroslav.foundry.slimplayer.action.close";
     public static final String  NOTIFICATION_ACTION_PREVIOUS = "mihaljevic.miroslav.foundry.slimplayer.action.previous";
-    public static final String  NOTIFICATION_ACTION_PLAY = "mihaljevic.miroslav.foundry.slimplayer.action.play";
-    public static final String  NOTIFICATION_ACTION_PAUSE = "mihaljevic.miroslav.foundry.slimplayer.action.pause";
+    public static final String  NOTIFICATION_ACTION_PLAY_PAUSE = "mihaljevic.miroslav.foundry.slimplayer.action.play_pause";
     public static final String  NOTIFICATION_ACTION_NEXT = "mihaljevic.miroslav.foundry.slimplayer.action.next";
 
 
@@ -36,6 +35,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public static final String ICON_FONT_PATH = "fonts/icons.ttf";
 
     public static final int ICON_FONT_SIZE_SP = 20;
+
+    private RemoteViews mNotificationView;
 
     private MediaPlayerBinder mBinder = new MediaPlayerBinder();
 
@@ -72,9 +73,36 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     }
 
+    //TODO - continue here - controls are working, service is almost stoping, make notification to open same instance of activity
+
     //NOTE - THIS IS CALLED WHEN SERVICE IS CALLED WHILE IT IS ALREADY RUNNING
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+        String action = intent.getAction();
+
+        if (action != null)
+        {
+            if (action.equals(NOTIFICATION_ACTION_CLOSE))
+            {
+                endService();
+            }
+            else if (action.equals(NOTIFICATION_ACTION_PREVIOUS))
+            {
+                playPrevious();
+            }
+            else if(action.equals(NOTIFICATION_ACTION_PLAY_PAUSE))
+            {
+                if (mPlaying)
+                    pause();
+                else
+                    resume();
+            }
+            else if (action.equals(NOTIFICATION_ACTION_NEXT))
+            {
+                playNext();
+            }
+        }
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -83,6 +111,13 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public boolean onUnbind(Intent intent)
     {
         return super.onUnbind(intent);
+    }
+
+    @Override
+    public void onDestroy() {
+
+
+        super.onDestroy();
     }
 
     public class MediaPlayerBinder extends Binder {
@@ -125,7 +160,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             mPlayer.setOnCompletionListener(this);
             mPlayer.prepareAsync();
 
-            showNotification();
+            showNotification(false);
         }
         catch (IOException e)
         {
@@ -171,10 +206,31 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         }*/
     }
 
-    //This is called when song is finished playing
-    @Override
-    public void onCompletion(MediaPlayer mp) {
-        Log.d("slim","MediaPlayerService - onCompletion()");
+    public void pause()
+    {
+        if (mPlayer != null)
+        {
+            mPlaying = false;
+            mPlayer.pause();
+            showNotification(true);
+        }
+    }
+
+    public void resume()
+    {
+        if (mPlayer != null)
+        {
+            mPlaying = true;
+            mPlayer.start();
+            showNotification(false);
+        }
+    }
+
+    public void playNext()
+    {
+        //If the player is not even started then just dont do anything
+        if (mPosition == -1)
+            return;
 
         if (mPosition == mCount - 1)
         {
@@ -182,31 +238,65 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             if (mRepeatPlaylist)
             {
                 //If we are repeating playlist then start from the begining
-                MediaPlayerService.this.play(0);
+                play(0);
             }
         }
         else
         {
             //Play next song
-            MediaPlayerService.this.play(mPosition + 1);
+            play(mPosition + 1);
         }
+    }
+
+    public void playPrevious()
+    {
+        //If the player is not even started then just don't do anything
+        if (mPosition == -1 || mPosition == 0)
+            return;
+
+
+        //Play previous song
+        play(mPosition - 1);
+
+    }
+
+    public void endService()
+    {
+        if (mPlayer != null) {
+            mPlayer.stop();
+            mPlayer.release();
+            mPlayer = null;
+        }
+
+        mPlaying = false;
+        stopForeground(true);
+        stopSelf();
+    }
+
+    //This is called when song is finished playing
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+        Log.d("slim","MediaPlayerService - onCompletion()");
+
+        MediaPlayerService.this.playNext();
 
 
     }
 
     //TODO - when notification is pressed, make sure it doesnt restart the song
     //Display notification player for this service
-    public void showNotification()
+    public void showNotification(boolean playIcon)
     {
         RemoteViews notificationView = new RemoteViews(getPackageName(),R.layout.notification_player4);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
 
         notificationView.setTextViewText(R.id.notification_title,mSongList.get(mPosition).getTitle());
 
+        //TODO - cache this
         //Render font icons in scale with current device screen density
         notificationView.setImageViewBitmap(R.id.notification_close,    Utils.renderFont(this, getString(R.string.icon_close),      Color.LTGRAY,ICON_FONT_SIZE_SP, ICON_FONT_PATH));
         notificationView.setImageViewBitmap(R.id.notification_previous, Utils.renderFont(this, getString(R.string.icon_previous),   Color.LTGRAY,ICON_FONT_SIZE_SP, ICON_FONT_PATH));
-        notificationView.setImageViewBitmap(R.id.notification_play,     Utils.renderFont(this, getString(R.string.icon_play),       Color.LTGRAY,ICON_FONT_SIZE_SP, ICON_FONT_PATH));
+        notificationView.setImageViewBitmap(R.id.notification_play,     Utils.renderFont(this, getString(playIcon ? R.string.icon_play : R.string.icon_pause),       Color.LTGRAY,ICON_FONT_SIZE_SP, ICON_FONT_PATH));
         notificationView.setImageViewBitmap(R.id.notification_next,     Utils.renderFont(this, getString(R.string.icon_next),       Color.LTGRAY,ICON_FONT_SIZE_SP, ICON_FONT_PATH));
 
         //Set-up notification
@@ -235,7 +325,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
         //Pause song action
         intent = new Intent(this,this.getClass());
-        intent.setAction(NOTIFICATION_ACTION_PAUSE);
+        intent.setAction(NOTIFICATION_ACTION_PLAY_PAUSE);
         pendingIntent = PendingIntent.getService(this,0,intent,0);
         notificationView.setOnClickPendingIntent(R.id.notification_play, pendingIntent);
 
@@ -244,6 +334,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         intent.setAction(NOTIFICATION_ACTION_NEXT);
         pendingIntent = PendingIntent.getService(this,0,intent,0);
         notificationView.setOnClickPendingIntent(R.id.notification_next, pendingIntent);
+
+        //Save notification view for updating
+        mNotificationView = notificationView;
 
         //Build and show notification
         Notification notification = builder.build();

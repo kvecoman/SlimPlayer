@@ -14,8 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar">
         <activity
-            android:name=".MainActivity"
-            android:screenOrientation="portrait">
+            android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -34,7 +33,13 @@
 
         <activity android:name=".AddToPlaylistActivity" />
         <activity android:name=".BackHandledFragmentActivity" />
-        <activity android:name=".NowPlayingActivity" />
+        <activity android:name=".NowPlayingActivity"
+                  android:launchMode="singleTop"
+                android:parentActivityName=".MainActivity">
+                <meta-data
+                    android:name="android.support.PARENT_ACTIVITY"
+                    android:value=".MainActivity"/>
+        </activity>
         <activity android:name=".TestActivity"></activity>
     </application>
 

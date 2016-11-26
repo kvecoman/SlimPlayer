@@ -88,6 +88,16 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
     }
 
     @Override
+    protected void onDestroy() {
+
+        //Unbind service
+        if (mServiceBound)
+            unbindService(mServiceConnection);
+
+        super.onDestroy();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
         getMenuInflater().inflate(R.menu.options_menu,menu);

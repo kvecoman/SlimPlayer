@@ -158,6 +158,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
             //connected to media player so the SeekBar would work and it has to be current selected fragment in view pager
             //Connect seek bar to media player
             bindSeekBarToPlayer();
+            //TODO - I think this is never called, service is never bound at this point (sync?)
         }
 
 
@@ -242,7 +243,9 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     {
         mPlayer = mPlayerService.getMediaPlayer();
 
-        //TODO - chekc if this handler is run more than necessary
+        //TODO - continue here - this throws NullPointer, read on BoundService, synchronize, and solve multithreading with MPService
+
+        //TODO - check if this handler is run more than necessary
         mSeekBarHandler = new Handler();
         getActivity().runOnUiThread(new Runnable() {
             @Override

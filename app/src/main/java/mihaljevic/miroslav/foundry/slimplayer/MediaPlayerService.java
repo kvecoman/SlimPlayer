@@ -12,6 +12,7 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
@@ -19,7 +20,7 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.util.List;
 
-//TODO - add intent filter so we can run any song
+//TODO - add intent filter so we can run songs from anywhere
 public class MediaPlayerService extends Service implements MediaPlayer.OnCompletionListener {
 
     //Notification ID
@@ -54,6 +55,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     private MediaPlayerListener mPlayerListener;
 
+
     public MediaPlayerService() {
     }
 
@@ -73,13 +75,14 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     }
 
-    //TODO - continue here - controls are working, service is almost stoping, make notification to open same instance of activity
+
 
     //NOTE - THIS IS CALLED WHEN SERVICE IS CALLED WHILE IT IS ALREADY RUNNING
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        String action = intent.getAction();
+        //Get action from intent while checking for null
+        String action = intent == null ? null : intent.getAction();
 
         if (action != null)
         {
@@ -103,6 +106,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 playNext();
             }
         }
+
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -160,7 +164,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             mPlayer.setOnCompletionListener(this);
             mPlayer.prepareAsync();
 
-            showNotification(false);
+            showNotification(false, true);
         }
         catch (IOException e)
         {
@@ -212,7 +216,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         {
             mPlaying = false;
             mPlayer.pause();
-            showNotification(true);
+            showNotification(true,false);
         }
     }
 
@@ -222,7 +226,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         {
             mPlaying = true;
             mPlayer.start();
-            showNotification(false);
+            showNotification(false, false);
         }
     }
 
@@ -283,14 +287,14 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     }
 
-    //TODO - when notification is pressed, make sure it doesnt restart the song
+
     //Display notification player for this service
-    public void showNotification(boolean playIcon)
+    public void showNotification(boolean playIcon, boolean ticker)
     {
         RemoteViews notificationView = new RemoteViews(getPackageName(),R.layout.notification_player4);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
 
-        notificationView.setTextViewText(R.id.notification_title,mSongList.get(mPosition).getTitle());
+        notificationView.setTextViewText(R.id.notification_title,getCurrentSong().getTitle());
 
         //TODO - cache this
         //Render font icons in scale with current device screen density
@@ -305,11 +309,22 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 .setContent(notificationView)
                 .setContentIntent(PendingIntent.getActivity(this,0,new Intent(this,NowPlayingActivity.class),0));
 
+        //If needed, set the ticker text with song title
+        if (ticker)
+            builder.setTicker(getCurrentSong().getTitle());
+
         //Set-up control actions
         Intent intent;
         PendingIntent pendingIntent;
 
-        //TODO - continue here - actions are set-up, now handle them in onStartCommand
+        //Show play screen/main action
+        //We build intent with MainActivity as parent activity in stack
+        intent = new Intent(this, NowPlayingActivity.class);
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        stackBuilder.addParentStack(NowPlayingActivity.class);
+        stackBuilder.addNextIntent(intent);
+        pendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(pendingIntent);
 
         //Close action
         intent = new Intent(this,this.getClass());
@@ -344,6 +359,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         startForeground(NOTIFICATION_PLAYER_ID,notification);
 
     }
+
+
+    //TODO - method that starts playing from list, and it chekcs if it is the same list with hash functions
 
    /* public void setCursor(Cursor cursor)
     {

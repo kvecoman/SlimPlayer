@@ -30,6 +30,9 @@ import java.util.Set;
 
 public class MainActivity extends BackHandledFragmentActivity implements SharedPreferences.OnSharedPreferenceChangeListener,
                                                                         ViewPager.OnPageChangeListener {
+
+    public static final String SCREEN_POSITION_KEY = "screen_position";
+
     //Pager that hold different screens (All music, Playlists etc)
     private ViewPager mPager;
     private PagerAdapter mPagerAdapter;
@@ -50,6 +53,9 @@ public class MainActivity extends BackHandledFragmentActivity implements SharedP
         PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
 
 
+
+
+
     }
 
     @Override
@@ -66,6 +72,8 @@ public class MainActivity extends BackHandledFragmentActivity implements SharedP
         //We call this to set first fragment that needs to handle back button press
         //onPageSelected(mPager.getCurrentItem());
     }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)

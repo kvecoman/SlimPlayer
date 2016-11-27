@@ -24,7 +24,10 @@ import android.widget.Toast;
 import java.util.List;
 
 /**
- * A simple {@link Fragment} subclass.
+ *
+ * Fragment with functionality to add selected songs to playlist
+ *
+ * @author Miroslav Mihaljević
  */
 public class AddToPlaylistFragment extends CategoryListFragment{
 

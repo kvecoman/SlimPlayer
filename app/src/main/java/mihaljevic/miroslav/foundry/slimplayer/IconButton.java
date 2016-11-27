@@ -8,7 +8,9 @@ import android.util.AttributeSet;
 import android.widget.Button;
 
 /**
- * Button that displays font icon
+ * Button that displays font icon (not used anywhere)
+ *
+ *
  *
  * @author Miroslav Mihaljević
  */

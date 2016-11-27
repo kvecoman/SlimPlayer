@@ -12,6 +12,8 @@ import android.widget.AdapterView;
 
 /**
  * Fragment that displays categories/playlists and opens apropriate song lists
+ *
+ * @author Miroslav Mihaljević
  */
 
 public class CategoryListFragment extends SlimListFragment {
@@ -29,13 +31,6 @@ public class CategoryListFragment extends SlimListFragment {
         return inflater.inflate(R.layout.fragment_slim_list, container, false);
     }
 
-    //Most of the init is done here
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState)
-    {
-        super.onActivityCreated(savedInstanceState);
-        //TODO - remove this override?
-    }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {

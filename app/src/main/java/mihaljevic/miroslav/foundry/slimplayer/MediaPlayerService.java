@@ -1,10 +1,8 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.media.MediaPlayer;
@@ -173,43 +171,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             e.printStackTrace();
         }
 
-
-        //Old code for playing from cursor
-       /* try
-        {
-            if (mCursor == null)
-            {
-                Log.d("slim","Media Player Service - mCursor is null");
-                return;
-            }
-
-            //Try to move to position
-            if (!mCursor.moveToPosition(position))
-            {
-                Log.d("slim","Media Player Service - Failed to move to position (out of bounds?)");
-                return;
-            }
-
-            mPosition = position;
-            String path = mCursor.getString(mCursor.getColumnIndex(MediaStore.Audio.Media.DATA));
-            Toast.makeText(getApplicationContext(),path,Toast.LENGTH_SHORT).show();
-
-            mPlayer.reset();
-            mPlayer.setDataSource(path);
-            mPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                //This is called when media player is prepared with its data source
-                @Override
-                public void onPrepared(MediaPlayer mp) {
-                    mp.start();
-                }
-            });
-            mPlayer.setOnCompletionListener(this);
-            mPlayer.prepareAsync();
-        }
-        catch(IOException e)
-        {
-            e.printStackTrace();
-        }*/
     }
 
     public void pause()
@@ -293,7 +254,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     //Display notification player for this service
     public void showNotification(boolean playIcon, boolean ticker)
     {
-        RemoteViews notificationView = new RemoteViews(getPackageName(),R.layout.notification_player4);
+        RemoteViews notificationView = new RemoteViews(getPackageName(),R.layout.notification_player);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
 
         notificationView.setTextViewText(R.id.notification_title,getCurrentSong().getTitle());
@@ -365,25 +326,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     //TODO - method that starts playing from list, and it chekcs if it is the same list with hash functions
 
-   /* public void setCursor(Cursor cursor)
-    {
-        //TODO - maybe work with actual position from cursor
-        //Whenever cursor is changed, we set position to -1
-        mPosition = -1;
-
-        if (cursor == null)
-        {
-            mCursor = null;
-            mCount = 0;
-        }
-        else
-        {
-            mCursor = cursor;
-            mCount = mCursor.getCount();
-        }
-
-
-    }*/
 
     //Setter for song list
     public void setSongList(List<Song> songList)

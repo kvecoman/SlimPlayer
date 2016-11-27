@@ -10,10 +10,13 @@ import android.util.Log;
 
 /**
  * Created by Miroslav on 15.11.2016..
+ *
+ * Store service connection and reference to it so every component can access it.
+ *
+ * @author Miroslav Mihaljević
  */
 public class SlimPlayerApplication extends Application {
 
-    //public static Object MEDIA_PLAYER_SERVICE_LOCK = new Object();
 
     private static SlimPlayerApplication sInstance;
 
@@ -27,15 +30,9 @@ public class SlimPlayerApplication extends Application {
             Log.d("slim","SlimPlayerApplication - onServiceConnected()");
 
 
-            //TODO - continue here - this locks wont work because all of this, even services run on same thread (UI/Main)
-            //find some other way for async checking of service binding or dont check at all (idk what is going to happen then)
-
-            //maybe message handlers?
-
             MediaPlayerService.MediaPlayerBinder playerBinder = (MediaPlayerService.MediaPlayerBinder)service;
             SlimPlayerApplication.this.mPlayerService = playerBinder.getService();
             SlimPlayerApplication.this.mServiceBound = true;
-            //MEDIA_PLAYER_SERVICE_LOCK.notifyAll();
 
         }
 

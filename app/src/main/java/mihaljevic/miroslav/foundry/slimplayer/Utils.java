@@ -6,9 +6,16 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.util.TypedValue;
+import android.view.View;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 
 /**
  * Created by Miroslav on 23.11.2016..
+ *
+ * Static class, contains utility functions used in other components
+ *
+ * @author Miroslav Mihaljević
  */
 public final class Utils {
 
@@ -40,5 +47,26 @@ public final class Utils {
     {
         int value = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, context.getResources().getDisplayMetrics());
         return value;
+    }
+
+
+    //Helper function to set and calculate height of list view (assuming all rows are same)
+    public static int calculateListHeight(ListView lv)
+    {
+        int height = 0;
+        ListAdapter adapter = lv.getAdapter();
+        int count = adapter.getCount();
+
+        if (adapter.getCount() <= 0)
+            return 0;
+
+        View item =  adapter.getView(0,null,lv);
+
+        item.measure(0,0);
+
+        height = item.getMeasuredHeight() * count;
+        height += lv.getDividerHeight() * (count - 1);
+
+        return height;
     }
 }

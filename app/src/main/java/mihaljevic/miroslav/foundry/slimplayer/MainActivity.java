@@ -26,7 +26,6 @@ import java.util.Set;
 //TODO - make the app
 //TODO - $$_PROFIT_$$
 
-//TODO - CONTINUE HERE - add notification player
 
 public class MainActivity extends BackHandledFragmentActivity implements SharedPreferences.OnSharedPreferenceChangeListener,
                                                                         ViewPager.OnPageChangeListener {
@@ -53,27 +52,7 @@ public class MainActivity extends BackHandledFragmentActivity implements SharedP
         PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
 
 
-
-
-
     }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        /*if (BuildConfig.DEBUG)
-        {
-            Intent intent = new Intent(this,TestActivity.class);
-            startActivity(intent);
-        }*/
-
-        //TODO - remove this override
-        //We call this to set first fragment that needs to handle back button press
-        //onPageSelected(mPager.getCurrentItem());
-    }
-
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)

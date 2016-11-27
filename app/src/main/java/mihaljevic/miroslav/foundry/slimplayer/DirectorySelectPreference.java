@@ -168,32 +168,13 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
         getSharedPreferences().edit().putStringSet(getKey(),mDirectoriesSet).commit();
     }
 
-    //TODO - put calculateListHeight somewhere else(Utility, idk?), its not really relevant here
-    //Helper function to set and calculate height of list view (assuming all rows are same)
-    public int calculateListHeight(ListView lv)
-    {
-        int height = 0;
-        ListAdapter adapter = lv.getAdapter();
-        int count = adapter.getCount();
 
-        if (adapter.getCount() <= 0)
-            return 0;
-
-        View item =  adapter.getView(0,null,lv);
-
-        item.measure(0,0);
-
-        height = item.getMeasuredHeight() * count;
-        height += lv.getDividerHeight() * (count - 1);
-
-        return height;
-    }
 
     //Functions that updates height of member list view based on number of items
     public void updateListHeight()
     {
         ViewGroup.LayoutParams params = mListView.getLayoutParams();
-        params.height = calculateListHeight(mListView);
+        params.height = Utils.calculateListHeight(mListView);
         mListView.setLayoutParams(params);
         mListView.requestLayout();
     }

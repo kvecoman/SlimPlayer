@@ -26,7 +26,7 @@ import java.util.List;
  * @author Miroslav Mihaljević
  */
 
-//TODO - write custom adapter like SimpleAdapter but with support for dynamic data
+
 public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmentCompat implements DialogPreference.TargetFragment {
 
     private Context mContext;

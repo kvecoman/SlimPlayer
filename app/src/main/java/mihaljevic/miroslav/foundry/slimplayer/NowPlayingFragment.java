@@ -38,15 +38,10 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     private int mPosition;
     private int mCount;
 
-    private LayoutInflater mInflater;
-    private View mParentView;
+
     private View mContentView;
-    private View mLeftView;
-    private View mRightView;
     private SeekBar mSeekBar;
 
-    //private MediaPlayerService mPlayerService;
-    //private boolean mServiceBound;
 
     private MediaPlayer mPlayer;
 
@@ -54,35 +49,6 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     private boolean mSeekBarBound;
     private boolean mOnCreateOptionsCalled;
 
-    //Here we set-up service connection that is used when service is started
-    /*protected ServiceConnection mServiceConnection = new ServiceConnection(){
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d("slim","NowPlayingFragment - onServiceConnected()");
-
-            MediaPlayerService.MediaPlayerBinder playerBinder = (MediaPlayerService.MediaPlayerBinder)service;
-            NowPlayingFragment.this.mPlayerService = playerBinder.getService();
-            NowPlayingFragment.this.mServiceBound = true;
-
-            loadSongInfo();
-
-            //This is a occurance that happens if this fragment is the first one after NowPlayingActivity loads
-            //This is connected to flow of code in OnCreateOptionsMenu()
-            if (mOnCreateOptionsCalled && !mSeekBarBound)
-                bindSeekBarToPlayer();
-
-
-
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            Log.d("slim","NowPlayingFragment - onServiceDisconnected()");
-
-            NowPlayingFragment.this.mServiceBound = false;
-
-        }
-    };*/
 
 
     public NowPlayingFragment() {
@@ -115,10 +81,6 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        //TODO - maybe try block for this, looks dangerous
-        //Here we init MediaPlayerService
-        /*Intent playerServiceIntent = new Intent(getContext(), MediaPlayerService.class);
-        getContext().bindService(playerServiceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);*/
 
         mApplication = ((SlimPlayerApplication) getContext().getApplicationContext());
 
@@ -134,120 +96,27 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
         loadSongInfo();
 
-
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-
-
-
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-    }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
 
-
-        /*if (mServiceBound)
-        {
-            //TODO - find better way?
-            //Explanation - onCreateOptionsMenu is almost only function that is called ONLY when fragment is REALLY
-            //... visible and not while he is created and cached, and we need that because only one fragment can be
-            //connected to media player so the SeekBar would work and it has to be current selected fragment in view pager
-            //Connect seek bar to media player
-            bindSeekBarToPlayer();
-            //TODO - I think this is never called, service is never bound at this point (sync?)
-        }*/
-
         bindSeekBarToPlayer();
-
-
         mOnCreateOptionsCalled = true;
 
     }
 
-    @Override
-    public void onStop() {
-        super.onStop();
-
-    }
-
-    @Override
-    public void onDestroy() {
-
-        //Unbind service
-       /* if (mServiceBound)
-            getContext().unbindService(mServiceConnection);*/
-
-        super.onDestroy();
-
-    }
-
-   /* @Override
-    public void onSongChanged(List<Song> songList, int position) {
-       mSongList = songList;
-        mPosition = position;
-
-        mCount = songList.size();
-        mSong = mSongList.get(mPosition);
-
-        mPlayer = mPlayerService.getMediaPlayer();
-
-        mSeekBarHandler = new Handler();
-
-        mSeekBar.setMax(((int) mSong.getDuration()));
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (mPlayer != null)
-                {
-                    int position = mPlayer.getCurrentPosition();
-                    mSeekBar.setProgress(position);
-                }
-                mSeekBarHandler.postDelayed(this, 1000);
-            }
-        });
-
-        //Update text views with new info
-        ((TextView) mContentView.findViewById(R.id.song_title)).setText(mSong.getTitle());
-        ((TextView) mContentView.findViewById(R.id.song_artist)).setText(mSong.getArtist());
-
-
-        Log.d("slim","NowPlayingFragment - onSongChanged()");
-    }*/
 
     public void loadSongInfo()
     {
         Log.d("slim","NowPlayingFragment - loadSongInfo()");
 
-        //Set a lot of member variables and update views with it (from MediaPlayerService)
-        /*if (mServiceBound)
-        {
-            mCount = mPlayerService.getCount();
-            mSong = mPlayerService.getSong(mPosition);
-
-            mSeekBar.setMax(((int) mSong.getDuration()));
-
-
-            //Update text views with new info
-            ((TextView) mContentView.findViewById(R.id.song_title)).setText(mSong.getTitle());
-            ((TextView) mContentView.findViewById(R.id.song_artist)).setText(mSong.getArtist());
-
-        }*/
-
         mCount = mApplication.getMediaPlayerService().getCount();
         mSong = mApplication.getMediaPlayerService().getSong(mPosition);
 
         mSeekBar.setMax(((int) mSong.getDuration()));
-
 
         //Update text views with new info
         ((TextView) mContentView.findViewById(R.id.song_title)).setText(mSong.getTitle());
@@ -261,7 +130,6 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         mPlayer = mApplication.getMediaPlayerService().getMediaPlayer();
 
 
-        //TODO - solve null pointer form getActivity()
         //TODO - check if this handler is run more than necessary
         mSeekBarHandler = new Handler();
         getActivity().runOnUiThread(new Runnable() {
@@ -279,31 +147,12 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         mSeekBarBound = true;
     }
 
-    /*
-    CODE FOR CUSTOM SWIPING WITHOUT VIEW PAGER
-    public void prepareSwipeViews()
-    {
-        if (mPosition > 0)
-        {
-            updateContentView(mLeftView, mSongList.get(mPosition-1));
-        }
-
-        if (mPosition < (mCount - 1))
-        {
-            updateContentView(mRightView, mSongList.get(mPosition+1));
-        }
-    }
-
-    public void updateContentView(View contentView, Song song)
-    {
-        ((TextView) contentView.findViewById(R.id.song_title)).setText(song.getTitle());
-        ((TextView) contentView.findViewById(R.id.song_artist)).setText(song.getArtist());
-    }
-*/
 
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+        //Only if touch is coming from user then seek song
         if (mPlayer != null && fromUser)
         {
             mPlayer.seekTo(progress);
@@ -311,12 +160,8 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     }
 
     @Override
-    public void onStartTrackingTouch(SeekBar seekBar) {
-
-    }
+    public void onStartTrackingTouch(SeekBar seekBar) {}
 
     @Override
-    public void onStopTrackingTouch(SeekBar seekBar) {
-
-    }
+    public void onStopTrackingTouch(SeekBar seekBar) {}
 }

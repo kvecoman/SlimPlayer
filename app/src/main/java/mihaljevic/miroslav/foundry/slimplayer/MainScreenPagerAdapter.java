@@ -31,14 +31,6 @@ import java.util.Set;
 
 public class MainScreenPagerAdapter extends FragmentPagerAdapter {
 
-    //Keys used to identify different screens - NOT USED - PREFERENCE KEYS ARE USED INSTEAD (in strings.xml)
-    /*public static final String M_SCREEN_HOME = "screen_home";
-    public static final String M_SCREEN_ALL = "screen_all";
-    public static final String M_SCREEN_PLAYLISTS = "screen_playlists";
-    public static final String M_SCREEN_ALBUMS = "screen_albums";
-    public static final String M_SCREEN_ARTISTS = "screen_artists";
-    public static final String M_SCREEN_GENRES = "screen_genres";*/
-
     //How many screens there are, based on preferences
     private int mNumScreens;
 
@@ -72,14 +64,7 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
 
         mNumScreens = ((ArrayList) mScreensList).size();
 
-        Log.d("slim","Number of screens: " + mNumScreens + "");
-
         //TODO - do something when none of the screens are selected
-
-        Log.d("slim","MainScreenPagerAdapter - end of constructor");
-
-
-
     }
 
     //Note - caching of fragments is already done internally, we only need to do first time init here
@@ -89,8 +74,7 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
         SlimListFragment fragment;
 
         //TODO - maybe move fragment loading to somewhere else? (idk)
-        //Decide which fragment to load
-
+        //Init fragments
         if (mScreensList.get(position).equals(mActivity.getString(R.string.pref_key_all_screen)))
         {
             fragment = new SongListFragment();

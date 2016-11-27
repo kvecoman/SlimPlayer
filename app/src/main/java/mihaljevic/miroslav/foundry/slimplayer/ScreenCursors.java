@@ -29,34 +29,6 @@ public final class ScreenCursors {
         return null;
     }
 
-    //Obtain all songs cursor
-    @Deprecated
-    public static Cursor getAllSongsCursor(Context context)
-    {
-        Cursor cursor;
-
-        String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0 AND (" + addDirectoryCheckSQL(context) + ")";
-        String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
-        String [] projection = {
-                MediaStore.Audio.Media._ID,
-                MediaStore.Audio.Media.TITLE,
-                MediaStore.Audio.Media.DISPLAY_NAME,
-                MediaStore.Audio.Media.ARTIST,
-                MediaStore.Audio.Media.ALBUM,
-                MediaStore.Audio.Media.DURATION,
-                MediaStore.Audio.Media.DATA
-        };
-
-        cursor = context.getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                projection,
-                selection,
-                null,
-                sortOrder);
-
-        return cursor;
-    }
-
-
     //Returns bundle for cursor init for All songs screen
     public static Bundle getAllSongsBundle(Context context)
     {

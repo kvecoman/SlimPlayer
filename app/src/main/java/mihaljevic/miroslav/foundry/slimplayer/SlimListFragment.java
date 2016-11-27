@@ -10,6 +10,8 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
@@ -86,6 +88,15 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
         getListView().setOnItemClickListener(this);
 
         getLoaderManager().initLoader(0,bundle,this);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+
+        //In this callback we know that fragment is really visible/selected in pager, so notify hosting activity
+        if (getContext() instanceof BackHandlerInterface)
+            ((BackHandlerInterface)getContext()).setBackHandledFragment(this);
     }
 
     @Override

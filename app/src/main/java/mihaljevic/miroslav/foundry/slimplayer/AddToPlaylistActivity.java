@@ -7,7 +7,7 @@ import android.os.Bundle;
 
 
 /**
- * Activity used to add selected songs to playlist (it is accesed from options menu -> add to playlist)
+ * Activity used to add selected songs to playlist (it is accessed from options menu -> add to playlist)
  *
  * @author Miroslav Mihaljević
  */

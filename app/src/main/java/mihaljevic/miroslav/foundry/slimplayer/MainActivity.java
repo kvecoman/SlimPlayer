@@ -26,9 +26,8 @@ import java.util.Set;
 //TODO - make the app
 //TODO - $$_PROFIT_$$
 
-
-public class MainActivity extends BackHandledFragmentActivity implements SharedPreferences.OnSharedPreferenceChangeListener,
-                                                                        ViewPager.OnPageChangeListener {
+//TODO - dont allow duplicates in playlists and close add to playlist screen when we are done adding
+public class MainActivity extends BackHandledFragmentActivity implements SharedPreferences.OnSharedPreferenceChangeListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";
 
@@ -46,7 +45,6 @@ public class MainActivity extends BackHandledFragmentActivity implements SharedP
         mPagerAdapter = new MainScreenPagerAdapter(getSupportFragmentManager(),this);
         mPager.setAdapter(mPagerAdapter);
 
-        mPager.addOnPageChangeListener(this);
 
         //Register this activity as listener for changed preferences
         PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
@@ -126,27 +124,5 @@ public class MainActivity extends BackHandledFragmentActivity implements SharedP
     }
 
 
-    //Pager listener implementations
-    @Override
-    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
 
-    }
-
-    @Override
-    public void onPageSelected(int position) {
-
-        //TODO - this could break stuff in the future really bad, also check call to this function in onStart event of this activity
-        //This is horrible idea
-        //Here we use FragmentManager to get current active fragment from ViewPager
-        //Coincidentally, position from ViewPager matches position in list of fragments from fragment manager
-        //We do this only so we could get current fragment that needs to handle back button, if we find another way, then
-        //... we dont need this
-        //TODO - find another way of setting fragment that needs to handle back button press
-        setBackHandledFragment((BackHandledListFragment) getSupportFragmentManager().getFragments().get(position));
-    }
-
-    @Override
-    public void onPageScrollStateChanged(int state) {
-
-    }
 }

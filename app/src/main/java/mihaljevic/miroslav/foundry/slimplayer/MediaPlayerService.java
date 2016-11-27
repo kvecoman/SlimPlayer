@@ -134,10 +134,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public void play(int position)
     {
         Log.d("slim","MediaPlayerService - play()");
-        //TODO - think of better solution
-        //play() method can be called two times in row from NowPlayingActivity->onPageChanged()
-        //we fix this here
-        if (mPosition == position)
+
+        //If something is wrong then do nothing
+        if (mPosition == position || position < 0 || position >= mCount || mSongList == null)
             return;
 
         mPosition = position;
@@ -227,6 +226,21 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     }
 
+    //Stop playing and clear list
+    public void stopAndClearList()
+    {
+        mCount = 0;
+        mPosition = -1;
+        mSongList = null;
+        if (mPlayer != null)
+        {
+            mPlayer.stop();
+            mPlayer.reset();
+        }
+
+    }
+
+    //Start ending this service
     public void endService()
     {
         if (mPlayer != null) {
@@ -324,7 +338,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     }
 
 
-    //TODO - method that starts playing from list, and it chekcs if it is the same list with hash functions
+    //Set the list and start playing
+    public void playList(List<Song> songList, int startPosition)
+    {
+        setSongList(songList);
+        play(startPosition);
+    }
 
 
     //Setter for song list
@@ -342,8 +361,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         else
         {
             //We have nothing, respond appropriately
-            mCount = 0;
-            mSongList = null;
+            stopAndClearList();
         }
 
     }

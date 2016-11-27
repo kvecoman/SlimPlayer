@@ -26,7 +26,7 @@ import java.util.Set;
 //TODO - make the app
 //TODO - $$_PROFIT_$$
 
-//TODO - dont allow duplicates in playlists and close add to playlist screen when we are done adding
+//TODO - continue optimizing stuff
 public class MainActivity extends BackHandledFragmentActivity implements SharedPreferences.OnSharedPreferenceChangeListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";

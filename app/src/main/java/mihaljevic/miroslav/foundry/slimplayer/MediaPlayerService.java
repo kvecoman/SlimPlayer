@@ -32,10 +32,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public static final String  NOTIFICATION_ACTION_NEXT = "mihaljevic.miroslav.foundry.slimplayer.action.next";
 
 
+
     //Points to location of our custom font file
     public static final String ICON_FONT_PATH = "fonts/icons.ttf";
 
     public static final int ICON_FONT_SIZE_SP = 20;
+
 
     private RemoteViews mNotificationView;
 

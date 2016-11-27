@@ -14,21 +14,23 @@ import android.view.Menu;
 
 import java.util.List;
 
-//TODO - now playing screen doesnt update when song is changed from MediaPlayerService
+
 public class NowPlayingActivity extends BackHandledFragmentActivity implements MediaPlayerService.MediaPlayerListener, ViewPager.OnPageChangeListener {
 
     public static final String SONG_COUNT_KEY = "song_count";
     public static final String SONG_POSITION_KEY = "song_position";
 
+    private SlimPlayerApplication mApplication;
+
     private ViewPager mPager;
     private NowPlayingPagerAdapter mPagerAdapter;
 
 
-    private MediaPlayerService mPlayerService;
-    private boolean mServiceBound;
+    //private MediaPlayerService mPlayerService;
+    //private boolean mServiceBound;
 
     //Here we set-up service connection that is used when service is started
-    protected ServiceConnection mServiceConnection = new ServiceConnection(){
+    /*protected ServiceConnection mServiceConnection = new ServiceConnection(){
         @Override
         public void onServiceConnected(ComponentName name, IBinder service)
         {
@@ -62,20 +64,23 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
             NowPlayingActivity.this.mServiceBound = false;
 
         }
-    };
+    };*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pager);
 
+        mApplication = ((SlimPlayerApplication)getApplicationContext());
+
         //Here we init MediaPlayerService
-        Intent playerServiceIntent = new Intent(this, MediaPlayerService.class);
-       bindService(playerServiceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
+        /*Intent playerServiceIntent = new Intent(this, MediaPlayerService.class);
+        bindService(playerServiceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);*/
 
         mPager = (ViewPager)findViewById(R.id.pager);
 
         Intent intent = getIntent();
+
         //If we have some info we will init pager right now, if now then when MediaPlayerService is connected
         if (intent.hasExtra(SONG_COUNT_KEY) && intent.hasExtra(SONG_POSITION_KEY))
         {
@@ -88,11 +93,31 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+
+        //TODO - add  possibility that PlayerService is not playing anything
+        //If pager is not set with intent extras, then set it with MediaPlayerService
+        if (mPagerAdapter == null)
+        {
+            //If pager is not already init, do it here
+            mPagerAdapter = new NowPlayingPagerAdapter(getSupportFragmentManager(),NowPlayingActivity.this,mApplication.getMediaPlayerService().getCount());
+            mPager.setAdapter(mPagerAdapter);
+            //TODO - this could produce out of bounds exception, insert some checks
+            mPager.setCurrentItem(mApplication.getMediaPlayerService().getPosition());
+        }
+
+        //When we are connected request current play info
+        mApplication.getMediaPlayerService().setMediaPlayerListener(NowPlayingActivity.this);
+        mApplication.getMediaPlayerService().setCurrentPlayInfoToListener();
+    }
+
+    @Override
     protected void onDestroy() {
 
         //Unbind service
-        if (mServiceBound)
-            unbindService(mServiceConnection);
+        /*if (mServiceBound)
+            unbindService(mServiceConnection);*/
 
         super.onDestroy();
     }
@@ -113,9 +138,9 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
 
     }
 
-    public MediaPlayerService getPlayerService() {
+    /*public MediaPlayerService getPlayerService() {
         return mPlayerService;
-    }
+    }*/
 
     public ViewPager getPager() {
         return mPager;
@@ -132,7 +157,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
 
         //If this song is already playing no need to start it again
         //(case when you change song outside of this activity)
-        mPlayerService.play(position);
+        mApplication.getMediaPlayerService().play(position);
 
 
 

@@ -31,6 +31,8 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
     public static final String SONG_POSITION_KEY = "song_position";
 
+    private SlimPlayerApplication mApplication;
+
     private Song mSong;
     private List<Song> mSongList;
     private int mPosition;
@@ -43,8 +45,8 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     private View mRightView;
     private SeekBar mSeekBar;
 
-    private MediaPlayerService mPlayerService;
-    private boolean mServiceBound;
+    //private MediaPlayerService mPlayerService;
+    //private boolean mServiceBound;
 
     private MediaPlayer mPlayer;
 
@@ -53,7 +55,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     private boolean mOnCreateOptionsCalled;
 
     //Here we set-up service connection that is used when service is started
-    protected ServiceConnection mServiceConnection = new ServiceConnection(){
+    /*protected ServiceConnection mServiceConnection = new ServiceConnection(){
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             Log.d("slim","NowPlayingFragment - onServiceConnected()");
@@ -80,7 +82,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
             NowPlayingFragment.this.mServiceBound = false;
 
         }
-    };
+    };*/
 
 
     public NowPlayingFragment() {
@@ -115,8 +117,10 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
         //TODO - maybe try block for this, looks dangerous
         //Here we init MediaPlayerService
-        Intent playerServiceIntent = new Intent(getContext(), MediaPlayerService.class);
-        getContext().bindService(playerServiceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
+        /*Intent playerServiceIntent = new Intent(getContext(), MediaPlayerService.class);
+        getContext().bindService(playerServiceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);*/
+
+        mApplication = ((SlimPlayerApplication) getContext().getApplicationContext());
 
         mSeekBar = (SeekBar) mContentView.findViewById(R.id.seek_bar);
         mSeekBar.setOnSeekBarChangeListener(this);
@@ -127,6 +131,8 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         {
             mPosition = args.getInt(SONG_POSITION_KEY);
         }
+
+        loadSongInfo();
 
 
     }
@@ -150,7 +156,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         super.onCreateOptionsMenu(menu, inflater);
 
 
-        if (mServiceBound)
+        /*if (mServiceBound)
         {
             //TODO - find better way?
             //Explanation - onCreateOptionsMenu is almost only function that is called ONLY when fragment is REALLY
@@ -159,7 +165,9 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
             //Connect seek bar to media player
             bindSeekBarToPlayer();
             //TODO - I think this is never called, service is never bound at this point (sync?)
-        }
+        }*/
+
+        bindSeekBarToPlayer();
 
 
         mOnCreateOptionsCalled = true;
@@ -176,8 +184,8 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     public void onDestroy() {
 
         //Unbind service
-        if (mServiceBound)
-            getContext().unbindService(mServiceConnection);
+       /* if (mServiceBound)
+            getContext().unbindService(mServiceConnection);*/
 
         super.onDestroy();
 
@@ -221,7 +229,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         Log.d("slim","NowPlayingFragment - loadSongInfo()");
 
         //Set a lot of member variables and update views with it (from MediaPlayerService)
-        if (mServiceBound)
+        /*if (mServiceBound)
         {
             mCount = mPlayerService.getCount();
             mSong = mPlayerService.getSong(mPosition);
@@ -233,24 +241,33 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
             ((TextView) mContentView.findViewById(R.id.song_title)).setText(mSong.getTitle());
             ((TextView) mContentView.findViewById(R.id.song_artist)).setText(mSong.getArtist());
 
+        }*/
+
+        mCount = mApplication.getMediaPlayerService().getCount();
+        mSong = mApplication.getMediaPlayerService().getSong(mPosition);
+
+        mSeekBar.setMax(((int) mSong.getDuration()));
 
 
-        }
+        //Update text views with new info
+        ((TextView) mContentView.findViewById(R.id.song_title)).setText(mSong.getTitle());
+        ((TextView) mContentView.findViewById(R.id.song_artist)).setText(mSong.getArtist());
+
     }
 
     //This connects seek bar to current song that is played by media player service
     public void bindSeekBarToPlayer()
     {
-        mPlayer = mPlayerService.getMediaPlayer();
+        mPlayer = mApplication.getMediaPlayerService().getMediaPlayer();
 
-        //TODO - continue here - this throws NullPointer, read on BoundService, synchronize, and solve multithreading with MPService
 
+        //TODO - solve null pointer form getActivity()
         //TODO - check if this handler is run more than necessary
         mSeekBarHandler = new Handler();
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if (mPlayer != null && mPlayerService.isPlaying())
+                if (mPlayer != null && mApplication.getMediaPlayerService().isPlaying())
                 {
                     int position = mPlayer.getCurrentPosition();
                     mSeekBar.setProgress(position);

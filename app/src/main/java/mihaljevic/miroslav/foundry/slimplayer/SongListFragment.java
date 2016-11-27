@@ -45,15 +45,17 @@ import java.util.List;
 public class SongListFragment extends SlimListFragment {
 
     //TODO - move this somewhere sane (idk)
-    protected MediaPlayerService mPlayerService;
-    protected boolean mServiceBound = false;
+   /* protected MediaPlayerService mPlayerService;
+    protected boolean mServiceBound = false;*/
+
+    private SlimPlayerApplication mApplication;
 
     protected boolean mSelectMode = false;
 
     protected List<Song> mSongList;
 
     //Here we set-up service connection that is used when service is started
-    protected ServiceConnection mServiceConnection = new ServiceConnection(){
+    /*protected ServiceConnection mServiceConnection = new ServiceConnection(){
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             MediaPlayerService.MediaPlayerBinder playerBinder = (MediaPlayerService.MediaPlayerBinder)service;
@@ -65,7 +67,7 @@ public class SongListFragment extends SlimListFragment {
         public void onServiceDisconnected(ComponentName name) {
             SongListFragment.this.mServiceBound = false;
         }
-    };
+    };*/
 
 
     public SongListFragment() {
@@ -86,10 +88,12 @@ public class SongListFragment extends SlimListFragment {
     {
         super.onActivityCreated(savedInstanceState);
 
+        mApplication = ((SlimPlayerApplication) getContext().getApplicationContext());
+
         //TODO - maybe try block for this, looks dangerous
         //Here we init MediaPlayerService
-        Intent playerServiceIntent = new Intent(mContext, MediaPlayerService.class);
-        mContext.bindService(playerServiceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
+        /*Intent playerServiceIntent = new Intent(mContext, MediaPlayerService.class);
+        mContext.bindService(playerServiceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);*/
 
 
 
@@ -108,6 +112,15 @@ public class SongListFragment extends SlimListFragment {
                 return true;
             }
         });
+
+
+        /*try
+        {
+            while (!mApplication.isMediaPlayerServiceBound())
+                mApplication.MEDIA_PLAYER_SERVICE_LOCK.wait();
+        }catch (InterruptedException e) {e.printStackTrace();}*/
+
+
     }
 
     //Here we load all songs in songList when Cursor loader is finished
@@ -132,8 +145,11 @@ public class SongListFragment extends SlimListFragment {
         {
             //Pass list of songs from which we play and play current position
             //TODO - maybe optimize this?
-            mPlayerService.setSongList(mSongList);
-            mPlayerService.play(position);
+            /*mPlayerService.setSongList(mSongList);
+            mPlayerService.play(position);*/
+            MediaPlayerService playerService = mApplication.getMediaPlayerService();
+            playerService.setSongList(mSongList);
+            playerService.play(position);
 
 
             //Use bundle to send some starting info to NowPlayingActivity
@@ -236,8 +252,8 @@ public class SongListFragment extends SlimListFragment {
     public void onDestroy() {
 
         //Unbind service
-        if (mServiceBound)
-            mContext.unbindService(mServiceConnection);
+       /* if (mServiceBound)
+            mContext.unbindService(mServiceConnection);*/
 
         super.onDestroy();
     }

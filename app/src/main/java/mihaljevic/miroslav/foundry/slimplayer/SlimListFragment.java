@@ -30,10 +30,10 @@ import android.widget.ListView;
  *
  */
 
-//TODO - close cursor when needed
+
 public abstract class SlimListFragment extends BackHandledListFragment implements ListView.OnItemClickListener, LoaderManager.LoaderCallbacks<Cursor> {
 
-    //Keys that are used when transfering data about diferrent screens from ScreenBundles
+    //Keys that are used when transferring data about different screens from ScreenBundles
     public static final String CURSOR_SCREEN_KEY = "cursor_screen";
 
     public static final String CURSOR_URI_KEY = "cursor_uri";
@@ -55,8 +55,6 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
         // Required empty public constructor
     }
 
-
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -74,20 +72,18 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
 
         mContext = getContext();
 
-        Bundle bundle = getArguments();
-        //TODO - add try-catch for this code
-
-        mCurrentScreen = bundle.getString(CURSOR_SCREEN_KEY);
-
-        String displayField = bundle.getString(DISPLAY_FIELD_KEY);
-
-        mCursorAdapter = new SongCursorAdapter(getContext(),null,0, displayField);
-
-        setListAdapter(mCursorAdapter);
-
         getListView().setOnItemClickListener(this);
 
-        getLoaderManager().initLoader(0,bundle,this);
+
+        Bundle bundle = getArguments();
+        if (bundle != null)
+        {
+            //If we have bundle, then load data accordingly
+            mCurrentScreen = bundle.getString(CURSOR_SCREEN_KEY);
+            mCursorAdapter = new SongCursorAdapter(getContext(),null,0, bundle.getString(DISPLAY_FIELD_KEY));
+            setListAdapter(mCursorAdapter);
+            getLoaderManager().initLoader(0,bundle,this);
+        }
     }
 
     @Override

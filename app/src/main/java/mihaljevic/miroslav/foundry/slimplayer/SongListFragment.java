@@ -129,12 +129,8 @@ public class SongListFragment extends SlimListFragment {
 
         if (mSelectMode)
         {
-            //TODO - this needs its own method
             //Deselect everything
-            mSelectMode = false;
-            getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-            getListView().clearChoices();
-            getListView().requestLayout();
+            deselect();
             backConsumed = true;
         }
 
@@ -195,6 +191,15 @@ public class SongListFragment extends SlimListFragment {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    //Deselects selection in listView
+    public void deselect()
+    {
+        mSelectMode = false;
+        getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+        getListView().clearChoices();
+        getListView().requestLayout();
     }
 
     //Here we create an ArrayList of all songs from cursor

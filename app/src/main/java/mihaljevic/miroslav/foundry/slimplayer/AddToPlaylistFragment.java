@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -136,9 +137,10 @@ public class AddToPlaylistFragment extends CategoryListFragment{
 
             //Create new playlist
 
-            //TODO - make it that first letter is capitalized in editText
+
             //Set up edit text that will be used in alert dialog to get playlist name
             final EditText editText = new EditText(mContext);
+            editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
             editText.setText(R.string.playlist_default_name);
             editText.selectAll();
 

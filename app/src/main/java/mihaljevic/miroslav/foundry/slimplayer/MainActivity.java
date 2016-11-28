@@ -26,7 +26,10 @@ import java.util.Set;
 //TODO - make the app
 //TODO - $$_PROFIT_$$
 
-//TODO - continue optimizing stuff
+//TODO - remove empty genres
+//TODO - limit width of notification text
+//TODO - make notification button fatter
+
 public class MainActivity extends BackHandledFragmentActivity implements SharedPreferences.OnSharedPreferenceChangeListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";

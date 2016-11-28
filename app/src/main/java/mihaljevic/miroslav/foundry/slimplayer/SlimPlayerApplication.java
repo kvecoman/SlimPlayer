@@ -54,7 +54,6 @@ public class SlimPlayerApplication extends Application {
         //Start media player service
         startService(new Intent(this,MediaPlayerService.class));
 
-        //TODO - maybe try block for this, looks dangerous
         //Here we init MediaPlayerService
         Intent playerServiceIntent = new Intent(this, MediaPlayerService.class);
         bindService(playerServiceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);

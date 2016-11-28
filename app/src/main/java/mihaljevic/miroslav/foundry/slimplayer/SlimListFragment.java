@@ -33,7 +33,7 @@ import android.widget.ListView;
 //TODO - close cursor when needed
 public abstract class SlimListFragment extends BackHandledListFragment implements ListView.OnItemClickListener, LoaderManager.LoaderCallbacks<Cursor> {
 
-    //Keys that are used when transfering data about diferrent screens from ScreenCursors
+    //Keys that are used when transfering data about diferrent screens from ScreenBundles
     public static final String CURSOR_SCREEN_KEY = "cursor_screen";
 
     public static final String CURSOR_URI_KEY = "cursor_uri";

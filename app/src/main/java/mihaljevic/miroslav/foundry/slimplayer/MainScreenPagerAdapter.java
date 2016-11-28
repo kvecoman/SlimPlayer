@@ -9,7 +9,6 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.ListFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.preference.PreferenceManager;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -78,37 +77,37 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
         if (mScreensList.get(position).equals(mActivity.getString(R.string.pref_key_all_screen)))
         {
             fragment = new SongListFragment();
-            Bundle bundle = ScreenCursors.getAllSongsBundle(mActivity);
+            Bundle bundle = ScreenBundles.getAllSongsBundle(mActivity);
             fragment.setArguments(bundle);
         }
         else if (mScreensList.get(position).equals(mActivity.getString(R.string.pref_key_playlists_screen)))
         {
             fragment = new CategoryListFragment();
-            Bundle bundle = ScreenCursors.getPlaylistsBundle(mActivity);
+            Bundle bundle = ScreenBundles.getPlaylistsBundle(mActivity);
             fragment.setArguments(bundle);
         }
         else if (mScreensList.get(position).equals(mActivity.getString(R.string.pref_key_albums_screen)))
         {
             fragment = new CategoryListFragment();
-            Bundle bundle = ScreenCursors.getAlbumsBundle(mActivity);
+            Bundle bundle = ScreenBundles.getAlbumsBundle(mActivity);
             fragment.setArguments(bundle);
         }
         else if (mScreensList.get(position).equals(mActivity.getString(R.string.pref_key_artists_screen)))
         {
             fragment = new CategoryListFragment();
-            Bundle bundle = ScreenCursors.getArtistsBundle(mActivity);
+            Bundle bundle = ScreenBundles.getArtistsBundle(mActivity);
             fragment.setArguments(bundle);
         }
         else if (mScreensList.get(position).equals(mActivity.getString(R.string.pref_key_genres_screen)))
         {
             fragment = new CategoryListFragment();
-            Bundle bundle = ScreenCursors.getGenresBundle(mActivity);
+            Bundle bundle = ScreenBundles.getGenresBundle(mActivity);
             fragment.setArguments(bundle);
         }
         else
         {
             fragment = new SongListFragment();
-            Bundle bundle = ScreenCursors.getAllSongsBundle(mActivity);
+            Bundle bundle = ScreenBundles.getAllSongsBundle(mActivity);
             fragment.setArguments(bundle);
         }
 

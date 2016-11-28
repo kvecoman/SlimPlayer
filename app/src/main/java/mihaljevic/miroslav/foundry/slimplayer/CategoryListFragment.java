@@ -4,14 +4,13 @@ package mihaljevic.miroslav.foundry.slimplayer;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 
 /**
- * Fragment that displays categories/playlists and opens apropriate song lists
+ * Fragment that displays categories/playlists and opens appropriate song lists
  *
  * @author Miroslav Mihaljević
  */
@@ -35,38 +34,16 @@ public class CategoryListFragment extends SlimListFragment {
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-        Bundle bundle = null;
-        String parameter;
+        //Get cursor and move it to current position
         Cursor cursor = mCursorAdapter.getCursor();
-
-        Intent intent = new Intent(mContext,SongListActivity.class);
         cursor.moveToPosition(position);
 
-        //TODO - move this somewhere sane, probably ScreenCursors
-        //Choose which screen we are showing next and we send apropriate bundle for it
-        if(mCurrentScreen.equals(getString(R.string.pref_key_playlists_screen)))
-        {
-            parameter = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
-            bundle = ScreenCursors.getSongsByPlaylistBundle(mContext, parameter);
-        }
-        else if (mCurrentScreen.equals(getString(R.string.pref_key_albums_screen)))
-        {
-            parameter = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM));
-            bundle = ScreenCursors.getSongsByAlbumBundle(mContext,parameter);
-        }
-        else if (mCurrentScreen.equals(getString(R.string.pref_key_artists_screen)))
-        {
-            parameter = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
-            bundle = ScreenCursors.getSongsByArtistsBundle(mContext,parameter);
-        }
-        else if (mCurrentScreen.equals(getString(R.string.pref_key_genres_screen)))
-        {
-            parameter = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Genres._ID));
-            bundle = ScreenCursors.getSongsByGenreBundle(mContext,parameter);
-        }
+        Intent intent = new Intent(mContext,SongListActivity.class);
 
-        //Bundle is chosen at this point and we send it to our custom SongListActivity which will display apropriate list fragment
-        intent.putExtra(SongListActivity.FRAGMENT_BUNDLE_KEY,bundle);
+        //Choose bundle and send it to songList fragment
+        intent.putExtra(    SongListActivity.FRAGMENT_BUNDLE_KEY,
+                            ScreenBundles.getBundleForSubScreen( mCurrentScreen, cursor, mContext ));
+        //Start next screen
         startActivity(intent);
 
     }

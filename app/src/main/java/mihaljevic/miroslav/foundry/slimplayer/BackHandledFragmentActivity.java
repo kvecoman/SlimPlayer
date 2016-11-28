@@ -37,9 +37,4 @@ public class BackHandledFragmentActivity extends AppCompatActivity implements Ba
 
     }
 
-    //We check if the fragment has been set already
-    public boolean isSelectedFragmentNull()
-    {
-        return mBackHandledListFragment == null;
-    }
 }

@@ -22,7 +22,7 @@ public class AddToPlaylistActivity extends AppCompatActivity {
         setContentView(R.layout.activity_fragment_holder);
 
         //Acquire bundle to query all playlists
-        Bundle fragmentBundle = ScreenCursors.getPlaylistsBundle(this);
+        Bundle fragmentBundle = ScreenBundles.getPlaylistsBundle(this);
 
         if (fragmentBundle != null)
         {

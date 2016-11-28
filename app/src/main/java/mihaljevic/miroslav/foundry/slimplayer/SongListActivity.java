@@ -9,9 +9,10 @@ import android.view.Menu;
  * @author Miroslav Mihaljević
  */
 
+//TODO - there is little delay between Activity loading and fragment showing list, try to fix it
 public class SongListActivity extends BackHandledFragmentActivity {
 
-    //Key for bundle that is intended to be sent with SlimListFragmet
+    //Key for bundle that is intended to be sent with SlimListFragment
     public static final String FRAGMENT_BUNDLE_KEY = "fragment_bundle";
 
     @Override
@@ -19,7 +20,7 @@ public class SongListActivity extends BackHandledFragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fragment_holder);
 
-        //Retrive bundle intended to be sent with SlimListFragment
+        //Retrieve bundle intended to be sent with SlimListFragment
         Bundle fragmentBundle = getIntent().getBundleExtra(FRAGMENT_BUNDLE_KEY);
 
         if (fragmentBundle != null)

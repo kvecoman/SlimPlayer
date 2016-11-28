@@ -14,19 +14,41 @@ import java.util.Set;
  * @author Miroslav Mihaljević
  */
 
-public final class ScreenCursors {
+public final class ScreenBundles {
 
     //Private constructor to make it non-instantiable
-    private ScreenCursors(){}
+    private ScreenBundles(){}
 
-    //Central function to obtain bundle based on key
-    public static Bundle getBundle (String key, Context context)
+    //Central function to obtain bundle for songs by playlist, or songs by artist screen
+    public static Bundle getBundleForSubScreen (String currentScreen, Cursor cursor, Context context)
     {
-        if (key.equals(context.getString(R.string.pref_key_all_screen)))
-            return getAllSongsBundle(context);
+        Bundle bundle = null;
+        String parameter;
+        
+
+        if(currentScreen.equals(context.getString(R.string.pref_key_playlists_screen)))
+        {
+            parameter = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
+            bundle = ScreenBundles.getSongsByPlaylistBundle(context, parameter);
+        }
+        else if (currentScreen.equals(context.getString(R.string.pref_key_albums_screen)))
+        {
+            parameter = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM));
+            bundle = ScreenBundles.getSongsByAlbumBundle(context,parameter);
+        }
+        else if (currentScreen.equals(context.getString(R.string.pref_key_artists_screen)))
+        {
+            parameter = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
+            bundle = ScreenBundles.getSongsByArtistsBundle(context,parameter);
+        }
+        else if (currentScreen.equals(context.getString(R.string.pref_key_genres_screen)))
+        {
+            parameter = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Genres._ID));
+            bundle = ScreenBundles.getSongsByGenreBundle(context,parameter);
+        }
 
 
-        return null;
+        return bundle;
     }
 
     //Returns bundle for cursor init for All songs screen

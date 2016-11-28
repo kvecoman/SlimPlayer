@@ -49,6 +49,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private List<Song> mSongList;
     private int mPosition;
     private int mCount;
+    private boolean mReadyToPlay = false; //Indicates if we have list loaded
 
     //TODO - Init this somewhere else
     private boolean mRepeatPlaylist = true;
@@ -232,6 +233,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         mCount = 0;
         mPosition = -1;
         mSongList = null;
+        mReadyToPlay = false;
         if (mPlayer != null)
         {
             mPlayer.stop();
@@ -357,6 +359,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             //Get song count and song list
             mCount = songList.size();
             mSongList = songList;
+            mReadyToPlay = true;
         }
         else
         {
@@ -376,6 +379,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             mPlayerListener.onSongChanged(mSongList,mPosition);
         }
 
+    }
+
+    public boolean isReadyToPlay() {
+        return mReadyToPlay;
     }
 
     public MediaPlayer getMediaPlayer()

@@ -106,23 +106,14 @@ public class SongListFragment extends SlimListFragment {
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id)
     {
-        if (mSelectMode)
-        {
-            //We are selecting items
-            //TODO - make this look sane
-        }
-        else
+        //If we are not selecting items, then we want to play them
+        if (!mSelectMode)
         {
             //Pass list of songs from which we play and play current position
             mApplication.getMediaPlayerService().playList(mSongList,position);
 
-            //TODO - this maybe isnt even needed now
-            //Use bundle to send some starting info to NowPlayingActivity
+            //Start NowPlayingActivity
             Intent intent = new Intent(mContext,NowPlayingActivity.class);
-
-            intent.putExtra(NowPlayingActivity.SONG_COUNT_KEY,mSongList.size());
-            intent.putExtra(NowPlayingActivity.SONG_POSITION_KEY,position);
-
             startActivity(intent);
         }
 
@@ -138,6 +129,7 @@ public class SongListFragment extends SlimListFragment {
 
         if (mSelectMode)
         {
+            //TODO - this needs its own method
             //Deselect everything
             mSelectMode = false;
             getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
@@ -203,12 +195,6 @@ public class SongListFragment extends SlimListFragment {
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onDestroy() {
-
-        super.onDestroy();
     }
 
     //Here we create an ArrayList of all songs from cursor

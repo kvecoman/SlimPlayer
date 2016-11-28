@@ -33,19 +33,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
 
         mApplication = ((SlimPlayerApplication)getApplicationContext());
 
-
         mPager = (ViewPager)findViewById(R.id.pager);
-
-        Intent intent = getIntent();
-
-        //If we have some info we will init pager right now, if now then when MediaPlayerService is connected
-        if (intent.hasExtra(SONG_COUNT_KEY) && intent.hasExtra(SONG_POSITION_KEY))
-        {
-            mPagerAdapter = new NowPlayingPagerAdapter(getSupportFragmentManager(),this,intent.getIntExtra(SONG_COUNT_KEY,0));
-            mPager.setAdapter(mPagerAdapter);
-            mPager.setCurrentItem(intent.getIntExtra(SONG_POSITION_KEY,0));
-        }
-
         mPager.addOnPageChangeListener(this);
     }
 
@@ -53,15 +41,18 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
     protected void onStart() {
         super.onStart();
 
-        //TODO - add  possibility that PlayerService is not playing anything
+
         //If pager is not set with intent extras, then set it with MediaPlayerService
-        if (mPagerAdapter == null)
+        if (mPagerAdapter == null && mApplication.isMediaPlayerServiceBound())
         {
-            //If pager is not already init, do it here
-            mPagerAdapter = new NowPlayingPagerAdapter(getSupportFragmentManager(),NowPlayingActivity.this,mApplication.getMediaPlayerService().getCount());
-            mPager.setAdapter(mPagerAdapter);
-            //TODO - this could produce out of bounds exception, insert some checks
-            mPager.setCurrentItem(mApplication.getMediaPlayerService().getPosition());
+            //Check that media player service has any list loaded and is ready to play
+            if (mApplication.getMediaPlayerService().isReadyToPlay())
+            {
+                mPagerAdapter = new NowPlayingPagerAdapter(getSupportFragmentManager(),NowPlayingActivity.this,mApplication.getMediaPlayerService().getCount());
+                mPager.setAdapter(mPagerAdapter);
+                mPager.setCurrentItem(mApplication.getMediaPlayerService().getPosition());
+            }
+
         }
 
         //When we are connected request current play info
@@ -79,16 +70,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
 
     @Override
     public void onSongChanged(List<Song> songList, int position) {
-        Log.d("slim","NowPlayingActivity - onSongChanged()");
-
         mPager.setCurrentItem(position,true);
-
-
-    }
-
-
-    public ViewPager getPager() {
-        return mPager;
     }
 
     @Override
@@ -96,9 +78,9 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
 
     @Override
     public void onPageSelected(int position) {
-        Log.d("slim","NowPlayingActivity - onPageSelected()");
 
         mApplication.getMediaPlayerService().play(position);
+
     }
 
     @Override

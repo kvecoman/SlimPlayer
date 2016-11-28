@@ -57,8 +57,8 @@
     <string name="icon_close">\uE805</string>
 
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <!-- Default text-->
+    <string name="hello_blank_fragment">Nothing to show</string>
 
 
 </resources>

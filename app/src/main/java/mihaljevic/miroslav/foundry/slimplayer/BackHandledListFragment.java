@@ -12,8 +12,6 @@ import android.support.v4.app.ListFragment;
  */
 public abstract class BackHandledListFragment extends ListFragment {
 
-    //TODO - maybe this whole class can be turned in interface and we can remove BackHandledFragmentActivity
-
     //Parent activity that implements BackHandlerInterface
     protected BackHandledFragmentActivity backHandler;
 

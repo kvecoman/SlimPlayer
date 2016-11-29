@@ -24,17 +24,12 @@ public class BackHandledFragmentActivity extends AppCompatActivity implements Ba
     @Override
     public void onBackPressed() {
 
-
-
-
-        //TODO - this "if" might generate null-pointer exception (or maybe not)
         //Allow fragment to handle back button press
         if (mBackHandledListFragment == null || !mBackHandledListFragment.onBackPressed())
         {
             //Back press was not consumed, so we let system to do what it wants
             super.onBackPressed();
         }
-
     }
 
 }

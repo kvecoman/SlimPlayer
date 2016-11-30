@@ -67,7 +67,7 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
 
         //Set up data for list view
         mDirectoriesSet = getSharedPreferences().getStringSet(getKey(),new HashSet<String>());
-        mAdapter = new ArrayAdapter<String>(mContext,android.R.layout.simple_list_item_activated_1);
+        mAdapter = new ArrayAdapter<>(mContext,android.R.layout.simple_list_item_activated_1);
         mAdapter.addAll(mDirectoriesSet);
         mListView.setAdapter(mAdapter);
 
@@ -85,7 +85,7 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
 
 
         //Handler for when LayoutChildren is called, and it is called on almost every kind of ListView update
-        //...and thats why we use to catch moment when everything from list is unselected
+        //...and that's why we use to catch moment when everything from list is unselected
         mListView.setOnLayoutChildrenListener(new MyListView.OnLayoutChildrenListener() {
             @Override
             public void onLayoutChildren() {
@@ -130,7 +130,7 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
     //Handler for when add directory(action button) is clicked
     @Override
     public void onClick(View v) {
-        //If nothing is selcted then show dialog
+        //If nothing is selected then show dialog
         if (mSelectedItem < 0)
             DirectorySelectPreference.this.getPreferenceManager().showDialog(DirectorySelectPreference.this);
         else
@@ -148,7 +148,7 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
         }
     }
 
-    //Instead of directly accesing SharedPreferences, here we should use persist methods, but I dont know :\
+    //Instead of directly accessing SharedPreferences, here we should use persist methods, but I dont know :\
     //This method is called from dialog when select button is clicked
     public void addDirectoryPath(String path)
     {

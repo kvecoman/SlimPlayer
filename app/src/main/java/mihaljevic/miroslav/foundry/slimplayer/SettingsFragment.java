@@ -1,11 +1,19 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceFragmentCompat;
 import android.widget.Toast;
+
+import java.io.File;
+import java.util.Set;
 
 /**
  * Fragment that load preferences from xml file and display it to user
@@ -29,11 +37,27 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             @Override
             public boolean onPreferenceClick(Preference preference) {
 
-                //TODO - actually do something here?
+                //Get selected directories and run rescan on them
+                SharedPreferences preferences  = PreferenceManager.getDefaultSharedPreferences(getContext());
+                Set<String> directoriesSet = preferences.getStringSet(getString(R.string.pref_key_directories_set),null);
 
-                //Here we update song list and delete empty genres
-                //TODO - put heavy work in seperate thread
-                Toast.makeText(getActivity(),"This button currently does nothing...",Toast.LENGTH_SHORT).show();
+                if (directoriesSet != null && !directoriesSet.isEmpty())
+                {
+                    //Send broadcasts to scan selected directories
+                    for (String directory : directoriesSet)
+                    {
+                        getContext().sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(new File(directory))));
+                    }
+                    Toast.makeText(getContext(),"Started scanning selected directories for new songs...",Toast.LENGTH_SHORT).show();
+                }
+                else
+                {
+                    //If there are none selected directories, then scan whole system
+                    //TODO - scan removable SD (one day)
+                    getContext().sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(Environment.getExternalStorageDirectory())));
+                    Toast.makeText(getContext(),"Started scanning system for new songs...",Toast.LENGTH_SHORT).show();
+                }
+
                 return false;
             }
         });

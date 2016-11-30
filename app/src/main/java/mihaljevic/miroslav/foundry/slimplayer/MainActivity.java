@@ -130,6 +130,8 @@ public class MainActivity extends BackHandledFragmentActivity implements SharedP
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
     {
+        //TODO - optimize this with key parameter instead of this all out approach
+
         //Update a collection set of screens that user wants to see
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor pEditor = pref.edit();

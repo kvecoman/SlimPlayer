@@ -30,6 +30,8 @@ import java.util.Set;
 //TODO - limit width of notification text
 //TODO - make notification button fatter
 //TODO - tap pauses/plays song
+//TODO - back button returns to last viewed page
+//TODO - make title for "Select directories" preference nicer
 
 public class MainActivity extends BackHandledFragmentActivity implements SharedPreferences.OnSharedPreferenceChangeListener{
 
@@ -77,7 +79,7 @@ public class MainActivity extends BackHandledFragmentActivity implements SharedP
     {
         int id = item.getItemId();
 
-        //Activate coresponding action that was selected in menu
+        //Activate corresponding action that was selected in menu
         switch (id)
         {
             case R.id.settings:

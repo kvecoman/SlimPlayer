@@ -2,6 +2,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -17,6 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.prefs.Preferences;
 
 /**
  * Created by Miroslav on 25.9.2016..
@@ -30,14 +32,6 @@ import java.util.Set;
 
 
 public class MainScreenPagerAdapter extends FragmentPagerAdapter {
-
-    //Static variable representing base id for next instance of this adapter
-    //private static int sBaseId = 0;
-
-    //private FragmentManager mFragmentManager;
-
-    //Base id for this instance
-    //private int mBaseId;
 
     //How many screens there are, based on preferences
     private int mNumScreens;
@@ -59,14 +53,25 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
         super(fragmentManager);
 
         mContext = context;
-        //mFragmentManager = fragmentManager;
 
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(mContext);
 
-        //Get base ID for this instance
-        /*mBaseId = sBaseId;
-        sBaseId++;*/
+        //Clear cached fragments (otherwise we see old fragments instead of new ones)
+        clearCachedFragments(fragmentManager,pagerID);
 
+        //Load screen names (only screens that user selected)
+        loadScreenNames(PreferenceManager.getDefaultSharedPreferences(mContext));
+
+        //If none of the screens are selected, then we will show EmptyMessage fragment
+        if (mNumScreens == 0)
+        {
+            mNumScreens = 1;
+            mShowEmpty = true;
+        }
+    }
+
+    //Method that clears all cached fragments from pager with pagerID
+    public void clearCachedFragments(FragmentManager fragmentManager, int pagerID)
+    {
         //If there are any fragments before in fragment manager, clear them
         List<Fragment> fragments = fragmentManager.getFragments();
         if (fragments != null)
@@ -84,43 +89,40 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
                         transaction.remove(fragment);
                     }
                 }
-
             }
             transaction.commitAllowingStateLoss();
         }
+    }
 
-        //TODO - optimize screen name loading from preferences
-        //A small bit of complex code used to load all screen names but leave only the ones that are actually used in order they need to be
-        mScreensList = new ArrayList<>(Arrays.asList(mContext.getResources().getStringArray(R.array.pref_screens_set_default)));
-        Set<String> defaultSet = new HashSet<>(mScreensList);
-        List<String> tempList = new ArrayList<>(mScreensList);
-        List<String> tempList2= new ArrayList<>();
-        tempList2.addAll(preferences.getStringSet(mContext.getResources().getString(R.string.pref_key_screens_set),defaultSet));
-        ((ArrayList)tempList).removeAll(tempList2);
-        ((ArrayList)mScreensList).removeAll(tempList);
+    //Method that loads screen names from preferences
+    public void loadScreenNames(SharedPreferences preferences)
+    {
+        Resources resources = mContext.getResources();
+        mScreensList = new ArrayList<>(6);
+        String [] allScreenKeys = resources.getStringArray(R.array.pref_screens_set_default);
+        for (String key : allScreenKeys)
+        {
+            if (preferences.getBoolean(key,true))
+                ((ArrayList) mScreensList).add(key);
+        }
+        ((ArrayList) mScreensList).trimToSize();
 
         mNumScreens = ((ArrayList) mScreensList).size();
-
-        //If none of the screens are selected, then we will show EmptyMessage fragment
-        if (mNumScreens == 0)
-        {
-            mNumScreens = 1;
-            mShowEmpty = true;
-        }
-
     }
 
     //Note - caching of fragments is already done internally, we only need to do first time init here
     @Override
     public Fragment getItem(int position) {
 
-        Fragment fragment;
+        //If nothing gets select we make sure to return empty message fragment
+        Fragment fragment = new EmptyMessageFragment();
 
-        //TODO - maybe move fragment loading to somewhere else? (idk)
-        //Init fragments
+
+        //Init appropriate fragment
         if (mShowEmpty)
         {
-            fragment = new EmptyMessageFragment();
+            //If we need to show empty fragment we can just return right now
+            return fragment;
         }
         else if (mScreensList.get(position).equals(mContext.getString(R.string.pref_key_all_screen)))
         {
@@ -162,35 +164,13 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
         return fragment;
     }
 
-    //Clears all fragments that are loaded
-    /*public void clearFragments()
-    {
-        FragmentTransaction transaction = mFragmentManager.beginTransaction();
-        Fragment fragment;
-        for (int i = 0;i < mNumScreens)
-        {
-            fragment = mFragmentManager.findFragmentByTag(getItemId(i));
-            transaction.
-        }
-    }*/
+
 
     @Override
     public int getCount() {
         return mNumScreens;
     }
 
-    //This gets called when notifyDataSetHasChanged
-   /* @Override
-    public int getItemPosition(Object object)
-    {
-        return POSITION_NONE;
-    }*/
 
-    //This is part of solution to clear all fragments when updtating view pager
-    /*@Override
-    public long getItemId(int position)
-    {
-        return mBaseId + position;
-    }*/
 
 }

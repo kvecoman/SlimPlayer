@@ -98,7 +98,7 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
                 }
 
 
-                //TODO - think of some other way to get notified when everything is deselected
+                //TODO - think of some other way to get notified when everything is deselected?
 
             }
         });

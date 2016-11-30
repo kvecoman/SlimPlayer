@@ -29,10 +29,14 @@ import java.util.Set;
 //TODO - remove empty genres
 //TODO - limit width of notification text
 //TODO - make notification button fatter
+//TODO - tap pauses/plays song
 
 public class MainActivity extends BackHandledFragmentActivity implements SharedPreferences.OnSharedPreferenceChangeListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";
+
+    //Indicate whether the preferences have changed
+    private boolean mPreferencesChanged = false;
 
     //Pager that hold different screens (All music, Playlists etc)
     private ViewPager mPager;
@@ -43,16 +47,21 @@ public class MainActivity extends BackHandledFragmentActivity implements SharedP
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pager);
 
-        //Set up pager and adapter to show list screens
-        mPager = (ViewPager)findViewById(R.id.pager);
-        mPagerAdapter = new MainScreenPagerAdapter(getSupportFragmentManager(),this);
-        mPager.setAdapter(mPagerAdapter);
-
+        //Init pager and show screens
+        initPager();
 
         //Register this activity as listener for changed preferences
         PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
 
 
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        if (mPreferencesChanged)
+            initPager();
     }
 
     @Override
@@ -81,6 +90,19 @@ public class MainActivity extends BackHandledFragmentActivity implements SharedP
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    //Set-up pager related stuff
+    public void initPager()
+    {
+        //Set up pager and adapter to show list screens
+        mPager = (ViewPager)findViewById(R.id.pager);
+        mPagerAdapter = new MainScreenPagerAdapter(getSupportFragmentManager(),this,R.id.pager);
+        mPager.setAdapter(mPagerAdapter);
+
+        mPagerAdapter.notifyDataSetChanged();
+        //TODO - make pager update its fragments
+        mPager.setCurrentItem(0);
     }
 
     @Override
@@ -123,6 +145,9 @@ public class MainActivity extends BackHandledFragmentActivity implements SharedP
         }
 
         pEditor.putStringSet(getString(R.string.pref_key_screens_set),screensSet);
+        pEditor.commit();
+
+        mPreferencesChanged = true;
 
     }
 

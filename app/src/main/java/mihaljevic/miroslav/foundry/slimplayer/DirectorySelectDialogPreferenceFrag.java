@@ -10,7 +10,6 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -29,11 +28,8 @@ import java.util.List;
 
 public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmentCompat implements DialogPreference.TargetFragment {
 
-    private Context mContext;
 
     //Controls from layout
-    private Button mSelectButton;
-    private Button mCancelButton;
     private ListView mListView;
 
     //Current directory and listing of all directories in it
@@ -55,8 +51,6 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
     @Override
     protected View onCreateDialogView(Context context)
     {
-        mContext = context;
-
         LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         return inflater.inflate(R.layout.directory_select_dialog,null);
     }
@@ -66,9 +60,10 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
     protected void onBindDialogView(View v)
     {
         //Bind views to member variables
-        mSelectButton = (Button)v.findViewById(R.id.directory_select_button);
-        mCancelButton = (Button)v.findViewById(R.id.directory_cancel_button);
         mListView = (ListView)v.findViewById(R.id.directory_select_list);
+
+        Button selectButton = (Button)v.findViewById(R.id.directory_select_button);
+        Button cancelButton = (Button)v.findViewById(R.id.directory_cancel_button);
 
         //Set starting directory and load its contents
         mCurrentDir = Environment.getExternalStorageDirectory();
@@ -86,7 +81,7 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
         });
 
         //Cancel button listener
-        mCancelButton.setOnClickListener(new View.OnClickListener() {
+        cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 DirectorySelectDialogPreferenceFrag.this.getDialog().dismiss();
@@ -94,7 +89,7 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
         });
 
         //Select button listener
-        mSelectButton.setOnClickListener(new View.OnClickListener() {
+        selectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //NOTE - proper way to do all of this is using "persist*" methods of Preference,

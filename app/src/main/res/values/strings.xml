@@ -40,8 +40,10 @@
     <string name="directory_pref_button_delete">Delete</string>
 
     <!--Directory select dialog -->
+    <string name="directory_dialog_title">Select directory containing song files</string>
     <string name="directory_dialog_button_select">Select directory</string>
     <string name="directory_dialog_button_cancel">Cancel</string>
+
 
     <!--Add to playlist screen-->
     <string name="playlist_create">Create new playlist...</string>
@@ -55,6 +57,10 @@
     <string name="icon_previous">\uE803</string>
     <string name="icon_next">\uE804</string>
     <string name="icon_close">\uE805</string>
+
+    <!--Empty screen texts-->
+    <string name="empty_placeholder">Nothing to be found here...</string>
+    <string name="empty_main_screen">None of the home screens are turned on to show, click here to review your preferences</string>
 
 
     <!-- Default text-->

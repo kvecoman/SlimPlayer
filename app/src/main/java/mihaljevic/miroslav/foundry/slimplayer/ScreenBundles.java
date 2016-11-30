@@ -192,7 +192,7 @@ public final class ScreenBundles {
                 MediaStore.Audio.Genres._ID,
                 MediaStore.Audio.Genres.NAME
         };
-        String selection = null;
+        String selection = "LENGTH(" +  MediaStore.Audio.Genres.NAME + ") > 0";
         String [] selectionArgs = null;
         String sortOrder = MediaStore.Audio.Genres.NAME + " ASC";
 

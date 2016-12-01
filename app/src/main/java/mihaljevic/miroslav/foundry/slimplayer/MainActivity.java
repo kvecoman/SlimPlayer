@@ -32,12 +32,13 @@ import java.util.Set;
 //TODO - tap pauses/plays song
 //TODO - make title for "Select directories" preference nicer
 
-public class MainActivity extends BackHandledFragmentActivity implements SharedPreferences.OnSharedPreferenceChangeListener{
+    //TODO - continue here- continue optimizing, also cant save the music directories in preferences
+
+public class MainActivity extends BackHandledFragmentActivity{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";
 
-    //Indicate whether the preferences have changed
-    private boolean mPreferencesChanged = false;
+
 
     //Pager that hold different screens (All music, Playlists etc)
     private ViewPager mPager;
@@ -50,9 +51,6 @@ public class MainActivity extends BackHandledFragmentActivity implements SharedP
 
         //Init pager and show screens
         initPager();
-
-        //Register this activity as listener for changed preferences
-        PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
 
         //Check if there is savedInstanceState and try to restore last page in pager
         if (savedInstanceState != null)
@@ -75,9 +73,14 @@ public class MainActivity extends BackHandledFragmentActivity implements SharedP
     protected void onStart() {
         super.onStart();
 
-        if (mPreferencesChanged)
+        //If preferences have changed respond accordingly
+        if (((SlimPlayerApplication) getApplicationContext()).isPreferencesChanged()) {
             initPager();
+            ((SlimPlayerApplication) getApplicationContext()).consumePreferenceChange();
+        }
     }
+
+
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -127,53 +130,7 @@ public class MainActivity extends BackHandledFragmentActivity implements SharedP
         mPager.setCurrentItem(0);
     }
 
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
-    {
-        //TODO - optimize this with key parameter instead of this all out approach
 
-        //Update a collection set of screens that user wants to see
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor pEditor = pref.edit();
-
-        Set<String> screensSet = new HashSet<>();
-
-        if (pref.getBoolean(getString(R.string.pref_key_home_screen),getResources().getBoolean(R.bool.pref_home_screen_default)))
-        {
-            screensSet.add(getString(R.string.pref_key_home_screen));
-        }
-
-        if (pref.getBoolean(getString(R.string.pref_key_all_screen),getResources().getBoolean(R.bool.pref_all_default)))
-        {
-            screensSet.add(getString(R.string.pref_key_all_screen));
-        }
-
-        if (pref.getBoolean(getString(R.string.pref_key_playlists_screen),getResources().getBoolean(R.bool.pref_playlists_default)))
-        {
-            screensSet.add(getString(R.string.pref_key_playlists_screen));
-        }
-
-        if (pref.getBoolean(getString(R.string.pref_key_albums_screen),getResources().getBoolean(R.bool.pref_albums_default)))
-        {
-            screensSet.add(getString(R.string.pref_key_albums_screen));
-        }
-
-        if (pref.getBoolean(getString(R.string.pref_key_artists_screen),getResources().getBoolean(R.bool.pref_artists_default)))
-        {
-            screensSet.add(getString(R.string.pref_key_artists_screen));
-        }
-
-        if (pref.getBoolean(getString(R.string.pref_key_genres_screen),getResources().getBoolean(R.bool.pref_genres_default)))
-        {
-            screensSet.add(getString(R.string.pref_key_genres_screen));
-        }
-
-        pEditor.putStringSet(getString(R.string.pref_key_screens_set),screensSet);
-        pEditor.commit();
-
-        mPreferencesChanged = true;
-
-    }
 
 
 

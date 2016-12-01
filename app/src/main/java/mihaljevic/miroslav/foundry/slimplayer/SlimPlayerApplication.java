@@ -20,6 +20,9 @@ public class SlimPlayerApplication extends Application {
 
     private static SlimPlayerApplication sInstance;
 
+    //Indicate whether the preferences have changed
+    private boolean mPreferencesChanged = false;
+
     private MediaPlayerService mPlayerService;
     private boolean mServiceBound;
 
@@ -82,4 +85,13 @@ public class SlimPlayerApplication extends Application {
     public boolean isMediaPlayerServiceBound() {
         return mServiceBound;
     }
+
+    //We indicate to any interested component that preferences have changed
+    public void notifyPreferencesChanged() {mPreferencesChanged = true;}
+
+    //Components get status on whether the preferences changed
+    public boolean isPreferencesChanged() {return mPreferencesChanged;}
+
+    //Components notify that the have responded to changes
+    public void consumePreferenceChange() {mPreferencesChanged = false;}
 }

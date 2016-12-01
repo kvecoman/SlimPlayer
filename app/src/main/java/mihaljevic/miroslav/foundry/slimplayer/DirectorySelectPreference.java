@@ -2,6 +2,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.Context;
 import android.support.v7.preference.DialogPreference;
+import android.support.v7.preference.PreferenceManager;
 import android.support.v7.preference.PreferenceViewHolder;
 import android.util.AttributeSet;
 import android.view.View;
@@ -15,6 +16,7 @@ import android.widget.TextView;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.prefs.Preferences;
 
 /**
  * Created by Miroslav on 28.9.2016..
@@ -148,7 +150,7 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
         }
     }
 
-    //Instead of directly accessing SharedPreferences, here we should use persist methods, but I dont know :\
+    //Instead of directly accessing SharedPreferences, here we should use persist methods, but I don't know :\
     //This method is called from dialog when select button is clicked
     public void addDirectoryPath(String path)
     {
@@ -166,6 +168,10 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
     public void updateDirectoriesPref()
     {
         getSharedPreferences().edit().putStringSet(getKey(),mDirectoriesSet).commit();
+        //PreferenceManager.getDefaultSharedPreferences(getContext()).edit().putStringSet(getKey(),mDirectoriesSet).commit();
+
+        //We have to do this right here, because with this preference the onSharedPreferenceChanged isn't called
+        ((SlimPlayerApplication) getContext().getApplicationContext()).notifyPreferencesChanged();
     }
 
 

@@ -2,6 +2,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,10 @@ import android.widget.TextView;
  */
 public class EmptyMessageFragment extends Fragment {
 
+    public static final String MESSAGE_KEY = "message_key";
+
+    private View mView;
+
 
     public EmptyMessageFragment() {
         // Required empty public constructor
@@ -22,9 +27,21 @@ public class EmptyMessageFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.empty_page,container,false);
-
-        //TODO - add support for message from bundle
+        mView = inflater.inflate(R.layout.empty_page,container,false);
+        return mView;
     }
 
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        Bundle args = getArguments();
+
+        if (args != null && args.containsKey(MESSAGE_KEY))
+        {
+            //Set empty message if one was provided
+            ((TextView) mView.findViewById(R.id.empty_text)).setText(args.getString(MESSAGE_KEY));
+        }
+
+    }
 }

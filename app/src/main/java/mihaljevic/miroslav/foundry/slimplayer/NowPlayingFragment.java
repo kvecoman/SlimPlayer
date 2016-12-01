@@ -98,6 +98,14 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
     }
 
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        //Indicate that we don't need to update seek bar anymore
+        mSeekBarBound = false;
+        mSeekBarHandler = null;
+    }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -129,8 +137,8 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     {
         mPlayer = mApplication.getMediaPlayerService().getMediaPlayer();
 
+        mSeekBarBound = true;
 
-        //TODO - check if this handler is run more than necessary
         mSeekBarHandler = new Handler();
         getActivity().runOnUiThread(new Runnable() {
             @Override
@@ -140,11 +148,12 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
                     int position = mPlayer.getCurrentPosition();
                     mSeekBar.setProgress(position);
                 }
-                mSeekBarHandler.postDelayed(this, 1000);
+                if (mSeekBarBound && mPosition == mApplication.getMediaPlayerService().getPosition())
+                    mSeekBarHandler.postDelayed(this, 1000);
             }
         });
 
-        mSeekBarBound = true;
+
     }
 
 

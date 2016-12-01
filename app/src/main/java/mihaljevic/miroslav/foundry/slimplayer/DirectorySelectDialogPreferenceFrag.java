@@ -111,8 +111,6 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
     @Override
     public void onDialogClosed(boolean positiveResult)
     {
-        //TODO - continue here - make it persist preference value
-        //positiveResult = true;
         //I have no idea how to use this properly, but adding directory in set should be done here
         //Problem is I don't know how to close custom dialog with positive result, only how to dismiss it
     }

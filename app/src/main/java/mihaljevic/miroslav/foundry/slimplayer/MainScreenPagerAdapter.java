@@ -116,6 +116,9 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
 
         //If nothing gets select we make sure to return empty message fragment
         Fragment fragment = new EmptyMessageFragment();
+        Bundle args = new Bundle();
+        args.putString(EmptyMessageFragment.MESSAGE_KEY,mContext.getString(R.string.empty_main_screen));
+        fragment.setArguments(args);
 
 
         //Init appropriate fragment
@@ -127,38 +130,38 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
         else if (mScreensList.get(position).equals(mContext.getString(R.string.pref_key_all_screen)))
         {
             fragment = new SongListFragment();
-            Bundle bundle = ScreenBundles.getAllSongsBundle(mContext);
-            fragment.setArguments(bundle);
+            args = ScreenBundles.getAllSongsBundle(mContext);
+            fragment.setArguments(args);
         }
         else if (mScreensList.get(position).equals(mContext.getString(R.string.pref_key_playlists_screen)))
         {
             fragment = new CategoryListFragment();
-            Bundle bundle = ScreenBundles.getPlaylistsBundle(mContext);
-            fragment.setArguments(bundle);
+            args = ScreenBundles.getPlaylistsBundle(mContext);
+            fragment.setArguments(args);
         }
         else if (mScreensList.get(position).equals(mContext.getString(R.string.pref_key_albums_screen)))
         {
             fragment = new CategoryListFragment();
-            Bundle bundle = ScreenBundles.getAlbumsBundle(mContext);
-            fragment.setArguments(bundle);
+            args = ScreenBundles.getAlbumsBundle(mContext);
+            fragment.setArguments(args);
         }
         else if (mScreensList.get(position).equals(mContext.getString(R.string.pref_key_artists_screen)))
         {
             fragment = new CategoryListFragment();
-            Bundle bundle = ScreenBundles.getArtistsBundle(mContext);
-            fragment.setArguments(bundle);
+            args = ScreenBundles.getArtistsBundle(mContext);
+            fragment.setArguments(args);
         }
         else if (mScreensList.get(position).equals(mContext.getString(R.string.pref_key_genres_screen)))
         {
             fragment = new CategoryListFragment();
-            Bundle bundle = ScreenBundles.getGenresBundle(mContext);
-            fragment.setArguments(bundle);
+            args = ScreenBundles.getGenresBundle(mContext);
+            fragment.setArguments(args);
         }
         else
         {
             fragment = new SongListFragment();
-            Bundle bundle = ScreenBundles.getAllSongsBundle(mContext);
-            fragment.setArguments(bundle);
+            args = ScreenBundles.getAllSongsBundle(mContext);
+            fragment.setArguments(args);
         }
 
         return fragment;

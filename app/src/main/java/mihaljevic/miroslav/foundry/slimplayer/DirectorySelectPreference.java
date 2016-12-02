@@ -68,7 +68,7 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
         mActionButton.setOnClickListener(this);
 
         //Set up data for list view
-        mDirectoriesSet = getSharedPreferences().getStringSet(getKey(),new HashSet<String>());
+        mDirectoriesSet = new HashSet<>(getSharedPreferences().getStringSet(getKey(),new HashSet<String>()));
         mAdapter = new ArrayAdapter<>(mContext,android.R.layout.simple_list_item_activated_1);
         mAdapter.addAll(mDirectoriesSet);
         mListView.setAdapter(mAdapter);

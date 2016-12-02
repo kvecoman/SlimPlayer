@@ -32,7 +32,6 @@ import java.util.Set;
 //TODO - tap pauses/plays song
 //TODO - make title for "Select directories" preference nicer
 //TODO - tap on empty screen opens preferences
-//TODO - empty lists show message that there is nothing here
 
 public class MainActivity extends BackHandledFragmentActivity{
 

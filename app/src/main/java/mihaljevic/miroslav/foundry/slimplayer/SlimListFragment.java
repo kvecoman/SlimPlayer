@@ -72,6 +72,7 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
 
         mContext = getContext();
 
+
         getListView().setOnItemClickListener(this);
 
 

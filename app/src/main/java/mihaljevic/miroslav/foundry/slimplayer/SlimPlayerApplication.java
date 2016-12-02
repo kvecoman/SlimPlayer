@@ -5,8 +5,13 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.IBinder;
 import android.util.Log;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Miroslav on 15.11.2016..
@@ -16,6 +21,8 @@ import android.util.Log;
  * @author Miroslav Mihaljević
  */
 public class SlimPlayerApplication extends Application {
+
+    //TODO - font size to resource file
 
 
     private static SlimPlayerApplication sInstance;
@@ -94,4 +101,6 @@ public class SlimPlayerApplication extends Application {
 
     //Components notify that the have responded to changes
     public void consumePreferenceChange() {mPreferencesChanged = false;}
+
+
 }

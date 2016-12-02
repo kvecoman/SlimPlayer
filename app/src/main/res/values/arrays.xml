@@ -10,4 +10,13 @@
         <item>@string/pref_key_artists_screen</item>
         <item>@string/pref_key_genres_screen</item>
     </array>
+
+    <array name="icon_codes">
+        <item>@string/icon_play</item>
+        <item>@string/icon_stop</item>
+        <item>@string/icon_pause</item>
+        <item>@string/icon_previous</item>
+        <item>@string/icon_next</item>
+        <item>@string/icon_close</item>
+    </array>
 </resources>

@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Binder;
@@ -16,7 +17,10 @@ import android.widget.RemoteViews;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 //TODO - add intent filter so we can run songs from anywhere
 public class MediaPlayerService extends Service implements MediaPlayer.OnCompletionListener {
@@ -31,13 +35,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 
 
+    //TODO - maybe move this also to resource file
     //Points to location of our custom font file
     public static final String ICON_FONT_PATH = "fonts/icons.ttf";
 
-    public static final int ICON_FONT_SIZE_SP = 20;
-
-
-    private RemoteViews mNotificationView;
+    private Map<String,Bitmap> mBitmapIcons;
 
     private MediaPlayerBinder mBinder = new MediaPlayerBinder();
 
@@ -259,11 +261,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     //This is called when song is finished playing
     @Override
     public void onCompletion(MediaPlayer mp) {
-        Log.d("slim","MediaPlayerService - onCompletion()");
-
         MediaPlayerService.this.playNext();
-
-
     }
 
 
@@ -275,12 +273,17 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
         notificationView.setTextViewText(R.id.notification_title,getCurrentSong().getTitle());
 
-        //TODO - cache this
+        //Check if we have notifications icons, if not generate them right now
+        if (mBitmapIcons == null)
+        {
+            generateBitmapIcons();
+        }
+
         //Render font icons in scale with current device screen density
-        notificationView.setImageViewBitmap(R.id.notification_close,    Utils.renderFont(this, getString(R.string.icon_close),      Color.LTGRAY,ICON_FONT_SIZE_SP, ICON_FONT_PATH));
-        notificationView.setImageViewBitmap(R.id.notification_previous, Utils.renderFont(this, getString(R.string.icon_previous),   Color.LTGRAY,ICON_FONT_SIZE_SP, ICON_FONT_PATH));
-        notificationView.setImageViewBitmap(R.id.notification_play,     Utils.renderFont(this, getString(playIcon ? R.string.icon_play : R.string.icon_pause),       Color.LTGRAY,ICON_FONT_SIZE_SP, ICON_FONT_PATH));
-        notificationView.setImageViewBitmap(R.id.notification_next,     Utils.renderFont(this, getString(R.string.icon_next),       Color.LTGRAY,ICON_FONT_SIZE_SP, ICON_FONT_PATH));
+        notificationView.setImageViewBitmap(R.id.notification_close,        mBitmapIcons.get(getString(R.string.icon_close)));
+        notificationView.setImageViewBitmap(R.id.notification_previous,     mBitmapIcons.get(getString(R.string.icon_previous)));
+        notificationView.setImageViewBitmap(R.id.notification_play,         mBitmapIcons.get(getString(playIcon ? R.string.icon_play : R.string.icon_pause)));
+        notificationView.setImageViewBitmap(R.id.notification_next,         mBitmapIcons.get(getString(R.string.icon_next)));
 
         //Set-up notification
         builder.setSmallIcon(R.mipmap.ic_launcher)
@@ -329,14 +332,26 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         pendingIntent = PendingIntent.getService(this,0,intent,0);
         notificationView.setOnClickPendingIntent(R.id.notification_next, pendingIntent);
 
-        //Save notification view for updating
-        mNotificationView = notificationView;
-
         //Build and show notification
         Notification notification = builder.build();
-        //NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
         startForeground(NOTIFICATION_PLAYER_ID,notification);
 
+    }
+
+    //Generates bitmap icons used for notification player
+    public void generateBitmapIcons()
+    {
+        String[] iconCodes = getResources().getStringArray(R.array.icon_codes);
+        Bitmap bitmap;
+        Map<String,Bitmap> bitmaps = new HashMap<>(iconCodes.length);
+
+        for (String iconCode : iconCodes)
+        {
+            bitmap = Utils.renderFont(this, iconCode, Color.LTGRAY,getResources().getInteger(R.integer.notification_icon_size_sp), ICON_FONT_PATH);
+            bitmaps.put(iconCode,bitmap);
+        }
+
+        mBitmapIcons = bitmaps;
     }
 
 

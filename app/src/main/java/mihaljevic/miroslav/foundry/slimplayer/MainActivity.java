@@ -31,8 +31,9 @@ import java.util.Set;
 //TODO - make notification button fatter
 //TODO - tap pauses/plays song
 //TODO - make title for "Select directories" preference nicer
+//TODO - tap on empty screen opens preferences
 
-    //TODO - continue here- continue optimizing, also cant save the music directories in preferences
+    //TODO - BUG - cant save the music directories in preferences
 
 public class MainActivity extends BackHandledFragmentActivity{
 

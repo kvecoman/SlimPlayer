@@ -56,6 +56,14 @@
     <string name="icon_previous">\uE803</string>
     <string name="icon_next">\uE804</string>
     <string name="icon_close">\uE805</string>
+    
+    <!--File names of icon bitmaps-->
+    <string name="bitmap_play">play.bmp</string>
+    <string name="bitmap_stop">stop.bmp</string>
+    <string name="bitmap_pause">pause.bmp</string>
+    <string name="bitmap_previous">previous.bmp</string>
+    <string name="bitmap_next">next.bmp</string>
+    <string name="bitmap_close">close.bmp</string>
 
     <!--Empty screen texts-->
     <string name="empty_placeholder">Nothing to be found here...</string>

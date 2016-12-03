@@ -87,6 +87,12 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         mSeekBar = (SeekBar) mContentView.findViewById(R.id.seek_bar);
         mSeekBar.setOnSeekBarChangeListener(this);
 
+        //Check if hosting activity can handle clicks and set it as click listener for content view (play/pause taps)
+        if (getContext() instanceof View.OnClickListener)
+        {
+            mContentView.setOnClickListener(((View.OnClickListener) getContext()));
+        }
+
         //Get song position that this fragment represents
         Bundle args = getArguments();
         if (args != null)
@@ -116,6 +122,22 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
     }
 
+   /* @Override
+    public void onClick(View v) {
+        MediaPlayerService playerService = mApplication.getMediaPlayerService();
+
+        if (playerService.isReadyToPlay())
+        {
+            if (playerService.isPlaying())
+            {
+                playerService.pause();
+            }
+            else
+            {
+                playerService.resume();
+            }
+        }
+    }*/
 
     public void loadSongInfo()
     {

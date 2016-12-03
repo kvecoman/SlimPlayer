@@ -11,11 +11,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
+import android.view.View;
 
 import java.util.List;
 
 
-public class NowPlayingActivity extends BackHandledFragmentActivity implements MediaPlayerService.MediaPlayerListener, ViewPager.OnPageChangeListener {
+public class NowPlayingActivity extends BackHandledFragmentActivity implements MediaPlayerService.MediaPlayerListener, View.OnClickListener,ViewPager.OnPageChangeListener {
 
     public static final String SONG_COUNT_KEY = "song_count";
     public static final String SONG_POSITION_KEY = "song_position";
@@ -66,6 +67,25 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
     {
         getMenuInflater().inflate(R.menu.options_menu,menu);
         return true;
+    }
+
+    //Handle onscreen taps, change between play/pause
+    @Override
+    public void onClick(View v) {
+
+        MediaPlayerService playerService = mApplication.getMediaPlayerService();
+
+        if (playerService.isReadyToPlay())
+        {
+            if (playerService.isPlaying())
+            {
+                playerService.pause();
+            }
+            else
+            {
+                playerService.resume();
+            }
+        }
     }
 
     @Override

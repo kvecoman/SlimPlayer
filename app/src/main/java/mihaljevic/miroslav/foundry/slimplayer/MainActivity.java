@@ -31,9 +31,8 @@ import java.util.Set;
 //TODO - remove empty genres
 //TODO - limit width of notification text
 //TODO - make notification button fatter
-//TODO - tap pauses/plays song
 //TODO - make title for "Select directories" preference nicer
-//TODO - tap on empty screen opens preferences
+    //TODO - indicate that tap paused of resumed the song
 
 public class MainActivity extends BackHandledFragmentActivity implements TextView.OnClickListener{
 

@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.support.v7.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -33,7 +35,7 @@ import java.util.Set;
 //TODO - make title for "Select directories" preference nicer
 //TODO - tap on empty screen opens preferences
 
-public class MainActivity extends BackHandledFragmentActivity{
+public class MainActivity extends BackHandledFragmentActivity implements TextView.OnClickListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";
 
@@ -114,6 +116,12 @@ public class MainActivity extends BackHandledFragmentActivity{
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    //Empty page click handler, opens preferences so user can select screens to be shown
+    @Override
+    public void onClick(View v) {
+        startActivity(new Intent(this, SettingsActivity.class));
     }
 
     //Set-up pager related stuff

@@ -11,6 +11,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.preference.PreferenceManager;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -117,14 +118,15 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
         //If nothing gets select we make sure to return empty message fragment
         Fragment fragment = new EmptyMessageFragment();
         Bundle args = new Bundle();
-        args.putString(EmptyMessageFragment.MESSAGE_KEY,mContext.getString(R.string.empty_main_screen));
-        fragment.setArguments(args);
+
 
 
         //Init appropriate fragment
         if (mShowEmpty)
         {
-            //If we need to show empty fragment we can just return right now
+            //If we need to show empty fragment, set all params and return it right now
+            args.putString(EmptyMessageFragment.MESSAGE_KEY,mContext.getString(R.string.empty_main_screen));
+            fragment.setArguments(args);
             return fragment;
         }
         else if (mScreensList.get(position).equals(mContext.getString(R.string.pref_key_all_screen)))

@@ -37,10 +37,16 @@ public class EmptyMessageFragment extends Fragment {
 
         Bundle args = getArguments();
 
+        //Set empty message if one was provided
         if (args != null && args.containsKey(MESSAGE_KEY))
         {
-            //Set empty message if one was provided
             ((TextView) mView.findViewById(R.id.empty_text)).setText(args.getString(MESSAGE_KEY));
+        }
+
+        //Check if host activity is implementing click listener for text view and if it does, hook to it
+        if (getContext() instanceof  TextView.OnClickListener)
+        {
+            ((TextView) mView.findViewById(R.id.empty_text)).setOnClickListener(((View.OnClickListener) getContext()));
         }
 
     }

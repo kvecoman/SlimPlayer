@@ -22,9 +22,6 @@ import java.util.List;
  */
 public class SlimPlayerApplication extends Application {
 
-    //TODO - font size to resource file
-
-
     private static SlimPlayerApplication sInstance;
 
     //Indicate whether the preferences have changed

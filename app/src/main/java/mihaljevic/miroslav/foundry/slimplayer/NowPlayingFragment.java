@@ -27,7 +27,7 @@ import java.util.List;
  *
  * @author Miroslav Mihaljević
  */
-public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarChangeListener {
+public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarChangeListener, MediaPlayerService.MediaPlayerListener {
 
     public static final String SONG_POSITION_KEY = "song_position";
 
@@ -48,6 +48,27 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     private Handler mSeekBarHandler;
     private boolean mSeekBarBound;
     private boolean mOnCreateOptionsCalled;
+
+    //Runnable that runs on UI thread and updates seek bar
+    private Runnable mSeekBarRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mSeekBarBound && mApplication.getMediaPlayerService().isPlaying() && mPosition == mApplication.getMediaPlayerService().getPosition()) {
+
+                if (mPlayer != null) {
+                    int position = mPlayer.getCurrentPosition();
+                    mSeekBar.setProgress(position);
+                }
+                mSeekBarHandler.postDelayed(this, 1000);
+            }
+            else if(mPosition != mApplication.getMediaPlayerService().getPosition())
+            {
+                mSeekBar.setProgress(0);
+            }
+
+
+        }
+    };
 
 
 
@@ -86,6 +107,9 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
         mSeekBar = (SeekBar) mContentView.findViewById(R.id.seek_bar);
         mSeekBar.setOnSeekBarChangeListener(this);
+        mSeekBarHandler = new Handler();
+
+        mPlayer = mApplication.getMediaPlayerService().getMediaPlayer();
 
         //Check if hosting activity can handle clicks and set it as click listener for content view (play/pause taps)
         if (getContext() instanceof View.OnClickListener)
@@ -105,10 +129,27 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+
+        //Indicate to resume updating seek bar
+        bindSeekBarToPlayer();
+    }
+
+    @Override
     public void onStop() {
         super.onStop();
 
-        //Indicate that we don't need to update seek bar anymore
+        //Pause updating seek bar
+        mSeekBarBound = false;
+        mApplication.getMediaPlayerService().unregisterListener(this);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        //End seek bar binding
         mSeekBarBound = false;
         mSeekBarHandler = null;
     }
@@ -117,8 +158,9 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
 
+        //OnCreateOptionsMenu is called when fragment is really visible in pager, we use that phenomena
+        mApplication.getMediaPlayerService().registerListener(this);
         bindSeekBarToPlayer();
-        mOnCreateOptionsCalled = true;
 
     }
 
@@ -157,28 +199,22 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     //This connects seek bar to current song that is played by media player service
     public void bindSeekBarToPlayer()
     {
-        mPlayer = mApplication.getMediaPlayerService().getMediaPlayer();
-
         mSeekBarBound = true;
-
-        mSeekBarHandler = new Handler();
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (mPlayer != null && mApplication.getMediaPlayerService().isPlaying())
-                {
-                    int position = mPlayer.getCurrentPosition();
-                    mSeekBar.setProgress(position);
-                }
-                if (mSeekBarBound && mPosition == mApplication.getMediaPlayerService().getPosition())
-                    mSeekBarHandler.postDelayed(this, 1000);
-            }
-        });
-
-
+        getActivity().runOnUiThread(mSeekBarRunnable);
     }
 
+    //Called when song is changed
+    @Override
+    public void onPlay(List<Song> songList, int position) {
+        //Start again updating seek bar
+        bindSeekBarToPlayer();
+    }
 
+    @Override
+    public void onSongResume() {
+        //Start again updating seek bar
+        bindSeekBarToPlayer();
+    }
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {

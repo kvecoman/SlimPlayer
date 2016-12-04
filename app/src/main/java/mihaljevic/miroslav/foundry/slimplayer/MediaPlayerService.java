@@ -1,6 +1,7 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
@@ -18,6 +19,7 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +34,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public static final String  NOTIFICATION_ACTION_PREVIOUS = "mihaljevic.miroslav.foundry.slimplayer.action.previous";
     public static final String  NOTIFICATION_ACTION_PLAY_PAUSE = "mihaljevic.miroslav.foundry.slimplayer.action.play_pause";
     public static final String  NOTIFICATION_ACTION_NEXT = "mihaljevic.miroslav.foundry.slimplayer.action.next";
+    public static final String  NOTIFICATION_ACTION_SWIPE = "mihaljevic.miroslav.foundry.slimplayer.action.swipe";
 
 
 
@@ -46,6 +49,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public MediaPlayer mPlayer;
 
     private boolean mPlaying = false;
+    private boolean mStopped = true;
 
    // private Cursor mCursor;
     private List<Song> mSongList;
@@ -56,8 +60,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     //TODO - Init this somewhere else
     private boolean mRepeatPlaylist = true;
 
-    private MediaPlayerListener mPlayerListener;
-
+    private List<MediaPlayerListener> mPlayerListenersList;
 
     public MediaPlayerService() {
     }
@@ -76,6 +79,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         mPlayer = new MediaPlayer();
         mPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
 
+        mPlayerListenersList = new ArrayList<>();
+
     }
 
 
@@ -91,7 +96,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         {
             if (action.equals(NOTIFICATION_ACTION_CLOSE))
             {
-                endService();
+                stop();
             }
             else if (action.equals(NOTIFICATION_ACTION_PREVIOUS))
             {
@@ -107,6 +112,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             else if (action.equals(NOTIFICATION_ACTION_NEXT))
             {
                 playNext();
+            }
+            else if (action.equals(NOTIFICATION_ACTION_SWIPE))
+            {
+                stop();
             }
         }
 
@@ -157,10 +166,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 public void onPrepared(MediaPlayer mp) {
                     mp.start();
                     mPlaying = true;
+                    mStopped = false;
 
                     //Notify NowPlayingActivity that we changed playing song
-                    if (mPlayerListener != null)
-                        mPlayerListener.onSongChanged(mSongList,mPosition);
+                    notifyListenersPlay();
                 }
             });
             mPlayer.setOnCompletionListener(this);
@@ -173,6 +182,15 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             e.printStackTrace();
         }
 
+    }
+
+    //This is called when song is finished playing
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+        //Continue to next song only if we are set to be playing
+        if (mPlaying) {
+            MediaPlayerService.this.playNext();
+        }
     }
 
     public void pause()
@@ -192,6 +210,20 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             mPlaying = true;
             mPlayer.start();
             showNotification(false, false);
+            notifyListenersResume();
+        }
+    }
+
+    //Function that tries to resume playback if the song is loaded, or load and play the song if not
+    public void resumeOrPlay(int position)
+    {
+        if (position == mPosition && mStopped == false)
+        {
+            resume();
+        }
+        else
+        {
+            play(position);
         }
     }
 
@@ -229,6 +261,19 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     }
 
+    public void stop()
+    {
+
+        if (mPlayer != null)
+        {
+            mPlaying = false;
+            mStopped = true;
+            mPosition = -1;
+            mPlayer.stop();
+            mPlayer.reset();
+        }
+    }
+
     //Stop playing and clear list
     public void stopAndClearList()
     {
@@ -236,11 +281,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         mPosition = -1;
         mSongList = null;
         mReadyToPlay = false;
-        if (mPlayer != null)
-        {
-            mPlayer.stop();
-            mPlayer.reset();
-        }
+        stop();
 
     }
 
@@ -258,10 +299,37 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         stopSelf();
     }
 
-    //This is called when song is finished playing
-    @Override
-    public void onCompletion(MediaPlayer mp) {
-        MediaPlayerService.this.playNext();
+
+    public void registerListener(MediaPlayerListener listener)
+    {
+        mPlayerListenersList.add(listener);
+    }
+
+    public void unregisterListener(MediaPlayerListener listener)
+    {
+        mPlayerListenersList.remove(listener);
+    }
+
+    public void notifyListenersPlay()
+    {
+        for (MediaPlayerListener listener : mPlayerListenersList)
+        {
+            try {
+                listener.onPlay(mSongList, mPosition);
+            }
+            catch (ConcurrentModificationException e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void notifyListenersResume()
+    {
+        for (MediaPlayerListener listener : mPlayerListenersList)
+        {
+            listener.onSongResume();
+        }
     }
 
 
@@ -287,7 +355,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
         //Set-up notification
         builder.setSmallIcon(R.mipmap.ic_launcher)
-                .setOngoing(true)
+                .setOngoing(false)
+                .setAutoCancel(false)
                 .setContent(notificationView)
                 .setContentIntent(PendingIntent.getActivity(this,0,new Intent(this,NowPlayingActivity.class),0));
 
@@ -332,9 +401,31 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         pendingIntent = PendingIntent.getService(this,0,intent,0);
         notificationView.setOnClickPendingIntent(R.id.notification_next, pendingIntent);
 
+        //Swipe notification intent
+        intent = new Intent(this, this.getClass());
+        intent.setAction(NOTIFICATION_ACTION_SWIPE);
+        pendingIntent = PendingIntent.getService(this,0,intent,0);
+        builder.setDeleteIntent(pendingIntent);
+
+
         //Build and show notification
         Notification notification = builder.build();
-        startForeground(NOTIFICATION_PLAYER_ID,notification);
+
+        //If we are playing, start notification as foreground otherwise start it so it can be dismissed
+        /*if (playIcon)
+        {
+            startForeground(NOTIFICATION_PLAYER_ID,notification);
+        }
+        else
+        {
+            NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+            notificationManager.notify(NOTIFICATION_PLAYER_ID, notification);
+        }*/
+
+        NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        notificationManager.notify(NOTIFICATION_PLAYER_ID, notification);
+
+
 
     }
 
@@ -389,9 +480,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     {
         Log.d("slim","MediaPlayerService - setCurrentPlayInfoToListener()");
         //Check if we have something in this service
-        if (mCount > 0 && mPosition >= 0 && mSongList != null && mPlayerListener != null)
+        if (mCount > 0 && mPosition >= 0 && mSongList != null)
         {
-            mPlayerListener.onSongChanged(mSongList,mPosition);
+            notifyListenersPlay();
         }
 
     }
@@ -436,15 +527,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         return mPlaying;
     }
 
-    public void setMediaPlayerListener(MediaPlayerListener listener)
-    {
-        mPlayerListener = listener;
-    }
-
-
     public interface MediaPlayerListener
     {
-        void onSongChanged(List<Song> songList, int position);
+        void onPlay(List<Song> songList, int position);
+
+        void onSongResume();
     }
 
 

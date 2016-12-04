@@ -56,11 +56,24 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
 
         }
 
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
         //When we are connected request current play info
-        mApplication.getMediaPlayerService().setMediaPlayerListener(NowPlayingActivity.this);
+        mApplication.getMediaPlayerService().registerListener(NowPlayingActivity.this);
         mApplication.getMediaPlayerService().setCurrentPlayInfoToListener();
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        mApplication.getMediaPlayerService().unregisterListener(this);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
@@ -83,15 +96,19 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
             }
             else
             {
-                playerService.resume();
+                playerService.resumeOrPlay(mPager.getCurrentItem());
             }
         }
     }
 
     @Override
-    public void onSongChanged(List<Song> songList, int position) {
+    public void onPlay(List<Song> songList, int position) {
+        //TODO - this looks sloppy
         mPager.setCurrentItem(position,true);
     }
+
+    @Override
+    public void onSongResume() {}
 
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}

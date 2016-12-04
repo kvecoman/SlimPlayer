@@ -17,7 +17,7 @@ import java.util.Set;
 
 /**
  * As its name says, this is main activity, tasked with showing starting screens like
- * homescreen, all songs, playlist etc.
+ * home screen, all songs, playlist etc.
  *
  * @author Miroslav Mihaljević
  *
@@ -32,7 +32,7 @@ import java.util.Set;
 //TODO - limit width of notification text
 //TODO - make notification button fatter
 //TODO - make title for "Select directories" preference nicer
-    //TODO - indicate that tap paused of resumed the song
+//TODO - indicate that tap paused or resumed the song
 
 public class MainActivity extends BackHandledFragmentActivity implements TextView.OnClickListener{
 
@@ -132,7 +132,6 @@ public class MainActivity extends BackHandledFragmentActivity implements TextVie
         mPager.setAdapter(mPagerAdapter);
 
         mPagerAdapter.notifyDataSetChanged();
-        //TODO - make pager update its fragments
         mPager.setCurrentItem(0);
     }
 

@@ -5,7 +5,9 @@
     <string name="options_title_settings">Settings</string>
     <string name="options_title_exit">Exit</string>
     <string name="options_title_playlist_add">Add to playlist...</string>
+    <string name="options_title_toggle_repeat">Toggle repeat</string>
 
+    <!--TODO: is this even used-->
     <!--options menu IDs-->
     <string name="options_id_playlist_add">playlist_add</string>
 

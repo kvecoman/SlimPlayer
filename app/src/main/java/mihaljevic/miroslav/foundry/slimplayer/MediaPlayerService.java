@@ -21,8 +21,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+
 
 //TODO - add intent filter so we can run songs from anywhere
 public class MediaPlayerService extends Service implements MediaPlayer.OnCompletionListener {
@@ -60,7 +63,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     //TODO - Init this somewhere else
     private boolean mRepeatPlaylist = true;
 
-    private List<MediaPlayerListener> mPlayerListenersList;
+    private List<SongPlayListener> mOnPlayListeners;
+    private List<SongResumeListener> mOnResumeListeners;
 
     public MediaPlayerService() {
     }
@@ -79,7 +83,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         mPlayer = new MediaPlayer();
         mPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
 
-        mPlayerListenersList = new ArrayList<>();
+        mOnPlayListeners = new ArrayList<>();
+        mOnResumeListeners = new ArrayList<>();
 
     }
 
@@ -300,33 +305,48 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     }
 
 
-    public void registerListener(MediaPlayerListener listener)
+    public void registerPlayListener(SongPlayListener listener)
     {
-        mPlayerListenersList.add(listener);
+        Log.d("slim","MediaPlayerService - registerListener - " + listener.toString());
+        mOnPlayListeners.add(listener);
     }
 
-    public void unregisterListener(MediaPlayerListener listener)
+    public void unregisterPlayListener(SongPlayListener listener)
     {
-        mPlayerListenersList.remove(listener);
+        Log.d("slim","MediaPlayerService - unregisterListener - " + listener.toString());
+        mOnPlayListeners.remove(listener);
+    }
+
+    public void registerResumeListener(SongResumeListener listener)
+    {
+        Log.d("slim","MediaPlayerService - registerListener - " + listener.toString());
+        mOnResumeListeners.add(listener);
+    }
+
+    public void unregisterResumeListener(SongResumeListener listener)
+    {
+        Log.d("slim","MediaPlayerService - unregisterListener - " + listener.toString());
+        mOnResumeListeners.remove(listener);
     }
 
     public void notifyListenersPlay()
     {
-        for (MediaPlayerListener listener : mPlayerListenersList)
+        try
         {
-            try {
-                listener.onPlay(mSongList, mPosition);
-            }
-            catch (ConcurrentModificationException e)
+            for (SongPlayListener listener : mOnPlayListeners)
             {
-                e.printStackTrace();
+                    listener.onPlay(mSongList, mPosition);
             }
+        }
+        catch (ConcurrentModificationException e)
+        {
+            e.printStackTrace();
         }
     }
 
     public void notifyListenersResume()
     {
-        for (MediaPlayerListener listener : mPlayerListenersList)
+        for (SongResumeListener listener : mOnResumeListeners)
         {
             listener.onSongResume();
         }
@@ -527,10 +547,14 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         return mPlaying;
     }
 
-    public interface MediaPlayerListener
+    public interface SongPlayListener
     {
         void onPlay(List<Song> songList, int position);
 
+    }
+
+    public interface SongResumeListener
+    {
         void onSongResume();
     }
 

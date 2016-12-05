@@ -27,7 +27,7 @@ import java.util.List;
  *
  * @author Miroslav Mihaljević
  */
-public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarChangeListener, MediaPlayerService.MediaPlayerListener {
+public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarChangeListener, MediaPlayerService.SongResumeListener {
 
     public static final String SONG_POSITION_KEY = "song_position";
 
@@ -142,7 +142,6 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
         //Pause updating seek bar
         mSeekBarBound = false;
-        mApplication.getMediaPlayerService().unregisterListener(this);
     }
 
     @Override
@@ -150,8 +149,9 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         super.onDestroy();
 
         //End seek bar binding
-        mSeekBarBound = false;
+        //mSeekBarBound = false;
         mSeekBarHandler = null;
+        mApplication.getMediaPlayerService().unregisterResumeListener(this);
     }
 
     @Override
@@ -159,7 +159,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         super.onCreateOptionsMenu(menu, inflater);
 
         //OnCreateOptionsMenu is called when fragment is really visible in pager, we use that phenomena
-        mApplication.getMediaPlayerService().registerListener(this);
+        mApplication.getMediaPlayerService().registerResumeListener(this);
         bindSeekBarToPlayer();
 
     }
@@ -203,13 +203,8 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         getActivity().runOnUiThread(mSeekBarRunnable);
     }
 
-    //Called when song is changed
-    @Override
-    public void onPlay(List<Song> songList, int position) {
-        //Start again updating seek bar
-        bindSeekBarToPlayer();
-    }
 
+    //Called when song is resumed from paused state (when user taps to play)
     @Override
     public void onSongResume() {
         //Start again updating seek bar

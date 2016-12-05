@@ -33,6 +33,8 @@ import java.util.Set;
 //TODO - make notification button fatter
 //TODO - make title for "Select directories" preference nicer
 //TODO - indicate that tap paused or resumed the song
+//TODO - add creating and adding to playlists from playlists fragment
+//TODO - make song stop when receiving a call
 
 public class MainActivity extends BackHandledFragmentActivity implements TextView.OnClickListener{
 

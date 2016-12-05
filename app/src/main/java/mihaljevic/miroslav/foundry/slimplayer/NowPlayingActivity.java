@@ -16,7 +16,7 @@ import android.view.View;
 import java.util.List;
 
 
-public class NowPlayingActivity extends BackHandledFragmentActivity implements MediaPlayerService.MediaPlayerListener, View.OnClickListener,ViewPager.OnPageChangeListener {
+public class NowPlayingActivity extends BackHandledFragmentActivity implements MediaPlayerService.SongPlayListener, View.OnClickListener,ViewPager.OnPageChangeListener {
 
     public static final String SONG_COUNT_KEY = "song_count";
     public static final String SONG_POSITION_KEY = "song_position";
@@ -64,15 +64,17 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
         super.onResume();
 
         //When we are connected request current play info
-        mApplication.getMediaPlayerService().registerListener(NowPlayingActivity.this);
-        mApplication.getMediaPlayerService().setCurrentPlayInfoToListener();
+        mApplication.getMediaPlayerService().registerPlayListener(NowPlayingActivity.this);
+
+        //This might not be necessary as on play already calls all listeners
+        //mApplication.getMediaPlayerService().setCurrentPlayInfoToListener();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
 
-        mApplication.getMediaPlayerService().unregisterListener(this);
+        mApplication.getMediaPlayerService().unregisterPlayListener(this);
     }
 
     @Override
@@ -106,9 +108,6 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
         //TODO - this looks sloppy
         mPager.setCurrentItem(position,true);
     }
-
-    @Override
-    public void onSongResume() {}
 
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}

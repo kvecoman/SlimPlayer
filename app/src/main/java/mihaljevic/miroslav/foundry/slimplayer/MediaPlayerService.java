@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.MediaPlayer;
@@ -13,6 +14,7 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
+import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
@@ -60,8 +62,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private int mCount;
     private boolean mReadyToPlay = false; //Indicates if we have list loaded
 
-    //TODO - Init this somewhere else
-    private boolean mRepeatPlaylist = true;
+    private boolean mRepeatPlaylist;
 
     private List<SongPlayListener> mOnPlayListeners;
     private List<SongResumeListener> mOnResumeListeners;
@@ -86,6 +87,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         mOnPlayListeners = new ArrayList<>();
         mOnResumeListeners = new ArrayList<>();
 
+        //Get last known repeat status from preferences
+        refreshRepeat();
     }
 
 
@@ -246,6 +249,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 //If we are repeating playlist then start from the begining
                 play(0);
             }
+            else
+            {
+                stop();
+            }
         }
         else
         {
@@ -302,6 +309,13 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         mPlaying = false;
         stopForeground(true);
         stopSelf();
+    }
+
+    //Function to get latest state of repeat option
+    public void refreshRepeat()
+    {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        mRepeatPlaylist = preferences.getBoolean(getString(R.string.pref_key_repeat),true);
     }
 
 

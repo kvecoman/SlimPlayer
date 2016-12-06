@@ -4,7 +4,8 @@
 
     <item
         android:id="@+id/toggle_repeat"
-        android:title="options_title_toggle_repeat"
+        android:icon="@drawable/ic_repeat_white_48dp"
+        android:title="@string/options_title_toggle_repeat"
         app:showAsAction="ifRoom"
         />
 </menu>

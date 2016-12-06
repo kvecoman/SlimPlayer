@@ -4,19 +4,22 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 
 import java.util.List;
 
 
-public class NowPlayingActivity extends BackHandledFragmentActivity implements MediaPlayerService.SongPlayListener, View.OnClickListener,ViewPager.OnPageChangeListener {
+public class NowPlayingActivity extends BackHandledFragmentActivity implements MediaPlayerService.SongPlayListener,ViewPager.OnPageChangeListener {
 
     public static final String SONG_COUNT_KEY = "song_count";
     public static final String SONG_POSITION_KEY = "song_position";
@@ -80,27 +83,51 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
+        super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.options_menu,menu);
+        getMenuInflater().inflate(R.menu.now_playing_menu,menu);
+
+        //Set correct icon for toggle repeat action
+        MenuItem repeatItem = menu.findItem(R.id.toggle_repeat);
+        if (repeatItem != null)
+        {
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+            if (preferences.getBoolean(getString(R.string.pref_key_repeat),true))
+                repeatItem.setIcon(R.drawable.ic_repeat_white_48dp);
+            else
+                repeatItem.setIcon(R.drawable.ic_repeat_gray_48dp);
+        }
         return true;
     }
 
-    //Handle onscreen taps, change between play/pause
     @Override
-    public void onClick(View v) {
+    public boolean onOptionsItemSelected(MenuItem item) {
 
-        MediaPlayerService playerService = mApplication.getMediaPlayerService();
-
-        if (playerService.isReadyToPlay())
+        //Toggle repeat option
+        if (item.getItemId() == R.id.toggle_repeat)
         {
-            if (playerService.isPlaying())
-            {
-                playerService.pause();
-            }
+
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+            boolean repeat = preferences.getBoolean(getString(R.string.pref_key_repeat),true);
+
+            repeat = !repeat;
+
+            if (repeat)
+                item.setIcon(R.drawable.ic_repeat_white_48dp);
             else
-            {
-                playerService.resumeOrPlay(mPager.getCurrentItem());
-            }
+                item.setIcon(R.drawable.ic_repeat_gray_48dp);
+
+            preferences.edit().putBoolean(getString(R.string.pref_key_repeat),repeat).commit();
+            mApplication.getMediaPlayerService().refreshRepeat();
+
         }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    public ViewPager getPager() {
+        return mPager;
     }
 
     @Override

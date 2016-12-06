@@ -35,6 +35,8 @@ import java.util.Set;
 //TODO - indicate that tap paused or resumed the song
 //TODO - add creating and adding to playlists from playlists fragment
 //TODO - make song stop when receiving a call
+//TODO - options in options menu don't work in other activities other than MainActivity
+//TODO - replace notification bitmaps with vector assets
 
 public class MainActivity extends BackHandledFragmentActivity implements TextView.OnClickListener{
 

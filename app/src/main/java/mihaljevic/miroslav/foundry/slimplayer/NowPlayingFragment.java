@@ -27,7 +27,7 @@ import java.util.List;
  *
  * @author Miroslav Mihaljević
  */
-public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarChangeListener, MediaPlayerService.SongResumeListener {
+public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarChangeListener, MediaPlayerService.SongResumeListener, MediaPlayerService.SongPlayListener, View.OnClickListener{
 
     public static final String SONG_POSITION_KEY = "song_position";
 
@@ -111,11 +111,9 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
         mPlayer = mApplication.getMediaPlayerService().getMediaPlayer();
 
-        //Check if hosting activity can handle clicks and set it as click listener for content view (play/pause taps)
-        if (getContext() instanceof View.OnClickListener)
-        {
-            mContentView.setOnClickListener(((View.OnClickListener) getContext()));
-        }
+        //Handle taps on screen
+        mContentView.setOnClickListener(this);
+
 
         //Get song position that this fragment represents
         Bundle args = getArguments();
@@ -152,6 +150,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         //mSeekBarBound = false;
         mSeekBarHandler = null;
         mApplication.getMediaPlayerService().unregisterResumeListener(this);
+        mApplication.getMediaPlayerService().unregisterPlayListener(this);
     }
 
     @Override
@@ -160,8 +159,32 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
         //OnCreateOptionsMenu is called when fragment is really visible in pager, we use that phenomena
         mApplication.getMediaPlayerService().registerResumeListener(this);
+        mApplication.getMediaPlayerService().registerPlayListener(this);
         bindSeekBarToPlayer();
 
+    }
+
+    //TODO - this code can go back to activity
+    //Handle onscreen taps, change between play/pause
+    @Override
+    public void onClick(View v) {
+
+        MediaPlayerService playerService = mApplication.getMediaPlayerService();
+
+        if (playerService.isReadyToPlay())
+        {
+            if (playerService.isPlaying())
+            {
+                playerService.pause();
+            }
+            else
+            {
+                if (getContext() instanceof NowPlayingActivity)
+                {
+                    playerService.resumeOrPlay(((NowPlayingActivity) getContext()).getPager().getCurrentItem());
+                }
+            }
+        }
     }
 
    /* @Override
@@ -208,6 +231,12 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     @Override
     public void onSongResume() {
         //Start again updating seek bar
+        bindSeekBarToPlayer();
+    }
+
+    //This also cancome from tap
+    @Override
+    public void onPlay(List<Song> songList, int position) {
         bindSeekBarToPlayer();
     }
 

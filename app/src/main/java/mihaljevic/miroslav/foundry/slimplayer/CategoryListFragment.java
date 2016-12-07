@@ -24,14 +24,6 @@ public class CategoryListFragment extends SlimListFragment {
 
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_slim_list, container, false);
-    }
-
-
-    @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
         //Get cursor and move it to current position

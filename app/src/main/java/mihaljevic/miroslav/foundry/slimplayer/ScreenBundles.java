@@ -213,6 +213,8 @@ public final class ScreenBundles {
     {
         Bundle bundle = new Bundle();
 
+        String cursorScreen = context.getString(R.string.pref_key_playlists_screen) + " - " + parameter;
+
         String uri = MediaStore.Audio.Playlists.Members.getContentUri("external",Long.valueOf(parameter)).toString();
         String [] projection = {
                 MediaStore.Audio.Playlists.Members._ID,
@@ -229,6 +231,7 @@ public final class ScreenBundles {
         String sortOrder = MediaStore.Audio.Playlists.Members.TITLE + " ASC";
 
 
+        bundle.putString(SlimListFragment.CURSOR_SCREEN_KEY,cursorScreen);
         bundle.putString(SlimListFragment.CURSOR_URI_KEY,uri);
         bundle.putStringArray(SongListFragment.CURSOR_PROJECTION_KEY,projection);
         bundle.putString(SongListFragment.CURSOR_SELECTION_KEY,selection);
@@ -244,6 +247,8 @@ public final class ScreenBundles {
     public static Bundle getSongsByAlbumBundle(Context context, String parameter)
     {
         Bundle bundle = new Bundle();
+
+        String cursorScreen = context.getString(R.string.pref_key_albums_screen) + " - " + parameter;
 
         String uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI.toString();
         String [] projection = {
@@ -262,6 +267,7 @@ public final class ScreenBundles {
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
 
 
+        bundle.putString(SlimListFragment.CURSOR_SCREEN_KEY,cursorScreen);
         bundle.putString(SlimListFragment.CURSOR_URI_KEY,uri);
         bundle.putStringArray(SongListFragment.CURSOR_PROJECTION_KEY,projection);
         bundle.putString(SongListFragment.CURSOR_SELECTION_KEY,selection);
@@ -277,6 +283,8 @@ public final class ScreenBundles {
     public static Bundle getSongsByArtistsBundle(Context context, String parameter)
     {
         Bundle bundle = new Bundle();
+
+        String cursorScreen = context.getString(R.string.pref_key_artists_screen) + " - " + parameter;
 
         String uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI.toString();
         String [] projection = {
@@ -295,6 +303,7 @@ public final class ScreenBundles {
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
 
 
+        bundle.putString(SlimListFragment.CURSOR_SCREEN_KEY,cursorScreen);
         bundle.putString(SlimListFragment.CURSOR_URI_KEY,uri);
         bundle.putStringArray(SongListFragment.CURSOR_PROJECTION_KEY,projection);
         bundle.putString(SongListFragment.CURSOR_SELECTION_KEY,selection);
@@ -310,6 +319,8 @@ public final class ScreenBundles {
     public static Bundle getSongsByGenreBundle(Context context, String parameter)
     {
         Bundle bundle = new Bundle();
+
+        String cursorScreen = context.getString(R.string.pref_key_genres_screen) + " - " + parameter;
 
         String uri = MediaStore.Audio.Genres.Members.getContentUri("external",Long.parseLong(parameter)).toString();
         String [] projection = {
@@ -327,6 +338,7 @@ public final class ScreenBundles {
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
 
 
+        bundle.putString(SlimListFragment.CURSOR_SCREEN_KEY,cursorScreen);
         bundle.putString(SlimListFragment.CURSOR_URI_KEY,uri);
         bundle.putStringArray(SongListFragment.CURSOR_PROJECTION_KEY,projection);
         bundle.putString(SongListFragment.CURSOR_SELECTION_KEY,selection);

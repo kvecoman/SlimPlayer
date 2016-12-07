@@ -29,9 +29,11 @@ import java.util.Set;
 //TODO - $$_PROFIT_$$
 
 //TODO - remove empty genres
-//TODO - make title for "Select directories" preference nicer
+//TODO - make visual style for project
 //TODO - indicate that tap paused or resumed the song
+//TODO - add option to delete playlists
 //TODO - add creating and adding to playlists from playlists fragment
+//TODO - separate activities like AddToPlaylistActivity or SongListActivity can be unified and made into HolderActivity
 
 //TODO - make song stop when receiving a call - DONE but it needs testing
 

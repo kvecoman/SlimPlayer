@@ -91,6 +91,8 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         //super.onCreateOptionsMenu(menu, inflater);
 
+        //inflater.inflate(R.menu.options_menu,menu);
+
         //In this callback we know that fragment is really visible/selected in pager, so notify hosting activity
         if (getContext() instanceof BackHandlerInterface)
             ((BackHandlerInterface)getContext()).setBackHandledFragment(this);

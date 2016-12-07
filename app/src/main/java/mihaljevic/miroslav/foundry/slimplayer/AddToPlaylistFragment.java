@@ -32,7 +32,7 @@ import java.util.List;
  *
  * @author Miroslav Mihaljević
  */
-public class AddToPlaylistFragment extends CategoryListFragment{
+public class AddToPlaylistFragment extends PlaylistsFragment{
 
     //Fields that need to be accessible to AsyncTask (when adding to playlist)
     private List<String> mIdList;
@@ -58,19 +58,6 @@ public class AddToPlaylistFragment extends CategoryListFragment{
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        LayoutInflater inflater = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        TextView view = (TextView)inflater.inflate(android.R.layout.simple_list_item_activated_1,null);
-        view.setText(R.string.playlist_create);
-        getListView().addFooterView(view);
-
-        if (BuildConfig.DEBUG == true)
-        {
-            TextView view2 = (TextView)inflater.inflate(android.R.layout.simple_list_item_activated_1,null);
-            view2.setText("Delete playlists");
-            getListView().addFooterView(view2);
-        }
-
-        getLoaderManager().initLoader(0,getArguments(),this);
 
     }
 
@@ -132,77 +119,7 @@ public class AddToPlaylistFragment extends CategoryListFragment{
             getActivity().finish();
 
         }
-        else if (position == getListAdapter().getCount())
-        {
 
-            //Create new playlist
-
-
-            //Set up edit text that will be used in alert dialog to get playlist name
-            final EditText editText = new EditText(mContext);
-            editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
-            editText.setText(R.string.playlist_default_name);
-            editText.selectAll();
-
-
-            //Build alert dialog that will take name of new playlist
-            AlertDialog dialog = new AlertDialog.Builder(mContext)
-                    .setTitle("Create new playlist")
-                    .setMessage("Enter playlist name!")
-                    .setView(editText)
-                    .setPositiveButton("OK", new DialogInterface.OnClickListener(){
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-
-                            //Here we create new playlist
-                            String playlistName;
-
-                            playlistName = editText.getText().toString();
-
-                            //Create content values with new playlist info
-                            ContentValues inserts = new ContentValues();
-                            inserts.put(MediaStore.Audio.Playlists.NAME, playlistName);
-                            inserts.put(MediaStore.Audio.Playlists.DATE_ADDED, System.currentTimeMillis());
-                            inserts.put(MediaStore.Audio.Playlists.DATE_MODIFIED, System.currentTimeMillis());
-
-                            //Insert new playlist values
-                            Uri uri = mContext.getContentResolver().insert(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,inserts);
-
-                            //Get ID of newly created playlist
-                            Cursor c = mContext.getContentResolver().query(uri, new String[]{MediaStore.Audio.Playlists._ID},null,null,null);
-                            c.moveToFirst();
-                            int pId = c.getInt(0);
-                            c.close();
-
-                            //Toast.makeText(mContext,uri.toString() + " ------ " + pId,Toast.LENGTH_LONG).show();
-                        }
-                    })
-                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener(){
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-
-                        }
-                    }).create();
-
-            dialog.setOnShowListener(new DialogInterface.OnShowListener() {
-                @Override
-                public void onShow(DialogInterface dialog) {
-                    //Code to automatically show soft keyboard when dialog is shown
-                    InputMethodManager imm = (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT,0);
-                }
-            });
-
-            dialog.show();
-
-
-
-        }
-        else if (position == getListAdapter().getCount() + 1)
-        {
-            //Delete all playlists
-            mContext.getContentResolver().delete(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,null,null);
-        }
     }
 
     //Check if AUDIO_ID already exists in playlist

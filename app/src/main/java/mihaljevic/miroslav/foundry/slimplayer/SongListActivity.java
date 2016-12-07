@@ -23,20 +23,40 @@ public class SongListActivity extends BackHandledFragmentActivity {
         //Retrieve bundle intended to be sent with SlimListFragment
         Bundle fragmentBundle = getIntent().getBundleExtra(FRAGMENT_BUNDLE_KEY);
 
+        //If there is bundle for fragment then create that fragment and add it to container
         if (fragmentBundle != null)
         {
-            //If there is bundle for fragment then create that fragment and add it to container
-            SongListFragment fragment = new SongListFragment();
-            fragment.setArguments(fragmentBundle);
+            //If we are opening playlist then load PlaylistSongsFragment
+            if (fragmentBundle.getString(SlimListFragment.CURSOR_SCREEN_KEY).contains(getString(R.string.pref_key_playlists_screen)))
+            {
+                PlaylistSongsFragment fragment = new PlaylistSongsFragment();
+                fragment.setArguments(fragmentBundle);
 
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,fragment).commit();
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,fragment).commit();
+            }
+            else
+            {
+                //Create usual song list fragment
+                SongListFragment fragment = new SongListFragment();
+                fragment.setArguments(fragmentBundle);
+
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,fragment).commit();
+            }
+
+
         }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
-        getMenuInflater().inflate(R.menu.options_menu,menu);
-        return true;
+        //Check if we need to inflate PlaylistSongs menu
+        if (getIntent().getBundleExtra(FRAGMENT_BUNDLE_KEY).getString(SlimListFragment.CURSOR_SCREEN_KEY).contains(getString(R.string.pref_key_playlists_screen)))
+        {
+            getMenuInflater().inflate(R.menu.playlist_songs_menu,menu);
+        }
+
+
+        return super.onCreateOptionsMenu(menu);
     }
 }

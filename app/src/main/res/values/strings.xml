@@ -60,7 +60,7 @@
     <string name="icon_previous">\uE803</string>
     <string name="icon_next">\uE804</string>
     <string name="icon_close">\uE805</string>
-    
+
     <!--File names of icon bitmaps-->
     <string name="bitmap_play">play.bmp</string>
     <string name="bitmap_stop">stop.bmp</string>

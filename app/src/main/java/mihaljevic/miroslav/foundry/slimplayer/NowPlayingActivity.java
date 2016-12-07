@@ -75,7 +75,6 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
     public boolean onCreateOptionsMenu(Menu menu)
     {
         super.onCreateOptionsMenu(menu);
-        getMenuInflater().inflate(R.menu.options_menu,menu);
         getMenuInflater().inflate(R.menu.now_playing_menu,menu);
 
         //Set correct icon for toggle repeat action
@@ -94,25 +93,6 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
-        //Toggle repeat option
-        if (item.getItemId() == R.id.toggle_repeat)
-        {
-
-            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-            boolean repeat = preferences.getBoolean(getString(R.string.pref_key_repeat),true);
-
-            repeat = !repeat;
-
-            if (repeat)
-                item.setIcon(R.drawable.ic_repeat_white_24dp);
-            else
-                item.setIcon(R.drawable.ic_repeat_gray_24dp);
-
-            preferences.edit().putBoolean(getString(R.string.pref_key_repeat),repeat).commit();
-            mApplication.getMediaPlayerService().refreshRepeat();
-
-        }
 
         return super.onOptionsItemSelected(item);
     }

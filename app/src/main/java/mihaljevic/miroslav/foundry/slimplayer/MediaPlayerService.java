@@ -4,10 +4,11 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.Color;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
@@ -22,15 +23,13 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 
 
 //TODO - add intent filter so we can run songs from anywhere
-public class MediaPlayerService extends Service implements MediaPlayer.OnCompletionListener {
+public class MediaPlayerService extends Service implements MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 
     //Notification ID
     public static final int NOTIFICATION_PLAYER_ID = 1;
@@ -45,9 +44,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     //TODO - maybe move this also to resource file
     //Points to location of our custom font file
-    public static final String ICON_FONT_PATH = "fonts/icons.ttf";
+    //public static final String ICON_FONT_PATH = "fonts/icons.ttf";
 
-    private Map<String,Bitmap> mBitmapIcons;
+    //private Map<String,Bitmap> mBitmapIcons;
 
     private MediaPlayerBinder mBinder = new MediaPlayerBinder();
 
@@ -55,6 +54,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     private boolean mPlaying = false;
     private boolean mStopped = true;
+
+    private AudioManager mAudioManager;
 
    // private Cursor mCursor;
     private List<Song> mSongList;
@@ -86,6 +87,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
         mOnPlayListeners = new ArrayList<>();
         mOnResumeListeners = new ArrayList<>();
+
+        mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        mAudioManager.requestAudioFocus(this,AudioManager.STREAM_MUSIC,AudioManager.AUDIOFOCUS_GAIN);
 
         //Get last known repeat status from preferences
         refreshRepeat();
@@ -142,6 +146,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public void onDestroy() {
 
+        mAudioManager.abandonAudioFocus(this);
 
         super.onDestroy();
     }
@@ -152,6 +157,17 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         }
     }
 
+    @Override
+    public void onAudioFocusChange(int focusChange) {
+        if (focusChange <= 0)
+        {
+            pause();
+        }
+        else
+        {
+            resume();
+        }
+    }
 
     public void play(int position)
     {
@@ -215,7 +231,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     public void resume()
     {
-        if (mPlayer != null)
+        if (mPlayer != null && mPosition != -1)
         {
             mPlaying = true;
             mPlayer.start();
@@ -372,7 +388,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     //Display notification player for this service
     public void showNotification(boolean playIcon, boolean ticker)
     {
-        RemoteViews notificationView = new RemoteViews(getPackageName(),R.layout.notification_player2);
+        RemoteViews notificationView = new RemoteViews(getPackageName(),R.layout.notification_player);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
 
         notificationView.setTextViewText(R.id.notification_title,getCurrentSong().getTitle());

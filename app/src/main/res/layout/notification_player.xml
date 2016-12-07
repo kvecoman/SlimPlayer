@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="64dp">
 
@@ -11,53 +12,60 @@
         android:src="@mipmap/ic_launcher" />
 
 
-    <TextView
-        android:id="@+id/notification_title"
-        android:textAllCaps="true"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Song Title"
-        android:textSize="16sp"
+    <!--Small bit of dirty fix to center title text-->
+    <FrameLayout
+        android:id="@+id/notification_frame_title"
+        android:layout_width="match_parent"
+        android:layout_height="18sp"
         android:layout_alignParentTop="true"
-        android:layout_marginTop="@dimen/notification_vertical_margin"
-        android:layout_toLeftOf="@+id/notification_close"
         android:layout_toRightOf="@+id/notification_icon"
-        android:layout_toEndOf="@+id/notification_icon"
-        android:layout_marginLeft="@dimen/notification_horizontal_margin" />
+        android:layout_toLeftOf="@+id/notification_close"
+        android:layout_marginTop="@dimen/notification_vertical_margin"
+        android:layout_marginLeft="@dimen/notification_horizontal_margin">
+
+        <TextView
+            android:id="@+id/notification_title"
+            android:textAllCaps="true"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Song Title + Jako dugacak text naslova pjesme koji ne smije probiti layout u kojem se nalazi"
+            android:textColor="#d3d3d3"
+            android:textSize="16sp"
+            android:ellipsize="end"/>
+    </FrameLayout>
 
     <ImageButton
         android:id="@+id/notification_close"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="0dp"
-        android:textSize="14sp"
-        android:minHeight="20sp"
-        android:minWidth="20sp"
+        android:src="@drawable/ic_close_ltgray_24dp"
         android:background="@null"
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginTop="@dimen/notification_vertical_margin"
-        android:layout_marginRight="@dimen/notification_horizontal_margin"/>
+        android:paddingTop="@dimen/notification_vertical_padding"
+        android:paddingRight="@dimen/notification_close_button_outer_padding"
+        android:paddingLeft="@dimen/notification_close_button_outer_padding"/>
 
     <ImageButton
         android:id="@+id/notification_previous"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="0dp"
+        android:src="@drawable/ic_skip_previous_ltgray_24dp"
+        android:background="@null"
         android:textSize="14sp"
         android:minHeight="20sp"
         android:minWidth="20sp"
-        android:background="@null"
         android:layout_alignParentBottom="true"
         android:layout_toRightOf="@+id/notification_icon"
         android:layout_toEndOf="@+id/notification_icon"
-        android:layout_marginLeft="@dimen/notification_horizontal_margin"
-        android:layout_marginBottom="@dimen/notification_vertical_margin"
-        android:paddingRight="@dimen/notification_outer_padding" />
+        android:paddingLeft="@dimen/notification_outer_padding"
+        android:paddingBottom="@dimen/notification_vertical_padding"
+        android:paddingRight="@dimen/notification_inner_padding" />
 
     <!--Small bit of dirty fix to center the button-->
     <FrameLayout
+        android:id="@+id/notification_frame_play"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
@@ -69,15 +77,11 @@
             android:layout_gravity="center_horizontal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="|>"
-            android:padding="0dp"
-            android:textSize="14sp"
-            android:minHeight="20sp"
-            android:minWidth="20sp"
+            android:src="@drawable/ic_play_arrow_ltgray_24dp"
             android:background="@null"
-            android:layout_marginBottom="@dimen/notification_vertical_margin"
-            android:paddingLeft="@dimen/notification_outer_padding"
-            android:paddingRight="@dimen/notification_outer_padding" />
+            android:paddingLeft="@dimen/notification_inner_padding"
+            android:paddingBottom="@dimen/notification_vertical_padding"
+            android:paddingRight="@dimen/notification_inner_padding"/>
     </FrameLayout>
 
 
@@ -85,17 +89,13 @@
         android:id="@+id/notification_next"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:contentDescription=">|"
-        android:padding="0dp"
-        android:textSize="14sp"
-        android:minHeight="20sp"
-        android:minWidth="20sp"
+        android:src="@drawable/ic_skip_next_ltgray_24dp"
         android:background="@null"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginBottom="@dimen/notification_vertical_margin"
-        android:layout_marginRight="@dimen/notification_horizontal_margin"
-        android:paddingLeft="@dimen/notification_outer_padding" />
+        android:paddingLeft="@dimen/notification_inner_padding"
+        android:paddingBottom="@dimen/notification_vertical_padding"
+        android:paddingRight="@dimen/notification_outer_padding" />
 
 </RelativeLayout>

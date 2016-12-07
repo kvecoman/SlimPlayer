@@ -10,7 +10,7 @@ import android.support.v7.app.AppCompatActivity;
  *
  */
 
-public class BackHandledFragmentActivity extends AppCompatActivity implements BackHandledListFragment.BackHandlerInterface {
+public class BackHandledFragmentActivity extends SlimActivity implements BackHandledListFragment.BackHandlerInterface {
 
     //Fragment which needs to handle back button press
     protected BackHandledListFragment mBackHandledListFragment;

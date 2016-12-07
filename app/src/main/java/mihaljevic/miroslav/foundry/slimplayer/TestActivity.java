@@ -3,7 +3,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-public class TestActivity extends AppCompatActivity {
+public class TestActivity extends SlimActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

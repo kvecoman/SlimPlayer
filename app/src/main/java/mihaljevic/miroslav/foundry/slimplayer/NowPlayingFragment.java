@@ -155,7 +155,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
+        //super.onCreateOptionsMenu(menu, inflater);
 
         //OnCreateOptionsMenu is called when fragment is really visible in pager, we use that phenomena
         mApplication.getMediaPlayerService().registerResumeListener(this);
@@ -222,6 +222,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     //This connects seek bar to current song that is played by media player service
     public void bindSeekBarToPlayer()
     {
+        //TODO - this can throw null-pointer if scrolled to fast - debug it
         mSeekBarBound = true;
         getActivity().runOnUiThread(mSeekBarRunnable);
     }

@@ -12,7 +12,7 @@ import android.os.Bundle;
  * @author Miroslav Mihaljević
  */
 
-public class AddToPlaylistActivity extends AppCompatActivity {
+public class AddToPlaylistActivity extends SlimActivity {
 
     public static final String ID_LIST_KEY = "id_list";
 

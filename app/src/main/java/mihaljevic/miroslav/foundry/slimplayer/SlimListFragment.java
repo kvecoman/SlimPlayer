@@ -89,7 +89,7 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
+        //super.onCreateOptionsMenu(menu, inflater);
 
         //In this callback we know that fragment is really visible/selected in pager, so notify hosting activity
         if (getContext() instanceof BackHandlerInterface)

@@ -32,8 +32,8 @@ import java.util.Set;
 //TODO - make title for "Select directories" preference nicer
 //TODO - indicate that tap paused or resumed the song
 //TODO - add creating and adding to playlists from playlists fragment
-//TODO - make song stop when receiving a call
-//TODO - options in options menu don't work in other activities other than MainActivity
+
+//TODO - make song stop when receiving a call - DONE but it needs testing
 
 public class MainActivity extends BackHandledFragmentActivity implements TextView.OnClickListener{
 
@@ -88,34 +88,6 @@ public class MainActivity extends BackHandledFragmentActivity implements TextVie
         super.onSaveInstanceState(outState);
 
         outState.putInt(SCREEN_POSITION_KEY,mPager.getCurrentItem());
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
-        //Inflate options menu
-        getMenuInflater().inflate(R.menu.options_menu,menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item)
-    {
-        int id = item.getItemId();
-
-        //Activate corresponding action that was selected in menu
-        switch (id)
-        {
-            case R.id.settings:
-                startActivity(new Intent(this, SettingsActivity.class));
-                break;
-            case R.id.exit:
-                android.os.Process.killProcess(android.os.Process.myPid());
-                System.exit(1);
-                break;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     //Empty page click handler, opens preferences so user can select screens to be shown

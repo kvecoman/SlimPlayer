@@ -105,6 +105,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             if (action.equals(NOTIFICATION_ACTION_CLOSE))
             {
                 stop();
+                NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+                notificationManager.cancel(NOTIFICATION_PLAYER_ID);
             }
             else if (action.equals(NOTIFICATION_ACTION_PREVIOUS))
             {
@@ -370,22 +372,24 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     //Display notification player for this service
     public void showNotification(boolean playIcon, boolean ticker)
     {
-        RemoteViews notificationView = new RemoteViews(getPackageName(),R.layout.notification_player);
+        RemoteViews notificationView = new RemoteViews(getPackageName(),R.layout.notification_player2);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
 
         notificationView.setTextViewText(R.id.notification_title,getCurrentSong().getTitle());
 
         //Check if we have notifications icons, if not generate them right now
-        if (mBitmapIcons == null)
+        /*if (mBitmapIcons == null)
         {
             generateBitmapIcons();
-        }
+        }*/
 
         //Render font icons in scale with current device screen density
-        notificationView.setImageViewBitmap(R.id.notification_close,        mBitmapIcons.get(getString(R.string.icon_close)));
+        /*notificationView.setImageViewBitmap(R.id.notification_close,        mBitmapIcons.get(getString(R.string.icon_close)));
         notificationView.setImageViewBitmap(R.id.notification_previous,     mBitmapIcons.get(getString(R.string.icon_previous)));
         notificationView.setImageViewBitmap(R.id.notification_play,         mBitmapIcons.get(getString(playIcon ? R.string.icon_play : R.string.icon_pause)));
-        notificationView.setImageViewBitmap(R.id.notification_next,         mBitmapIcons.get(getString(R.string.icon_next)));
+        notificationView.setImageViewBitmap(R.id.notification_next,         mBitmapIcons.get(getString(R.string.icon_next)));*/
+
+        notificationView.setImageViewResource(R.id.notification_play, playIcon ? R.drawable.ic_play_arrow_ltgray_24dp : R.drawable.ic_pause_ltgray_24dp);
 
         //Set-up notification
         builder.setSmallIcon(R.mipmap.ic_launcher)
@@ -464,7 +468,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     }
 
     //Generates bitmap icons used for notification player
-    public void generateBitmapIcons()
+    /*public void generateBitmapIcons()
     {
         String[] iconCodes = getResources().getStringArray(R.array.icon_codes);
         Bitmap bitmap;
@@ -477,7 +481,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         }
 
         mBitmapIcons = bitmaps;
-    }
+    }*/
 
 
     //Set the list and start playing

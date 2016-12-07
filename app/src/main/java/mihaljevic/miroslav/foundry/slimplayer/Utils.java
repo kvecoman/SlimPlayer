@@ -22,7 +22,7 @@ public final class Utils {
     private Utils(){}
 
     //Render custom font
-    public static Bitmap renderFont(Context context, String text, int color, float fontSizeSP, String path)
+    /*public static Bitmap renderFont(Context context, String text, int color, float fontSizeSP, String path)
     {
         int fontSizePX = convertDipToPix(context, fontSizeSP);
         int pad = (fontSizePX / 9);
@@ -47,7 +47,7 @@ public final class Utils {
     {
         int value = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, context.getResources().getDisplayMetrics());
         return value;
-    }
+    }*/
 
 
     //Helper function to set and calculate height of list view (assuming all rows are same)

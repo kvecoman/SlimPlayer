@@ -1,20 +1,11 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.os.IBinder;
-import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.preference.PreferenceManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 
 import java.util.List;
 
@@ -94,9 +85,9 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
             if (preferences.getBoolean(getString(R.string.pref_key_repeat),true))
-                repeatItem.setIcon(R.drawable.ic_repeat_white_48dp);
+                repeatItem.setIcon(R.drawable.ic_repeat_white_24dp);
             else
-                repeatItem.setIcon(R.drawable.ic_repeat_gray_48dp);
+                repeatItem.setIcon(R.drawable.ic_repeat_gray_24dp);
         }
         return true;
     }
@@ -114,9 +105,9 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
             repeat = !repeat;
 
             if (repeat)
-                item.setIcon(R.drawable.ic_repeat_white_48dp);
+                item.setIcon(R.drawable.ic_repeat_white_24dp);
             else
-                item.setIcon(R.drawable.ic_repeat_gray_48dp);
+                item.setIcon(R.drawable.ic_repeat_gray_24dp);
 
             preferences.edit().putBoolean(getString(R.string.pref_key_repeat),repeat).commit();
             mApplication.getMediaPlayerService().refreshRepeat();

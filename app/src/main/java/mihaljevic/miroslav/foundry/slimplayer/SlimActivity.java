@@ -16,7 +16,9 @@ import android.view.MenuItem;
  *
  */
 
-public class SlimActivity extends AppCompatActivity {
+public abstract class SlimActivity extends AppCompatActivity {
+
+    public static String REQUEST_CODE_KEY = "request_code";
 
     private SlimPlayerApplication mApplication;
 
@@ -74,4 +76,12 @@ public class SlimActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+    //Lets make sure that we always send request code when starting activity for result
+    /*@Override
+    public void startActivityForResult(Intent intent, int requestCode) {
+
+        intent.putExtra(REQUEST_CODE_KEY,requestCode);
+        super.startActivityForResult(intent, requestCode);
+    }*/
 }

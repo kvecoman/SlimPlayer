@@ -36,6 +36,7 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
     //Keys that are used when transferring data about different screens from ScreenBundles
     public static final String CURSOR_SCREEN_KEY = "cursor_screen";
 
+    public static final String CURSOR_PARAMETER_KEY = "cursor_parameter"; //ID of playlist, or artist, something like that
     public static final String CURSOR_URI_KEY = "cursor_uri";
     public static final String CURSOR_PROJECTION_KEY = "cursor_projection";
     public static final String CURSOR_SELECTION_KEY = "cursor_selection";
@@ -49,6 +50,12 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
     protected CursorAdapter mCursorAdapter;
 
     protected String mCurrentScreen;
+
+    //Are we only selecting songs for playlists
+    protected boolean mSelectSongsForResult;
+
+    //Are we selecting something
+    protected boolean mSelectMode = false;
 
 
     public SlimListFragment() {
@@ -85,6 +92,15 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
             setListAdapter(mCursorAdapter);
             getLoaderManager().initLoader(0,bundle,this);
         }
+
+        //Check if we are selecting songs for playlists
+        if (mContext instanceof SelectSongsActivity)
+        {
+            if (((SelectSongsActivity)mContext).isSelectSongsForResult())
+            {
+                mSelectSongsForResult = true;
+            }
+        }
     }
 
     @Override
@@ -96,6 +112,42 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
         //In this callback we know that fragment is really visible/selected in pager, so notify hosting activity
         if (getContext() instanceof BackHandlerInterface)
             ((BackHandlerInterface)getContext()).setBackHandledFragment(this);
+    }
+
+    @Override
+    public boolean onBackPressed() {
+
+        //Here we store if the back button event is consumed
+        boolean backConsumed = false;
+
+        //If we are in normal mode, just deselect everything, if we are in select for result mode, no deselection
+        if (mSelectMode && !mSelectSongsForResult)
+        {
+            //Deselect everything
+            deselect();
+            backConsumed = true;
+        }
+
+        return backConsumed;
+    }
+
+    //Turns on selection in listView
+    public void activateSelectMode()
+    {
+        //If we are not in select mode, activate it
+        getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+        mSelectMode = true;
+        getActivity().invalidateOptionsMenu();
+
+    }
+
+    //Deselects selection in listView
+    public void deselect()
+    {
+        mSelectMode = false;
+        getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+        getListView().clearChoices();
+        getListView().requestLayout();
     }
 
     @Override

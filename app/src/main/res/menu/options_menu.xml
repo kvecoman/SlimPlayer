@@ -6,6 +6,16 @@
         android:visible="false"
         />
     <item
+        android:id="@+id/playlist_create"
+        android:title="@string/playlist_create"
+        android:visible="false"
+        />
+    <item
+        android:id="@+id/delete_item"
+        android:title="@string/options_title_delete_item"
+        android:visible="false"
+        />
+    <item
         android:id="@+id/settings"
         android:title="@string/options_title_settings"
         />

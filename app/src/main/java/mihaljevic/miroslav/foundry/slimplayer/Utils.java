@@ -1,10 +1,12 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.provider.MediaStore;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.ListAdapter;
@@ -68,5 +70,25 @@ public final class Utils {
         height += lv.getDividerHeight() * (count - 1);
 
         return height;
+    }
+
+    //Check if AUDIO_ID already exists in playlist
+    public static boolean playlistCheckForDuplicate(Cursor playlistCursor, long id)
+    {
+        if (playlistCursor == null)
+            return false;
+
+
+        for (int i = 0; i < playlistCursor.getCount(); i++)
+        {
+            playlistCursor.moveToPosition(i);
+
+            if (playlistCursor.getLong(playlistCursor.getColumnIndex(MediaStore.Audio.Playlists.Members.AUDIO_ID)) == id)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

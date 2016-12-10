@@ -89,7 +89,7 @@ public class AddToPlaylistFragment extends PlaylistsFragment{
 
                     for(int i = 0;i < mIdList.size();i++)
                     {
-                        if (!playlistCheckForDuplicate(mPlaylistCursor,Long.parseLong(mIdList.get(i)))) {
+                        if (!Utils.playlistCheckForDuplicate(mPlaylistCursor,Long.parseLong(mIdList.get(i)))) {
 
                             values = new ContentValues();
                             values.put(MediaStore.Audio.Playlists.Members.AUDIO_ID, Long.valueOf(mIdList.get(i)));
@@ -122,25 +122,7 @@ public class AddToPlaylistFragment extends PlaylistsFragment{
 
     }
 
-    //Check if AUDIO_ID already exists in playlist
-    public boolean playlistCheckForDuplicate(Cursor playlistCursor, long id)
-    {
-        if (playlistCursor == null)
-            return false;
 
-
-        for (int i = 0; i < playlistCursor.getCount(); i++)
-        {
-            playlistCursor.moveToPosition(i);
-
-            if (playlistCursor.getLong(playlistCursor.getColumnIndex(MediaStore.Audio.Playlists.Members.AUDIO_ID)) == id)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
 
 
 }

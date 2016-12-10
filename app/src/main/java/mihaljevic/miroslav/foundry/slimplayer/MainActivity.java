@@ -34,10 +34,12 @@ import java.util.Set;
 //TODO - add option to delete playlists
 //TODO - add creating and adding to playlists from playlists fragment
 //TODO - separate activities like AddToPlaylistActivity or SongListActivity can be unified and made into HolderActivity
+//TODO - rename vectors with 36dp that have in name 24dp
+//TODO - rotating phone crashes app, something with cursor not working when recreating in SongListFragments
 
 //TODO - make song stop when receiving a call - DONE but it needs testing
 
-public class MainActivity extends BackHandledFragmentActivity implements TextView.OnClickListener{
+public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";
 
@@ -46,6 +48,8 @@ public class MainActivity extends BackHandledFragmentActivity implements TextVie
     //Pager that hold different screens (All music, Playlists etc)
     private ViewPager mPager;
     private PagerAdapter mPagerAdapter;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,8 +113,6 @@ public class MainActivity extends BackHandledFragmentActivity implements TextVie
         mPagerAdapter.notifyDataSetChanged();
         mPager.setCurrentItem(0);
     }
-
-
 
 
 

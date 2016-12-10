@@ -6,6 +6,9 @@
     <string name="options_title_exit">Exit</string>
     <string name="options_title_playlist_add">Add to playlist...</string>
     <string name="options_title_toggle_repeat">Toggle repeat</string>
+    <string name="options_title_accept_selected">Confirm selected songs</string>
+    <string name="options_title_cancel_selected">Cancel selected songs</string>
+    <string name="options_title_delete_item">Delete</string>
 
     <!--TODO: is this even used-->
     <!--options menu IDs-->
@@ -73,6 +76,8 @@
     <string name="empty_placeholder">Nothing to be found here...</string>
     <string name="empty_main_screen">None of the home screens are turned on to show, click here to review your preferences</string>
 
+    <!--Toast texts-->
+    <string name="toast_playlist_exists">Playlist with that name already exists</string>
 
     <!-- Default text-->
     <string name="hello_blank_fragment">Nothing to show</string>

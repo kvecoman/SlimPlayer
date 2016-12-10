@@ -47,7 +47,7 @@ public class SongListFragment extends SlimListFragment {
 
     private SlimPlayerApplication mApplication;
 
-    protected boolean mSelectMode = false;
+
 
     protected List<Song> mSongList;
 
@@ -79,11 +79,8 @@ public class SongListFragment extends SlimListFragment {
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 if (!mSelectMode)
                 {
-                    //If we are not in select mode, activate it
-                    ((ListView)parent).setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+                    activateSelectMode();
                     ((ListView)parent).setItemChecked(position, true);
-                    mSelectMode = true;
-                    getActivity().invalidateOptionsMenu();
                 }
                 return true;
             }
@@ -93,6 +90,17 @@ public class SongListFragment extends SlimListFragment {
 
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        //If we are selecting songs for result then we need to enforce select mode, so we don't play songs here
+        if (mSelectSongsForResult)
+        {
+            activateSelectMode();
+        }
+    }
+
     //Here we load all songs in songList when Cursor loader is finished
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
@@ -100,14 +108,17 @@ public class SongListFragment extends SlimListFragment {
 
         Log.d("slim",mCurrentScreen + " - onLoadFinished()");
 
+        //TODO - this might be heavy, move to async
         mSongList = getSongListFromCursor(data);
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id)
     {
+
+
         //If we are not selecting items, then we want to play them
-        if (!mSelectMode)
+        if (!mSelectMode && !mSelectSongsForResult)
         {
             //Pass list of songs from which we play and play current position
             mApplication.getMediaPlayerService().playList(mSongList,position);
@@ -117,61 +128,59 @@ public class SongListFragment extends SlimListFragment {
             startActivity(intent);
         }
 
-    }
-
-
-
-    @Override
-    public boolean onBackPressed() {
-
-        //Here we store if the back button event is consumed
-        boolean backConsumed = false;
-
-        if (mSelectMode)
+        //If we are in select for result mode
+        if (mSelectSongsForResult)
         {
-            //Deselect everything
-            deselect();
-            backConsumed = true;
+            if (getListView().isItemChecked(position)) {
+                ((SelectSongsActivity) mContext).getSelectedSongsList().add(mSongList.get(position).getId() + "");
+            }
+            else
+            {
+                ((SelectSongsActivity) mContext).getSelectedSongsList().remove(mSongList.get(position).getId() + "");
+            }
         }
 
-        return backConsumed;
     }
+
+
+
+
 
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
 
-        MenuItem playlistAddMenuItem = menu.findItem(R.id.playlist_add);
-
-        if (mSelectMode)
+        //Show add to playlist only if we are in normal mode (and not select for result mode)
+        if (!mSelectSongsForResult)
         {
-            //If we are selecting items then we want option to add them to playlist
-            playlistAddMenuItem.setVisible(true);
-        }
-        else
-        {
-            //Hide option to add to playlist
-            playlistAddMenuItem.setVisible(false);
-        }
+            MenuItem playlistAddMenuItem = menu.findItem(R.id.playlist_add);
 
+            if (mSelectMode && getListView().getCheckedItemCount() > 0) {
+                //If we are selecting items then we want option to add them to playlist
+                playlistAddMenuItem.setVisible(true);
+            } else {
+                //Hide option to add to playlist
+                playlistAddMenuItem.setVisible(false);
+            }
+        }
         super.onPrepareOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
-        if (mSelectMode)
+        //Allow this option only if we are in normal mode
+        if (mSelectMode && !mSelectSongsForResult)
         {
             if (item.getItemId() == R.id.playlist_add)
             {
-
                 //Get all checked positions
                 SparseBooleanArray checkedPositions = getListView().getCheckedItemPositions();
 
                 Log.d("slim", getListView().getCount() + " of list items ----- " + checkedPositions.size() + " of items in boolean array");
 
                 Cursor cursor = mCursorAdapter.getCursor();
-                List<String> idList = new ArrayList<>(checkedPositions.size());
+                List<String> idList = new ArrayList<>();
 
                 //Transfer IDs from selected songs to ID list
                 for (int i = 0; i < checkedPositions.size();i++)
@@ -179,10 +188,13 @@ public class SongListFragment extends SlimListFragment {
                     int position = checkedPositions.keyAt(i);
                     Log.d("slim","Position of checked song: " + position);
 
-                    cursor.moveToPosition(position);
-                    idList.add(cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media._ID)));
-
+                    if (checkedPositions.get(position))
+                    {
+                        cursor.moveToPosition(position);
+                        idList.add(cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media._ID)));
+                    }
                 }
+
                 //Here we call add to playlists activity and pass ID list
                 Intent intent = new Intent(mContext,AddToPlaylistActivity.class);
                 intent.putExtra(AddToPlaylistActivity.ID_LIST_KEY,(ArrayList)idList);
@@ -193,14 +205,9 @@ public class SongListFragment extends SlimListFragment {
         return super.onOptionsItemSelected(item);
     }
 
-    //Deselects selection in listView
-    public void deselect()
-    {
-        mSelectMode = false;
-        getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-        getListView().clearChoices();
-        getListView().requestLayout();
-    }
+
+
+
 
     //Here we create an ArrayList of all songs from cursor
     public List<Song> getSongListFromCursor(Cursor cursor)

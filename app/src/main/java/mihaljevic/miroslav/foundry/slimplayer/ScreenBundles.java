@@ -218,6 +218,7 @@ public final class ScreenBundles {
         String uri = MediaStore.Audio.Playlists.Members.getContentUri("external",Long.valueOf(parameter)).toString();
         String [] projection = {
                 MediaStore.Audio.Playlists.Members._ID,
+                MediaStore.Audio.Playlists.Members.AUDIO_ID,
                 MediaStore.Audio.Playlists.Members.TITLE,
                 MediaStore.Audio.Playlists.Members.DISPLAY_NAME,
                 MediaStore.Audio.Playlists.Members.ARTIST,
@@ -231,6 +232,7 @@ public final class ScreenBundles {
         String sortOrder = MediaStore.Audio.Playlists.Members.TITLE + " ASC";
 
 
+        bundle.putString(SlimListFragment.CURSOR_PARAMETER_KEY,parameter);
         bundle.putString(SlimListFragment.CURSOR_SCREEN_KEY,cursorScreen);
         bundle.putString(SlimListFragment.CURSOR_URI_KEY,uri);
         bundle.putStringArray(SongListFragment.CURSOR_PROJECTION_KEY,projection);
@@ -267,6 +269,7 @@ public final class ScreenBundles {
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
 
 
+        bundle.putString(SlimListFragment.CURSOR_PARAMETER_KEY,parameter);
         bundle.putString(SlimListFragment.CURSOR_SCREEN_KEY,cursorScreen);
         bundle.putString(SlimListFragment.CURSOR_URI_KEY,uri);
         bundle.putStringArray(SongListFragment.CURSOR_PROJECTION_KEY,projection);
@@ -303,6 +306,7 @@ public final class ScreenBundles {
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
 
 
+        bundle.putString(SlimListFragment.CURSOR_PARAMETER_KEY,parameter);
         bundle.putString(SlimListFragment.CURSOR_SCREEN_KEY,cursorScreen);
         bundle.putString(SlimListFragment.CURSOR_URI_KEY,uri);
         bundle.putStringArray(SongListFragment.CURSOR_PROJECTION_KEY,projection);
@@ -338,6 +342,7 @@ public final class ScreenBundles {
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
 
 
+        bundle.putString(SlimListFragment.CURSOR_PARAMETER_KEY,parameter);
         bundle.putString(SlimListFragment.CURSOR_SCREEN_KEY,cursorScreen);
         bundle.putString(SlimListFragment.CURSOR_URI_KEY,uri);
         bundle.putStringArray(SongListFragment.CURSOR_PROJECTION_KEY,projection);

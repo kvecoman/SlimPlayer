@@ -31,7 +31,6 @@
             android:exported="true" />
 
         <activity android:name=".AddToPlaylistActivity" />
-        <activity android:name=".BackHandledFragmentActivity" />
         <activity
             android:name=".NowPlayingActivity"
             android:launchMode="singleTop"
@@ -41,7 +40,6 @@
                 android:value=".MainActivity" />
         </activity>
         <activity android:name=".TestActivity" />
-        <activity android:name=".SlimActivity"></activity>
     </application>
 
 </manifest>

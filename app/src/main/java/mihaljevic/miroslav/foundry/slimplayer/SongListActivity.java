@@ -10,7 +10,7 @@ import android.view.Menu;
  */
 
 //TODO - there is little delay between Activity loading and fragment showing list, try to fix it
-public class SongListActivity extends BackHandledFragmentActivity {
+public class SongListActivity extends SelectSongsActivity {
 
     //Key for bundle that is intended to be sent with SlimListFragment
     public static final String FRAGMENT_BUNDLE_KEY = "fragment_bundle";
@@ -50,8 +50,8 @@ public class SongListActivity extends BackHandledFragmentActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
-        //Check if we need to inflate PlaylistSongs menu
-        if (getIntent().getBundleExtra(FRAGMENT_BUNDLE_KEY).getString(SlimListFragment.CURSOR_SCREEN_KEY).contains(getString(R.string.pref_key_playlists_screen)))
+        //If we are in normal mode and this is playlist songs screen then inflate playlist songs menu
+        if (!mSelectSongsForResult && getIntent().getBundleExtra(FRAGMENT_BUNDLE_KEY).getString(SlimListFragment.CURSOR_SCREEN_KEY).contains(getString(R.string.pref_key_playlists_screen)))
         {
             getMenuInflater().inflate(R.menu.playlist_songs_menu,menu);
         }

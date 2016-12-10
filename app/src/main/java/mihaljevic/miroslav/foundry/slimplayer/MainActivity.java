@@ -31,9 +31,7 @@ import java.util.Set;
 //TODO - remove empty genres
 //TODO - make visual style for project
 //TODO - indicate that tap paused or resumed the song
-//TODO - add option to delete playlists
-//TODO - add creating and adding to playlists from playlists fragment
-//TODO - separate activities like AddToPlaylistActivity or SongListActivity can be unified and made into HolderActivity
+//TODO - separate activities like AddToPlaylistActivity or SongListActivity can be unified and made into HolderActivity (actually they can't, but they can have a superclass)
 //TODO - rename vectors with 36dp that have in name 24dp
 //TODO - rotating phone crashes app, something with cursor not working when recreating in SongListFragments
 

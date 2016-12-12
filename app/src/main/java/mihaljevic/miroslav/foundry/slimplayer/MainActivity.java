@@ -28,15 +28,16 @@ import java.util.Set;
 //TODO - make the app
 //TODO - $$_PROFIT_$$
 
+//TODO - separate activities like AddToPlaylistActivity or SongListActivity can be unified and made into HolderActivity (actually they can't, but they can have a superclass)
 //TODO - remove empty genres
 //TODO - make visual style for project
 //TODO - indicate that tap paused or resumed the song
-//TODO - separate activities like AddToPlaylistActivity or SongListActivity can be unified and made into HolderActivity (actually they can't, but they can have a superclass)
-//TODO - rename vectors with 36dp that have in name 24dp
-//TODO - rotating phone crashes app, something with cursor not working when recreating in SongListFragments
+//TODO - all database work to async tasks
+//TODO - earphones in/out resume/stop playback
+//TODO - make homescreen
+//TODO - make visualization
 
-//TODO - make song stop when receiving a call - DONE but it needs testing
-
+//TODO - continue here - async task loader works, but song display is messed up, log all relevant methods
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";

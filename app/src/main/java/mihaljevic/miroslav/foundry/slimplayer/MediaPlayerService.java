@@ -158,8 +158,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public void onAudioFocusChange(int focusChange) {
         if (focusChange <= 0)
         {
-            //TODO - add check that this is playing
-            pause();
+            if (mPlaying == true)
+            {
+                pause();
+            }
+
         }
         else
         {

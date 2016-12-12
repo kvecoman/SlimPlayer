@@ -45,6 +45,8 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
 
     public static final String DISPLAY_FIELD_KEY = "display_field";
 
+    public static final int MAIN_CURSOR_LOADER = 1;
+
 
     protected Context mContext;
     protected CursorAdapter mCursorAdapter;
@@ -90,7 +92,7 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
             mCurrentScreen = bundle.getString(CURSOR_SCREEN_KEY);
             mCursorAdapter = new SongCursorAdapter(getContext(),null,0, bundle.getString(DISPLAY_FIELD_KEY));
             setListAdapter(mCursorAdapter);
-            getLoaderManager().initLoader(0,bundle,this);
+            getLoaderManager().initLoader(MAIN_CURSOR_LOADER,bundle,this);
         }
 
         //Check if we are selecting songs for playlists

@@ -192,7 +192,7 @@ public final class ScreenBundles {
                 MediaStore.Audio.Genres._ID,
                 MediaStore.Audio.Genres.NAME
         };
-        String selection = "LENGTH(" +  MediaStore.Audio.Genres.NAME + ") > 0";
+        String selection = "LENGTH(" +  MediaStore.Audio.Genres.NAME + ") > 0 AND (" + excludeEmptyGenresSQL(context) + ")";
         String [] selectionArgs = null;
         String sortOrder = MediaStore.Audio.Genres.NAME + " ASC";
 
@@ -378,6 +378,27 @@ public final class ScreenBundles {
         }
         //Remove the excess OR from the string
         result = result.substring(0,result.length() - 2);
+
+        return result;
+    }
+
+    public static  String excludeEmptyGenresSQL(Context context)
+    {
+        String result = "";
+        String genreField = MediaStore.Audio.Genres._ID;
+        Set<String> idSet = PreferenceManager.getDefaultSharedPreferences(context).getStringSet(context.getString(R.string.pref_key_empty_genres),null);
+
+        if (idSet == null ||idSet.isEmpty())
+        {
+            return "1=1";
+        }
+
+        for (String id : idSet)
+        {
+            result += " " + genreField + " <> " + id + " AND";
+        }
+        //Remove the excess AND from the string
+        result = result.substring(0,result.length() - 3);
 
         return result;
     }

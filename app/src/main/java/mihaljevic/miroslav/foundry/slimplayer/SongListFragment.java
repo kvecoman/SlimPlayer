@@ -1,38 +1,23 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Typeface;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.provider.ContactsContract;
 import android.provider.MediaStore;
-import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.util.Log;
 import android.util.SparseBooleanArray;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.RemoteViews;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,12 +29,16 @@ import java.util.List;
  */
 public class SongListFragment extends SlimListFragment {
 
+    public static final int SONG_LIST_LOADER = 2;
+
 
     private SlimPlayerApplication mApplication;
 
 
 
     protected List<Song> mSongList;
+
+    protected String mAudioIdField = MediaStore.Audio.Media._ID;
 
 
     public SongListFragment() {
@@ -108,8 +97,11 @@ public class SongListFragment extends SlimListFragment {
 
         Log.d("slim",mCurrentScreen + " - onLoadFinished()");
 
-        //TODO - this might be heavy, move to async
-        mSongList = getSongListFromCursor(data);
+        //Get song list in mSongList
+        //new AsyncGetSongList().execute(data);
+        //mSongList = getSongListFromCursor(data);
+        getLoaderManager().initLoader(SONG_LIST_LOADER,null, new GetSongsLoaderCallback()).forceLoad();
+
     }
 
     @Override
@@ -118,7 +110,7 @@ public class SongListFragment extends SlimListFragment {
 
 
         //If we are not selecting items, then we want to play them
-        if (!mSelectMode && !mSelectSongsForResult)
+        if (!mSelectMode && !mSelectSongsForResult && mSongList != null && !mSongList.isEmpty())
         {
             //Pass list of songs from which we play and play current position
             mApplication.getMediaPlayerService().playList(mSongList,position);
@@ -210,13 +202,13 @@ public class SongListFragment extends SlimListFragment {
 
 
     //Here we create an ArrayList of all songs from cursor
-    public List<Song> getSongListFromCursor(Cursor cursor)
+    /*public List<Song> getSongListFromCursor(Cursor cursor)
     {
         List<Song> songList = new ArrayList<>();
         Song song;
 
-        //If there are nothing in cursor just remove empty list
-        if (cursor.getCount() == 0)
+        //If there are nothing in cursor just return empty list
+        if (cursor == null || cursor.getCount() == 0)
             return songList;
 
         //Transfer all data from cursor to ArrayList of songs
@@ -237,5 +229,64 @@ public class SongListFragment extends SlimListFragment {
         while (cursor.moveToNext());
 
         return songList;
+    }*/
+
+    //Async task to create song list
+    /*private class AsyncGetSongList extends AsyncTask<Cursor,Void,List<Song>>
+    {
+        @Override
+        protected List<Song> doInBackground(Cursor... params) {
+            Cursor cursor = params[0];
+            List<Song> songList = new ArrayList<>();
+            Song song;
+
+            //If there are nothing in cursor just return empty list
+            if (cursor == null || cursor.getCount() == 0)
+                return songList;
+
+            //Transfer all data from cursor to ArrayList of songs
+            cursor.moveToFirst();
+            do
+            {
+                song = new Song(
+                        cursor.getLong(cursor.getColumnIndex(mAudioIdField)),
+                        cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
+                        cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)),
+                        cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM)),
+                        cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION)),
+                        cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA)));
+
+                songList.add(song);
+
+            }
+            while (cursor.moveToNext());
+
+            return songList;
+        }
+
+        @Override
+        protected void onPostExecute(List<Song> songs) {
+            mSongList = songs;
+        }
+    }*/
+
+
+    private class GetSongsLoaderCallback implements LoaderManager.LoaderCallbacks<List<Song>>
+    {
+        @Override
+        public Loader<List<Song>> onCreateLoader(int id, Bundle args) {
+
+            return new SongListAsyncLoader(getContext(),mCursorAdapter.getCursor(),mAudioIdField);
+        }
+
+        @Override
+        public void onLoadFinished(Loader<List<Song>> loader, List<Song> data) {
+            mSongList = data;
+        }
+
+        @Override
+        public void onLoaderReset(Loader<List<Song>> loader) {
+            mSongList = null;
+        }
     }
 }

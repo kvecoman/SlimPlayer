@@ -6,9 +6,11 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -53,12 +55,17 @@ public class PlaylistSongsFragment extends SongListFragment {
         return super.onCreateView(inflater, container,savedInstanceState);
     }
 
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        //We need different ID field when loading playlist songs
+        mAudioIdField = MediaStore.Audio.Playlists.Members.AUDIO_ID;
+    }
+
     /*@Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-
-        super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.playlist_songs_menu,menu);
-
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        super.onLoadFinished(loader, data);
     }*/
 
     @Override
@@ -92,7 +99,6 @@ public class PlaylistSongsFragment extends SongListFragment {
 
         if (data != null && requestCode == SELECT_SONGS_REQUEST && data.hasExtra(PlaylistSongsFragment.SELECTED_SONGS_KEY))
         {
-            //TODO - continue here - shit isn't working, it isnt adding to playlist, resultCode is 1
             //TODO - set this into async task
             List<String> ids = data.getStringArrayListExtra(PlaylistSongsFragment.SELECTED_SONGS_KEY);
             insertIntoPlaylist(ids);
@@ -136,7 +142,7 @@ public class PlaylistSongsFragment extends SongListFragment {
     }
 
     //A small change in that we use audio_ID and not normal ID when creating song list
-    @Override
+    /*@Override
     public List<Song> getSongListFromCursor(Cursor cursor) {
         List<Song> songList = new ArrayList<>();
         Song song;
@@ -163,5 +169,44 @@ public class PlaylistSongsFragment extends SongListFragment {
         while (cursor.moveToNext());
 
         return songList;
-    }
+    }*/
+
+    //Async task to create song list, almost same as in SongListFragment with slight difference
+    /*private class AsyncGetSongList extends AsyncTask<Cursor,Void,List<Song>>
+    {
+        @Override
+        protected List<Song> doInBackground(Cursor... params) {
+            Cursor cursor = params[0];
+            List<Song> songList = new ArrayList<>();
+            Song song;
+
+            //If there are nothing in cursor just return empty list
+            if (cursor == null || cursor.getCount() == 0)
+                return songList;
+
+            //Transfer all data from cursor to ArrayList of songs
+            cursor.moveToFirst();
+            do
+            {
+                song = new Song(
+                        cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists.Members.AUDIO_ID)), //This is the only change
+                        cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
+                        cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)),
+                        cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM)),
+                        cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION)),
+                        cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA)));
+
+                songList.add(song);
+
+            }
+            while (cursor.moveToNext());
+
+            return songList;
+        }
+
+        @Override
+        protected void onPostExecute(List<Song> songs) {
+            mSongList = songs;
+        }
+    }*/
 }

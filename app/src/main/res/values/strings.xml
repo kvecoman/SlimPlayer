@@ -10,9 +10,6 @@
     <string name="options_title_cancel_selected">Cancel selected songs</string>
     <string name="options_title_delete_item">Delete</string>
 
-    <!--TODO: is this even used-->
-    <!--options menu IDs-->
-    <string name="options_id_playlist_add">playlist_add</string>
 
     <!--Titles used in settings screen -->
     <string name="pref_title_tabs">Available screens</string>
@@ -40,6 +37,8 @@
     <string name="pref_key_refresh">pref_key_refresh</string>
 
     <string name="pref_key_repeat">pref_key_repeat</string>
+
+    <string name="pref_key_empty_genres">pref_key_empty_genres</string>
 
     <!--Directory select dialog -->
     <string name="directory_pref_button_select">Select...</string>

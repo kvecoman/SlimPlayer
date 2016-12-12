@@ -53,23 +53,6 @@ public class PlaylistsFragment extends CategoryListFragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        //getListView().setEmptyView(null);
-
-        //Add extra options only if we are in normal mode
-        /*if (!mSelectSongsForResult)
-        {
-            LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            mCreatePlaylistView = (TextView) inflater.inflate(android.R.layout.simple_list_item_activated_1, null);
-            mCreatePlaylistView.setText(R.string.playlist_create);
-            getListView().addFooterView( mCreatePlaylistView);
-
-            if (BuildConfig.DEBUG == true) {
-                TextView view2 = (TextView) inflater.inflate(android.R.layout.simple_list_item_activated_1, null);
-                view2.setText("Delete playlists");
-                getListView().addFooterView(view2);
-            }
-        }*/
-
         //Set up AlertDialog for creating playlists
         initCreatePlaylistDialog();
 
@@ -243,40 +226,7 @@ public class PlaylistsFragment extends CategoryListFragment {
                 super.onItemClick(parent, view, position, id);
             }
         }
-        else if (position == getListAdapter().getCount())
-        {
 
-            //Small bit of dirty fix to make Create new playlist options un-selectable when deleting playlists
-            /*if (!view.isEnabled() && mSelectMode && getListView().isItemChecked(position)) {
-                getListView().setItemChecked(position, false);
-                return;
-            }*/
-
-
-
-
-
-        }
-        else if (position == getListAdapter().getCount() + 1)
-        {
-            //Delete all playlists
-            mContext.getContentResolver().delete(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,null,null);
-        }
     }
 
-    @Override
-    public void activateSelectMode() {
-        //Hide footer view when selecting stuff
-        //mCreatePlaylistView.setVisibility(View.GONE);
-        //mCreatePlaylistView.setEnabled(false);
-        super.activateSelectMode();
-    }
-
-    @Override
-    public void deselect() {
-        //Show footer views when not in select mode
-        //mCreatePlaylistView.setVisibility(View.VISIBLE);
-        //mCreatePlaylistView.setEnabled(true);
-        super.deselect();
-    }
 }

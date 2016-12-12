@@ -1,16 +1,22 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
+import android.content.ContentResolver;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by Miroslav on 23.11.2016..
@@ -91,4 +97,30 @@ public final class Utils {
 
         return false;
     }
+
+    //Method that detects empty genres and stores that list into preferences
+    /*public static void detectEmptyGenres(Context context)
+    {
+        ContentResolver resolver = context.getContentResolver();
+        Set<String> idSet = new HashSet<>();
+        Cursor genresCursor = resolver.query(MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI,
+                new String[]{MediaStore.Audio.Genres._ID},null,null,null);
+        int id;
+        Cursor cursor;
+        genresCursor.moveToFirst();
+        do {
+            id = genresCursor.getInt(0);
+            cursor = resolver.query(MediaStore.Audio.Genres.getContentUriForAudioId("external", id),
+                    new String[]{MediaStore.Audio.Genres.Members._ID,MediaStore.Audio.Genres.Members.DATA},ScreenBundles.addDirectoryCheckSQL(context),null,null);
+            if (cursor.getCount() == 0)
+            {
+                idSet.add(String.valueOf(id));
+
+            }
+            genresCursor.moveToNext();
+        }while (!genresCursor.isLast());
+
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
+        pref.edit().putStringSet(context.getString(R.string.pref_key_empty_genres),idSet).commit();
+    }*/
 }

@@ -9,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -32,6 +33,7 @@ import android.widget.ListView;
 
 
 public abstract class SlimListFragment extends BackHandledListFragment implements ListView.OnItemClickListener, LoaderManager.LoaderCallbacks<Cursor> {
+    protected final String TAG = getClass().getSimpleName();
 
     //Keys that are used when transferring data about different screens from ScreenBundles
     public static final String CURSOR_SCREEN_KEY = "cursor_screen";
@@ -92,6 +94,7 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
             mCurrentScreen = bundle.getString(CURSOR_SCREEN_KEY);
             mCursorAdapter = new SongCursorAdapter(getContext(),null,0, bundle.getString(DISPLAY_FIELD_KEY));
             setListAdapter(mCursorAdapter);
+            Log.d(TAG,"initLoader for MAIN_CURSOR_LOADER");
             getLoaderManager().initLoader(MAIN_CURSOR_LOADER,bundle,this);
         }
 
@@ -154,6 +157,7 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        Log.d(TAG,"onCreateLoader() for MAIN_CURSOR_LOADER");
         //Create query that will fetch songs that we need for this screen
         Uri uri = Uri.parse(args.getString(CURSOR_URI_KEY));
         String [] projection = args.getStringArray(CURSOR_PROJECTION_KEY);
@@ -166,12 +170,14 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        Log.d(TAG,"onLoadFinished() for MAIN_CURSOR_LOADER");
         //Update cursor when loading is finished
         mCursorAdapter.swapCursor(data);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
+        Log.d(TAG,"onLoaderReset() for MAIN_CURSOR_LOADER");
         mCursorAdapter.swapCursor(null);
     }
 }

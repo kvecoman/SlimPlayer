@@ -2,6 +2,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,19 +18,34 @@ import android.widget.TextView;
  * @author Miroslav Mihaljević
  */
 public class SongCursorAdapter extends CursorAdapter {
+    protected final String TAG = getClass().getSimpleName();
 
     //Used to identify which field from cursor we need to show in ListView (sometimes its Title, sometimes Artist and so on)
     private String mDisplayField;
 
     public SongCursorAdapter(Context context, Cursor c, boolean autoRequery, String displayField) {
         super(context, c, autoRequery);
+        Log.d(TAG,"Constructor");
         mDisplayField = displayField;
     }
 
     public SongCursorAdapter(Context context, Cursor c, int flags, String displayField) {
         super(context, c, flags);
+        Log.d(TAG,"Constructor");
         mDisplayField = displayField;
 
+    }
+
+    //Here we use synchronized block to prevent SongListAsyncLoader using cursor at same time
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        synchronized (getCursor())
+        {
+            //Log.d(TAG, "getView() - acquired cursor lock");
+            View v = super.getView(position, convertView, parent);
+            //Log.d(TAG, "getView() - released cursor lock");
+            return v;
+        }
     }
 
     @Override

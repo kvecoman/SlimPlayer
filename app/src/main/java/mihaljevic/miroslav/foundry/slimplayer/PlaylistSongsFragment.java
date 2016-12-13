@@ -137,7 +137,6 @@ public class PlaylistSongsFragment extends SongListFragment {
         int result = resolver.bulkInsert(playlistUri, valuesArray);
         resolver.notifyChange(playlistUri,null);
 
-        Log.d("slim","Number of items added " + result + "");
         Toast.makeText(mContext,result + " " + getString(R.string.playlist_add_succes),Toast.LENGTH_SHORT).show();
     }
 

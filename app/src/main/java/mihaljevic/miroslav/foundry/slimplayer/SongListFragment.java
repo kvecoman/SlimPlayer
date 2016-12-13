@@ -95,7 +95,6 @@ public class SongListFragment extends SlimListFragment {
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         super.onLoadFinished(loader, data);
 
-        Log.d("slim",mCurrentScreen + " - onLoadFinished()");
 
         //Get song list in mSongList
         //new AsyncGetSongList().execute(data);
@@ -169,7 +168,6 @@ public class SongListFragment extends SlimListFragment {
                 //Get all checked positions
                 SparseBooleanArray checkedPositions = getListView().getCheckedItemPositions();
 
-                Log.d("slim", getListView().getCount() + " of list items ----- " + checkedPositions.size() + " of items in boolean array");
 
                 Cursor cursor = mCursorAdapter.getCursor();
                 List<String> idList = new ArrayList<>();
@@ -178,7 +176,6 @@ public class SongListFragment extends SlimListFragment {
                 for (int i = 0; i < checkedPositions.size();i++)
                 {
                     int position = checkedPositions.keyAt(i);
-                    Log.d("slim","Position of checked song: " + position);
 
                     if (checkedPositions.get(position))
                     {
@@ -273,19 +270,23 @@ public class SongListFragment extends SlimListFragment {
 
     private class GetSongsLoaderCallback implements LoaderManager.LoaderCallbacks<List<Song>>
     {
+        protected final String TAG = getClass().getSimpleName();
+
         @Override
         public Loader<List<Song>> onCreateLoader(int id, Bundle args) {
-
+            Log.d(TAG,"onCreateLoader() for SONG_LIST_LOADER");
             return new SongListAsyncLoader(getContext(),mCursorAdapter.getCursor(),mAudioIdField);
         }
 
         @Override
         public void onLoadFinished(Loader<List<Song>> loader, List<Song> data) {
+            Log.d(TAG,"onLoadFinished() for SONG_LIST_LOADER");
             mSongList = data;
         }
 
         @Override
         public void onLoaderReset(Loader<List<Song>> loader) {
+            Log.d(TAG,"onLoaderReset() for SONG_LIST_LOADER");
             mSongList = null;
         }
     }

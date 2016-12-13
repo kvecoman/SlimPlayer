@@ -206,7 +206,6 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
     public void loadSongInfo()
     {
-        Log.d("slim","NowPlayingFragment - loadSongInfo()");
 
         mCount = mApplication.getMediaPlayerService().getCount();
         mSong = mApplication.getMediaPlayerService().getSong(mPosition);

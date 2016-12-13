@@ -34,10 +34,12 @@ import java.util.Set;
 //TODO - indicate that tap paused or resumed the song
 //TODO - all database work to async tasks
 //TODO - earphones in/out resume/stop playback
+//TODO - 2x options to add to playlist when selecting songs in playlist
+//TODO - add option to delete songs in playlists
 //TODO - make homescreen
 //TODO - make visualization
 
-//TODO - continue here - async task loader works, but song display is messed up, log all relevant methods
+
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";

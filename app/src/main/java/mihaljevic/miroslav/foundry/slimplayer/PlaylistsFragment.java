@@ -69,7 +69,7 @@ public class PlaylistsFragment extends CategoryListFragment {
             }
         });
 
-        getLoaderManager().initLoader(0,getArguments(),this);
+        //getLoaderManager().initLoader(0,getArguments(),this);
     }
 
     public void initCreatePlaylistDialog()

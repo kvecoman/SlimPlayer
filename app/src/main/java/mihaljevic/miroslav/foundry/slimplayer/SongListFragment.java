@@ -34,9 +34,10 @@ public class SongListFragment extends SlimListFragment {
 
     private SlimPlayerApplication mApplication;
 
+    //Provides easy access to cursor and fields within it
+    protected CursorSongs mSongs;
 
-
-    protected List<Song> mSongList;
+    //protected List<Song> mSongList;
 
     protected String mAudioIdField = MediaStore.Audio.Media._ID;
 
@@ -99,7 +100,8 @@ public class SongListFragment extends SlimListFragment {
         //Get song list in mSongList
         //new AsyncGetSongList().execute(data);
         //mSongList = getSongListFromCursor(data);
-        getLoaderManager().initLoader(SONG_LIST_LOADER,null, new GetSongsLoaderCallback()).forceLoad();
+        //getLoaderManager().initLoader(SONG_LIST_LOADER,null, new GetSongsLoaderCallback()).forceLoad();
+        mSongs = new CursorSongs(data);
 
     }
 
@@ -109,10 +111,10 @@ public class SongListFragment extends SlimListFragment {
 
 
         //If we are not selecting items, then we want to play them
-        if (!mSelectMode && !mSelectSongsForResult && mSongList != null && !mSongList.isEmpty())
+        if (!mSelectMode && !mSelectSongsForResult && mSongs != null)
         {
             //Pass list of songs from which we play and play current position
-            mApplication.getMediaPlayerService().playList(mSongList,position);
+            mApplication.getMediaPlayerService().playList(mSongs,position);
 
             //Start NowPlayingActivity
             Intent intent = new Intent(mContext,NowPlayingActivity.class);
@@ -123,11 +125,11 @@ public class SongListFragment extends SlimListFragment {
         if (mSelectSongsForResult)
         {
             if (getListView().isItemChecked(position)) {
-                ((SelectSongsActivity) mContext).getSelectedSongsList().add(mSongList.get(position).getId() + "");
+                ((SelectSongsActivity) mContext).getSelectedSongsList().add(mSongs.getId(position) + "");
             }
             else
             {
-                ((SelectSongsActivity) mContext).getSelectedSongsList().remove(mSongList.get(position).getId() + "");
+                ((SelectSongsActivity) mContext).getSelectedSongsList().remove(mSongs.getId(position) + "");
             }
         }
 
@@ -268,7 +270,7 @@ public class SongListFragment extends SlimListFragment {
     }*/
 
 
-    private class GetSongsLoaderCallback implements LoaderManager.LoaderCallbacks<List<Song>>
+    /*private class GetSongsLoaderCallback implements LoaderManager.LoaderCallbacks<List<Song>>
     {
         protected final String TAG = getClass().getSimpleName();
 
@@ -289,5 +291,5 @@ public class SongListFragment extends SlimListFragment {
             Log.d(TAG,"onLoaderReset() for SONG_LIST_LOADER");
             mSongList = null;
         }
-    }
+    }*/
 }

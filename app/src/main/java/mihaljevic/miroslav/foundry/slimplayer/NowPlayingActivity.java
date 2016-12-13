@@ -102,7 +102,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
     }
 
     @Override
-    public void onPlay(List<Song> songList, int position) {
+    public void onPlay(CursorSongs songs, int position) {
         //TODO - this looks sloppy
         mPager.setCurrentItem(position,true);
     }

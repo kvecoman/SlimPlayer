@@ -9,7 +9,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -33,10 +35,12 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
     private SlimPlayerApplication mApplication;
 
-    private Song mSong;
+    private Context mContext;
+
+    /*private Song mSong;
     private List<Song> mSongList;
+    private int mCount;*/
     private int mPosition;
-    private int mCount;
 
 
     private View mContentView;
@@ -104,6 +108,8 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
 
         mApplication = ((SlimPlayerApplication) getContext().getApplicationContext());
+
+        mContext = getContext();
 
         mSeekBar = (SeekBar) mContentView.findViewById(R.id.seek_bar);
         mSeekBar.setOnSeekBarChangeListener(this);
@@ -207,23 +213,25 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     public void loadSongInfo()
     {
 
-        mCount = mApplication.getMediaPlayerService().getCount();
-        mSong = mApplication.getMediaPlayerService().getSong(mPosition);
+        CursorSongs songs = mApplication.getMediaPlayerService().getSongs();
+        //mCount = songs.getCount();
 
-        mSeekBar.setMax(((int) mSong.getDuration()));
+        mSeekBar.setMax(((int) songs.getDuration(mPosition)));
 
         //Update text views with new info
-        ((TextView) mContentView.findViewById(R.id.song_title)).setText(mSong.getTitle());
-        ((TextView) mContentView.findViewById(R.id.song_artist)).setText(mSong.getArtist());
+        ((TextView) mContentView.findViewById(R.id.song_title)).setText(songs.getTitle(mPosition));
+        ((TextView) mContentView.findViewById(R.id.song_artist)).setText(songs.getArtist(mPosition));
 
     }
 
     //This connects seek bar to current song that is played by media player service
     public void bindSeekBarToPlayer()
     {
-        //TODO - this can throw null-pointer if scrolled to fast - debug it
         mSeekBarBound = true;
-        getActivity().runOnUiThread(mSeekBarRunnable);
+        if (mContext instanceof FragmentActivity)
+        {
+            ((FragmentActivity) mContext).runOnUiThread(mSeekBarRunnable);
+        }
     }
 
 
@@ -234,9 +242,9 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         bindSeekBarToPlayer();
     }
 
-    //This also cancome from tap
+    //This also can come from tap
     @Override
-    public void onPlay(List<Song> songList, int position) {
+    public void onPlay(CursorSongs songs, int position) {
         bindSeekBarToPlayer();
     }
 

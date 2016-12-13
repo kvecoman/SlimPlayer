@@ -38,8 +38,8 @@ import java.util.Set;
 //TODO - add option to delete songs in playlists
 //TODO - make homescreen
 //TODO - make visualization
-
-
+//TODO - add content observers/listeners to CursorSongs
+//TODO - make fragment loading in NowPlaying activity faster/move parts to Async
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";

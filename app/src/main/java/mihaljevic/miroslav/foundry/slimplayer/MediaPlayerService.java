@@ -38,8 +38,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public static final String  NOTIFICATION_ACTION_SWIPE = "mihaljevic.miroslav.foundry.slimplayer.action.swipe";
 
 
-
-    //TODO - maybe move this also to resource file
     //Points to location of our custom font file
     //public static final String ICON_FONT_PATH = "fonts/icons.ttf";
 
@@ -55,7 +53,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private AudioManager mAudioManager;
 
    // private Cursor mCursor;
-    private List<Song> mSongList;
+    //private List<Song> mSongList;
+    private CursorSongs mSongs;
     private int mPosition;
     private int mCount;
     private boolean mReadyToPlay = false; //Indicates if we have list loaded
@@ -175,18 +174,18 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         Log.d("slim","MediaPlayerService - play()");
 
         //If something is wrong then do nothing
-        if (mPosition == position || position < 0 || position >= mCount || mSongList == null)
+        if (mPosition == position || position < 0 || position >= mCount || mSongs == null)
             return;
 
         mPosition = position;
-        Song song = mSongList.get(mPosition);
-        Toast.makeText(getApplicationContext(),song.getData(),Toast.LENGTH_SHORT).show();
+        //Song song = mSongList.get(mPosition);
+        Toast.makeText(getApplicationContext(),mSongs.getData(mPosition),Toast.LENGTH_SHORT).show();
 
         try
         {
             //Set up media player and start playing when ready
             mPlayer.reset();
-            mPlayer.setDataSource(song.getData());
+            mPlayer.setDataSource(mSongs.getData(mPosition));
             mPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 //This is called when media player is prepared with its data source
                 @Override
@@ -310,7 +309,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     {
         mCount = 0;
         mPosition = -1;
-        mSongList = null;
+        mSongs = null;
         mReadyToPlay = false;
         stop();
 
@@ -368,7 +367,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         {
             for (SongPlayListener listener : mOnPlayListeners)
             {
-                    listener.onPlay(mSongList, mPosition);
+                    listener.onPlay(mSongs, mPosition);
             }
         }
         catch (ConcurrentModificationException e)
@@ -392,7 +391,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         RemoteViews notificationView = new RemoteViews(getPackageName(),R.layout.notification_player);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
 
-        notificationView.setTextViewText(R.id.notification_title,getCurrentSong().getTitle());
+        notificationView.setTextViewText(R.id.notification_title,mSongs.getTitle(mPosition));
 
         //Check if we have notifications icons, if not generate them right now
         /*if (mBitmapIcons == null)
@@ -417,7 +416,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
         //If needed, set the ticker text with song title
         if (ticker)
-            builder.setTicker(getCurrentSong().getTitle());
+            builder.setTicker(mSongs.getTitle(mPosition));
 
         //Set-up control actions
         Intent intent;
@@ -502,24 +501,24 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 
     //Set the list and start playing
-    public void playList(List<Song> songList, int startPosition)
+    public void playList(CursorSongs songs, int startPosition)
     {
-        setSongList(songList);
+        setCursorSongs(songs);
         play(startPosition);
     }
 
 
     //Setter for song list
-    public void setSongList(List<Song> songList)
+    public void setCursorSongs(CursorSongs songs)
     {
         //This is starting position before we find out anything
         mPosition = -1;
 
-        if (songList != null)
+        if (songs != null)
         {
             //Get song count and song list
-            mCount = songList.size();
-            mSongList = songList;
+            mCount = songs.getCount();
+            mSongs = songs;
             mReadyToPlay = true;
         }
         else
@@ -535,11 +534,16 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     {
         Log.d("slim","MediaPlayerService - setCurrentPlayInfoToListener()");
         //Check if we have something in this service
-        if (mCount > 0 && mPosition >= 0 && mSongList != null)
+        if (mCount > 0 && mPosition >= 0 && mSongs != null)
         {
             notifyListenersPlay();
         }
 
+    }
+
+    public CursorSongs getSongs()
+    {
+        return mSongs;
     }
 
     public boolean isReadyToPlay() {
@@ -551,7 +555,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         return mPlayer;
     }
 
-    public Song getCurrentSong()
+    /*public Song getCurrentSong()
     {
         if (mPosition < 0 || mPosition >= mCount)
             return null;
@@ -567,7 +571,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
         return mSongList.get(position);
 
-    }
+    }*/
 
     public int getPosition() {
         return mPosition;
@@ -584,7 +588,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     public interface SongPlayListener
     {
-        void onPlay(List<Song> songList, int position);
+        void onPlay(CursorSongs songs, int position);
 
     }
 

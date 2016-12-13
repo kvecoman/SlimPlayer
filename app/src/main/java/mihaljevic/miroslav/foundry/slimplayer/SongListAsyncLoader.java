@@ -16,7 +16,7 @@ import java.util.List;
  *
  * @author Miroslav Mihaljević
  */
-
+@Deprecated
 public class SongListAsyncLoader extends AsyncTaskLoader<List<Song>>
 {
     protected final String TAG = getClass().getSimpleName();

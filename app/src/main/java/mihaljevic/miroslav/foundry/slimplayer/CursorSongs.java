@@ -23,6 +23,12 @@ public class CursorSongs {
     CursorSongs(Cursor cursor)
     {
         Log.d(TAG, "Constructor");
+        init(cursor);
+    }
+
+    private void init(Cursor cursor)
+    {
+        Log.d(TAG, "init()");
         if (cursor == null || cursor.isClosed() || cursor.getCount() == 0)
         {
             Log.d(TAG, "Failed to init CursorSongs");
@@ -32,6 +38,11 @@ public class CursorSongs {
         mCursor = cursor;
 
         acquireIndexes();
+    }
+
+    public void swapCursor(Cursor cursor)
+    {
+        init(cursor);
     }
 
     //Check if we can still work with current cursor
@@ -46,12 +57,19 @@ public class CursorSongs {
     //Method that acquires all indexes of fields in cursor
     public void acquireIndexes()
     {
-        mIndexId = mCursor.getColumnIndex(MediaStore.Audio.Media._ID);
+        //Try to use AUDIO_ID (for playlist), if it doesn't exist, use normal ID
+        mIndexId = mCursor.getColumnIndex(MediaStore.Audio.Playlists.Members.AUDIO_ID) != -1 ? mCursor.getColumnIndex(MediaStore.Audio.Playlists.Members.AUDIO_ID) : mCursor.getColumnIndex(MediaStore.Audio.Media._ID);
+
         mIndexTitle = mCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
         mIndexArtist = mCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
         mIndexAlbum = mCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM);
         mIndexDuration = mCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
         mIndexData = mCursor.getColumnIndex(MediaStore.Audio.Media.DATA);
+    }
+
+    public Cursor getCursor()
+    {
+        return mCursor;
     }
 
     public int getCount()

@@ -7,8 +7,10 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -27,6 +29,8 @@ import java.util.List;
 
 //TODO - add intent filter so we can run songs from anywhere
 public class MediaPlayerService extends Service implements MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
+
+    protected final String TAG = getClass().getSimpleName();
 
     //Notification ID
     public static final int NOTIFICATION_PLAYER_ID = 1;
@@ -51,6 +55,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private boolean mStopped = true;
 
     private AudioManager mAudioManager;
+
+    private AsyncTask<Void, Void, Void> mCurrentPlayTask;
 
    // private Cursor mCursor;
     //private List<Song> mSongList;
@@ -171,17 +177,67 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     public void play(int position)
     {
-        Log.d("slim","MediaPlayerService - play()");
+        Log.d(TAG,"play() - position " + position);
 
         //If something is wrong then do nothing
         if (mPosition == position || position < 0 || position >= mCount || mSongs == null)
             return;
 
+        if (mCurrentPlayTask != null)
+            mCurrentPlayTask.cancel(true);
+
         mPosition = position;
         //Song song = mSongList.get(mPosition);
         Toast.makeText(getApplicationContext(),mSongs.getData(mPosition),Toast.LENGTH_SHORT).show();
 
-        try
+        mCurrentPlayTask = new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                try
+                {
+                    //Set up media player and start playing when ready
+                    mPlayer.reset();
+                    mPlayer.setDataSource(mSongs.getData(mPosition));
+                    mPlayer.setOnCompletionListener(MediaPlayerService.this);
+
+                    //If this task is cancelled, no need to do anything
+                    if (isCancelled()) {
+                        Log.d(TAG,"Current play task is cancelled");
+                        return null;
+                    }
+
+                    mPlayer.prepare();
+                    mPlayer.start();
+
+                    //If this task is cancelled, no need to do anything
+                    if (isCancelled()) {
+                        Log.d(TAG,"Current play task is cancelled");
+                        return null;
+                    }
+
+
+                    mPlaying = true;
+                    mStopped = false;
+
+
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                showNotification(false, true);
+                //Notify NowPlayingActivity that we changed playing song
+                notifyListenersPlay();
+            }
+        };
+        mCurrentPlayTask.execute();
+        /*try
         {
             //Set up media player and start playing when ready
             mPlayer.reset();
@@ -206,7 +262,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         catch (IOException e)
         {
             e.printStackTrace();
-        }
+        }*/
 
     }
 
@@ -336,28 +392,42 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         mRepeatPlaylist = preferences.getBoolean(getString(R.string.pref_key_repeat),true);
     }
 
+    public boolean isCursorUsed(Cursor cursor)
+    {
+        if (cursor == null)
+            return false;
+
+        if (mSongs != null)
+        {
+            if (cursor == mSongs.getCursor())
+                return true;
+        }
+
+        return false;
+    }
+
 
     public void registerPlayListener(SongPlayListener listener)
     {
-        Log.d("slim","MediaPlayerService - registerListener - " + listener.toString());
+        Log.d(TAG,"registerListener - " + listener.toString());
         mOnPlayListeners.add(listener);
     }
 
     public void unregisterPlayListener(SongPlayListener listener)
     {
-        Log.d("slim","MediaPlayerService - unregisterListener - " + listener.toString());
+        Log.d(TAG,"unregisterListener - " + listener.toString());
         mOnPlayListeners.remove(listener);
     }
 
     public void registerResumeListener(SongResumeListener listener)
     {
-        Log.d("slim","MediaPlayerService - registerListener - " + listener.toString());
+        Log.d(TAG,"registerListener - " + listener.toString());
         mOnResumeListeners.add(listener);
     }
 
     public void unregisterResumeListener(SongResumeListener listener)
     {
-        Log.d("slim","MediaPlayerService - unregisterListener - " + listener.toString());
+        Log.d(TAG,"unregisterListener - " + listener.toString());
         mOnResumeListeners.remove(listener);
     }
 
@@ -532,7 +602,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     //Used to send info when NowPlayingActivity is starting to get up to date with player service
     public void setCurrentPlayInfoToListener()
     {
-        Log.d("slim","MediaPlayerService - setCurrentPlayInfoToListener()");
+        Log.d(TAG,"setCurrentPlayInfoToListener()");
         //Check if we have something in this service
         if (mCount > 0 && mPosition >= 0 && mSongs != null)
         {

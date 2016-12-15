@@ -51,7 +51,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
     private Handler mSeekBarHandler;
     private boolean mSeekBarBound;
-    private boolean mOnCreateOptionsCalled;
+    //private boolean mOnCreateOptionsCalled;
 
     //Runnable that runs on UI thread and updates seek bar
     private Runnable mSeekBarRunnable = new Runnable() {

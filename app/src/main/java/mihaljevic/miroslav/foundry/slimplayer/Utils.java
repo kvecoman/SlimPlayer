@@ -1,6 +1,7 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -8,6 +9,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.util.TypedValue;
@@ -15,7 +17,9 @@ import android.view.View;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -96,6 +100,41 @@ public final class Utils {
         }
 
         return false;
+    }
+
+    public static int insertIntoPlaylist(Context context, List<String> IDs, long playlistId)
+    {
+        //long [] IDs = data.getLongArrayExtra(PlaylistSongsFragment.SELECTED_SONGS_KEY);
+        //long playlistId = ;
+        Uri playlistUri = MediaStore.Audio.Playlists.Members.getContentUri("external",playlistId);
+        List<ContentValues> valuesList = new ArrayList<>();
+
+        Cursor playlistCursor = context.getContentResolver().query(playlistUri,new String[]{MediaStore.Audio.Playlists.Members._ID, MediaStore.Audio.Playlists.Members.AUDIO_ID},null,null,null);
+        int songCount = playlistCursor.getCount();
+
+        ContentValues values;
+
+        long id;
+        for(String audio_id : IDs)
+        {
+            id = Long.parseLong(audio_id);
+            if (!Utils.playlistCheckForDuplicate(playlistCursor,id)) {
+
+                values = new ContentValues();
+                values.put(MediaStore.Audio.Playlists.Members.AUDIO_ID, id);
+                values.put(MediaStore.Audio.Playlists.Members.PLAY_ORDER, valuesList.size() + songCount);
+                valuesList.add(values);
+            }
+        }
+
+        ContentResolver resolver = context.getContentResolver();
+        ContentValues[] valuesArray = new ContentValues[valuesList.size()];
+        valuesList.toArray(valuesArray);
+        int result = resolver.bulkInsert(playlistUri, valuesArray);
+        resolver.notifyChange(playlistUri,null);
+
+        return result;
+
     }
 
     //Method that detects empty genres and stores that list into preferences

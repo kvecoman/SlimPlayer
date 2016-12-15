@@ -29,7 +29,6 @@ import java.util.List;
  */
 public class SongListFragment extends SlimListFragment {
 
-    public static final int SONG_LIST_LOADER = 2;
 
 
     private SlimPlayerApplication mApplication;
@@ -39,7 +38,7 @@ public class SongListFragment extends SlimListFragment {
 
     //protected List<Song> mSongList;
 
-    protected String mAudioIdField = MediaStore.Audio.Media._ID;
+    //protected String mAudioIdField = MediaStore.Audio.Media._ID;
 
 
     public SongListFragment() {
@@ -81,7 +80,8 @@ public class SongListFragment extends SlimListFragment {
     }
 
     @Override
-    public void onStart() {
+    public void onStart()
+    {
         super.onStart();
 
         //If we are selecting songs for result then we need to enforce select mode, so we don't play songs here
@@ -91,8 +91,21 @@ public class SongListFragment extends SlimListFragment {
         }
     }
 
-    //Here we load all songs in songList when Cursor loader is finished
     @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
+
+    //We override this so that when data is refreshed we also load new cursor into mSongs
+    @Override
+    protected void swapCursor() {
+        super.swapCursor();
+
+        mSongs = new CursorSongs(mCursor);
+    }
+
+    //Here we load all songs in songList when Cursor loader is finished
+    /*@Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         super.onLoadFinished(loader, data);
 
@@ -101,9 +114,12 @@ public class SongListFragment extends SlimListFragment {
         //new AsyncGetSongList().execute(data);
         //mSongList = getSongListFromCursor(data);
         //getLoaderManager().initLoader(SONG_LIST_LOADER,null, new GetSongsLoaderCallback()).forceLoad();
-        mSongs = new CursorSongs(data);
+        if (mSongs != null)
+            mSongs.swapCursor(data);
+        else
+            mSongs = new CursorSongs(data);
 
-    }
+    }*/
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id)

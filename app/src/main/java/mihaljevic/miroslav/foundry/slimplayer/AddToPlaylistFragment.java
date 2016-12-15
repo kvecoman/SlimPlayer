@@ -67,9 +67,9 @@ public class AddToPlaylistFragment extends PlaylistsFragment{
         if (position < getListAdapter().getCount())
         {
             //Get id of selected playlist
-            Cursor cursor = mCursorAdapter.getCursor();
+            /*Cursor cursor = mCursorAdapter.getCursor();
             cursor.moveToPosition(position);
-            long playlistId = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
+            final long playlistId = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
             mPlaylistUri = MediaStore.Audio.Playlists.Members.getContentUri("external",playlistId);
 
             //Here we add songs to selected playlist
@@ -113,7 +113,32 @@ public class AddToPlaylistFragment extends PlaylistsFragment{
                     Log.d("slim","Number of items added " + result + "");
                     Toast.makeText(mContext,result + " " + getString(R.string.playlist_add_succes),Toast.LENGTH_SHORT).show();
                 }
-            }).execute();
+            }).execute();*/
+
+            Cursor cursor = mCursorAdapter.getCursor();
+            List<String> ids  = getActivity().getIntent().getStringArrayListExtra(AddToPlaylistActivity.ID_LIST_KEY);
+            final long playlistId = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
+
+            //Insert songs in playlist
+            new AsyncTask<List<String>,Void,Integer>(){
+
+                @Override
+                protected Integer doInBackground(List<String>... params)
+                {
+                    List<String> ids = params[0];
+
+                    if (ids == null)
+                        return null;
+
+                    return Utils.insertIntoPlaylist(getContext(),ids,playlistId);
+                }
+
+                @Override
+                protected void onPostExecute(Integer result) {
+                    Toast.makeText(mContext,result + " " + getString(R.string.playlist_add_succes),Toast.LENGTH_SHORT).show();
+                    //loadDataAsync();
+                }
+            }.execute(ids);
 
             //Exit after we start adding songs to playlist
             getActivity().finish();

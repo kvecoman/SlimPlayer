@@ -7,6 +7,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
  *
  * @author Miroslav Mihaljević
  */
+@Deprecated
 public class Song {
 
     protected long mId;

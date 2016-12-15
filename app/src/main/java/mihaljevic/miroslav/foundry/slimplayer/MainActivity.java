@@ -32,14 +32,11 @@ import java.util.Set;
 //TODO - remove empty genres
 //TODO - make visual style for project
 //TODO - indicate that tap paused or resumed the song
-//TODO - all database work to async tasks
 //TODO - earphones in/out resume/stop playback
-//TODO - 2x options to add to playlist when selecting songs in playlist
 //TODO - add option to delete songs in playlists
 //TODO - make homescreen
 //TODO - make visualization
-//TODO - add content observers/listeners to CursorSongs
-//TODO - make fragment loading in NowPlaying activity faster/move parts to Async
+
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";

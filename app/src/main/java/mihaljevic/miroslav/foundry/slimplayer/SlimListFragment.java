@@ -4,6 +4,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -32,7 +33,7 @@ import android.widget.ListView;
  */
 
 
-public abstract class SlimListFragment extends BackHandledListFragment implements ListView.OnItemClickListener, LoaderManager.LoaderCallbacks<Cursor> {
+public abstract class SlimListFragment extends BackHandledListFragment implements ListView.OnItemClickListener/*, LoaderManager.LoaderCallbacks<Cursor>*/ {
     protected final String TAG = getClass().getSimpleName();
 
     //Keys that are used when transferring data about different screens from ScreenBundles
@@ -47,11 +48,14 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
 
     public static final String DISPLAY_FIELD_KEY = "display_field";
 
-    public static final int MAIN_CURSOR_LOADER = 1;
+    //public static final int MAIN_CURSOR_LOADER = 1;
 
 
     protected Context mContext;
+    protected SlimPlayerApplication mApplication;
+
     protected CursorAdapter mCursorAdapter;
+    protected Cursor mCursor;
 
     protected String mCurrentScreen;
 
@@ -83,6 +87,8 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
 
         mContext = getContext();
 
+        mApplication = ((SlimPlayerApplication) mContext.getApplicationContext());
+
 
         getListView().setOnItemClickListener(this);
 
@@ -92,10 +98,15 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
         {
             //If we have bundle, then load data accordingly
             mCurrentScreen = bundle.getString(CURSOR_SCREEN_KEY);
-            mCursorAdapter = new SongCursorAdapter(getContext(),null,0, bundle.getString(DISPLAY_FIELD_KEY));
+            mCursorAdapter = new SongCursorAdapter(getContext(),mCursor,0, bundle.getString(DISPLAY_FIELD_KEY));
             setListAdapter(mCursorAdapter);
-            Log.d(TAG,"initLoader for MAIN_CURSOR_LOADER");
-            getLoaderManager().initLoader(MAIN_CURSOR_LOADER,bundle,this);
+
+            loadDataAsync();
+
+
+            //Log.d(TAG,"initLoader for MAIN_CURSOR_LOADER");
+            //getLoaderManager().initLoader(MAIN_CURSOR_LOADER,bundle,this);
+
         }
 
         //Check if we are selecting songs for playlists
@@ -106,6 +117,15 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
                 mSelectSongsForResult = true;
             }
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        //We need to check that the cursor we want to close is not in use by MediaPlayerService
+        if (!mApplication.getMediaPlayerService().isCursorUsed(mCursor))
+            mCursor.close();
     }
 
     @Override
@@ -155,7 +175,50 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
         getListView().requestLayout();
     }
 
-    @Override
+    protected void queryCursor()
+    {
+        Log.d(TAG,"queryCursor()");
+        Bundle args = getArguments();
+
+        if (args == null)
+            return;
+
+        //Create query that will fetch songs that we need for this screen
+        Uri uri = Uri.parse(args.getString(CURSOR_URI_KEY));
+        String [] projection = args.getStringArray(CURSOR_PROJECTION_KEY);
+        String selection = args.getString(CURSOR_SELECTION_KEY);
+        String [] selectionArgs = args.getStringArray(CURSOR_SELECTION_ARGS_KEY);
+        String sortOrder = args.getString(CURSOR_SORT_ORDER_KEY);
+
+        mCursor = mContext.getContentResolver().query(uri,projection,selection,selectionArgs,sortOrder);
+    }
+
+    protected void loadDataAsync()
+    {
+        Log.d(TAG,"loadDataAsync()");
+        //Load cursor and connect it to cursor adapter
+        new AsyncTask<Void,Void,Void>()
+        {
+            @Override
+            protected Void doInBackground(Void... params) {
+                queryCursor();
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                swapCursor();
+            }
+        }.execute();
+    }
+
+
+    protected void swapCursor()
+    {
+        mCursorAdapter.swapCursor(mCursor);
+    }
+
+    /*@Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         Log.d(TAG,"onCreateLoader() for MAIN_CURSOR_LOADER");
         //Create query that will fetch songs that we need for this screen
@@ -179,5 +242,5 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
     public void onLoaderReset(Loader<Cursor> loader) {
         Log.d(TAG,"onLoaderReset() for MAIN_CURSOR_LOADER");
         mCursorAdapter.swapCursor(null);
-    }
+    }*/
 }

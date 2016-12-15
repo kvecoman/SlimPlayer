@@ -9,7 +9,7 @@ import android.view.Menu;
  * @author Miroslav Mihaljević
  */
 
-//TODO - there is little delay between Activity loading and fragment showing list, try to fix it
+
 public class SongListActivity extends SelectSongsActivity {
 
     //Key for bundle that is intended to be sent with SlimListFragment

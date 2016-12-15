@@ -3,6 +3,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -60,7 +61,7 @@ public class PlaylistSongsFragment extends SongListFragment {
         super.onActivityCreated(savedInstanceState);
 
         //We need different ID field when loading playlist songs
-        mAudioIdField = MediaStore.Audio.Playlists.Members.AUDIO_ID;
+        //mAudioIdField = MediaStore.Audio.Playlists.Members.AUDIO_ID;
     }
 
     /*@Override
@@ -99,46 +100,33 @@ public class PlaylistSongsFragment extends SongListFragment {
 
         if (data != null && requestCode == SELECT_SONGS_REQUEST && data.hasExtra(PlaylistSongsFragment.SELECTED_SONGS_KEY))
         {
-            //TODO - set this into async task
             List<String> ids = data.getStringArrayListExtra(PlaylistSongsFragment.SELECTED_SONGS_KEY);
-            insertIntoPlaylist(ids);
 
+            //Insert songs in playlist and then refresh data
+            new AsyncTask<List<String>,Void,Integer>(){
+
+                @Override
+                protected Integer doInBackground(List<String>... params)
+                {
+                    List<String> ids = params[0];
+
+                    if (ids == null)
+                        return null;
+
+                    return Utils.insertIntoPlaylist(getContext(),ids,Long.valueOf(getArguments().getString(SlimListFragment.CURSOR_PARAMETER_KEY)));
+                }
+
+                @Override
+                protected void onPostExecute(Integer result) {
+                    Toast.makeText(mContext,result + " " + getString(R.string.playlist_add_succes),Toast.LENGTH_SHORT).show();
+                    loadDataAsync();
+                }
+            }.execute(ids);
         }
     }
 
-    public void insertIntoPlaylist(List<String> IDs)
-    {
-        //long [] IDs = data.getLongArrayExtra(PlaylistSongsFragment.SELECTED_SONGS_KEY);
-        long playlistId = Long.valueOf(getArguments().getString(SlimListFragment.CURSOR_PARAMETER_KEY));
-        Uri playlistUri = MediaStore.Audio.Playlists.Members.getContentUri("external",playlistId);
-        List<ContentValues> valuesList = new ArrayList<>();
+    //Returns number of inserted songs
 
-        Cursor playlistCursor = mContext.getContentResolver().query(playlistUri,new String[]{MediaStore.Audio.Playlists.Members._ID, MediaStore.Audio.Playlists.Members.AUDIO_ID},null,null,null);
-        int songCount = playlistCursor.getCount();
-
-        ContentValues values;
-
-        long id;
-        for(String audio_id : IDs)
-        {
-            id = Long.parseLong(audio_id);
-            if (!Utils.playlistCheckForDuplicate(playlistCursor,id)) {
-
-                values = new ContentValues();
-                values.put(MediaStore.Audio.Playlists.Members.AUDIO_ID, id);
-                values.put(MediaStore.Audio.Playlists.Members.PLAY_ORDER, valuesList.size() + songCount);
-                valuesList.add(values);
-            }
-        }
-
-        ContentResolver resolver = mContext.getContentResolver();
-        ContentValues[] valuesArray = new ContentValues[valuesList.size()];
-        valuesList.toArray(valuesArray);
-        int result = resolver.bulkInsert(playlistUri, valuesArray);
-        resolver.notifyChange(playlistUri,null);
-
-        Toast.makeText(mContext,result + " " + getString(R.string.playlist_add_succes),Toast.LENGTH_SHORT).show();
-    }
 
     //A small change in that we use audio_ID and not normal ID when creating song list
     /*@Override

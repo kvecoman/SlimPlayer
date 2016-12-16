@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
@@ -94,7 +95,7 @@ public class PlaylistsFragment extends CategoryListFragment {
                         playlistName = mCreatePlaylistEditText.getText().toString();
 
                         //Check if playlist with that name already exists
-                        Cursor playlistsCursor = mCursorAdapter.getCursor();
+                        /*Cursor playlistsCursor = mCursorAdapter.getCursor();
                         for (int i = 0;i < playlistsCursor.getCount();i++)
                         {
                             playlistsCursor.moveToPosition(i);
@@ -104,10 +105,54 @@ public class PlaylistsFragment extends CategoryListFragment {
                                 mCreatePlaylistEditText.selectAll();
                                 return;
                             }
-                        }
+                        }*/
+
+                        //Async task in async task, in first one we check if playlist with that name already exist,
+                        // and in second one we actually create playlist
+                        new AsyncTask<String,Void,Boolean>()
+                        {
+                            private String mPlaylistName;
+
+                            @Override
+                            protected Boolean doInBackground(String... params) {
+                                mPlaylistName = params[0];
+
+                                return Utils.checkIfPlaylistExist(mContext, mPlaylistName);
+                            }
+
+                            @Override
+                            protected void onPostExecute(Boolean result) {
+                                //If playlist already exist
+                                if (result)
+                                {
+                                    Toast.makeText(mContext,getString(R.string.toast_playlist_exists),Toast.LENGTH_SHORT).show();
+                                    mCreatePlaylistEditText.selectAll();
+                                }
+                                else
+                                {
+                                    //If not then we can create new playlist
+                                    new AsyncTask<String,Void,Long>()
+                                    {
+                                        @Override
+                                        protected Long doInBackground(String... params) {
+                                            return Utils.createPlaylist(getContext(),params[0]);
+                                        }
+
+                                        @Override
+                                        protected void onPostExecute(Long result) {
+                                            //Refresh data
+                                            loadDataAsync();
+                                        }
+                                    }.execute(mPlaylistName);
+                                }
+                            }
+                        }.execute(playlistName);
+
+
+
 
                         //Create content values with new playlist info
-                        ContentValues inserts = new ContentValues();
+                        /*ContentValues inserts = new ContentValues();
                         inserts.put(MediaStore.Audio.Playlists.NAME, playlistName);
                         inserts.put(MediaStore.Audio.Playlists.DATE_ADDED, System.currentTimeMillis());
                         inserts.put(MediaStore.Audio.Playlists.DATE_MODIFIED, System.currentTimeMillis());
@@ -119,7 +164,7 @@ public class PlaylistsFragment extends CategoryListFragment {
                         Cursor c = mContext.getContentResolver().query(uri, new String[]{MediaStore.Audio.Playlists._ID},null,null,null);
                         c.moveToFirst();
                         int pId = c.getInt(0);
-                        c.close();
+                        c.close();*/
 
                         //Toast.makeText(mContext,uri.toString() + " ------ " + pId,Toast.LENGTH_LONG).show();
                     }
@@ -177,7 +222,7 @@ public class PlaylistsFragment extends CategoryListFragment {
         {
             //Delete playlists
             //Get all checked positions
-            SparseBooleanArray checkedPositions = getListView().getCheckedItemPositions();
+            /*SparseBooleanArray checkedPositions = getListView().getCheckedItemPositions();
             Cursor cursor = mCursorAdapter.getCursor();
             int position = -1;
             long id;
@@ -196,9 +241,27 @@ public class PlaylistsFragment extends CategoryListFragment {
                                                                             new String  [] {id + ""});
                 }
 
-            }
+            }*/
 
-            Toast.makeText(mContext,deletedCount + " items deleted",Toast.LENGTH_SHORT).show();
+
+            new AsyncTask<SparseBooleanArray,Void,Integer>()
+            {
+                @Override
+                protected Integer doInBackground(SparseBooleanArray... params) {
+
+                    return Utils.deleteFromList(getContext(), mCursor, MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,params[0]);
+                }
+
+                @Override
+                protected void onPostExecute(Integer result) {
+                    Toast.makeText(mContext,result + " items deleted",Toast.LENGTH_SHORT).show();
+                    loadDataAsync();
+                }
+            }.execute(getListView().getCheckedItemPositions());
+
+
+
+
 
         }
         else if (item.getItemId() == R.id.playlist_create)
@@ -216,16 +279,10 @@ public class PlaylistsFragment extends CategoryListFragment {
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        //super.onItemClick(parent, view, position, id);
 
-        if (position < getListAdapter().getCount())
-        {
-            //Just open the playlist if we are not selecting
-            if (!mSelectMode)
-            {
-                super.onItemClick(parent, view, position, id);
-            }
-        }
+        //Open playlist only if we are not in select mode
+        if (!mSelectMode)
+            super.onItemClick(parent, view, position, id);
 
     }
 

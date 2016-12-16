@@ -33,10 +33,10 @@ import java.util.Set;
 //TODO - make visual style for project
 //TODO - indicate that tap paused or resumed the song
 //TODO - earphones in/out resume/stop playback
-//TODO - add option to delete songs in playlists
 //TODO - make homescreen
 //TODO - make visualization
 
+    //TODO - continue here - continue optimizing
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";

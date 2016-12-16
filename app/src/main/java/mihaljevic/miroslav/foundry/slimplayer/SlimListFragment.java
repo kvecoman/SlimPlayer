@@ -101,9 +101,6 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
             mCursorAdapter = new SongCursorAdapter(getContext(),mCursor,0, bundle.getString(DISPLAY_FIELD_KEY));
             setListAdapter(mCursorAdapter);
 
-            loadDataAsync();
-
-
             //Log.d(TAG,"initLoader for MAIN_CURSOR_LOADER");
             //getLoaderManager().initLoader(MAIN_CURSOR_LOADER,bundle,this);
 
@@ -117,6 +114,14 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
                 mSelectSongsForResult = true;
             }
         }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        //With every showing of this fragment, load data
+        loadDataAsync();
     }
 
     @Override
@@ -170,9 +175,16 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
     public void deselect()
     {
         mSelectMode = false;
-        getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
         getListView().clearChoices();
         getListView().requestLayout();
+        getListView().post(new Runnable() {
+            @Override
+            public void run() {
+                getListView().setChoiceMode(ListView.CHOICE_MODE_NONE);
+            }
+        });
+
+
     }
 
     protected void queryCursor()

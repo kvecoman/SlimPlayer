@@ -12,11 +12,14 @@ import android.graphics.Typeface;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
+import android.util.SparseBooleanArray;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -102,6 +105,45 @@ public final class Utils {
         return false;
     }
 
+    public static boolean checkIfPlaylistExist(Context context, String playlistName)
+    {
+        //Check if playlist with that name already exists
+        Cursor playlistsCursor = context.getContentResolver().query(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,
+                                                        new String [] {MediaStore.Audio.Playlists._ID,MediaStore.Audio.Playlists.NAME},null,null,null);
+        for (int i = 0;i < playlistsCursor.getCount();i++)
+        {
+            playlistsCursor.moveToPosition(i);
+            if (playlistName.equals(playlistsCursor.getString(playlistsCursor.getColumnIndex(MediaStore.Audio.Playlists.NAME))))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    //Creates playlist and returns id
+    public static long createPlaylist(Context context, String playlistName)
+    {
+        //Create content values with new playlist info
+        ContentValues inserts = new ContentValues();
+        inserts.put(MediaStore.Audio.Playlists.NAME, playlistName);
+        inserts.put(MediaStore.Audio.Playlists.DATE_ADDED, System.currentTimeMillis());
+        inserts.put(MediaStore.Audio.Playlists.DATE_MODIFIED, System.currentTimeMillis());
+
+        //Insert new playlist values
+        Uri uri = context.getContentResolver().insert(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,inserts);
+
+        //Get ID of newly created playlist
+        Cursor c = context.getContentResolver().query(uri, new String[]{MediaStore.Audio.Playlists._ID},null,null,null);
+        c.moveToFirst();
+        long pId = c.getLong(0);
+        c.close();
+
+        return pId;
+    }
+
+    //Returns number of inserted items
     public static int insertIntoPlaylist(Context context, List<String> IDs, long playlistId)
     {
         //long [] IDs = data.getLongArrayExtra(PlaylistSongsFragment.SELECTED_SONGS_KEY);
@@ -135,6 +177,33 @@ public final class Utils {
 
         return result;
 
+    }
+
+    public static int deleteFromList(Context context, Cursor cursor, Uri uri, SparseBooleanArray checkedPositions)
+    {
+        int position = -1;
+        long id;
+        int deletedCount = 0;
+
+        if (cursor == null || cursor.isClosed() || cursor.getColumnIndex("_id") == -1)
+            return  0;
+
+        for (int i = 0;i < checkedPositions.size();i++)
+        {
+            position = checkedPositions.keyAt(i);
+
+            if (position >= 0 && position < cursor.getCount() && checkedPositions.get(position))
+            {
+                cursor.moveToPosition(position);
+                id = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
+                deletedCount += context.getContentResolver().delete(  uri,
+                        "_id" + "=?",
+                        new String  [] {id + ""});
+            }
+
+        }
+
+        return deletedCount;
     }
 
     //Method that detects empty genres and stores that list into preferences

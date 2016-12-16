@@ -13,6 +13,7 @@ import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.Loader;
 import android.util.Log;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -50,7 +51,7 @@ public class PlaylistSongsFragment extends SongListFragment {
     }
 
 
-    @Override
+    /*@Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         return super.onCreateView(inflater, container,savedInstanceState);
@@ -64,10 +65,33 @@ public class PlaylistSongsFragment extends SongListFragment {
         //mAudioIdField = MediaStore.Audio.Playlists.Members.AUDIO_ID;
     }
 
-    /*@Override
+    @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         super.onLoadFinished(loader, data);
     }*/
+
+    @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+
+        if (!mSelectSongsForResult)
+        {
+            MenuItem addToThisPlaylistItem = menu.findItem(R.id.playlist_add_to_this);
+            MenuItem deleteItem = menu.findItem(R.id.delete_item);
+
+            if (mSelectMode && getListView().getCheckedItemCount() > 0)
+            {
+                deleteItem.setVisible(true);
+                addToThisPlaylistItem.setVisible(false);
+            }
+            else
+            {
+                deleteItem.setVisible(false);
+                addToThisPlaylistItem.setVisible(true);
+            }
+        }
+
+        super.onPrepareOptionsMenu(menu);
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -88,8 +112,59 @@ public class PlaylistSongsFragment extends SongListFragment {
         }
         else
         {
-            //Upper class will handle selection mode
-            return super.onOptionsItemSelected(item);
+            if (item.getItemId() == R.id.delete_item)
+            {
+                //Delete songs from playlist
+                //Get all checked positions
+                /*SparseBooleanArray checkedPositions = getListView().getCheckedItemPositions();
+                Cursor cursor = mCursorAdapter.getCursor();
+                int position = -1;
+                long id;
+                int deletedCount = 0;
+
+                for (int i = 0;i < checkedPositions.size();i++)
+                {
+                    position = checkedPositions.keyAt(i);
+
+                    if (position >= 0 && position < cursor.getCount() && checkedPositions.get(position))
+                    {
+                        cursor.moveToPosition(position);
+                        id = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists.Members._ID));
+                        deletedCount += mContext.getContentResolver().delete(   MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,
+                                MediaStore.Audio.Playlists._ID + "=?",
+                                new String  [] {id + ""});
+                    }
+
+                }
+
+                Toast.makeText(mContext,deletedCount + " items deleted",Toast.LENGTH_SHORT).show();*/
+
+
+                new AsyncTask<SparseBooleanArray,Void,Integer>()
+                {
+                    @Override
+                    protected Integer doInBackground(SparseBooleanArray... params) {
+
+                        return Utils.deleteFromList(getContext(),
+                                                    mCursor,
+                                                    MediaStore.Audio.Playlists.Members.getContentUri("external",Long.valueOf(getArguments().getString(SlimListFragment.CURSOR_PARAMETER_KEY))),
+                                                    params[0]);
+                    }
+
+                    @Override
+                    protected void onPostExecute(Integer result) {
+                        Toast.makeText(mContext,result + " items deleted",Toast.LENGTH_SHORT).show();
+                        loadDataAsync();
+                    }
+                }.execute(getListView().getCheckedItemPositions());
+            }
+            else
+            {
+                //If none of previous conditions was met then allow upper class to handle this
+                return super.onOptionsItemSelected(item);
+            }
+
+
         }
 
         return true;

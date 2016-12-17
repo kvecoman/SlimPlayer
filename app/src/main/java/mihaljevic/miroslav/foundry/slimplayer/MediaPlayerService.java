@@ -14,8 +14,10 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.preference.PreferenceManager;
@@ -33,6 +35,11 @@ import java.util.List;
 public class MediaPlayerService extends Service implements MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 
     protected final String TAG = getClass().getSimpleName();
+
+    //Preference keys to restore last played list
+    public static final String SONGLIST_SOURCE_KEY = "SONGLIST_SOURCE";
+    public static final String SONGLIST_PARAMETER_KEY = "SONGLIST_PARAMETER";
+    public static final String SONGLIST_POSITION_KEY = "SONGLIST_POSITION";
 
     //Notification ID
     public static final int NOTIFICATION_PLAYER_ID = 1;
@@ -116,6 +123,23 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
         //Register to detect headphones in/out
         registerReceiver(mHeadphonesChangeReceiver, new IntentFilter(AudioManager.ACTION_HEADSET_PLUG));
+
+        //Try to get last playback state (if there is none, nothing will happen)
+        new AsyncTask<Void,Void,Integer>(){
+            @Override
+            protected Integer doInBackground(Void... params)
+            {
+                return recreateLastPlaybackState();
+            }
+
+            @Override
+            protected void onPostExecute(Integer result) {
+                //If we could recreate state then play the position
+                if (result != -1)
+                    play(result);
+            }
+        }.execute();
+
     }
 
 
@@ -180,6 +204,25 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         }
     }
 
+    //Returns position of last played song
+    private int recreateLastPlaybackState()
+    {
+        //Recreate last playback state
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String source = prefs.getString(SONGLIST_SOURCE_KEY,null);
+        String parameter = prefs.getString(SONGLIST_PARAMETER_KEY,null);
+        int position = prefs.getInt(SONGLIST_POSITION_KEY,0);
+
+        if (source != null)
+        {
+            Bundle bundle = ScreenBundles.getBundleForSubScreen(this,source,parameter);
+            CursorSongs songs = new CursorSongs(Utils.querySongListCursor(this,bundle));
+            setCursorSongs(songs,null,null);
+            return position;
+        }
+        return -1;
+    }
+
     @Override
     public void onAudioFocusChange(int focusChange) {
         if (focusChange <= 0)
@@ -208,7 +251,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             mCurrentPlayTask.cancel(true);
 
         mPosition = position;
-        //Song song = mSongList.get(mPosition);
+
+        //Save current position so we can get it later on
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        preferences.edit().putInt(SONGLIST_POSITION_KEY,mPosition).apply();
+
         Toast.makeText(getApplicationContext(),mSongs.getData(mPosition),Toast.LENGTH_SHORT).show();
 
         mCurrentPlayTask = new AsyncTask<Void, Void, Void>() {
@@ -298,7 +345,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     public void pause()
     {
-        if (mPlayer != null)
+        if (mPlayer != null && mPlaying == true)
         {
             mPlaying = false;
             mPlayer.pause();
@@ -590,35 +637,51 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         mBitmapIcons = bitmaps;
     }*/
 
+    //Sets the list and starts playing, source string is one of screen keys or something else (if list is from files or something)
+    public void playList(CursorSongs songs, int startPosition,final String source,final String parameter)
+    {
+
+        setCursorSongs(songs,source,parameter);
+        play(startPosition);
+
+    }
+
+
 
     //Set the list and start playing
     public void playList(CursorSongs songs, int startPosition)
     {
-        setCursorSongs(songs);
+        setCursorSongs(songs,null,null);
         play(startPosition);
     }
 
-
-    //Setter for song list
-    public void setCursorSongs(CursorSongs songs)
+    public void setCursorSongs(CursorSongs songs, @Nullable final String source,@Nullable final String parameter)
     {
+        if (songs == null) {
+            //We have nothing, respond appropriately
+            stopAndClearList();
+            return;
+        }
+
+        if (source != null)
+        {
+            //Save song list source in preferences so we remember this list
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(MediaPlayerService.this);
+            preferences.edit().putString(SONGLIST_SOURCE_KEY, source)
+                    .putString(SONGLIST_PARAMETER_KEY, parameter).apply();
+        }
+
         //This is starting position before we find out anything
         mPosition = -1;
 
-        if (songs != null)
-        {
-            //Get song count and song list
-            mCount = songs.getCount();
-            mSongs = songs;
-            mReadyToPlay = true;
-        }
-        else
-        {
-            //We have nothing, respond appropriately
-            stopAndClearList();
-        }
+        //Get song count and song list
+        mCount = songs.getCount();
+        mSongs = songs;
+        mReadyToPlay = true;
 
     }
+
+
 
     //Used to send info when NowPlayingActivity is starting to get up to date with player service
     public void setCurrentPlayInfoToListener()

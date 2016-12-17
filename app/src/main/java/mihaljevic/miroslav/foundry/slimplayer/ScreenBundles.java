@@ -51,6 +51,35 @@ public final class ScreenBundles {
         return bundle;
     }
 
+    //Also central function for retrieving bundle, but when we already know parameter
+    public static Bundle getBundleForSubScreen (Context context, String currentScreen, String parameter )
+    {
+        Bundle bundle = null;
+
+        if (currentScreen.equals(context.getString(R.string.pref_key_all_screen)))
+        {
+            bundle = ScreenBundles.getAllSongsBundle(context);
+        }
+        else if(currentScreen.equals(context.getString(R.string.pref_key_playlists_screen)))
+        {
+            bundle = ScreenBundles.getSongsByPlaylistBundle(context, parameter);
+        }
+        else if (currentScreen.equals(context.getString(R.string.pref_key_albums_screen)))
+        {
+            bundle = ScreenBundles.getSongsByAlbumBundle(context,parameter);
+        }
+        else if (currentScreen.equals(context.getString(R.string.pref_key_artists_screen)))
+        {
+            bundle = ScreenBundles.getSongsByArtistsBundle(context,parameter);
+        }
+        else if (currentScreen.equals(context.getString(R.string.pref_key_genres_screen)))
+        {
+            bundle = ScreenBundles.getSongsByGenreBundle(context,parameter);
+        }
+
+        return bundle;
+    }
+
     //Returns bundle for cursor init for All songs screen
     public static Bundle getAllSongsBundle(Context context)
     {

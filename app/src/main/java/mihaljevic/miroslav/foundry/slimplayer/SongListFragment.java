@@ -130,7 +130,7 @@ public class SongListFragment extends SlimListFragment {
         if (!mSelectMode && !mSelectSongsForResult && mSongs != null)
         {
             //Pass list of songs from which we play and play current position
-            mApplication.getMediaPlayerService().playList(mSongs,position);
+            mApplication.getMediaPlayerService().playList(mSongs,position,mCurrentScreen,getArguments().getString(CURSOR_PARAMETER_KEY));
 
             //Start NowPlayingActivity
             Intent intent = new Intent(mContext,NowPlayingActivity.class);

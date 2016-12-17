@@ -35,7 +35,6 @@ import java.util.Set;
 //TODO - earphones in starts playing last list
 //TODO - make homescreen
 //TODO - make visualization
-//TODO - always remember last played position
 
 //TODO - continue here - continue optimizing
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{

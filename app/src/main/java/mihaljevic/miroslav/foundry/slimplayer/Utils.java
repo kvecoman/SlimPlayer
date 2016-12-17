@@ -10,8 +10,10 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.net.Uri;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.util.TypedValue;
 import android.view.View;
@@ -33,6 +35,8 @@ import java.util.Set;
  * @author Miroslav Mihaljević
  */
 public final class Utils {
+
+    protected static final String TAG = Utils.class.getSimpleName();
 
     private Utils(){}
 
@@ -204,6 +208,23 @@ public final class Utils {
         }
 
         return deletedCount;
+    }
+
+    public static Cursor querySongListCursor(Context context, Bundle args)
+    {
+        Log.d(TAG,"queryCursor()");
+
+        if (args == null)
+            return null;
+
+        //Create query that will fetch songs that we need for this screen
+        Uri uri = Uri.parse(args.getString(SlimListFragment.CURSOR_URI_KEY));
+        String [] projection = args.getStringArray(SlimListFragment.CURSOR_PROJECTION_KEY);
+        String selection = args.getString(SlimListFragment.CURSOR_SELECTION_KEY);
+        String [] selectionArgs = args.getStringArray(SlimListFragment.CURSOR_SELECTION_ARGS_KEY);
+        String sortOrder = args.getString(SlimListFragment.CURSOR_SORT_ORDER_KEY);
+
+        return context.getContentResolver().query(uri,projection,selection,selectionArgs,sortOrder);
     }
 
     //Method that detects empty genres and stores that list into preferences

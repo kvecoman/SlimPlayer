@@ -187,23 +187,7 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
 
     }
 
-    protected void queryCursor()
-    {
-        Log.d(TAG,"queryCursor()");
-        Bundle args = getArguments();
 
-        if (args == null)
-            return;
-
-        //Create query that will fetch songs that we need for this screen
-        Uri uri = Uri.parse(args.getString(CURSOR_URI_KEY));
-        String [] projection = args.getStringArray(CURSOR_PROJECTION_KEY);
-        String selection = args.getString(CURSOR_SELECTION_KEY);
-        String [] selectionArgs = args.getStringArray(CURSOR_SELECTION_ARGS_KEY);
-        String sortOrder = args.getString(CURSOR_SORT_ORDER_KEY);
-
-        mCursor = mContext.getContentResolver().query(uri,projection,selection,selectionArgs,sortOrder);
-    }
 
     protected void loadDataAsync()
     {
@@ -213,7 +197,7 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
         {
             @Override
             protected Void doInBackground(Void... params) {
-                queryCursor();
+                mCursor = Utils.querySongListCursor(mContext,getArguments());
                 return null;
             }
 

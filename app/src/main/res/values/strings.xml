@@ -40,6 +40,7 @@
     <string name="pref_key_repeat">pref_key_repeat</string>
 
     <string name="pref_key_empty_genres">pref_key_empty_genres</string>
+    <!-- There are also some other keys defined as constants in project files-->
 
     <!--Directory select dialog -->
     <string name="directory_pref_button_select">Select...</string>

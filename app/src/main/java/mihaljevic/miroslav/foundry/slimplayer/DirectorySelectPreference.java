@@ -99,9 +99,6 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
                     deselectList();
                 }
 
-
-                //TODO - think of some other way to get notified when everything is deselected?
-
             }
         });
 
@@ -185,7 +182,7 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
         mListView.requestLayout();
     }
 
-    //Function that deselects item from list and sets apropriate action button text
+    //Function that deselects item from list and sets appropriate action button text
     public void deselectList()
     {
         mSelectedItem = -1;

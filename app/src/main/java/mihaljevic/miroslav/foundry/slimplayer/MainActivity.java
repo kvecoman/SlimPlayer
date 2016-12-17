@@ -32,21 +32,19 @@ import java.util.Set;
 //TODO - remove empty genres
 //TODO - make visual style for project
 //TODO - indicate that tap paused or resumed the song
-//TODO - earphones in/out resume/stop playback
+//TODO - earphones in starts playing last list
 //TODO - make homescreen
 //TODO - make visualization
+//TODO - always remember last played position
 
-    //TODO - continue here - continue optimizing
+//TODO - continue here - continue optimizing
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";
 
-
-
     //Pager that hold different screens (All music, Playlists etc)
     private ViewPager mPager;
     private PagerAdapter mPagerAdapter;
-
 
 
     @Override

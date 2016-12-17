@@ -106,6 +106,7 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
 
             }
         });
+
     }
 
     @Override

@@ -4,8 +4,10 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.media.AudioManager;
@@ -70,6 +72,22 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private List<SongPlayListener> mOnPlayListeners;
     private List<SongResumeListener> mOnResumeListeners;
 
+    //Used to detect if headphones are plugged in
+    private BroadcastReceiver mHeadphonesChangeReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            if (intent.hasExtra("state"))
+            {
+                //If headset is plugged out, pause the playback
+                if (intent.getIntExtra("state",0) == 0)
+                {
+                    pause();
+                }
+            }
+        }
+    };
+
     public MediaPlayerService() {
     }
 
@@ -95,6 +113,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
         //Get last known repeat status from preferences
         refreshRepeat();
+
+        //Register to detect headphones in/out
+        registerReceiver(mHeadphonesChangeReceiver, new IntentFilter(AudioManager.ACTION_HEADSET_PLUG));
     }
 
 
@@ -149,7 +170,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public void onDestroy() {
 
         mAudioManager.abandonAudioFocus(this);
-
+        unregisterReceiver(mHeadphonesChangeReceiver);
         super.onDestroy();
     }
 

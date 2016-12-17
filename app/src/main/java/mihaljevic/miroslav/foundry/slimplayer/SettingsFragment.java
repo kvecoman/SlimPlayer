@@ -44,6 +44,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                 SharedPreferences preferences  = PreferenceManager.getDefaultSharedPreferences(getContext());
                 Set<String> directoriesSet = preferences.getStringSet(getString(R.string.pref_key_directories_set),null);
 
+                //THIS DOESN'T WORK
                 //Detect empty genres so they can be hidden in future
                 //Utils.detectEmptyGenres(getContext());
 

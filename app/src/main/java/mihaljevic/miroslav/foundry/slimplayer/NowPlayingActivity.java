@@ -1,13 +1,13 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
 import android.support.v7.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
-
-import java.util.List;
 
 
 public class NowPlayingActivity extends BackHandledFragmentActivity implements MediaPlayerService.SongPlayListener,ViewPager.OnPageChangeListener {
@@ -36,6 +36,25 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
     protected void onStart() {
         super.onStart();
 
+        Intent intent = getIntent();
+
+        //Here we handle if playback is started from file
+        if (intent != null && intent.getAction() != null && intent.getAction().equals(Intent.ACTION_VIEW))
+        {
+            //This activity is called from outside, when playing audio files
+            Uri dataUri = intent.getData();
+
+            if (dataUri.getScheme().contains("file"))
+            {
+                FileSongs songs = new FileSongs();
+                songs.addFile(dataUri.getPath());
+
+                //TODO - make it remember this list(actually 1 song) somehow
+                mApplication.getMediaPlayerService().playList(songs,0);
+            }
+
+        }
+
 
         //If pager is not set with intent extras, then set it with MediaPlayerService
         if (mPagerAdapter == null && mApplication.isMediaPlayerServiceBound())
@@ -50,19 +69,11 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
 
         }
 
-
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        //When we are connected request current play info
+        //When we are connected request current play info (NOTE - this has been in onResume before, unknown effects could occur)
         mApplication.getMediaPlayerService().registerPlayListener(NowPlayingActivity.this);
 
-        //This might not be necessary as on play already calls all listeners
-        //mApplication.getMediaPlayerService().setCurrentPlayInfoToListener();
     }
+
 
     @Override
     protected void onStop() {
@@ -102,8 +113,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
     }
 
     @Override
-    public void onPlay(CursorSongs songs, int position) {
-        //TODO - this looks sloppy
+    public void onPlay(Songs songs, int position) {
         mPager.setCurrentItem(position,true);
     }
 

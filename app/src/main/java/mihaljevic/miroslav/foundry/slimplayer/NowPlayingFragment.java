@@ -1,18 +1,12 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -20,8 +14,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.SeekBar;
 import android.widget.TextView;
-
-import java.util.List;
 
 /**
  *
@@ -213,7 +205,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     public void loadSongInfo()
     {
 
-        CursorSongs songs = mApplication.getMediaPlayerService().getSongs();
+        Songs songs = mApplication.getMediaPlayerService().getSongs();
         //mCount = songs.getCount();
 
         mSeekBar.setMax(((int) songs.getDuration(mPosition)));
@@ -244,7 +236,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
     //This also can come from tap
     @Override
-    public void onPlay(CursorSongs songs, int position) {
+    public void onPlay(Songs songs, int position) {
         bindSeekBarToPlayer();
     }
 

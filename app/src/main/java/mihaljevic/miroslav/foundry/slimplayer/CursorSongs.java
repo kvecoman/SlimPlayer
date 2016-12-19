@@ -8,7 +8,7 @@ import android.util.Log;
  * Helper class that allows easy access to fields of different songs
  */
 
-public class CursorSongs {
+public class CursorSongs implements Songs {
     private final String TAG = getClass().getSimpleName();
 
     private Cursor mCursor;
@@ -72,6 +72,7 @@ public class CursorSongs {
         return mCursor;
     }
 
+    @Override
     public int getCount()
     {
         if (!checkCursor())
@@ -80,6 +81,7 @@ public class CursorSongs {
         return mCursor.getCount();
     }
 
+    @Override
     public long getId(int position) {
         if (!checkCursor() || position < 0 || position >= mCursor.getCount())
             return -1;
@@ -89,6 +91,7 @@ public class CursorSongs {
         return mCursor.getLong(mIndexId);
     }
 
+    @Override
     public String getTitle(int position) {
         if (!checkCursor() || position < 0 || position >= mCursor.getCount())
             return null;
@@ -98,6 +101,7 @@ public class CursorSongs {
         return mCursor.getString(mIndexTitle);
     }
 
+    @Override
     public String getArtist(int position) {
         if (!checkCursor() || position < 0 || position >= mCursor.getCount())
             return null;
@@ -107,6 +111,7 @@ public class CursorSongs {
         return mCursor.getString(mIndexArtist);
     }
 
+    @Override
     public String getAlbum(int position) {
         if (!checkCursor() || position < 0 || position >= mCursor.getCount())
             return null;
@@ -116,6 +121,7 @@ public class CursorSongs {
         return mCursor.getString(mIndexAlbum);
     }
 
+    @Override
     public long getDuration(int position) {
         if (!checkCursor() || position < 0 || position >= mCursor.getCount())
             return -1;
@@ -125,6 +131,7 @@ public class CursorSongs {
         return mCursor.getLong(mIndexDuration);
     }
 
+    @Override
     public String getData(int position) {
         if (!checkCursor() || position < 0 || position >= mCursor.getCount())
             return null;

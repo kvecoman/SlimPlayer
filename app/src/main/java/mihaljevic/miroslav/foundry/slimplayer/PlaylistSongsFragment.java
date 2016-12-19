@@ -97,7 +97,8 @@ public class PlaylistSongsFragment extends SongListFragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (!mSelectMode)
         {
-            if (item.getItemId() == R.id.playlist_add_to_this) {
+            if (item.getItemId() == R.id.playlist_add_to_this)
+            {
                 //If we have not selected anything, then we run MainActivity for result
                 Toast.makeText(getContext(), "Starting MainActivity for result", Toast.LENGTH_SHORT).show();
 

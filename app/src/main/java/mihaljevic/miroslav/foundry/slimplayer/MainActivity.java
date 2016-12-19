@@ -30,13 +30,15 @@ import java.util.Set;
 
 //TODO - separate activities like AddToPlaylistActivity or SongListActivity can be unified and made into HolderActivity (actually they can't, but they can have a superclass)
 //TODO - remove empty genres
-//TODO - make visual style for project
 //TODO - indicate that tap paused or resumed the song
 //TODO - earphones in starts playing last list
+//TODO - big notification for status bar player
+//TODO - playback of songs from multiple files and from internet
+//TODO - make visual style for project
 //TODO - make homescreen
 //TODO - make visualization
 
-//TODO - continue here - continue optimizing
+
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";

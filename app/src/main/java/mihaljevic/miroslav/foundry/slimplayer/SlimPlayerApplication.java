@@ -22,10 +22,15 @@ import java.util.List;
  */
 public class SlimPlayerApplication extends Application {
 
+    protected final String TAG = getClass().getSimpleName();
+
     private static SlimPlayerApplication sInstance;
 
     //Indicate whether the preferences have changed
     private boolean mPreferencesChanged = false;
+
+    //List of listeners that need to be called when service is connected
+    private List<PlayerServiceBoundListener> mServiceBoundListeners;
 
     private MediaPlayerService mPlayerService;
     private boolean mServiceBound;
@@ -34,18 +39,20 @@ public class SlimPlayerApplication extends Application {
     protected ServiceConnection mServiceConnection = new ServiceConnection(){
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d("slim","SlimPlayerApplication - onServiceConnected()");
+            Log.d(TAG,"onServiceConnected()");
 
 
             MediaPlayerService.MediaPlayerBinder playerBinder = (MediaPlayerService.MediaPlayerBinder)service;
             SlimPlayerApplication.this.mPlayerService = playerBinder.getService();
             SlimPlayerApplication.this.mServiceBound = true;
 
+            notifyPlayerServiceBound();
+
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            Log.d("slim","SlimPlayerApplication - onServiceDisconnected()");
+            Log.d(TAG,"onServiceDisconnected()");
 
             SlimPlayerApplication.this.mServiceBound = false;
 
@@ -64,6 +71,9 @@ public class SlimPlayerApplication extends Application {
         //Here we init MediaPlayerService
         Intent playerServiceIntent = new Intent(this, MediaPlayerService.class);
         bindService(playerServiceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
+
+        //Init list for listeners
+        mServiceBoundListeners = new ArrayList<>();
 
         super.onCreate();
     }
@@ -98,6 +108,32 @@ public class SlimPlayerApplication extends Application {
 
     //Components notify that the have responded to changes
     public void consumePreferenceChange() {mPreferencesChanged = false;}
+
+    public void registerPlayerServiceBoundListener(PlayerServiceBoundListener listener)
+    {
+        mServiceBoundListeners.add(listener);
+    }
+
+    public void unregisterPlayerServiceBoundListener(PlayerServiceBoundListener listener)
+    {
+        mServiceBoundListeners.remove(listener);
+    }
+
+    private void notifyPlayerServiceBound()
+    {
+        for (PlayerServiceBoundListener listener : mServiceBoundListeners)
+        {
+            if (listener != null)
+            {
+                listener.onPlayerServiceBound();
+            }
+        }
+    }
+
+    public interface PlayerServiceBoundListener
+    {
+        void onPlayerServiceBound();
+    }
 
 
 }

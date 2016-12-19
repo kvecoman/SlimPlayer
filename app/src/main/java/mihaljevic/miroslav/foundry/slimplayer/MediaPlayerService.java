@@ -31,7 +31,6 @@ import java.util.ConcurrentModificationException;
 import java.util.List;
 
 
-//TODO - add intent filter so we can run songs from anywhere
 public class MediaPlayerService extends Service implements MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 
     protected final String TAG = getClass().getSimpleName();
@@ -69,7 +68,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
    // private Cursor mCursor;
     //private List<Song> mSongList;
-    private CursorSongs mSongs;
+    private Songs mSongs;
     private int mPosition;
     private int mCount;
     private boolean mReadyToPlay = false; //Indicates if we have list loaded
@@ -80,20 +79,14 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private List<SongResumeListener> mOnResumeListeners;
 
     //Used to detect if headphones are plugged in
-    private BroadcastReceiver mHeadphonesChangeReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver mHeadsetChangeReceiver = new HeadsetChangeReceiver();
+    /*private BroadcastReceiver mHeadsetChangeReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
 
-            if (intent.hasExtra("state"))
-            {
-                //If headset is plugged out, pause the playback
-                if (intent.getIntExtra("state",0) == 0)
-                {
-                    pause();
-                }
-            }
+
         }
-    };
+    };*/
 
     public MediaPlayerService() {
     }
@@ -122,7 +115,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         refreshRepeat();
 
         //Register to detect headphones in/out
-        registerReceiver(mHeadphonesChangeReceiver, new IntentFilter(AudioManager.ACTION_HEADSET_PLUG));
+        registerReceiver(mHeadsetChangeReceiver, new IntentFilter(AudioManager.ACTION_HEADSET_PLUG));
 
         //Try to get last playback state (if there is none, nothing will happen)
         new AsyncTask<Void,Void,Integer>(){
@@ -194,7 +187,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public void onDestroy() {
 
         mAudioManager.abandonAudioFocus(this);
-        unregisterReceiver(mHeadphonesChangeReceiver);
+        unregisterReceiver(mHeadsetChangeReceiver);
         super.onDestroy();
     }
 
@@ -217,7 +210,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         {
             Bundle bundle = ScreenBundles.getBundleForSubScreen(this,source,parameter);
             CursorSongs songs = new CursorSongs(Utils.querySongListCursor(this,bundle));
-            setCursorSongs(songs,null,null);
+            setSongs(songs,null,null);
             return position;
         }
         return -1;
@@ -465,9 +458,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         if (cursor == null)
             return false;
 
-        if (mSongs != null)
+        if (mSongs != null && mSongs instanceof CursorSongs)
         {
-            if (cursor == mSongs.getCursor())
+            if (cursor == ((CursorSongs)mSongs).getCursor())
                 return true;
         }
 
@@ -477,25 +470,25 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     public void registerPlayListener(SongPlayListener listener)
     {
-        Log.d(TAG,"registerListener - " + listener.toString());
+        Log.d(TAG,"registerPlayListener - " + listener.toString());
         mOnPlayListeners.add(listener);
     }
 
     public void unregisterPlayListener(SongPlayListener listener)
     {
-        Log.d(TAG,"unregisterListener - " + listener.toString());
+        Log.d(TAG,"unregisterPlayListener - " + listener.toString());
         mOnPlayListeners.remove(listener);
     }
 
     public void registerResumeListener(SongResumeListener listener)
     {
-        Log.d(TAG,"registerListener - " + listener.toString());
+        Log.d(TAG,"registerResumeListener - " + listener.toString());
         mOnResumeListeners.add(listener);
     }
 
     public void unregisterResumeListener(SongResumeListener listener)
     {
-        Log.d(TAG,"unregisterListener - " + listener.toString());
+        Log.d(TAG,"unregisterResumeListener - " + listener.toString());
         mOnResumeListeners.remove(listener);
     }
 
@@ -638,10 +631,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     }*/
 
     //Sets the list and starts playing, source string is one of screen keys or something else (if list is from files or something)
-    public void playList(CursorSongs songs, int startPosition,final String source,final String parameter)
+    public void playList(Songs songs, int startPosition,final String source,final String parameter)
     {
 
-        setCursorSongs(songs,source,parameter);
+        setSongs(songs,source,parameter);
         play(startPosition);
 
     }
@@ -649,13 +642,13 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 
     //Set the list and start playing
-    public void playList(CursorSongs songs, int startPosition)
+    public void playList(Songs songs, int startPosition)
     {
-        setCursorSongs(songs,null,null);
+        setSongs(songs,null,null);
         play(startPosition);
     }
 
-    public void setCursorSongs(CursorSongs songs, @Nullable final String source,@Nullable final String parameter)
+    public void setSongs(Songs songs, @Nullable final String source, @Nullable final String parameter)
     {
         if (songs == null) {
             //We have nothing, respond appropriately
@@ -695,7 +688,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     }
 
-    public CursorSongs getSongs()
+    public Songs getSongs()
     {
         return mSongs;
     }
@@ -742,8 +735,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     public interface SongPlayListener
     {
-        void onPlay(CursorSongs songs, int position);
-
+        void onPlay(Songs songs, int position);
     }
 
     public interface SongResumeListener

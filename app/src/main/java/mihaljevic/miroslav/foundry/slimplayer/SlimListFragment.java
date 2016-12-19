@@ -129,7 +129,7 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
         super.onDestroy();
 
         //We need to check that the cursor we want to close is not in use by MediaPlayerService
-        if (!mApplication.getMediaPlayerService().isCursorUsed(mCursor))
+        if (mCursor != null && !mApplication.getMediaPlayerService().isCursorUsed(mCursor))
             mCursor.close();
     }
 

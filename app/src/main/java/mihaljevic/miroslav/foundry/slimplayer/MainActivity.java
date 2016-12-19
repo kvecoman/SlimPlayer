@@ -29,7 +29,6 @@ import java.util.Set;
 //TODO - $$_PROFIT_$$
 
 //TODO - separate activities like AddToPlaylistActivity or SongListActivity can be unified and made into HolderActivity (actually they can't, but they can have a superclass)
-//TODO - remove empty genres
 //TODO - indicate that tap paused or resumed the song
 //TODO - earphones in starts playing last list
 //TODO - big notification for status bar player

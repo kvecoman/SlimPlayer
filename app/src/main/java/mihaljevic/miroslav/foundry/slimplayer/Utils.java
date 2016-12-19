@@ -228,28 +228,36 @@ public final class Utils {
     }
 
     //Method that detects empty genres and stores that list into preferences
-    /*public static void detectEmptyGenres(Context context)
+    public static int deleteEmptyGenres(Context context)
     {
         ContentResolver resolver = context.getContentResolver();
-        Set<String> idSet = new HashSet<>();
+        int count = 0;
         Cursor genresCursor = resolver.query(MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI,
                 new String[]{MediaStore.Audio.Genres._ID},null,null,null);
+
+        if (genresCursor == null)
+            return 0;
+
         int id;
         Cursor cursor;
         genresCursor.moveToFirst();
-        do {
+        do
+        {
             id = genresCursor.getInt(0);
-            cursor = resolver.query(MediaStore.Audio.Genres.getContentUriForAudioId("external", id),
-                    new String[]{MediaStore.Audio.Genres.Members._ID,MediaStore.Audio.Genres.Members.DATA},ScreenBundles.addDirectoryCheckSQL(context),null,null);
+            cursor = resolver.query(MediaStore.Audio.Genres.Members.getContentUri("external", id),
+                    new String[]{MediaStore.Audio.Genres.Members._ID},null,null,null);
             if (cursor.getCount() == 0)
             {
-                idSet.add(String.valueOf(id));
-
+                //Here we delete if genre is empty
+                resolver.delete(MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI,MediaStore.Audio.Genres._ID + "=" + id,null);
+                count++;
             }
-            genresCursor.moveToNext();
-        }while (!genresCursor.isLast());
+            cursor.close();
+        }while(genresCursor.moveToNext());
 
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
-        pref.edit().putStringSet(context.getString(R.string.pref_key_empty_genres),idSet).commit();
-    }*/
+        genresCursor.close();
+
+        return count;
+
+    }
 }

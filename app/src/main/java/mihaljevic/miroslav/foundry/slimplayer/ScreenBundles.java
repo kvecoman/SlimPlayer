@@ -221,7 +221,8 @@ public final class ScreenBundles {
                 MediaStore.Audio.Genres._ID,
                 MediaStore.Audio.Genres.NAME
         };
-        String selection = "LENGTH(" +  MediaStore.Audio.Genres.NAME + ") > 0 AND (" + excludeEmptyGenresSQL(context) + ")";
+        String selection = "LENGTH(" +  MediaStore.Audio.Genres.NAME + ") > 0";
+        //String selection = null;
         String [] selectionArgs = null;
         String sortOrder = MediaStore.Audio.Genres.NAME + " ASC";
 
@@ -411,7 +412,7 @@ public final class ScreenBundles {
         return result;
     }
 
-    public static  String excludeEmptyGenresSQL(Context context)
+    /*public static  String excludeEmptyGenresSQL(Context context)
     {
         String result = "";
         String genreField = MediaStore.Audio.Genres._ID;
@@ -430,5 +431,5 @@ public final class ScreenBundles {
         result = result.substring(0,result.length() - 3);
 
         return result;
-    }
+    }*/
 }

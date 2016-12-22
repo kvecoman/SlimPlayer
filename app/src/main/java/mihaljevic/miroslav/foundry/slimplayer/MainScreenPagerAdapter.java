@@ -129,6 +129,10 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
             fragment.setArguments(args);
             return fragment;
         }
+        else if (mScreensList.get(position).equals(mContext.getString(R.string.pref_key_home_screen)))
+        {
+            fragment = new HomeFragment();
+        }
         else if (mScreensList.get(position).equals(mContext.getString(R.string.pref_key_all_screen)))
         {
             fragment = new SongListFragment();

@@ -17,6 +17,7 @@ import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
@@ -205,7 +206,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         String source = prefs.getString(SONGLIST_SOURCE_KEY,null);
         String parameter = prefs.getString(SONGLIST_PARAMETER_KEY,null);
         int position = prefs.getInt(SONGLIST_POSITION_KEY,0);
-
+        MediaStore.Audio.Media
         if (source != null)
         {
             Bundle bundle = ScreenBundles.getBundleForSubScreen(this,source,parameter);

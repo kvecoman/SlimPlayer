@@ -1,6 +1,7 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.view.Menu;
 
 /**
@@ -26,22 +27,17 @@ public class SongListActivity extends SelectSongsActivity {
         //If there is bundle for fragment then create that fragment and add it to container
         if (fragmentBundle != null)
         {
+            Fragment fragment;
+
             //If we are opening playlist then load PlaylistSongsFragment
             if (fragmentBundle.getString(SlimListFragment.CURSOR_SCREEN_KEY).contains(getString(R.string.pref_key_playlists_screen)))
-            {
-                PlaylistSongsFragment fragment = new PlaylistSongsFragment();
-                fragment.setArguments(fragmentBundle);
-
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,fragment).commit();
-            }
+                fragment = new PlaylistSongsFragment();
             else
-            {
-                //Create usual song list fragment
-                SongListFragment fragment = new SongListFragment();
-                fragment.setArguments(fragmentBundle);
+                fragment = new SongListFragment();
 
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,fragment).commit();
-            }
+
+            fragment.setArguments(fragmentBundle);
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,fragment).commit();
 
 
         }

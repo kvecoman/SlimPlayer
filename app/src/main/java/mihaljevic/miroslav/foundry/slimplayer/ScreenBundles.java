@@ -14,6 +14,7 @@ import java.util.Set;
  * @author Miroslav Mihaljević
  */
 
+//TODO - rename CURSOR_SCREEN_KEY to SOURCE_KEY or something
 public final class ScreenBundles {
 
     //Private constructor to make it non-instantiable
@@ -33,12 +34,12 @@ public final class ScreenBundles {
         }
         else if (currentScreen.equals(context.getString(R.string.pref_key_albums_screen)))
         {
-            parameter = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM));
+            parameter = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Albums._ID));
             bundle = ScreenBundles.getSongsByAlbumBundle(context,parameter);
         }
         else if (currentScreen.equals(context.getString(R.string.pref_key_artists_screen)))
         {
-            parameter = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
+            parameter = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Artists._ID));
             bundle = ScreenBundles.getSongsByArtistsBundle(context,parameter);
         }
         else if (currentScreen.equals(context.getString(R.string.pref_key_genres_screen)))
@@ -154,7 +155,7 @@ public final class ScreenBundles {
 
         String cursorScreen = context.getString(R.string.pref_key_albums_screen);
 
-        String uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI.toString();
+        /*String uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI.toString();
         String [] projection = {
                 MediaStore.Audio.Media._ID,
                 MediaStore.Audio.Media.ALBUM,
@@ -162,7 +163,17 @@ public final class ScreenBundles {
         };
         String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0 AND (" + addDirectoryCheckSQL(context) + ")" + ") GROUP BY (" + MediaStore.Audio.Media.ALBUM;
         String [] selectionArgs = null;
-        String sortOrder = MediaStore.Audio.Media.ALBUM + " ASC";
+        String sortOrder = MediaStore.Audio.Media.ALBUM + " ASC";*/
+
+        String uri = MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI.toString();
+        String [] projection = {
+                MediaStore.Audio.Albums._ID,
+                MediaStore.Audio.Albums.ALBUM,
+        };
+        //TODO - there might be need to somehow check for directories of songs in particular album, also for artists
+        String selection = null;
+        String [] selectionArgs = null;
+        String sortOrder = MediaStore.Audio.Albums.ALBUM + " ASC";
 
         bundle.putString(SlimListFragment.CURSOR_SCREEN_KEY,cursorScreen);
         bundle.putString(SlimListFragment.CURSOR_URI_KEY,uri);
@@ -171,7 +182,7 @@ public final class ScreenBundles {
         bundle.putStringArray(SongListFragment.CURSOR_SELECTION_ARGS_KEY,selectionArgs);
         bundle.putString(SongListFragment.CURSOR_SORT_ORDER_KEY,sortOrder);
 
-        bundle.putString(SongListFragment.DISPLAY_FIELD_KEY,MediaStore.Audio.Media.ALBUM);
+        bundle.putString(SongListFragment.DISPLAY_FIELD_KEY,MediaStore.Audio.Albums.ALBUM);
 
         return bundle;
     }
@@ -186,7 +197,7 @@ public final class ScreenBundles {
 
         String cursorScreen = context.getString(R.string.pref_key_artists_screen);
 
-        String uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI.toString();
+        /*String uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI.toString();
         String [] projection = {
                 MediaStore.Audio.Media._ID,
                 MediaStore.Audio.Media.ARTIST,
@@ -194,7 +205,16 @@ public final class ScreenBundles {
         };
         String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0 AND (" + addDirectoryCheckSQL(context) + ")" + ") GROUP BY (" + MediaStore.Audio.Media.ARTIST;
         String [] selectionArgs = null;
-        String sortOrder = MediaStore.Audio.Media.ARTIST + " ASC";
+        String sortOrder = MediaStore.Audio.Media.ARTIST + " ASC";*/
+
+        String uri = MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI.toString();
+        String [] projection = {
+                MediaStore.Audio.Artists._ID,
+                MediaStore.Audio.Artists.ARTIST,
+        };
+        String selection = null;
+        String [] selectionArgs = null;
+        String sortOrder = MediaStore.Audio.Artists.ARTIST + " ASC";
 
         bundle.putString(SlimListFragment.CURSOR_SCREEN_KEY,cursorScreen);
         bundle.putString(SlimListFragment.CURSOR_URI_KEY,uri);
@@ -203,7 +223,7 @@ public final class ScreenBundles {
         bundle.putStringArray(SongListFragment.CURSOR_SELECTION_ARGS_KEY,selectionArgs);
         bundle.putString(SongListFragment.CURSOR_SORT_ORDER_KEY,sortOrder);
 
-        bundle.putString(SongListFragment.DISPLAY_FIELD_KEY,MediaStore.Audio.Media.ARTIST);
+        bundle.putString(SongListFragment.DISPLAY_FIELD_KEY,MediaStore.Audio.Artists.ARTIST);
 
         return bundle;
     }
@@ -243,7 +263,7 @@ public final class ScreenBundles {
     {
         Bundle bundle = new Bundle();
 
-        String cursorScreen = context.getString(R.string.pref_key_playlists_screen) + " - " + parameter;
+        String cursorScreen = context.getString(R.string.pref_key_playlists_screen);
 
         String uri = MediaStore.Audio.Playlists.Members.getContentUri("external",Long.valueOf(parameter)).toString();
         String [] projection = {
@@ -280,7 +300,7 @@ public final class ScreenBundles {
     {
         Bundle bundle = new Bundle();
 
-        String cursorScreen = context.getString(R.string.pref_key_albums_screen) + " - " + parameter;
+        String cursorScreen = context.getString(R.string.pref_key_albums_screen);
 
         String uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI.toString();
         String [] projection = {
@@ -294,7 +314,7 @@ public final class ScreenBundles {
         };
         String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0 AND (" +
                 addDirectoryCheckSQL(context) + ") AND " +
-                MediaStore.Audio.Media.ALBUM + "=?";
+                MediaStore.Audio.Media.ALBUM_ID + "=?";
         String [] selectionArgs = {parameter};
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
 
@@ -317,7 +337,7 @@ public final class ScreenBundles {
     {
         Bundle bundle = new Bundle();
 
-        String cursorScreen = context.getString(R.string.pref_key_artists_screen) + " - " + parameter;
+        String cursorScreen = context.getString(R.string.pref_key_artists_screen);
 
         String uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI.toString();
         String [] projection = {
@@ -331,7 +351,7 @@ public final class ScreenBundles {
         };
         String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0 AND (" +
                                                 addDirectoryCheckSQL(context) + ") AND " +
-                                                MediaStore.Audio.Media.ARTIST + "=?";
+                                                MediaStore.Audio.Media.ARTIST_ID + "=?";
         String [] selectionArgs = {parameter};
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
 
@@ -354,7 +374,7 @@ public final class ScreenBundles {
     {
         Bundle bundle = new Bundle();
 
-        String cursorScreen = context.getString(R.string.pref_key_genres_screen) + " - " + parameter;
+        String cursorScreen = context.getString(R.string.pref_key_genres_screen);
 
         String uri = MediaStore.Audio.Genres.Members.getContentUri("external",Long.parseLong(parameter)).toString();
         String [] projection = {

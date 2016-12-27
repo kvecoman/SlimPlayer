@@ -1,6 +1,7 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -22,6 +23,8 @@ public class HomeFragment extends Fragment {
 
     private RecyclerView.LayoutManager mLayoutManager;
 
+    private HomeAdapter mAdapter;
+
 
     public HomeFragment() {
         // Required empty public constructor
@@ -42,12 +45,29 @@ public class HomeFragment extends Fragment {
         //Find recycler view
         mRecyclerView = (RecyclerView) getView().findViewById(R.id.home_recycler_view);
 
+        //Set that it has fixed site
+        mRecyclerView.setHasFixedSize(true);
+
         //Set layout manager for recycler view
         mLayoutManager = new GridLayoutManager(getContext(),2);
         mRecyclerView.setLayoutManager(mLayoutManager);
 
         //Set adapter for recycler view
+        //TODO - this to async
+        Cursor cursor = (new StatsDbHelper(getContext())).getReadableDatabase().query(StatsContract.SourceStats.TABLE_NAME,
+                new String[] {StatsContract.SourceStats.COLUMN_NAME_SOURCE,StatsContract.SourceStats.COLUMN_NAME_PARAMETER,StatsContract.SourceStats.COLUMN_NAME_DISPLAY_NAME, StatsContract.SourceStats.COLUMN_NAME_LAST_POSITION},
+                null,null,null,null, StatsContract.SourceStats.COLUMN_NAME_RECENT_FREQUENCY + " DESC","5"); //TODO - make this 5 generic
+        mAdapter = new HomeAdapter(getContext(),cursor);
 
+        mRecyclerView.setAdapter(mAdapter);
 
+    }
+
+    @Override
+    public void onDestroy() {
+
+        mAdapter.getCursor().close();
+
+        super.onDestroy();
     }
 }

@@ -34,11 +34,12 @@ import java.util.Set;
 //TODO - big notification for status bar player
 //TODO - loadDataAsync() bug, sometimes during normal work, CursorClosedException is thrown, locate when it is called
 //TODO - playback of songs from multiple files and from internet
+//TODO - lock screen on NowPlayingActivity, doesnt changes song info when song changes
 //TODO - make visual style for project
 //TODO - make homescreen
 //TODO - make visualization
 
-//TODO - continue - time to roll
+//TODO - continue here - get last play position when tile at home_screen is clicked
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";

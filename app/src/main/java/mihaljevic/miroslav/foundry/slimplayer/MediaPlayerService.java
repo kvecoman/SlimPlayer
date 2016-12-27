@@ -17,7 +17,6 @@ import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.PowerManager;
-import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
@@ -74,10 +73,16 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private int mCount;
     private boolean mReadyToPlay = false; //Indicates if we have list loaded
 
+    //Source and parameter of currently used song list
+    private String mSongsSource;
+    private String mSongsParameter;
+
     private boolean mRepeatPlaylist;
 
     private List<SongPlayListener> mOnPlayListeners;
     private List<SongResumeListener> mOnResumeListeners;
+
+
 
     //Used to detect if headphones are plugged in
     private BroadcastReceiver mHeadsetChangeReceiver = new HeadsetChangeReceiver();
@@ -206,7 +211,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         String source = prefs.getString(SONGLIST_SOURCE_KEY,null);
         String parameter = prefs.getString(SONGLIST_PARAMETER_KEY,null);
         int position = prefs.getInt(SONGLIST_POSITION_KEY,0);
-        MediaStore.Audio.Media
+
         if (source != null)
         {
             Bundle bundle = ScreenBundles.getBundleForSubScreen(this,source,parameter);
@@ -252,6 +257,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
         Toast.makeText(getApplicationContext(),mSongs.getData(mPosition),Toast.LENGTH_SHORT).show();
 
+        //TODO - does this need to be in variable and then executed?
         mCurrentPlayTask = new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... params) {
@@ -296,6 +302,19 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 showNotification(false, true);
                 //Notify NowPlayingActivity that we changed playing song
                 notifyListenersPlay();
+
+                //Start new task to update last play position for this source
+                if (mSongsSource != null)
+                {
+                    new AsyncTask<Void,Void,Void>(){
+                        @Override
+                        protected Void doInBackground(Void... params) {
+                            StatsDbHelper statsDbHelper = new StatsDbHelper(MediaPlayerService.this);
+                            statsDbHelper.updateLastPosition(mSongsSource,mSongsParameter,mPosition);
+                            return null;
+                        }
+                    }.execute();
+                }
             }
         };
         mCurrentPlayTask.execute();
@@ -428,6 +447,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         mCount = 0;
         mPosition = -1;
         mSongs = null;
+        mSongsSource = null;
+        mSongsParameter = null;
         mReadyToPlay = false;
         stop();
 
@@ -631,6 +652,13 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         mBitmapIcons = bitmaps;
     }*/
 
+
+
+
+
+
+
+
     //Sets the list and starts playing, source string is one of screen keys or something else (if list is from files or something)
     public void playList(Songs songs, int startPosition,final String source,final String parameter)
     {
@@ -651,15 +679,41 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     public void setSongs(Songs songs, @Nullable final String source, @Nullable final String parameter)
     {
+        Log.d(TAG,"setSongs()");
+
         if (songs == null) {
             //We have nothing, respond appropriately
             stopAndClearList();
             return;
         }
 
-        if (source != null)
+        if (source == null)
         {
-            //Save song list source in preferences so we remember this list
+            mSongsSource = null;
+            mSongsParameter = null;
+        }
+        else
+        {
+            //If we have source
+
+            if (!Utils.equalsIncludingNull(mSongsSource,source) || !Utils.equalsIncludingNull(mSongsParameter,parameter))
+            {
+
+
+                new AsyncTask<Void,Void,Void>(){
+                    @Override
+                    protected Void doInBackground(Void... params) {
+                        StatsDbHelper statsDbHelper = new StatsDbHelper(MediaPlayerService.this);
+                        statsDbHelper.updateStats(source,parameter);
+                        return null;
+                    }
+                }.execute();
+            }
+
+            mSongsSource = source;
+            mSongsParameter = parameter;
+
+            //Save song list source in preferences so we remember this list for auto-start playback
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(MediaPlayerService.this);
             preferences.edit().putString(SONGLIST_SOURCE_KEY, source)
                     .putString(SONGLIST_PARAMETER_KEY, parameter).apply();
@@ -674,6 +728,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         mReadyToPlay = true;
 
     }
+
+
 
 
 

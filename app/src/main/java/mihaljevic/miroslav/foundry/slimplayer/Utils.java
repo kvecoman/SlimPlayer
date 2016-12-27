@@ -260,4 +260,78 @@ public final class Utils {
         return count;
 
     }
+
+
+
+    //Checks if two strings are equal even if they are null
+    public static boolean equalsIncludingNull(String str1, String str2)
+    {
+        if (str1 == null && str2 == null)
+            return true;
+
+        if (str1 == null && str2 != null)
+            return false;
+
+        if (str1 != null && str2 == null)
+            return false;
+
+        return str1.equals(str2);
+    }
+
+
+    //Gets display name either for playlist or genre or artist etc.
+    public static String getDisplayName(Context context, String source, String parameter)
+    {
+
+        String displayName = null;
+        Cursor cursor;
+        ContentResolver resolver = context.getContentResolver();
+
+        if (source == null)
+            return null;
+
+        if (source.equals(context.getString(R.string.pref_key_all_screen)))
+        {
+            //TODO - move to resource
+            displayName = "All songs";
+        }
+        else if(source.equals(context.getString(R.string.pref_key_playlists_screen)))
+        {
+            cursor = resolver.query(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,new String[]{MediaStore.Audio.Playlists.NAME}, MediaStore.Audio.Playlists._ID + "=" + parameter,null,null);
+            if (cursor.getCount() == 0)
+                return null;
+
+            cursor.moveToFirst();
+            displayName = cursor.getString(0);
+        }
+        else if (source.equals(context.getString(R.string.pref_key_albums_screen)))
+        {
+            cursor = resolver.query(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,new String[]{MediaStore.Audio.Albums.ALBUM}, MediaStore.Audio.Albums._ID + "=" + parameter,null,null);
+            if (cursor.getCount() == 0)
+                return null;
+
+            cursor.moveToFirst();
+            displayName = cursor.getString(0);
+        }
+        else if (source.equals(context.getString(R.string.pref_key_artists_screen)))
+        {
+            cursor = resolver.query(MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI,new String[]{MediaStore.Audio.Artists.ARTIST}, MediaStore.Audio.Artists._ID + "=" + parameter,null,null);
+            if (cursor.getCount() == 0)
+                return null;
+
+            cursor.moveToFirst();
+            displayName = cursor.getString(0);
+        }
+        else if (source.equals(context.getString(R.string.pref_key_genres_screen)))
+        {
+            cursor = resolver.query(MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI,new String[]{MediaStore.Audio.Genres.NAME}, MediaStore.Audio.Genres._ID + "=" + parameter,null,null);
+            if (cursor.getCount() == 0)
+                return null;
+
+            cursor.moveToFirst();
+            displayName = cursor.getString(0);
+        }
+
+        return displayName;
+    }
 }

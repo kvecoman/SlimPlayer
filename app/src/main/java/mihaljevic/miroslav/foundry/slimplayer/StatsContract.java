@@ -17,18 +17,21 @@ public final class StatsContract {
 
         public static final String COLUMN_NAME_SOURCE = "source";
         public static final String COLUMN_NAME_PARAMETER = "parameter";
+        public static final String COLUMN_NAME_DISPLAY_NAME = "display_name";
         public static final String COLUMN_NAME_LAST_POSITION = "last_position";
         public static final String COLUMN_NAME_RECENT_FREQUENCY = "recent_frequency";
         public static final String COLUMN_NAME_LAST_PLAY = "last_play";
 
         //TODO - varchar instead of text?
         public static final String SQL_CREATE = "CREATE TABLE " + TABLE_NAME +
-                                                " (" + _ID + " INTEGER PRIMARY KEY," +
+                                                " (" +
                                                 COLUMN_NAME_SOURCE + " TEXT," +
                                                 COLUMN_NAME_PARAMETER + " TEXT," +
-                                                COLUMN_NAME_LAST_POSITION + " INTEGER," +
-                                                COLUMN_NAME_RECENT_FREQUENCY + " INTEGER," +
-                                                COLUMN_NAME_LAST_PLAY + " TIMESTAMP)";
+                                                COLUMN_NAME_DISPLAY_NAME + " TEXT," +
+                                                COLUMN_NAME_LAST_POSITION + " INTEGER DEFAULT 0," +
+                                                COLUMN_NAME_RECENT_FREQUENCY + " INTEGER DEFAULT 0," +
+                                                COLUMN_NAME_LAST_PLAY + " TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
+                                                "PRIMARY KEY (" + COLUMN_NAME_SOURCE + ", " + COLUMN_NAME_PARAMETER + "))" ;
 
         public static final String SQL_DROP = "DROP TABLE IF EXISTS " + TABLE_NAME;
     }
@@ -37,13 +40,19 @@ public final class StatsContract {
     {
         public static final String TABLE_NAME = "source_records";
 
-        public static final String COLUMN_NAME_SOURCE_STATS_ID = "source_stats_id";
+        //public static final String COLUMN_NAME_SOURCE_STATS_ID = "source_stats_id";
+        public static final String COLUMN_NAME_SOURCE = "source";
+        public static final String COLUMN_NAME_PARAMETER = "parameter";
         public static final String COLUMN_NAME_TIME = "time";
 
         public static final String SQL_CREATE = "CREATE TABLE " + TABLE_NAME +
                                                 " (" + _ID + " INTEGER PRIMARY KEY," +
-                                                COLUMN_NAME_SOURCE_STATS_ID + " INTEGER," +
-                                                COLUMN_NAME_TIME + " TIMESTAMP)";
+                                                COLUMN_NAME_SOURCE + " TEXT," +
+                                                COLUMN_NAME_PARAMETER + " TEXT," +
+                                                COLUMN_NAME_TIME + " TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
+                                                " FOREIGN KEY(" + COLUMN_NAME_SOURCE + "," + COLUMN_NAME_PARAMETER + ")" +
+                                                " REFERENCES " + SourceStats.TABLE_NAME + "(" + SourceStats.COLUMN_NAME_SOURCE + "," + SourceStats.COLUMN_NAME_PARAMETER + ")" +
+                                                "  )";
 
         public static final String SQL_DROP = "DROP TABLE IF EXISTS " + TABLE_NAME;
 

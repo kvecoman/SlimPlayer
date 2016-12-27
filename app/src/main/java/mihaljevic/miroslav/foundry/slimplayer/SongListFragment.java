@@ -29,6 +29,9 @@ import java.util.List;
  */
 public class SongListFragment extends SlimListFragment {
 
+    //If bundle contains this key
+    public static final String PLAY_POSITION_KEY = "play_position";
+
 
 
     private SlimPlayerApplication mApplication;
@@ -101,7 +104,29 @@ public class SongListFragment extends SlimListFragment {
     protected void swapCursor() {
         super.swapCursor();
 
+        onDataLoaded();
+    }
+
+    private void onDataLoaded()
+    {
         mSongs = new CursorSongs(mCursor);
+
+        //If we are in normal mode
+        if (!mSelectSongsForResult)
+        {
+            //Check if we need to start any song right now
+            if (getArguments().containsKey(PLAY_POSITION_KEY))
+            {
+                int play_position = getArguments().getInt(PLAY_POSITION_KEY);
+
+                mApplication.getMediaPlayerService().playList(mSongs,play_position,mCurrentScreen,getArguments().getString(CURSOR_PARAMETER_KEY));
+
+                //Once we have started the intended song from intent, we delete it so we don't start it again and again
+                getArguments().remove(PLAY_POSITION_KEY);
+            }
+        }
+
+
     }
 
     //Here we load all songs in songList when Cursor loader is finished

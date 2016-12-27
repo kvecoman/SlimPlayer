@@ -98,7 +98,8 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
         {
             //If we have bundle, then load data accordingly
             mCurrentScreen = bundle.getString(CURSOR_SCREEN_KEY);
-            mCursorAdapter = new SongCursorAdapter(getContext(),mCursor,0, bundle.getString(DISPLAY_FIELD_KEY));
+            //Here is cursor null,but it will be set-up properly after loadDataAsync() is called
+            mCursorAdapter = new SongCursorAdapter(getContext(),null,0, bundle.getString(DISPLAY_FIELD_KEY));
             setListAdapter(mCursorAdapter);
 
             //Log.d(TAG,"initLoader for MAIN_CURSOR_LOADER");
@@ -211,7 +212,9 @@ public abstract class SlimListFragment extends BackHandledListFragment implement
 
     protected void swapCursor()
     {
-        mCursorAdapter.swapCursor(mCursor);
+        //Check that cursor is ok and not closed
+        if (!mCursor.isClosed())
+            mCursorAdapter.swapCursor(mCursor);
     }
 
     /*@Override

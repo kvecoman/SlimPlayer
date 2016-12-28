@@ -56,7 +56,7 @@ public class StatsDbHelper extends SQLiteOpenHelper {
         sourceStatsValues.put(StatsContract.SourceStats.COLUMN_NAME_SOURCE,source);
         sourceStatsValues.put(StatsContract.SourceStats.COLUMN_NAME_PARAMETER,parameter);
         sourceStatsValues.put(StatsContract.SourceStats.COLUMN_NAME_DISPLAY_NAME, Utils.getDisplayName(mContext,source,parameter));
-        long source_stats_id = statsDb.insert(StatsContract.SourceStats.TABLE_NAME,null,sourceStatsValues);
+        long source_stats_id = statsDb.insertWithOnConflict(StatsContract.SourceStats.TABLE_NAME,null,sourceStatsValues,SQLiteDatabase.CONFLICT_IGNORE);
 
         //Insert row in source_records
         ContentValues sourceRecordValues = new ContentValues();

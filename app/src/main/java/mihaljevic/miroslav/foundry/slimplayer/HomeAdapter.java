@@ -26,6 +26,7 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
     private Context mContext;
     private Cursor mCursor;
 
+
     public HomeAdapter(Context context, Cursor cursor)
     {
         mContext = context;
@@ -45,6 +46,9 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(ViewHolder holder, int position)
     {
+        if (mCursor == null || mCursor.isClosed())
+            return;
+
         String text;
 
         mCursor.moveToPosition(position);
@@ -67,12 +71,21 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
         return 0;
     }
 
+
     public Cursor getCursor() {
         return mCursor;
     }
 
     public void setCursor(Cursor mCursor) {
         this.mCursor = mCursor;
+    }
+
+    public void closeCursor()
+    {
+        if (mCursor != null && !mCursor.isClosed())
+        {
+            mCursor.close();
+        }
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener

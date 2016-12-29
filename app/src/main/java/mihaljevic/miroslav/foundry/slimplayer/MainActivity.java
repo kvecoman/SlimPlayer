@@ -28,16 +28,14 @@ import java.util.Set;
 //TODO - make the app
 //TODO - $$_PROFIT_$$
 
-//TODO - separate activities like AddToPlaylistActivity or SongListActivity can be unified and made into HolderActivity (actually they can't, but they can have a superclass)
 //TODO - indicate that tap paused or resumed the song
 //TODO - earphones in starts playing last list
 //TODO - big notification for status bar player
 //TODO - loadDataAsync() bug, sometimes during normal work, CursorClosedException is thrown, locate when it is called
-//TODO - playback of songs from multiple files and from internet
-//TODO - lock screen on NowPlayingActivity, doesnt changes song info when song changes
-//TODO - on home screen prevent playback of the list that is already playing
+//TODO - playback of songs from internet?
+//TODO - lock screen on NowPlayingActivity, doesn't changes song info when song changes
+//TODO - recycler views instead of list views
 //TODO - make visual style for project
-//TODO - make homescreen
 //TODO - make visualization
 
 

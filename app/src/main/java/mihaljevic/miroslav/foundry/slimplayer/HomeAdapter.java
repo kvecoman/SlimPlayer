@@ -108,13 +108,21 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
         @Override
         public void onClick(View v) {
 
+
+            MediaPlayerService playerService = SlimPlayerApplication.getInstance().getMediaPlayerService();
+
             //Get bundle
             Bundle bundle = ScreenBundles.getBundleForSubScreen(v.getContext(),mSource,mParameter);
-            bundle.putInt(SongListFragment.PLAY_POSITION_KEY,mPlayPosition);
+
+            //Check if the same list is already playing
+            if (playerService != null && !(Utils.equalsIncludingNull(playerService.getSongsSource(),mSource) && Utils.equalsIncludingNull(playerService.getSongsParameter(),mParameter)))
+            {
+                //Insert last remembered position
+                bundle.putInt(SongListFragment.PLAY_POSITION_KEY,mPlayPosition);
+            }
+
 
             Intent intent = new Intent(v.getContext(),SongListActivity.class);
-
-            //Insert last remembered position
             intent.putExtra(SongListActivity.FRAGMENT_BUNDLE_KEY, bundle);
 
             //Start activity

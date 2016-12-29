@@ -154,7 +154,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         {
             if (action.equals(NOTIFICATION_ACTION_CLOSE))
             {
-                stop();
+                stopAndClearList();
                 NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
                 notificationManager.cancel(NOTIFICATION_PLAYER_ID);
             }
@@ -175,7 +175,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             }
             else if (action.equals(NOTIFICATION_ACTION_SWIPE))
             {
-                stop();
+                stopAndClearList();
             }
         }
 
@@ -216,7 +216,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         {
             Bundle bundle = ScreenBundles.getBundleForSubScreen(this,source,parameter);
             CursorSongs songs = new CursorSongs(Utils.querySongListCursor(this,bundle));
-            setSongs(songs,null,null);
+            setSongs(songs,source,parameter);
             return position;
         }
         return -1;
@@ -788,6 +788,14 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public boolean isPlaying()
     {
         return mPlaying;
+    }
+
+    public String getSongsSource() {
+        return mSongsSource;
+    }
+
+    public String getSongsParameter() {
+        return mSongsParameter;
     }
 
     public interface SongPlayListener

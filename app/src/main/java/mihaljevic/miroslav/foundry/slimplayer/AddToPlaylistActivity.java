@@ -27,7 +27,7 @@ public class AddToPlaylistActivity extends SlimActivity {
         if (fragmentBundle != null)
         {
             //Create add to playlist fragment
-            AddToPlaylistFragment fragment = new AddToPlaylistFragment();
+            AddToPlaylistsRecyclerFragment fragment = new AddToPlaylistsRecyclerFragment();
             fragment.setArguments(fragmentBundle);
 
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,fragment).commit();

@@ -14,8 +14,20 @@ import java.util.Set;
  * @author Miroslav Mihaljević
  */
 
-//TODO - rename CURSOR_SCREEN_KEY to SOURCE_KEY or something
+
 public final class ScreenBundles {
+
+    //Keys that are used when transferring data about different screens
+    public static final String CURSOR_SOURCE_KEY = "cursor_screen";
+
+    public static final String CURSOR_PARAMETER_KEY = "cursor_parameter"; //ID of playlist, or artist, something like that
+    public static final String CURSOR_URI_KEY = "cursor_uri";
+    public static final String CURSOR_PROJECTION_KEY = "cursor_projection";
+    public static final String CURSOR_SELECTION_KEY = "cursor_selection";
+    public static final String CURSOR_SELECTION_ARGS_KEY = "cursor_selection_args";
+    public static final String CURSOR_SORT_ORDER_KEY = "cursor_sort_order";
+
+    public static final String DISPLAY_FIELD_KEY = "display_field";
 
     //Private constructor to make it non-instantiable
     private ScreenBundles(){}
@@ -108,14 +120,14 @@ public final class ScreenBundles {
         }*/
 
 
-        bundle.putString(SlimListFragment.CURSOR_SCREEN_KEY,cursorScreen);
-        bundle.putString(SlimListFragment.CURSOR_URI_KEY,uri);
-        bundle.putStringArray(SongListFragment.CURSOR_PROJECTION_KEY,projection);
-        bundle.putString(SongListFragment.CURSOR_SELECTION_KEY,selection);
-        bundle.putStringArray(SongListFragment.CURSOR_SELECTION_ARGS_KEY,selectionArgs);
-        bundle.putString(SongListFragment.CURSOR_SORT_ORDER_KEY,sortOrder);
+        bundle.putString(CURSOR_SOURCE_KEY,cursorScreen);
+        bundle.putString(CURSOR_URI_KEY,uri);
+        bundle.putStringArray(CURSOR_PROJECTION_KEY,projection);
+        bundle.putString(CURSOR_SELECTION_KEY,selection);
+        bundle.putStringArray(CURSOR_SELECTION_ARGS_KEY,selectionArgs);
+        bundle.putString(CURSOR_SORT_ORDER_KEY,sortOrder);
 
-        bundle.putString(SongListFragment.DISPLAY_FIELD_KEY,MediaStore.Audio.Media.TITLE);
+        bundle.putString(DISPLAY_FIELD_KEY,MediaStore.Audio.Media.TITLE);
 
         return bundle;
     }
@@ -136,14 +148,14 @@ public final class ScreenBundles {
         String [] selectionArgs = null;
         String sortOrder = MediaStore.Audio.Playlists.NAME + " ASC";
 
-        bundle.putString(SlimListFragment.CURSOR_SCREEN_KEY,cursorScreen);
-        bundle.putString(SlimListFragment.CURSOR_URI_KEY,uri);
-        bundle.putStringArray(SongListFragment.CURSOR_PROJECTION_KEY,projection);
-        bundle.putString(SongListFragment.CURSOR_SELECTION_KEY,selection);
-        bundle.putStringArray(SongListFragment.CURSOR_SELECTION_ARGS_KEY,selectionArgs);
-        bundle.putString(SongListFragment.CURSOR_SORT_ORDER_KEY,sortOrder);
+        bundle.putString(CURSOR_SOURCE_KEY,cursorScreen);
+        bundle.putString(CURSOR_URI_KEY,uri);
+        bundle.putStringArray(CURSOR_PROJECTION_KEY,projection);
+        bundle.putString(CURSOR_SELECTION_KEY,selection);
+        bundle.putStringArray(CURSOR_SELECTION_ARGS_KEY,selectionArgs);
+        bundle.putString(CURSOR_SORT_ORDER_KEY,sortOrder);
 
-        bundle.putString(SongListFragment.DISPLAY_FIELD_KEY,MediaStore.Audio.Playlists.NAME);
+        bundle.putString(DISPLAY_FIELD_KEY,MediaStore.Audio.Playlists.NAME);
 
         return bundle;
     }
@@ -175,14 +187,14 @@ public final class ScreenBundles {
         String [] selectionArgs = null;
         String sortOrder = MediaStore.Audio.Albums.ALBUM + " ASC";
 
-        bundle.putString(SlimListFragment.CURSOR_SCREEN_KEY,cursorScreen);
-        bundle.putString(SlimListFragment.CURSOR_URI_KEY,uri);
-        bundle.putStringArray(SongListFragment.CURSOR_PROJECTION_KEY,projection);
-        bundle.putString(SongListFragment.CURSOR_SELECTION_KEY,selection);
-        bundle.putStringArray(SongListFragment.CURSOR_SELECTION_ARGS_KEY,selectionArgs);
-        bundle.putString(SongListFragment.CURSOR_SORT_ORDER_KEY,sortOrder);
+        bundle.putString(CURSOR_SOURCE_KEY,cursorScreen);
+        bundle.putString(CURSOR_URI_KEY,uri);
+        bundle.putStringArray(CURSOR_PROJECTION_KEY,projection);
+        bundle.putString(CURSOR_SELECTION_KEY,selection);
+        bundle.putStringArray(CURSOR_SELECTION_ARGS_KEY,selectionArgs);
+        bundle.putString(CURSOR_SORT_ORDER_KEY,sortOrder);
 
-        bundle.putString(SongListFragment.DISPLAY_FIELD_KEY,MediaStore.Audio.Albums.ALBUM);
+        bundle.putString(DISPLAY_FIELD_KEY,MediaStore.Audio.Albums.ALBUM);
 
         return bundle;
     }
@@ -216,14 +228,14 @@ public final class ScreenBundles {
         String [] selectionArgs = null;
         String sortOrder = MediaStore.Audio.Artists.ARTIST + " ASC";
 
-        bundle.putString(SlimListFragment.CURSOR_SCREEN_KEY,cursorScreen);
-        bundle.putString(SlimListFragment.CURSOR_URI_KEY,uri);
-        bundle.putStringArray(SongListFragment.CURSOR_PROJECTION_KEY,projection);
-        bundle.putString(SongListFragment.CURSOR_SELECTION_KEY,selection);
-        bundle.putStringArray(SongListFragment.CURSOR_SELECTION_ARGS_KEY,selectionArgs);
-        bundle.putString(SongListFragment.CURSOR_SORT_ORDER_KEY,sortOrder);
+        bundle.putString(CURSOR_SOURCE_KEY,cursorScreen);
+        bundle.putString(CURSOR_URI_KEY,uri);
+        bundle.putStringArray(CURSOR_PROJECTION_KEY,projection);
+        bundle.putString(CURSOR_SELECTION_KEY,selection);
+        bundle.putStringArray(CURSOR_SELECTION_ARGS_KEY,selectionArgs);
+        bundle.putString(CURSOR_SORT_ORDER_KEY,sortOrder);
 
-        bundle.putString(SongListFragment.DISPLAY_FIELD_KEY,MediaStore.Audio.Artists.ARTIST);
+        bundle.putString(DISPLAY_FIELD_KEY,MediaStore.Audio.Artists.ARTIST);
 
         return bundle;
     }
@@ -246,14 +258,14 @@ public final class ScreenBundles {
         String [] selectionArgs = null;
         String sortOrder = MediaStore.Audio.Genres.NAME + " ASC";
 
-        bundle.putString(SlimListFragment.CURSOR_SCREEN_KEY,cursorScreen);
-        bundle.putString(SlimListFragment.CURSOR_URI_KEY,uri);
-        bundle.putStringArray(SongListFragment.CURSOR_PROJECTION_KEY,projection);
-        bundle.putString(SongListFragment.CURSOR_SELECTION_KEY,selection);
-        bundle.putStringArray(SongListFragment.CURSOR_SELECTION_ARGS_KEY,selectionArgs);
-        bundle.putString(SongListFragment.CURSOR_SORT_ORDER_KEY,sortOrder);
+        bundle.putString(CURSOR_SOURCE_KEY,cursorScreen);
+        bundle.putString(CURSOR_URI_KEY,uri);
+        bundle.putStringArray(CURSOR_PROJECTION_KEY,projection);
+        bundle.putString(CURSOR_SELECTION_KEY,selection);
+        bundle.putStringArray(CURSOR_SELECTION_ARGS_KEY,selectionArgs);
+        bundle.putString(CURSOR_SORT_ORDER_KEY,sortOrder);
 
-        bundle.putString(SongListFragment.DISPLAY_FIELD_KEY,MediaStore.Audio.Genres.NAME);
+        bundle.putString(DISPLAY_FIELD_KEY,MediaStore.Audio.Genres.NAME);
 
         return bundle;
     }
@@ -282,15 +294,15 @@ public final class ScreenBundles {
         String sortOrder = MediaStore.Audio.Playlists.Members.TITLE + " ASC";
 
 
-        bundle.putString(SlimListFragment.CURSOR_PARAMETER_KEY,parameter);
-        bundle.putString(SlimListFragment.CURSOR_SCREEN_KEY,cursorScreen);
-        bundle.putString(SlimListFragment.CURSOR_URI_KEY,uri);
-        bundle.putStringArray(SongListFragment.CURSOR_PROJECTION_KEY,projection);
-        bundle.putString(SongListFragment.CURSOR_SELECTION_KEY,selection);
-        bundle.putStringArray(SongListFragment.CURSOR_SELECTION_ARGS_KEY,selectionArgs);
-        bundle.putString(SongListFragment.CURSOR_SORT_ORDER_KEY,sortOrder);
+        bundle.putString(CURSOR_PARAMETER_KEY,parameter);
+        bundle.putString(CURSOR_SOURCE_KEY,cursorScreen);
+        bundle.putString(CURSOR_URI_KEY,uri);
+        bundle.putStringArray(CURSOR_PROJECTION_KEY,projection);
+        bundle.putString(CURSOR_SELECTION_KEY,selection);
+        bundle.putStringArray(CURSOR_SELECTION_ARGS_KEY,selectionArgs);
+        bundle.putString(CURSOR_SORT_ORDER_KEY,sortOrder);
 
-        bundle.putString(SongListFragment.DISPLAY_FIELD_KEY,MediaStore.Audio.Playlists.Members.TITLE);
+        bundle.putString(DISPLAY_FIELD_KEY,MediaStore.Audio.Playlists.Members.TITLE);
 
         return bundle;
     }
@@ -319,15 +331,15 @@ public final class ScreenBundles {
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
 
 
-        bundle.putString(SlimListFragment.CURSOR_PARAMETER_KEY,parameter);
-        bundle.putString(SlimListFragment.CURSOR_SCREEN_KEY,cursorScreen);
-        bundle.putString(SlimListFragment.CURSOR_URI_KEY,uri);
-        bundle.putStringArray(SongListFragment.CURSOR_PROJECTION_KEY,projection);
-        bundle.putString(SongListFragment.CURSOR_SELECTION_KEY,selection);
-        bundle.putStringArray(SongListFragment.CURSOR_SELECTION_ARGS_KEY,selectionArgs);
-        bundle.putString(SongListFragment.CURSOR_SORT_ORDER_KEY,sortOrder);
+        bundle.putString(CURSOR_PARAMETER_KEY,parameter);
+        bundle.putString(CURSOR_SOURCE_KEY,cursorScreen);
+        bundle.putString(CURSOR_URI_KEY,uri);
+        bundle.putStringArray(CURSOR_PROJECTION_KEY,projection);
+        bundle.putString(CURSOR_SELECTION_KEY,selection);
+        bundle.putStringArray(CURSOR_SELECTION_ARGS_KEY,selectionArgs);
+        bundle.putString(CURSOR_SORT_ORDER_KEY,sortOrder);
 
-        bundle.putString(SongListFragment.DISPLAY_FIELD_KEY,MediaStore.Audio.Media.TITLE);
+        bundle.putString(DISPLAY_FIELD_KEY,MediaStore.Audio.Media.TITLE);
 
         return bundle;
     }
@@ -356,15 +368,15 @@ public final class ScreenBundles {
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
 
 
-        bundle.putString(SlimListFragment.CURSOR_PARAMETER_KEY,parameter);
-        bundle.putString(SlimListFragment.CURSOR_SCREEN_KEY,cursorScreen);
-        bundle.putString(SlimListFragment.CURSOR_URI_KEY,uri);
-        bundle.putStringArray(SongListFragment.CURSOR_PROJECTION_KEY,projection);
-        bundle.putString(SongListFragment.CURSOR_SELECTION_KEY,selection);
-        bundle.putStringArray(SongListFragment.CURSOR_SELECTION_ARGS_KEY,selectionArgs);
-        bundle.putString(SongListFragment.CURSOR_SORT_ORDER_KEY,sortOrder);
+        bundle.putString(CURSOR_PARAMETER_KEY,parameter);
+        bundle.putString(CURSOR_SOURCE_KEY,cursorScreen);
+        bundle.putString(CURSOR_URI_KEY,uri);
+        bundle.putStringArray(CURSOR_PROJECTION_KEY,projection);
+        bundle.putString(CURSOR_SELECTION_KEY,selection);
+        bundle.putStringArray(CURSOR_SELECTION_ARGS_KEY,selectionArgs);
+        bundle.putString(CURSOR_SORT_ORDER_KEY,sortOrder);
 
-        bundle.putString(SongListFragment.DISPLAY_FIELD_KEY,MediaStore.Audio.Media.TITLE);
+        bundle.putString(DISPLAY_FIELD_KEY,MediaStore.Audio.Media.TITLE);
 
         return bundle;
     }
@@ -392,15 +404,15 @@ public final class ScreenBundles {
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
 
 
-        bundle.putString(SlimListFragment.CURSOR_PARAMETER_KEY,parameter);
-        bundle.putString(SlimListFragment.CURSOR_SCREEN_KEY,cursorScreen);
-        bundle.putString(SlimListFragment.CURSOR_URI_KEY,uri);
-        bundle.putStringArray(SongListFragment.CURSOR_PROJECTION_KEY,projection);
-        bundle.putString(SongListFragment.CURSOR_SELECTION_KEY,selection);
-        bundle.putStringArray(SongListFragment.CURSOR_SELECTION_ARGS_KEY,selectionArgs);
-        bundle.putString(SongListFragment.CURSOR_SORT_ORDER_KEY,sortOrder);
+        bundle.putString(CURSOR_PARAMETER_KEY,parameter);
+        bundle.putString(CURSOR_SOURCE_KEY,cursorScreen);
+        bundle.putString(CURSOR_URI_KEY,uri);
+        bundle.putStringArray(CURSOR_PROJECTION_KEY,projection);
+        bundle.putString(CURSOR_SELECTION_KEY,selection);
+        bundle.putStringArray(CURSOR_SELECTION_ARGS_KEY,selectionArgs);
+        bundle.putString(CURSOR_SORT_ORDER_KEY,sortOrder);
 
-        bundle.putString(SongListFragment.DISPLAY_FIELD_KEY,MediaStore.Audio.Media.TITLE);
+        bundle.putString(DISPLAY_FIELD_KEY,MediaStore.Audio.Media.TITLE);
 
         return bundle;
     }

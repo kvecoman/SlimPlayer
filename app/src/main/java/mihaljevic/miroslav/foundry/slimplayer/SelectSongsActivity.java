@@ -26,7 +26,7 @@ public abstract class SelectSongsActivity extends BackHandledFragmentActivity {
         super.onCreate(savedInstanceState);
 
         //Check if we have started this activity only to select songs
-        if (getIntent().getAction() == PlaylistSongsFragment.ACTION_SELECT_SONGS)
+        if (getIntent().getAction() == PlaylistSongsRecyclerFragment.ACTION_SELECT_SONGS)
         {
             mSelectSongsForResult = true;
             mSelectedSongIdsList = new HashSet<>();
@@ -63,8 +63,8 @@ public abstract class SelectSongsActivity extends BackHandledFragmentActivity {
                 if (mSelectedSongIdsList.size() > 0)
                 {
                     Intent intent = new Intent();
-                    intent.putStringArrayListExtra(PlaylistSongsFragment.SELECTED_SONGS_KEY,new ArrayList<>(mSelectedSongIdsList));
-                    setResult(getIntent().getIntExtra(SlimActivity.REQUEST_CODE_KEY,PlaylistSongsFragment.SELECT_SONGS_REQUEST_2),intent);
+                    intent.putStringArrayListExtra(PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY,new ArrayList<>(mSelectedSongIdsList));
+                    setResult(getIntent().getIntExtra(SlimActivity.REQUEST_CODE_KEY,PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2),intent);
                     finish();
                 }
                 else

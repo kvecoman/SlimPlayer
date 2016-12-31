@@ -1,11 +1,8 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -15,7 +12,6 @@ import android.text.InputType;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,24 +27,15 @@ import android.widget.Toast;
  *
  * @author Miroslav Mihaljević
  */
-public class PlaylistsFragment extends CategoryListFragment {
-
-    //private TextView mCreatePlaylistView;
+public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
 
     private AlertDialog mCreatePlaylistDialog;
     private EditText mCreatePlaylistEditText;
 
-    public PlaylistsFragment() {
+    public PlaylistsRecyclerFragment() {
         // Required empty public constructor
     }
 
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-
-        return super.onCreateView(inflater,container, savedInstanceState);
-    }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -56,21 +43,6 @@ public class PlaylistsFragment extends CategoryListFragment {
 
         //Set up AlertDialog for creating playlists
         initCreatePlaylistDialog();
-
-        //Handler for long click to enter into select mode
-        getListView().setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                if (!mSelectMode)
-                {
-                    activateSelectMode();
-                    ((ListView)parent).setItemChecked(position, true);
-                }
-                return true;
-            }
-        });
-
-        //getLoaderManager().initLoader(0,getArguments(),this);
     }
 
     public void initCreatePlaylistDialog()
@@ -93,19 +65,6 @@ public class PlaylistsFragment extends CategoryListFragment {
                         String playlistName;
 
                         playlistName = mCreatePlaylistEditText.getText().toString();
-
-                        //Check if playlist with that name already exists
-                        /*Cursor playlistsCursor = mCursorAdapter.getCursor();
-                        for (int i = 0;i < playlistsCursor.getCount();i++)
-                        {
-                            playlistsCursor.moveToPosition(i);
-                            if (playlistName.equals(playlistsCursor.getString(playlistsCursor.getColumnIndex(MediaStore.Audio.Playlists.NAME))))
-                            {
-                                Toast.makeText(mContext,getString(R.string.toast_playlist_exists),Toast.LENGTH_SHORT).show();
-                                mCreatePlaylistEditText.selectAll();
-                                return;
-                            }
-                        }*/
 
                         //Async task in async task, in first one we check if playlist with that name already exist,
                         // and in second one we actually create playlist
@@ -148,25 +107,6 @@ public class PlaylistsFragment extends CategoryListFragment {
                             }
                         }.execute(playlistName);
 
-
-
-
-                        //Create content values with new playlist info
-                        /*ContentValues inserts = new ContentValues();
-                        inserts.put(MediaStore.Audio.Playlists.NAME, playlistName);
-                        inserts.put(MediaStore.Audio.Playlists.DATE_ADDED, System.currentTimeMillis());
-                        inserts.put(MediaStore.Audio.Playlists.DATE_MODIFIED, System.currentTimeMillis());
-
-                        //Insert new playlist values
-                        Uri uri = mContext.getContentResolver().insert(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,inserts);
-
-                        //Get ID of newly created playlist
-                        Cursor c = mContext.getContentResolver().query(uri, new String[]{MediaStore.Audio.Playlists._ID},null,null,null);
-                        c.moveToFirst();
-                        int pId = c.getInt(0);
-                        c.close();*/
-
-                        //Toast.makeText(mContext,uri.toString() + " ------ " + pId,Toast.LENGTH_LONG).show();
                     }
                 })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener(){
@@ -197,7 +137,7 @@ public class PlaylistsFragment extends CategoryListFragment {
             MenuItem createPlaylistItem = menu.findItem(R.id.playlist_create);
 
             //Decide whether to show option for deleting playlists
-            if (mSelectMode && getListView().getCheckedItemCount() > 0)
+            if (mSelectMode && mSelectedItems.size() > 0)
             {
                 //If we are selecting items then we want option to delete them
                 deleteItem.setVisible(true);
@@ -221,35 +161,12 @@ public class PlaylistsFragment extends CategoryListFragment {
         if (item.getItemId() == R.id.delete_item)
         {
             //Delete playlists
-            //Get all checked positions
-            /*SparseBooleanArray checkedPositions = getListView().getCheckedItemPositions();
-            Cursor cursor = mCursorAdapter.getCursor();
-            int position = -1;
-            long id;
-            int deletedCount = 0;
-
-            for (int i = 0;i < checkedPositions.size();i++)
-            {
-                position = checkedPositions.keyAt(i);
-
-                if (position >= 0 && position < cursor.getCount() && checkedPositions.get(position))
-                {
-                    cursor.moveToPosition(position);
-                    id = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
-                    deletedCount += mContext.getContentResolver().delete(   MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,
-                                                                            MediaStore.Audio.Playlists._ID + "=?",
-                                                                            new String  [] {id + ""});
-                }
-
-            }*/
-
-
             new AsyncTask<SparseBooleanArray,Void,Integer>()
             {
                 @Override
                 protected Integer doInBackground(SparseBooleanArray... params) {
 
-                    return Utils.deleteFromList(getContext(), mCursor, MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,params[0]);
+                    return Utils.deleteFromList(getContext(), mAdapter.getCursor(), MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,params[0]);
                 }
 
                 @Override
@@ -257,17 +174,12 @@ public class PlaylistsFragment extends CategoryListFragment {
                     Toast.makeText(mContext,result + " items deleted",Toast.LENGTH_SHORT).show();
                     loadDataAsync();
                 }
-            }.execute(getListView().getCheckedItemPositions());
-
-
-
-
+            }.execute(mSelectedItems);
 
         }
         else if (item.getItemId() == R.id.playlist_create)
         {
             //Create new playlist
-
             mCreatePlaylistEditText.setText(R.string.playlist_default_name);
             mCreatePlaylistEditText.selectAll();
 
@@ -277,13 +189,30 @@ public class PlaylistsFragment extends CategoryListFragment {
         return super.onOptionsItemSelected(item);
     }
 
+
+
     @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+    public void onClick(View v) {
+
+        int position = mRecyclerView.getChildLayoutPosition(v);
 
         //Open playlist only if we are not in select mode
         if (!mSelectMode)
-            super.onItemClick(parent, view, position, id);
-
+            super.onClick(v);
+        else
+        {
+            //If we are in select mode, then select playlist
+            setItemSelected(position,!isItemSelected(position),v);
+        }
     }
 
+    @Override
+    public boolean onLongClick(View v) {
+        if (!mSelectMode)
+        {
+            activateSelectMode();
+            setItemSelected(mRecyclerView.getChildLayoutPosition(v),true,v);
+        }
+        return true;
+    }
 }

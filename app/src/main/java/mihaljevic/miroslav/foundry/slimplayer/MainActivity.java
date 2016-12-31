@@ -34,11 +34,10 @@ import java.util.Set;
 //TODO - loadDataAsync() bug, sometimes during normal work, CursorClosedException is thrown, locate when it is called
 //TODO - playback of songs from internet?
 //TODO - lock screen on NowPlayingActivity, doesn't changes song info when song changes
-//TODO - recycler views instead of list views
 //TODO - make visual style for project
 //TODO - make visualization
 
-
+//TODO - continue here - select mode is implemented in recycler but it is buggy, make sure mSelectedItems.size() is ok after deselect, and sometimes items get selected on their own
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";

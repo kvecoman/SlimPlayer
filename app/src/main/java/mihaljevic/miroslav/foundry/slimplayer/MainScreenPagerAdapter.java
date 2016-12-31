@@ -135,37 +135,37 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
         }
         else if (mScreensList.get(position).equals(mContext.getString(R.string.pref_key_all_screen)))
         {
-            fragment = new SongListFragment();
+            fragment = new SongRecyclerFragment();
             args = ScreenBundles.getAllSongsBundle(mContext);
             fragment.setArguments(args);
         }
         else if (mScreensList.get(position).equals(mContext.getString(R.string.pref_key_playlists_screen)))
         {
-            fragment = new PlaylistsFragment();
+            fragment = new SongRecyclerFragment();
             args = ScreenBundles.getPlaylistsBundle(mContext);
             fragment.setArguments(args);
         }
         else if (mScreensList.get(position).equals(mContext.getString(R.string.pref_key_albums_screen)))
         {
-            fragment = new CategoryListFragment();
+            fragment = new CategoryRecyclerFragment();
             args = ScreenBundles.getAlbumsBundle(mContext);
             fragment.setArguments(args);
         }
         else if (mScreensList.get(position).equals(mContext.getString(R.string.pref_key_artists_screen)))
         {
-            fragment = new CategoryListFragment();
+            fragment = new CategoryRecyclerFragment();
             args = ScreenBundles.getArtistsBundle(mContext);
             fragment.setArguments(args);
         }
         else if (mScreensList.get(position).equals(mContext.getString(R.string.pref_key_genres_screen)))
         {
-            fragment = new CategoryListFragment();
+            fragment = new CategoryRecyclerFragment();
             args = ScreenBundles.getGenresBundle(mContext);
             fragment.setArguments(args);
         }
         else
         {
-            fragment = new SongListFragment();
+            fragment = new SongRecyclerFragment();
             args = ScreenBundles.getAllSongsBundle(mContext);
             fragment.setArguments(args);
         }

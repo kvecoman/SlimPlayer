@@ -218,11 +218,11 @@ public final class Utils {
             return null;
 
         //Create query that will fetch songs that we need for this screen
-        Uri uri = Uri.parse(args.getString(SlimListFragment.CURSOR_URI_KEY));
-        String [] projection = args.getStringArray(SlimListFragment.CURSOR_PROJECTION_KEY);
-        String selection = args.getString(SlimListFragment.CURSOR_SELECTION_KEY);
-        String [] selectionArgs = args.getStringArray(SlimListFragment.CURSOR_SELECTION_ARGS_KEY);
-        String sortOrder = args.getString(SlimListFragment.CURSOR_SORT_ORDER_KEY);
+        Uri uri = Uri.parse(args.getString(ScreenBundles.CURSOR_URI_KEY));
+        String [] projection = args.getStringArray(ScreenBundles.CURSOR_PROJECTION_KEY);
+        String selection = args.getString(ScreenBundles.CURSOR_SELECTION_KEY);
+        String [] selectionArgs = args.getStringArray(ScreenBundles.CURSOR_SELECTION_ARGS_KEY);
+        String sortOrder = args.getString(ScreenBundles.CURSOR_SORT_ORDER_KEY);
 
         return context.getContentResolver().query(uri,projection,selection,selectionArgs,sortOrder);
     }

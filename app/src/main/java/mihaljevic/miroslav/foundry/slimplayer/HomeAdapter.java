@@ -55,8 +55,6 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
         text = mCursor.getString(mCursor.getColumnIndex(StatsContract.SourceStats.COLUMN_NAME_DISPLAY_NAME));
         holder.mTextView.setText(text);
 
-        mCursor.moveToPosition(position);
-
         holder.mSource = mCursor.getString(mCursor.getColumnIndex(StatsContract.SourceStats.COLUMN_NAME_SOURCE));
         holder.mParameter = mCursor.getString(mCursor.getColumnIndex(StatsContract.SourceStats.COLUMN_NAME_PARAMETER));
         holder.mPlayPosition = mCursor.getInt(mCursor.getColumnIndex(StatsContract.SourceStats.COLUMN_NAME_LAST_POSITION));
@@ -118,7 +116,7 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
             if (playerService != null && !(Utils.equalsIncludingNull(playerService.getSongsSource(),mSource) && Utils.equalsIncludingNull(playerService.getSongsParameter(),mParameter)))
             {
                 //Insert last remembered position
-                bundle.putInt(SongListFragment.PLAY_POSITION_KEY,mPlayPosition);
+                bundle.putInt(SongRecyclerFragment.PLAY_POSITION_KEY,mPlayPosition);
             }
 
 

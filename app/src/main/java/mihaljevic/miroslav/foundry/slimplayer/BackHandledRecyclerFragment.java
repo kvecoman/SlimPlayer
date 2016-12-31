@@ -1,7 +1,12 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
+
 import android.os.Bundle;
-import android.support.v4.app.ListFragment;
+import android.support.v4.app.Fragment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
 
 /**
  * Class that allows for back button to be handled inside of fragment.
@@ -10,7 +15,8 @@ import android.support.v4.app.ListFragment;
  *
  * @author Miroslav Mihaljević
  */
-public abstract class BackHandledListFragment extends ListFragment {
+public abstract class BackHandledRecyclerFragment extends Fragment {
+
 
     //Parent activity that implements BackHandlerInterface
     protected BackHandledFragmentActivity backHandler;
@@ -22,6 +28,7 @@ public abstract class BackHandledListFragment extends ListFragment {
     //Interface that hosting activity needs to implement
     public interface BackHandlerInterface
     {
-        void setBackHandledFragment(BackHandledListFragment backHandledFragment);
+        void setBackHandledFragment(BackHandledRecyclerFragment backHandledFragment);
     }
+
 }

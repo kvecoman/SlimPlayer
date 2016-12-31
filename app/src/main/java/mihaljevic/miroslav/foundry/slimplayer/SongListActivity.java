@@ -30,10 +30,10 @@ public class SongListActivity extends SelectSongsActivity {
             Fragment fragment;
 
             //If we are opening playlist then load PlaylistSongsFragment
-            if (fragmentBundle.getString(SlimListFragment.CURSOR_SCREEN_KEY).contains(getString(R.string.pref_key_playlists_screen)))
-                fragment = new PlaylistSongsFragment();
+            if (fragmentBundle.getString(ScreenBundles.CURSOR_SOURCE_KEY).contains(getString(R.string.pref_key_playlists_screen)))
+                fragment = new PlaylistSongsRecyclerFragment();
             else
-                fragment = new SongListFragment();
+                fragment = new SongRecyclerFragment();
 
 
             fragment.setArguments(fragmentBundle);
@@ -47,7 +47,7 @@ public class SongListActivity extends SelectSongsActivity {
     public boolean onCreateOptionsMenu(Menu menu)
     {
         //If we are in normal mode and this is playlist songs screen then inflate playlist songs menu
-        if (!mSelectSongsForResult && getIntent().getBundleExtra(FRAGMENT_BUNDLE_KEY).getString(SlimListFragment.CURSOR_SCREEN_KEY).contains(getString(R.string.pref_key_playlists_screen)))
+        if (!mSelectSongsForResult && getIntent().getBundleExtra(FRAGMENT_BUNDLE_KEY).getString(ScreenBundles.CURSOR_SOURCE_KEY).contains(getString(R.string.pref_key_playlists_screen)))
         {
             getMenuInflater().inflate(R.menu.playlist_songs_menu,menu);
         }

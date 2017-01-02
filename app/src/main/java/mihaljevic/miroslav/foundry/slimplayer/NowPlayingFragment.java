@@ -29,9 +29,6 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
     private Context mContext;
 
-    /*private Song mSong;
-    private List<Song> mSongList;
-    private int mCount;*/
     private int mPosition;
 
 
@@ -43,7 +40,6 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
     private Handler mSeekBarHandler;
     private boolean mSeekBarBound;
-    //private boolean mOnCreateOptionsCalled;
 
     //Runnable that runs on UI thread and updates seek bar
     private Runnable mSeekBarRunnable = new Runnable() {
@@ -75,18 +71,8 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
-
-        setHasOptionsMenu(true);
 
         // Inflate the layout for this fragment
         mContentView = inflater.inflate(R.layout.fragment_now_playing, container, false);
@@ -98,6 +84,8 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        //Make sure that we get onCreateOptionsMenu() call
+        setHasOptionsMenu(true);
 
         mApplication = ((SlimPlayerApplication) getContext().getApplicationContext());
 
@@ -133,6 +121,17 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     }
 
     @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        //super.onCreateOptionsMenu(menu, inflater);
+
+        //OnCreateOptionsMenu is called when fragment is really visible in pager, we use that phenomena
+        mApplication.getMediaPlayerService().registerResumeListener(this);
+        mApplication.getMediaPlayerService().registerPlayListener(this);
+        bindSeekBarToPlayer();
+
+    }
+
+    @Override
     public void onStop() {
         super.onStop();
 
@@ -151,16 +150,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         mApplication.getMediaPlayerService().unregisterPlayListener(this);
     }
 
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        //super.onCreateOptionsMenu(menu, inflater);
 
-        //OnCreateOptionsMenu is called when fragment is really visible in pager, we use that phenomena
-        mApplication.getMediaPlayerService().registerResumeListener(this);
-        mApplication.getMediaPlayerService().registerPlayListener(this);
-        bindSeekBarToPlayer();
-
-    }
 
     //TODO - this code can go back to activity
     //Handle onscreen taps, change between play/pause

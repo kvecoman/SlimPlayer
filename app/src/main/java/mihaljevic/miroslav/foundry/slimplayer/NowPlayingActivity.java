@@ -74,12 +74,12 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
 
     }
 
-
     @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onResume() {
+        super.onResume();
 
-        mApplication.getMediaPlayerService().unregisterPlayListener(this);
+        //Update pager with current song when we return to this activity
+        updatePagerWithCurrentSong();
     }
 
     @Override
@@ -88,6 +88,25 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.now_playing_menu,menu);
 
+
+        updateRepeatIcon(menu);
+
+        return true;
+    }
+
+    public void updatePagerWithCurrentSong()
+    {
+        int playPosition = mApplication.getMediaPlayerService().getPosition();
+
+        if (playPosition == mPager.getCurrentItem() || playPosition < 0 || playPosition >= mPagerAdapter.getCount())
+            return;
+
+        mPager.setCurrentItem(playPosition);
+
+    }
+
+    public void updateRepeatIcon(Menu menu)
+    {
         //Set correct icon for toggle repeat action
         MenuItem repeatItem = menu.findItem(R.id.toggle_repeat);
         if (repeatItem != null)
@@ -99,14 +118,24 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
             else
                 repeatItem.setIcon(R.drawable.ic_repeat_gray_24dp);
         }
-        return true;
     }
+
+
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        mApplication.getMediaPlayerService().unregisterPlayListener(this);
+    }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
         return super.onOptionsItemSelected(item);
     }
+
 
     public ViewPager getPager() {
         return mPager;

@@ -33,7 +33,6 @@ import java.util.Set;
 //TODO - big notification for status bar player
 //TODO - loadDataAsync() bug, sometimes during normal work, CursorClosedException is thrown, locate when it is called
 //TODO - playback of songs from internet?
-//TODO - delete obsolete records from source_records table
 //TODO - make visual style for project
 //TODO - make visualization
 

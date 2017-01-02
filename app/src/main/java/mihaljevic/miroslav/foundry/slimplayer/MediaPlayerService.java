@@ -257,7 +257,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
         Toast.makeText(getApplicationContext(),mSongs.getData(mPosition),Toast.LENGTH_SHORT).show();
 
-        //TODO - does this need to be in variable and then executed?
         mCurrentPlayTask = new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... params) {
@@ -318,32 +317,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             }
         };
         mCurrentPlayTask.execute();
-        /*try
-        {
-            //Set up media player and start playing when ready
-            mPlayer.reset();
-            mPlayer.setDataSource(mSongs.getData(mPosition));
-            mPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                //This is called when media player is prepared with its data source
-                @Override
-                public void onPrepared(MediaPlayer mp) {
-                    mp.start();
-                    mPlaying = true;
-                    mStopped = false;
 
-                    //Notify NowPlayingActivity that we changed playing song
-                    notifyListenersPlay();
-                }
-            });
-            mPlayer.setOnCompletionListener(this);
-            mPlayer.prepareAsync();
-
-            showNotification(false, true);
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }*/
 
     }
 

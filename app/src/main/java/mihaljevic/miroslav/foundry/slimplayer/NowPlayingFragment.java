@@ -45,20 +45,23 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     private Runnable mSeekBarRunnable = new Runnable() {
         @Override
         public void run() {
-            if (mSeekBarBound && mApplication.getMediaPlayerService().isPlaying() && mPosition == mApplication.getMediaPlayerService().getPosition()) {
 
-                if (mPlayer != null) {
-                    int position = mPlayer.getCurrentPosition();
-                    mSeekBar.setProgress(position);
-                }
-                mSeekBarHandler.postDelayed(this, 1000);
-            }
-            else if(mPosition != mApplication.getMediaPlayerService().getPosition())
-            {
+            if (mSeekBar == null ||
+                    !mSeekBarBound ||
+                    !mApplication.getMediaPlayerService().isPlaying())
+                return;
+
+            if (mPosition == mApplication.getMediaPlayerService().getPosition()) {
                 mSeekBar.setProgress(0);
+                return;
             }
 
-
+            if (mPlayer != null)
+            {
+                int position = mPlayer.getCurrentPosition();
+                mSeekBar.setProgress(position);
+            }
+            mSeekBarHandler.postDelayed(this, 1000);
         }
     };
 

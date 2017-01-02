@@ -48,6 +48,8 @@ public class StatsDbHelper extends SQLiteOpenHelper {
     {
         Log.d(TAG,"updateStats()");
 
+        int N = 10; //Number of last records we scan //TODO - make this number generic
+
         //Get database
         SQLiteDatabase statsDb = getWritableDatabase();
 
@@ -64,8 +66,12 @@ public class StatsDbHelper extends SQLiteOpenHelper {
         sourceRecordValues.put(StatsContract.SourceRecords.COLUMN_NAME_PARAMETER, parameter);
         long source_record_id = statsDb.insert(StatsContract.SourceRecords.TABLE_NAME,null,sourceRecordValues);
 
+        //Delete old obsolete values from source records
+        statsDb.execSQL("DELETE FROM " + StatsContract.SourceRecords.TABLE_NAME + " WHERE " +
+                StatsContract.SourceRecords._ID + " NOT IN (" + "SELECT " + StatsContract.SourceRecords._ID + " FROM " +
+                "(SELECT " + StatsContract.SourceRecords._ID + " FROM " + StatsContract.SourceRecords.TABLE_NAME + " ORDER BY " + StatsContract.SourceRecords._ID + " DESC LIMIT " + N + ") )");
+
         //Update recent frequency of this source
-        int N = 10; //Number of last records we scan //TODO - make this number generic
         statsDb.execSQL("UPDATE " + StatsContract.SourceStats.TABLE_NAME + " SET " + StatsContract.SourceStats.COLUMN_NAME_RECENT_FREQUENCY +
                 "=(SELECT COUNT() FROM " +
                 "(SELECT * FROM " + StatsContract.SourceRecords.TABLE_NAME +

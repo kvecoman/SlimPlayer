@@ -13,11 +13,6 @@ public class HeadsetChangeReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
 
-        if (BuildConfig.DEBUG)
-        {
-            Toast.makeText(context,"Headphones state changed",Toast.LENGTH_SHORT).show();
-        }
-
         MediaPlayerService playerService = SlimPlayerApplication.getInstance().getMediaPlayerService();
 
         if (intent.hasExtra("state"))
@@ -30,7 +25,6 @@ public class HeadsetChangeReceiver extends BroadcastReceiver {
                     playerService.pause();
                 }
             }
-
         }
     }
 }

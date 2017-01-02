@@ -3,6 +3,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 import android.content.Context;
 import android.database.Cursor;
 import android.support.v7.widget.RecyclerView;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,16 +22,17 @@ public class CursorRecyclerAdapter extends RecyclerView.Adapter<CursorRecyclerAd
 
     private View.OnClickListener mOnClickListener;
 
-    //private int mItemLayout; //ID of row layout we inflate
+
+    protected SparseBooleanArray mSelectedItems; //Array of selected items, init is done outside
 
 
-    public CursorRecyclerAdapter(Context context, Cursor cursor, String displayField, View.OnClickListener listener)
+    public CursorRecyclerAdapter(Context context, Cursor cursor, String displayField, View.OnClickListener listener, SparseBooleanArray selectedItemsArray)
     {
         mContext = context;
         mCursor = cursor;
         mDisplayField = displayField;
         mOnClickListener = listener;
-        //mItemLayout = itemLayout;
+        mSelectedItems = selectedItemsArray;
     }
 
     @Override
@@ -52,6 +54,16 @@ public class CursorRecyclerAdapter extends RecyclerView.Adapter<CursorRecyclerAd
         mCursor.moveToPosition(position);
         text = mCursor.getString(mCursor.getColumnIndex(mDisplayField));
         holder.mTextView.setText(text);
+
+        //Check if this item needs to be selected
+        if (mSelectedItems.get(position))
+        {
+            holder.mParentView.setSelected(true);
+        }
+        else
+        {
+            holder.mParentView.setSelected(false);
+        }
     }
 
     @Override
@@ -74,6 +86,9 @@ public class CursorRecyclerAdapter extends RecyclerView.Adapter<CursorRecyclerAd
 
     public void swapCursor(Cursor cursor)
     {
+        if (mCursor == cursor)
+            return;
+
         this.mCursor = cursor;
         notifyDataSetChanged();
     }
@@ -86,13 +101,16 @@ public class CursorRecyclerAdapter extends RecyclerView.Adapter<CursorRecyclerAd
         }
     }
 
+
     public static class ViewHolder extends RecyclerView.ViewHolder
     {
+        public View mParentView;
         public TextView mTextView;
 
         public ViewHolder(View v)
         {
             super(v);
+            mParentView = v;
             mTextView = (TextView)v.findViewById(R.id.recycler_item_text);
         }
 

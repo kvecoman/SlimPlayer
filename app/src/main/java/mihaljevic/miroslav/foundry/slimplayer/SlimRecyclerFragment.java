@@ -3,6 +3,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.database.MatrixCursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -91,7 +92,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
             //If we have bundle, then load data accordingly
             mCurrentSource = bundle.getString(ScreenBundles.CURSOR_SOURCE_KEY);
             //Here is cursor null,but it will be set-up properly after loadDataAsync() is called
-            mAdapter = new CursorRecyclerAdapter(mContext,null, bundle.getString(DISPLAY_FIELD_KEY),this);
+            mAdapter = new CursorRecyclerAdapter(mContext,null, bundle.getString(DISPLAY_FIELD_KEY),this,mSelectedItems);
             mRecyclerView.setAdapter(mAdapter);
         }
 
@@ -158,37 +159,38 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
     {
         mSelectMode = false;
 
-        //Deselect EVERY child view
-        for (int i = 0;i < mRecyclerView.getChildCount();i++)
-        {
-            mRecyclerView.getChildAt(i).setSelected(false);
-        }
-
         //Remove everything from selected items
         mSelectedItems.clear();
 
+        //Un-highlight everything
+        for (int i = 0;i < mRecyclerView.getChildCount();i++)
+            mRecyclerView.getChildAt(i).setSelected(false);
+
     }
 
-    public void setItemSelected(int pos, boolean selected, View view)
+    public void setItemSelected(int pos, boolean selected,View view)
     {
-        //Check if position is in range
-        if (pos > 0 && pos < mAdapter.getItemCount())
+        //Check if positions are in range
+        if (pos < 0 || pos >= mAdapter.getItemCount())
+            return;
+
+
+        if (selected)
         {
-            if (selected)
-            {
-                //If we are selecting item
-                mSelectedItems.put(pos,selected);
-
-                view.setSelected(true);
-            }
-            else
-            {
-                //If we are deselecting just delete that key
-                mSelectedItems.delete(pos);
-
-                view.setSelected(false);
-            }
+            //If we are selecting item
+            mSelectedItems.put(pos,selected);
         }
+        else
+        {
+            //If we are deselecting just delete that key
+            mSelectedItems.delete(pos);
+        }
+
+        //Higlight or not the view
+        view.setSelected(selected);
+
+
+
     }
 
     public boolean isItemSelected(int pos)
@@ -212,6 +214,17 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
                 onDataLoaded(cursor);
             }
         }.execute();
+
+        //Random data for debug purposes
+        /*String[] columns = new String[] {"display_field"};
+
+        MatrixCursor matrixCursor = new MatrixCursor(columns,300);
+        for (int i = 0;i < 300;i++)
+        {
+            matrixCursor.addRow(new Object[] {i});
+        }
+        mAdapter.swapCursor(matrixCursor);*/
+
     }
 
 

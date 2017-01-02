@@ -141,7 +141,7 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
         }
         else if (mScreensList.get(position).equals(mContext.getString(R.string.pref_key_playlists_screen)))
         {
-            fragment = new SongRecyclerFragment();
+            fragment = new PlaylistsRecyclerFragment();
             args = ScreenBundles.getPlaylistsBundle(mContext);
             fragment.setArguments(args);
         }

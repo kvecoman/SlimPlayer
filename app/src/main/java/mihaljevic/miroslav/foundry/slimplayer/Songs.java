@@ -1,5 +1,7 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
+import android.graphics.Bitmap;
+
 /**
  * Created by Miroslav on 18.12.2016..
  */
@@ -14,6 +16,8 @@ public interface Songs {
     String getAlbum(int position);
     long getDuration(int position);
     String getData(int position);
+
+    Bitmap getArt(int position);
 
 
 }

@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
@@ -532,6 +533,14 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 .setContent(notificationView)
                 .setCustomBigContentView(bigNotificationView)
                 .setContentIntent(PendingIntent.getActivity(this,0,new Intent(this,NowPlayingActivity.class),0));
+
+        //Check if we have album art in mp3 and try to add it to player
+        Bitmap artBitmap = mSongs.getArt(mPosition);
+        if (artBitmap != null)
+        {
+            notificationView.setImageViewBitmap(R.id.notification_icon,artBitmap);
+            bigNotificationView.setImageViewBitmap(R.id.notification_icon,artBitmap);
+        }
 
 
         //If needed, set the ticker text with song title

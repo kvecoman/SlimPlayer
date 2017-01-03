@@ -34,7 +34,7 @@ import java.util.Set;
 //TODO - make visual style for project
 //TODO - make visualization
 //TODO - ability for some code parts/methods to fail without throwing exception
-//TODO - ability for notification player and now playing activity to load image art
+//TODO - ability for now playing activity to load image art
 
 //TODO - continue here - keep rolling
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{

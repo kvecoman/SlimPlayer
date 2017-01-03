@@ -1,9 +1,13 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.MediaMetadata;
 import android.media.MediaMetadataRetriever;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -95,5 +99,21 @@ public class FileSongs implements Songs {
             return null;
 
         return files.get(position);
+    }
+
+    @Override
+    public Bitmap getArt(int position) {
+        Bitmap bitmap = null;
+
+        mRetriever.setDataSource(getData(position));
+
+        InputStream inputStream = null;
+        byte[] bytes = mRetriever.getEmbeddedPicture();
+        if (bytes != null)
+            inputStream = new ByteArrayInputStream(bytes);
+
+        bitmap = BitmapFactory.decodeStream(inputStream);
+
+        return bitmap;
     }
 }

@@ -1,8 +1,14 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.MediaMetadataRetriever;
 import android.provider.MediaStore;
 import android.util.Log;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 
 /**
  * Helper class that allows easy access to fields of different songs
@@ -20,10 +26,14 @@ public class CursorSongs implements Songs {
     private int mIndexDuration;
     private int mIndexData;
 
+    private MediaMetadataRetriever mRetriever;
+
     CursorSongs(Cursor cursor)
     {
         Log.d(TAG, "Constructor");
         init(cursor);
+
+        mRetriever = new MediaMetadataRetriever();
     }
 
     private void init(Cursor cursor)
@@ -139,5 +149,21 @@ public class CursorSongs implements Songs {
         mCursor.moveToPosition(position);
 
         return mCursor.getString(mIndexData);
+    }
+
+    @Override
+    public Bitmap getArt(int position) {
+        Bitmap bitmap = null;
+
+        mRetriever.setDataSource(getData(position));
+
+        InputStream inputStream = null;
+        byte[] bytes = mRetriever.getEmbeddedPicture();
+        if (bytes != null)
+            inputStream = new ByteArrayInputStream(bytes);
+
+        bitmap = BitmapFactory.decodeStream(inputStream);
+
+        return bitmap;
     }
 }

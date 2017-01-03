@@ -29,14 +29,14 @@ import java.util.Set;
 //TODO - $$_PROFIT_$$
 
 //TODO - indicate that tap paused or resumed the song
-//TODO - earphones in starts playing last list
 //TODO - big notification for status bar player
 //TODO - loadDataAsync() bug, sometimes during normal work, CursorClosedException is thrown, locate when it is called
-//TODO - playback of songs from internet?
 //TODO - make visual style for project
 //TODO - make visualization
+//TODO - ability for some code parts/methods to fail without throwing exception
+//TODO - ability for notification player and now playing activity to load image art
 
-
+//TODO - continue here - keep rolling
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";

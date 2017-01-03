@@ -49,7 +49,6 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
                 FileSongs songs = new FileSongs();
                 songs.addFile(dataUri.getPath());
 
-                //TODO - make it remember this list(actually 1 song) somehow
                 mApplication.getMediaPlayerService().playList(songs,0);
             }
 

@@ -516,30 +516,23 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public void showNotification(boolean playIcon, boolean ticker)
     {
         RemoteViews notificationView = new RemoteViews(getPackageName(),R.layout.notification_player);
+        RemoteViews bigNotificationView = new RemoteViews(getPackageName(), R.layout.notification_player_big);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
 
         notificationView.setTextViewText(R.id.notification_title,mSongs.getTitle(mPosition));
-
-        //Check if we have notifications icons, if not generate them right now
-        /*if (mBitmapIcons == null)
-        {
-            generateBitmapIcons();
-        }*/
-
-        //Render font icons in scale with current device screen density
-        /*notificationView.setImageViewBitmap(R.id.notification_close,        mBitmapIcons.get(getString(R.string.icon_close)));
-        notificationView.setImageViewBitmap(R.id.notification_previous,     mBitmapIcons.get(getString(R.string.icon_previous)));
-        notificationView.setImageViewBitmap(R.id.notification_play,         mBitmapIcons.get(getString(playIcon ? R.string.icon_play : R.string.icon_pause)));
-        notificationView.setImageViewBitmap(R.id.notification_next,         mBitmapIcons.get(getString(R.string.icon_next)));*/
+        bigNotificationView.setTextViewText(R.id.notification_title,mSongs.getTitle(mPosition));
 
         notificationView.setImageViewResource(R.id.notification_play, playIcon ? R.drawable.ic_play_arrow_ltgray_36dp : R.drawable.ic_pause_ltgray_36dp);
+        bigNotificationView.setImageViewResource(R.id.notification_play, playIcon ? R.drawable.ic_play_arrow_ltgray_54dp : R.drawable.ic_pause_ltgray_54dp);
 
         //Set-up notification
         builder.setSmallIcon(R.mipmap.ic_launcher)
                 .setOngoing(false)
                 .setAutoCancel(false)
                 .setContent(notificationView)
+                .setCustomBigContentView(bigNotificationView)
                 .setContentIntent(PendingIntent.getActivity(this,0,new Intent(this,NowPlayingActivity.class),0));
+
 
         //If needed, set the ticker text with song title
         if (ticker)
@@ -563,24 +556,28 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         intent.setAction(NOTIFICATION_ACTION_CLOSE);
         pendingIntent = PendingIntent.getService(this,0,intent,0);
         notificationView.setOnClickPendingIntent(R.id.notification_close, pendingIntent);
+        bigNotificationView.setOnClickPendingIntent(R.id.notification_close, pendingIntent);
 
         //Previous song action
         intent = new Intent(this,this.getClass());
         intent.setAction(NOTIFICATION_ACTION_PREVIOUS);
         pendingIntent = PendingIntent.getService(this,0,intent,0);
         notificationView.setOnClickPendingIntent(R.id.notification_previous, pendingIntent);
+        bigNotificationView.setOnClickPendingIntent(R.id.notification_previous, pendingIntent);
 
         //Pause song action
         intent = new Intent(this,this.getClass());
         intent.setAction(NOTIFICATION_ACTION_PLAY_PAUSE);
         pendingIntent = PendingIntent.getService(this,0,intent,0);
         notificationView.setOnClickPendingIntent(R.id.notification_play, pendingIntent);
+        bigNotificationView.setOnClickPendingIntent(R.id.notification_play, pendingIntent);
 
         //Next song action
         intent = new Intent(this,this.getClass());
         intent.setAction(NOTIFICATION_ACTION_NEXT);
         pendingIntent = PendingIntent.getService(this,0,intent,0);
         notificationView.setOnClickPendingIntent(R.id.notification_next, pendingIntent);
+        bigNotificationView.setOnClickPendingIntent(R.id.notification_next, pendingIntent);
 
         //Swipe notification intent
         intent = new Intent(this, this.getClass());
@@ -592,43 +589,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         //Build and show notification
         Notification notification = builder.build();
 
-        //If we are playing, start notification as foreground otherwise start it so it can be dismissed
-        /*if (playIcon)
-        {
-            startForeground(NOTIFICATION_PLAYER_ID,notification);
-        }
-        else
-        {
-            NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-            notificationManager.notify(NOTIFICATION_PLAYER_ID, notification);
-        }*/
 
         NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
         notificationManager.notify(NOTIFICATION_PLAYER_ID, notification);
-
-
-
     }
-
-    //Generates bitmap icons used for notification player
-    /*public void generateBitmapIcons()
-    {
-        String[] iconCodes = getResources().getStringArray(R.array.icon_codes);
-        Bitmap bitmap;
-        Map<String,Bitmap> bitmaps = new HashMap<>(iconCodes.length);
-
-        for (String iconCode : iconCodes)
-        {
-            bitmap = Utils.renderFont(this, iconCode, Color.LTGRAY,getResources().getInteger(R.integer.notification_icon_size_sp), ICON_FONT_PATH);
-            bitmaps.put(iconCode,bitmap);
-        }
-
-        mBitmapIcons = bitmaps;
-    }*/
-
-
-
-
 
 
 

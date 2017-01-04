@@ -2,7 +2,6 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.MediaMetadata;
 import android.media.MediaMetadataRetriever;
 
 import java.io.ByteArrayInputStream;
@@ -103,7 +102,7 @@ public class FileSongs implements Songs {
 
     @Override
     public Bitmap getArt(int position) {
-        Bitmap bitmap = null;
+        Bitmap bitmap;
 
         mRetriever.setDataSource(getData(position));
 

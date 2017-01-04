@@ -3,7 +3,9 @@ package mihaljevic.miroslav.foundry.slimplayer;
 import android.graphics.Bitmap;
 
 /**
- * Created by Miroslav on 18.12.2016..
+ * Interface that represents list of songs to use for playback purposes
+ *
+ * @author Miroslav Mihaljević
  */
 
 public interface Songs {

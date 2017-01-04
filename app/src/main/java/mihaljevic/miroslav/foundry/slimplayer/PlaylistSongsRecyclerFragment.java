@@ -96,6 +96,7 @@ public class PlaylistSongsRecyclerFragment extends SongRecyclerFragment {
                     @Override
                     protected void onPostExecute(Integer result) {
                         Toast.makeText(mContext,result + " items deleted",Toast.LENGTH_SHORT).show();
+                        deselect();
                         loadDataAsync();
                     }
                 }.execute(mSelectedItems);

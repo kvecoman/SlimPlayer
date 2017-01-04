@@ -1,7 +1,11 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.media.MediaPlayer;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -12,6 +16,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -24,8 +30,6 @@ import android.widget.TextView;
 public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarChangeListener, MediaPlayerService.SongResumeListener, MediaPlayerService.SongPlayListener, View.OnClickListener{
 
     public static final String SONG_POSITION_KEY = "song_position";
-
-    private SlimPlayerApplication mApplication;
 
     private Context mContext;
 
@@ -48,10 +52,10 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
             if (mSeekBar == null ||
                     !mSeekBarBound ||
-                    !mApplication.getMediaPlayerService().isPlaying())
+                    !getPlayerService().isPlaying())
                 return;
 
-            if (mPosition == mApplication.getMediaPlayerService().getPosition()) {
+            if (mPosition != getPlayerService().getPosition()) {
                 mSeekBar.setProgress(0);
                 return;
             }
@@ -61,7 +65,9 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
                 int position = mPlayer.getCurrentPosition();
                 mSeekBar.setProgress(position);
             }
-            mSeekBarHandler.postDelayed(this, 1000);
+
+            if (mSeekBarHandler != null)
+                mSeekBarHandler.postDelayed(this, 1000);
         }
     };
 
@@ -90,15 +96,13 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         //Make sure that we get onCreateOptionsMenu() call
         setHasOptionsMenu(true);
 
-        mApplication = ((SlimPlayerApplication) getContext().getApplicationContext());
-
         mContext = getContext();
 
         mSeekBar = (SeekBar) mContentView.findViewById(R.id.seek_bar);
         mSeekBar.setOnSeekBarChangeListener(this);
         mSeekBarHandler = new Handler();
 
-        mPlayer = mApplication.getMediaPlayerService().getMediaPlayer();
+        mPlayer = getPlayerService().getMediaPlayer();
 
         //Handle taps on screen
         mContentView.setOnClickListener(this);
@@ -112,6 +116,24 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         }
 
         loadSongInfo();
+
+        //Little hack so we know that UI is already set up when we need to use it
+        mContentView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+
+                if (Build.VERSION.SDK_INT >= 16)
+                    mContentView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                else
+                    mContentView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+
+                //Load album art if it exist
+                loadArtAsync();
+
+            }
+        });
+
+
 
     }
 
@@ -128,9 +150,10 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         //super.onCreateOptionsMenu(menu, inflater);
 
         //OnCreateOptionsMenu is called when fragment is really visible in pager, we use that phenomena
-        mApplication.getMediaPlayerService().registerResumeListener(this);
-        mApplication.getMediaPlayerService().registerPlayListener(this);
+        getPlayerService().registerResumeListener(this);
+        getPlayerService().registerPlayListener(this);
         bindSeekBarToPlayer();
+
 
     }
 
@@ -149,8 +172,8 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         //End seek bar binding
         //mSeekBarBound = false;
         mSeekBarHandler = null;
-        mApplication.getMediaPlayerService().unregisterResumeListener(this);
-        mApplication.getMediaPlayerService().unregisterPlayListener(this);
+        getPlayerService().unregisterResumeListener(this);
+        getPlayerService().unregisterPlayListener(this);
     }
 
 
@@ -160,52 +183,64 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     @Override
     public void onClick(View v) {
 
-        MediaPlayerService playerService = mApplication.getMediaPlayerService();
-
-        if (playerService.isReadyToPlay())
+        if (getPlayerService().isReadyToPlay())
         {
-            if (playerService.isPlaying())
+            if (getPlayerService().isPlaying())
             {
-                playerService.pause();
+                getPlayerService().pause();
             }
             else
             {
                 if (getContext() instanceof NowPlayingActivity)
                 {
-                    playerService.resumeOrPlay(((NowPlayingActivity) getContext()).getPager().getCurrentItem());
+                    getPlayerService().resumeOrPlay(((NowPlayingActivity) getContext()).getPager().getCurrentItem());
                 }
             }
         }
     }
 
-   /* @Override
-    public void onClick(View v) {
-        MediaPlayerService playerService = mApplication.getMediaPlayerService();
-
-        if (playerService.isReadyToPlay())
-        {
-            if (playerService.isPlaying())
-            {
-                playerService.pause();
-            }
-            else
-            {
-                playerService.resume();
-            }
-        }
-    }*/
-
     public void loadSongInfo()
     {
 
-        Songs songs = mApplication.getMediaPlayerService().getSongs();
-        //mCount = songs.getCount();
+        Songs songs = getPlayerService().getSongs();
 
         mSeekBar.setMax(((int) songs.getDuration(mPosition)));
 
         //Update text views with new info
         ((TextView) mContentView.findViewById(R.id.song_title)).setText(songs.getTitle(mPosition));
         ((TextView) mContentView.findViewById(R.id.song_artist)).setText(songs.getArtist(mPosition));
+
+
+
+    }
+
+    //Tries to load album art if it exist (with async task)
+    public void loadArtAsync()
+    {
+        final float viewRatio = (float)mContentView.getWidth() / (float)mContentView.getHeight();
+
+        new AsyncTask<Void,Void,Bitmap>(){
+            @Override
+            protected Bitmap doInBackground(Void... params) {
+                //We crop album art so it fits screen(s)
+                return Utils.cropBitmapToRatio(getPlayerService().getSongs().getArt(mPosition),viewRatio);
+            }
+
+            @Override
+            protected void onPostExecute(Bitmap bitmap) {
+                if (bitmap == null)
+                    return;
+
+                //Update background with album art if it exist
+                if(Build.VERSION.SDK_INT >= 16) {
+                    mContentView.setBackground(new BitmapDrawable(getResources(),bitmap));
+                }
+                else
+                {
+                    mContentView.setBackgroundDrawable(new BitmapDrawable(getResources(),bitmap));
+                }
+            }
+        }.execute();
 
     }
 
@@ -217,6 +252,11 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         {
             ((FragmentActivity) mContext).runOnUiThread(mSeekBarRunnable);
         }
+    }
+
+    private MediaPlayerService getPlayerService()
+    {
+        return SlimPlayerApplication.getInstance().getMediaPlayerService();
     }
 
 

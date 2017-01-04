@@ -3,9 +3,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.preference.PreferenceManager;
-import android.test.mock.MockApplication;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -20,16 +18,6 @@ public abstract class SlimActivity extends AppCompatActivity {
 
     public static String REQUEST_CODE_KEY = "request_code";
 
-    private SlimPlayerApplication mApplication;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-
-        super.onCreate(savedInstanceState);
-
-        mApplication = ((SlimPlayerApplication) getApplication());
-
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
@@ -59,8 +47,8 @@ public abstract class SlimActivity extends AppCompatActivity {
                 else
                     item.setIcon(R.drawable.ic_repeat_gray_24dp);
 
-                preferences.edit().putBoolean(getString(R.string.pref_key_repeat),repeat).commit();
-                mApplication.getMediaPlayerService().refreshRepeat();
+                preferences.edit().putBoolean(getString(R.string.pref_key_repeat),repeat).apply();
+                SlimPlayerApplication.getInstance().getMediaPlayerService().refreshRepeat();
                 break;
             case R.id.settings:
                 //Start settings screen

@@ -56,16 +56,13 @@ public class CursorSongs implements Songs {
     }
 
     //Check if we can still work with current cursor
-    public boolean checkCursor()
+    private boolean checkCursor()
     {
-        if (mCursor == null || mCursor.isClosed() || mCursor.getCount() == 0)
-            return false;
-
-        return true;
+        return !(mCursor == null || mCursor.isClosed() || mCursor.getCount() == 0);
     }
 
     //Method that acquires all indexes of fields in cursor
-    public void acquireIndexes()
+    private void acquireIndexes()
     {
         //Try to use AUDIO_ID (for playlist), if it doesn't exist, use normal ID
         mIndexId = mCursor.getColumnIndex(MediaStore.Audio.Playlists.Members.AUDIO_ID) != -1 ? mCursor.getColumnIndex(MediaStore.Audio.Playlists.Members.AUDIO_ID) : mCursor.getColumnIndex(MediaStore.Audio.Media._ID);
@@ -153,7 +150,7 @@ public class CursorSongs implements Songs {
 
     @Override
     public Bitmap getArt(int position) {
-        Bitmap bitmap = null;
+        Bitmap bitmap;
 
         mRetriever.setDataSource(getData(position));
 

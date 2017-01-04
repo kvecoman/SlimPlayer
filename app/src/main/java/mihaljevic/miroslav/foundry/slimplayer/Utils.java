@@ -334,4 +334,33 @@ public final class Utils {
 
         return displayName;
     }
+
+    public static Bitmap cropBitmapToRatio(Bitmap bitmap, float ratio)
+    {
+        if (bitmap == null || ratio <= 0)
+            return null;
+
+        Bitmap resultBitmap = null;
+
+        int bitmapWidth = bitmap.getWidth();
+        int bitmapHeight = bitmap.getHeight();
+        float bitmapRatio = (float)bitmapWidth / (float)bitmapHeight;
+
+        if (ratio < bitmapRatio)
+        {
+            //Here we cut sides of bitmap
+            int targetWidth = (int)(ratio * bitmapHeight);
+            int dif = bitmapWidth - targetWidth;
+            resultBitmap = Bitmap.createBitmap(bitmap,dif / 2,0,targetWidth,bitmapHeight);
+        }
+        else
+        {
+            //Here we cut top and bottom of bitmap
+            int targetHeight = (int)(bitmapWidth / ratio);
+            int dif = bitmapHeight - targetHeight;
+            resultBitmap = Bitmap.createBitmap(bitmap,0,dif/2,bitmapWidth,targetHeight);
+        }
+
+        return resultBitmap;
+    }
 }

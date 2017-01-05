@@ -7,6 +7,7 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -93,6 +94,7 @@ public class SongRecyclerFragment extends SlimRecyclerFragment {
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
+        Log.v(TAG,"onPrepareOptionsMenu()");
 
         //Show add to playlist only if we are in normal mode (and not select for result mode)
         if (!mSelectSongsForResult)

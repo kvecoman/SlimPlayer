@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -15,6 +16,7 @@ import android.view.MenuItem;
  */
 
 public abstract class SlimActivity extends AppCompatActivity {
+    protected final String TAG = getClass().getSimpleName();
 
     public static String REQUEST_CODE_KEY = "request_code";
 
@@ -22,6 +24,8 @@ public abstract class SlimActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
+        Log.v(TAG,"onCreateOptionsMenu()");
+
         //Inflate options menu
         getMenuInflater().inflate(R.menu.options_menu,menu);
         return true;
@@ -64,12 +68,4 @@ public abstract class SlimActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
-
-    //Lets make sure that we always send request code when starting activity for result
-    /*@Override
-    public void startActivityForResult(Intent intent, int requestCode) {
-
-        intent.putExtra(REQUEST_CODE_KEY,requestCode);
-        super.startActivityForResult(intent, requestCode);
-    }*/
 }

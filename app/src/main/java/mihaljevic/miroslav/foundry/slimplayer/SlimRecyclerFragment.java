@@ -7,6 +7,7 @@ import android.database.MatrixCursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -152,6 +153,11 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
     {
         //If we are not in select mode, activate it
         mSelectMode = true;
+
+        //Make sure menu picks up the changes
+        if (getContext() instanceof AppCompatActivity) {
+            ((AppCompatActivity) getContext()).invalidateOptionsMenu();
+        }
     }
 
     //Deselects selection in recycler

@@ -36,6 +36,7 @@ import java.util.Set;
 //TODO - preferences commit to apply
 //TODO - reduce warnings
 //TODO - 2 step process of adding to playlist?????? - songs from step 1 are added to step 2 and when user confirms everything is added at same moment
+//TODO - "press back again to exit" confirmation like in 9gag
 
 //TODO - continue here - keep rolling
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{

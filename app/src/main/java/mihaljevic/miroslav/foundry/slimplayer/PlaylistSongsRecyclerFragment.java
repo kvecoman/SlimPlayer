@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -39,6 +40,7 @@ public class PlaylistSongsRecyclerFragment extends SongRecyclerFragment {
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
+        Log.v(TAG,"onPrepareOptionsMenu()");
 
         if (!mSelectSongsForResult)
         {

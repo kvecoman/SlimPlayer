@@ -79,6 +79,7 @@
 
     <!--Toast texts-->
     <string name="toast_playlist_exists">Playlist with that name already exists</string>
+    <string name="toast_exit_confirm">Press back again to exit</string>
 
     <!-- Default text-->
     <string name="hello_blank_fragment">Nothing to show</string>

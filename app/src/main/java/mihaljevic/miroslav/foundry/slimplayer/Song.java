@@ -10,12 +10,12 @@ package mihaljevic.miroslav.foundry.slimplayer;
 @Deprecated
 public class Song {
 
-    protected long mId;
-    protected String mTitle;
-    protected String mArtist;
-    protected String mAlbum;
-    protected long mDuration;
-    protected String mData;
+    private long mId;
+    private String mTitle;
+    private String mArtist;
+    private String mAlbum;
+    private long mDuration;
+    private String mData;
 
     public Song(long mId, String mTitle, String mArtist, String mAlbum, long mDuration, String mData) {
         //Just assign everything

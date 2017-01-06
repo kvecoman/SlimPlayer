@@ -17,6 +17,7 @@ import android.widget.TextView;
  *
  * @author Miroslav Mihaljević
  */
+@Deprecated
 public class SongCursorAdapter extends CursorAdapter {
     protected final String TAG = getClass().getSimpleName();
 

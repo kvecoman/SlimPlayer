@@ -20,7 +20,7 @@ import android.widget.ListView;
  */
 public class MyListView extends ListView {
 
-    //This variable is really bad idea UPDATE: really, it is monstrosity
+    //This variable is really bad idea UPDATE: really, it is a monstrosity
     //We use to not deselect everything when OnLayoutChildren is called in DirectorySelectPreference
     public boolean mIsItemClicked = false;
 
@@ -63,7 +63,7 @@ public class MyListView extends ListView {
 
     public interface OnLayoutChildrenListener
     {
-        public void onLayoutChildren();
+        void onLayoutChildren();
     }
 
     public void setOnLayoutChildrenListener(OnLayoutChildrenListener listener)

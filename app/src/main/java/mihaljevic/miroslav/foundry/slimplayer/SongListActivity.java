@@ -2,6 +2,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.Menu;
 
 /**
@@ -12,45 +13,61 @@ import android.view.Menu;
 
 
 public class SongListActivity extends SelectSongsActivity {
+    protected final String TAG = getClass().getSimpleName();
 
-    //Key for bundle that is intended to be sent with SlimListFragment
+    //Key for bundle that is intended to be sent with SlimRecyclerFragment
     public static final String FRAGMENT_BUNDLE_KEY = "fragment_bundle";
+
+    private String mSource;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fragment_holder);
 
+
+        //Fragment that we will display here
+        Fragment fragment = null;
+
         //Retrieve bundle intended to be sent with SlimListFragment
         Bundle fragmentBundle = getIntent().getBundleExtra(FRAGMENT_BUNDLE_KEY);
+
+        //Check if everything is okay with bundle
+        if (fragmentBundle == null || !fragmentBundle.containsKey(ScreenBundles.CURSOR_SOURCE_KEY))
+        {
+            Log.i(TAG, "onCreate() - Could not load data list fragment, loading empty one instead");
+            //If something is wrong with bundle just show empty fragment
+            fragment = new EmptyMessageFragment();
+            Bundle args = new Bundle();
+            args.putString(EmptyMessageFragment.MESSAGE_KEY,getString(R.string.empty_songlist));
+        }
 
         //If there is bundle for fragment then create that fragment and add it to container
         if (fragmentBundle != null)
         {
-            Fragment fragment;
+            mSource = fragmentBundle.getString(ScreenBundles.CURSOR_SOURCE_KEY);
 
             //If we are opening playlist then load PlaylistSongsFragment
-            if (fragmentBundle.getString(ScreenBundles.CURSOR_SOURCE_KEY).contains(getString(R.string.pref_key_playlists_screen)))
+            if (Utils.equalsIncludingNull(mSource,getString(R.string.pref_key_playlists_screen)))
                 fragment = new PlaylistSongsRecyclerFragment();
             else
                 fragment = new SongRecyclerFragment();
 
-
             fragment.setArguments(fragmentBundle);
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,fragment).commit();
-
-
         }
+
+
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,fragment).commit();
+
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
         //If we are in normal mode and this is playlist songs screen then inflate playlist songs menu
-        if (!mSelectSongsForResult && getIntent().getBundleExtra(FRAGMENT_BUNDLE_KEY).getString(ScreenBundles.CURSOR_SOURCE_KEY).contains(getString(R.string.pref_key_playlists_screen)))
-        {
+        if (!mSelectSongsForResult && Utils.equalsIncludingNull(mSource,getString(R.string.pref_key_playlists_screen)))
             getMenuInflater().inflate(R.menu.playlist_songs_menu,menu);
-        }
+
 
 
         return super.onCreateOptionsMenu(menu);

@@ -4,6 +4,10 @@ import android.provider.BaseColumns;
 
 /**
  * Created by Miroslav on 21.12.2016..
+ *
+ * Scheme for database that is used to store song playng statistics to present user with most listened lists
+ *
+ * @author Miroslav Mihaljević
  */
 
 public final class StatsContract {
@@ -31,7 +35,7 @@ public final class StatsContract {
                                                 COLUMN_NAME_LAST_POSITION + " INTEGER DEFAULT 0," +
                                                 COLUMN_NAME_RECENT_FREQUENCY + " INTEGER DEFAULT 0," +
                                                 COLUMN_NAME_LAST_PLAY + " TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
-                                                "PRIMARY KEY (" + COLUMN_NAME_SOURCE + ", " + COLUMN_NAME_PARAMETER + "))" ;
+                                                "PRIMARY KEY (" + COLUMN_NAME_SOURCE + ", " + COLUMN_NAME_PARAMETER + "))";
 
         public static final String SQL_DROP = "DROP TABLE IF EXISTS " + TABLE_NAME;
     }

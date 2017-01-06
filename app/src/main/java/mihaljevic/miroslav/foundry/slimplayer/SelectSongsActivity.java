@@ -7,7 +7,6 @@ import android.view.MenuItem;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -26,7 +25,7 @@ public abstract class SelectSongsActivity extends BackHandledFragmentActivity {
         super.onCreate(savedInstanceState);
 
         //Check if we have started this activity only to select songs
-        if (getIntent().getAction() == PlaylistSongsRecyclerFragment.ACTION_SELECT_SONGS)
+        if ( Utils.equalsIncludingNull(getIntent().getAction(),PlaylistSongsRecyclerFragment.ACTION_SELECT_SONGS))
         {
             mSelectSongsForResult = true;
             mSelectedSongIdsList = new HashSet<>();

@@ -5,13 +5,8 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.os.IBinder;
 import android.util.Log;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by Miroslav on 15.11.2016..
@@ -30,7 +25,7 @@ public class SlimPlayerApplication extends Application {
     private boolean mPreferencesChanged = false;
 
     //List of listeners that need to be called when service is connected
-    private List<PlayerServiceBoundListener> mServiceBoundListeners;
+    //private List<PlayerServiceBoundListener> mServiceBoundListeners;
 
     private MediaPlayerService mPlayerService;
     private boolean mServiceBound;
@@ -46,7 +41,7 @@ public class SlimPlayerApplication extends Application {
             SlimPlayerApplication.this.mPlayerService = playerBinder.getService();
             SlimPlayerApplication.this.mServiceBound = true;
 
-            notifyPlayerServiceBound();
+            //notifyPlayerServiceBound();
 
         }
 
@@ -73,7 +68,7 @@ public class SlimPlayerApplication extends Application {
         bindService(playerServiceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
 
         //Init list for listeners
-        mServiceBoundListeners = new ArrayList<>();
+        //mServiceBoundListeners = new ArrayList<>();
 
         super.onCreate();
     }
@@ -109,7 +104,7 @@ public class SlimPlayerApplication extends Application {
     //Components notify that the have responded to changes
     public void consumePreferenceChange() {mPreferencesChanged = false;}
 
-    public void registerPlayerServiceBoundListener(PlayerServiceBoundListener listener)
+    /*public void registerPlayerServiceBoundListener(PlayerServiceBoundListener listener)
     {
         mServiceBoundListeners.add(listener);
     }
@@ -128,12 +123,12 @@ public class SlimPlayerApplication extends Application {
                 listener.onPlayerServiceBound();
             }
         }
-    }
+    }*/
 
-    public interface PlayerServiceBoundListener
+    /*public interface PlayerServiceBoundListener
     {
         void onPlayerServiceBound();
-    }
+    }*/
 
 
 }

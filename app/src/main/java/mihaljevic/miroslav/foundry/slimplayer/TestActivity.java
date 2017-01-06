@@ -1,6 +1,5 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 public class TestActivity extends SlimActivity {

@@ -15,6 +15,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -122,7 +123,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         refreshRepeat();
 
         //Register to detect headphones in/out
-        registerReceiver(mHeadsetChangeReceiver, new IntentFilter(AudioManager.ACTION_HEADSET_PLUG));
+        //TODO - see what is with this, will it work on older versions
+        if (Build.VERSION.SDK_INT >= 21)
+            registerReceiver(mHeadsetChangeReceiver, new IntentFilter(AudioManager.ACTION_HEADSET_PLUG));
 
         //Try to get last playback state (if there is none, nothing will happen)
         new AsyncTask<Void,Void,Integer>(){
@@ -153,7 +156,31 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
         if (action != null)
         {
-            if (action.equals(NOTIFICATION_ACTION_CLOSE))
+            switch (action)
+            {
+                case NOTIFICATION_ACTION_CLOSE:
+                    stopAndClearList();
+                    NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+                    notificationManager.cancel(NOTIFICATION_PLAYER_ID);
+                    break;
+                case NOTIFICATION_ACTION_PREVIOUS:
+                    playPrevious();
+                    break;
+                case NOTIFICATION_ACTION_PLAY_PAUSE:
+                    if (mPlaying)
+                        pause();
+                    else
+                        resume();
+                    break;
+                case NOTIFICATION_ACTION_NEXT:
+                    playNext();
+                    break;
+                case NOTIFICATION_ACTION_SWIPE:
+                    stopAndClearList();
+                    break;
+
+            }
+            /*if (action.equals(NOTIFICATION_ACTION_CLOSE))
             {
                 stopAndClearList();
                 NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
@@ -177,7 +204,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             else if (action.equals(NOTIFICATION_ACTION_SWIPE))
             {
                 stopAndClearList();
-            }
+            }*/
         }
 
 
@@ -225,13 +252,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     @Override
     public void onAudioFocusChange(int focusChange) {
-        if (focusChange <= 0)
+        if (focusChange <= 0 && mPlaying)
         {
-            if (mPlaying == true)
-            {
                 pause();
-            }
-
         }
         else
         {
@@ -241,7 +264,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     public void play(int position)
     {
-        Log.d(TAG,"play() - position " + position);
+        Log.v(TAG,"play() - position " + position);
 
         //If something is wrong then do nothing
         if (mPosition == position || position < 0 || position >= mCount || mSongs == null)
@@ -333,7 +356,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     public void pause()
     {
-        if (mPlayer != null && mPlaying == true)
+        if (mPlayer != null && mPlaying)
         {
             mPlaying = false;
             mPlayer.pause();
@@ -355,7 +378,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     //Function that tries to resume playback if the song is loaded, or load and play the song if not
     public void resumeOrPlay(int position)
     {
-        if (position == mPosition && mStopped == false)
+        if (position == mPosition && !mStopped)
         {
             resume();
         }
@@ -430,7 +453,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     }
 
     //Start ending this service
-    public void endService()
+    /*public void endService()
     {
         if (mPlayer != null) {
             mPlayer.stop();
@@ -441,7 +464,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         mPlaying = false;
         stopForeground(true);
         stopSelf();
-    }
+    }*/
 
     //Function to get latest state of repeat option
     public void refreshRepeat()
@@ -681,7 +704,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 
     //Used to send info when NowPlayingActivity is starting to get up to date with player service
-    public void setCurrentPlayInfoToListener()
+    /*public void setCurrentPlayInfoToListener()
     {
         Log.d(TAG,"setCurrentPlayInfoToListener()");
         //Check if we have something in this service
@@ -690,7 +713,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             notifyListenersPlay();
         }
 
-    }
+    }*/
 
     public Songs getSongs()
     {

@@ -12,8 +12,10 @@ import android.view.MenuItem;
 
 public class NowPlayingActivity extends BackHandledFragmentActivity implements MediaPlayerService.SongPlayListener,ViewPager.OnPageChangeListener {
 
-    public static final String SONG_COUNT_KEY = "song_count";
-    public static final String SONG_POSITION_KEY = "song_position";
+    //TODO -check if this class can be optimized
+
+    /*public static final String SONG_COUNT_KEY = "song_count";
+    public static final String SONG_POSITION_KEY = "song_position";*/
 
     private SlimPlayerApplication mApplication;
 

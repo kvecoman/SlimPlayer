@@ -76,6 +76,7 @@
     <!--Empty screen texts-->
     <string name="empty_placeholder">Nothing to be found here...</string>
     <string name="empty_main_screen">None of the home screens are turned on to show, click here to review your preferences</string>
+    <string name="empty_songlist">A problem occured with data loading</string>
 
     <!--Toast texts-->
     <string name="toast_playlist_exists">Playlist with that name already exists</string>

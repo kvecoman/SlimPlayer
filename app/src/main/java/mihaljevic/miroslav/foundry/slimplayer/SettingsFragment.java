@@ -1,15 +1,12 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 
-import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.provider.MediaStore;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceFragmentCompat;
@@ -75,7 +72,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     @Override
     public void onDisplayPreferenceDialog(Preference preference)
     {
-        DialogFragment dialogFragment = null;
+        DialogFragment dialogFragment;
 
         //If the selected preference is Directory Select Preference we then send it
         if (preference instanceof DirectorySelectPreference)

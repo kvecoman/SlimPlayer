@@ -72,7 +72,7 @@ public final class Utils {
     //Helper function to set and calculate height of list view (assuming all rows are same)
     public static int calculateListHeight(ListView lv)
     {
-        int height = 0;
+        int height;
         ListAdapter adapter = lv.getAdapter();
         int count = adapter.getCount();
 
@@ -119,10 +119,11 @@ public final class Utils {
             playlistsCursor.moveToPosition(i);
             if (playlistName.equals(playlistsCursor.getString(playlistsCursor.getColumnIndex(MediaStore.Audio.Playlists.NAME))))
             {
+                playlistsCursor.close();
                 return true;
             }
         }
-
+        playlistsCursor.close();
         return false;
     }
 

@@ -26,10 +26,10 @@ import android.widget.TextView;
 //TODO - make visual style for project
 //TODO - make visualization
 //TODO - ability for some code parts/methods to fail without throwing exception (or with catching exception)
-//TODO - reduce warnings
 //TODO - 2 step process of adding to playlist?????? - songs from step 1 are added to step 2 and when user confirms everything is added at same moment
+//TODO - big notification player, album art doesn't change after it shows picture
 
-//TODO - continue here - bug when turning off screens in preferences, pager is not properly updated after - before that you were testing settings and directory fragments
+//TODO - continue here - keep rolling
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";

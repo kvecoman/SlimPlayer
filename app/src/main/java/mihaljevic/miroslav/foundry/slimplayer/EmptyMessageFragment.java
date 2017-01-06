@@ -10,7 +10,9 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 /**
- * A simple {@link Fragment} subclass.
+ * A fragment used to display an empty message
+ *
+ * @author Miroslav Mihaljević
  */
 public class EmptyMessageFragment extends Fragment {
 
@@ -36,17 +38,18 @@ public class EmptyMessageFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
 
         Bundle args = getArguments();
+        TextView textView = ((TextView) mView.findViewById(R.id.empty_text));
 
         //Set empty message if one was provided
         if (args != null && args.containsKey(MESSAGE_KEY))
         {
-            ((TextView) mView.findViewById(R.id.empty_text)).setText(args.getString(MESSAGE_KEY));
+            textView.setText(args.getString(MESSAGE_KEY));
         }
 
         //Check if host activity is implementing click listener for text view and if it does, hook to it
         if (getContext() instanceof  TextView.OnClickListener)
         {
-            ((TextView) mView.findViewById(R.id.empty_text)).setOnClickListener(((View.OnClickListener) getContext()));
+            textView.setOnClickListener(((View.OnClickListener) getContext()));
         }
 
     }

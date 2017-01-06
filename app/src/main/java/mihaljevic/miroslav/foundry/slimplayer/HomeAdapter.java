@@ -10,8 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
 /**
  * Adapter for recycler view in home screen
  *
@@ -19,8 +17,6 @@ import org.w3c.dom.Text;
  */
 
 
-//TODO - continue here - create 2 custom databases, one for lists(sources), other for songs and record stats in them, then use that
-    //...as data source in this adapter, then connect adapter to recycler view in home fragment - ko plitak potok
 public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
 
     private Context mContext;
@@ -39,8 +35,7 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
     public HomeAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
     {
         View v = LayoutInflater.from(mContext).inflate(R.layout.home_card,parent,false);
-        ViewHolder vh = new ViewHolder(v);
-        return vh;
+        return new ViewHolder(v);
     }
 
     @Override

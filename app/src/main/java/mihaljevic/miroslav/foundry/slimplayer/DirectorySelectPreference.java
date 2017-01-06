@@ -2,7 +2,6 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.Context;
 import android.support.v7.preference.DialogPreference;
-import android.support.v7.preference.PreferenceManager;
 import android.support.v7.preference.PreferenceViewHolder;
 import android.util.AttributeSet;
 import android.view.View;
@@ -10,13 +9,11 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.prefs.Preferences;
 
 /**
  * Created by Miroslav on 28.9.2016..
@@ -94,7 +91,7 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
                 //This is pretty bad, but even if we always deselect list, OnItemClick goes after this
                 //... so it will be selected again
 
-                if (mListView.mIsItemClicked == false)
+                if (!mListView.mIsItemClicked)
                 {
                     deselectList();
                 }
@@ -162,9 +159,9 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
     }
 
     //Updates ListView and shared preference with latest directories set
-    public void updateDirectoriesPref()
+    private void updateDirectoriesPref()
     {
-        getSharedPreferences().edit().putStringSet(getKey(),mDirectoriesSet).commit();
+        getSharedPreferences().edit().putStringSet(getKey(),mDirectoriesSet).apply();
         //PreferenceManager.getDefaultSharedPreferences(getContext()).edit().putStringSet(getKey(),mDirectoriesSet).commit();
 
         //We have to do this right here, because with this preference the onSharedPreferenceChanged isn't called
@@ -174,7 +171,7 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
 
 
     //Functions that updates height of member list view based on number of items
-    public void updateListHeight()
+    private void updateListHeight()
     {
         ViewGroup.LayoutParams params = mListView.getLayoutParams();
         params.height = Utils.calculateListHeight(mListView);
@@ -183,7 +180,7 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
     }
 
     //Function that deselects item from list and sets appropriate action button text
-    public void deselectList()
+    private void deselectList()
     {
         mSelectedItem = -1;
         mActionButton.setText(mContext.getString(R.string.directory_pref_button_select));

@@ -51,7 +51,7 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
     @Override
     protected View onCreateDialogView(Context context)
     {
-        LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        LayoutInflater inflater = LayoutInflater.from(context);
         return inflater.inflate(R.layout.directory_select_dialog,null);
     }
 

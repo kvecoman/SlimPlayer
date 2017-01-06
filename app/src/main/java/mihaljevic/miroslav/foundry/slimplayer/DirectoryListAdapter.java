@@ -1,6 +1,7 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,7 +10,6 @@ import android.widget.TextView;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.zip.Inflater;
 
 /**
  * Created by Miroslav on 28.11.2016..
@@ -34,7 +34,7 @@ public class DirectoryListAdapter extends ArrayAdapter<HashMap<String,Object>> {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    @NonNull public View getView(int position, View convertView,@NonNull ViewGroup parent) {
 
         View view = convertView;
 

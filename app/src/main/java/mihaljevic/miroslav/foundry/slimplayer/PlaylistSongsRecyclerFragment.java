@@ -3,17 +3,12 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.util.SparseBooleanArray;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.List;
@@ -120,16 +115,14 @@ public class PlaylistSongsRecyclerFragment extends SongRecyclerFragment {
 
         if (data != null && requestCode == SELECT_SONGS_REQUEST && data.hasExtra(PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY))
         {
-            List<String> ids = data.getStringArrayListExtra(PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY);
+            final List<String> ids = data.getStringArrayListExtra(PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY);
 
             //Insert songs in playlist and then refresh data
-            new AsyncTask<List<String>,Void,Integer>(){
+            new AsyncTask<Void,Void,Integer>(){
 
                 @Override
-                protected Integer doInBackground(List<String>... params)
+                protected Integer doInBackground(Void... params)
                 {
-                    List<String> ids = params[0];
-
                     if (ids == null)
                         return null;
 
@@ -141,7 +134,7 @@ public class PlaylistSongsRecyclerFragment extends SongRecyclerFragment {
                     Toast.makeText(mContext,result + " " + getString(R.string.playlist_add_succes),Toast.LENGTH_SHORT).show();
                     loadDataAsync();
                 }
-            }.execute(ids);
+            }.execute();
         }
     }
 

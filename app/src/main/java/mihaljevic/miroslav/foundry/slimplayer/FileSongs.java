@@ -16,6 +16,8 @@ import java.util.List;
  * Created by Miroslav on 18.12.2016..
  *
  * A list of songs whose source is coming from files
+ *
+ * @author Miroslav Mihaljević
  */
 
 public class FileSongs implements Songs {

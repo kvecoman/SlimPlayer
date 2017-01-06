@@ -10,7 +10,10 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 /**
- * Created by Miroslav on 29.12.2016..
+ * Adapter for recycler view that uses cursor as its base source of data.
+ * Used for lists od data coming from media store.
+ *
+ * @author Miroslav Mihaljević
  */
 
 public class CursorRecyclerAdapter extends RecyclerView.Adapter<CursorRecyclerAdapter.ViewHolder> {
@@ -23,7 +26,7 @@ public class CursorRecyclerAdapter extends RecyclerView.Adapter<CursorRecyclerAd
     private View.OnClickListener mOnClickListener;
 
 
-    protected SparseBooleanArray mSelectedItems; //Array of selected items, init is done outside
+    private SparseBooleanArray mSelectedItems; //Array of selected items, init is done outside
 
 
     public CursorRecyclerAdapter(Context context, Cursor cursor, String displayField, View.OnClickListener listener, SparseBooleanArray selectedItemsArray)

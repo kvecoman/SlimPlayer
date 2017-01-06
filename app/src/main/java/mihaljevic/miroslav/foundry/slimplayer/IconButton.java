@@ -14,6 +14,7 @@ import android.widget.Button;
  *
  * @author Miroslav Mihaljević
  */
+@Deprecated
 public class IconButton extends Button {
 
     public IconButton(Context context) {

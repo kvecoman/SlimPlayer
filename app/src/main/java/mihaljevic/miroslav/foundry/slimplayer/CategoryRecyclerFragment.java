@@ -3,19 +3,15 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.Intent;
 import android.database.Cursor;
-import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.v4.app.Fragment;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.TextView;
 
 import java.util.List;
 
 /**
- * A simple {@link Fragment} subclass.
+ * Fragment used for displaying of different categories like all genres, all abums etc.
+ *
+ * @author Miroslav Mihaljević
  */
 public class CategoryRecyclerFragment extends SlimRecyclerFragment {
 

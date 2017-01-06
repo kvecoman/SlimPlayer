@@ -3,15 +3,12 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.database.MatrixCursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
@@ -19,9 +16,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CursorAdapter;
-import android.widget.ListView;
-import android.widget.TextView;
 
 import static mihaljevic.miroslav.foundry.slimplayer.ScreenBundles.DISPLAY_FIELD_KEY;
 
@@ -184,7 +178,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         if (selected)
         {
             //If we are selecting item
-            mSelectedItems.put(pos,selected);
+            mSelectedItems.put(pos,true);
         }
         else
         {

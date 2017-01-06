@@ -3,10 +3,12 @@ package mihaljevic.miroslav.foundry.slimplayer;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.widget.Toast;
 
 /**
- * Created by Miroslav on 17.12.2016..
+ * Broadcast receiver when headset plugged state is changed,
+ * used to pause playback when headset is plugged out
+ *
+ * @author Miroslav Mihaljević
  */
 
 public class HeadsetChangeReceiver extends BroadcastReceiver {
@@ -15,16 +17,15 @@ public class HeadsetChangeReceiver extends BroadcastReceiver {
 
         MediaPlayerService playerService = SlimPlayerApplication.getInstance().getMediaPlayerService();
 
-        if (intent.hasExtra("state"))
+        //If something is wrong just return
+        if (!intent.hasExtra("state") || playerService == null)
+            return;
+
+
+        //If headset is plugged out, pause the playback
+        if (intent.getIntExtra("state",0) == 0)
         {
-            if (playerService != null)
-            {
-                //If headset is plugged out, pause the playback
-                if (intent.getIntExtra("state",0) == 0)
-                {
-                    playerService.pause();
-                }
-            }
+            playerService.pause();
         }
     }
 }

@@ -1,18 +1,11 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.os.Bundle;
-import android.support.v7.preference.PreferenceManager;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
-
-import java.util.HashSet;
-import java.util.Set;
 
 
 /**
@@ -33,11 +26,10 @@ import java.util.Set;
 //TODO - make visual style for project
 //TODO - make visualization
 //TODO - ability for some code parts/methods to fail without throwing exception (or with catching exception)
-//TODO - preferences commit to apply
 //TODO - reduce warnings
 //TODO - 2 step process of adding to playlist?????? - songs from step 1 are added to step 2 and when user confirms everything is added at same moment
 
-//TODO - continue here - keep rolling
+//TODO - continue here - bug when turning off screens in preferences, pager is not properly updated after - before that you were testing settings and directory fragments
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";
@@ -76,11 +68,7 @@ public class MainActivity extends SelectSongsActivity implements TextView.OnClic
     protected void onStart() {
         super.onStart();
 
-        //If preferences have changed respond accordingly
-        if (((SlimPlayerApplication) getApplicationContext()).isPreferencesChanged()) {
-            initPager();
-            ((SlimPlayerApplication) getApplicationContext()).consumePreferenceChange();
-        }
+        updateAfterPreferenceChange();
     }
 
 
@@ -103,7 +91,7 @@ public class MainActivity extends SelectSongsActivity implements TextView.OnClic
     }
 
     //Set-up pager related stuff
-    public void initPager()
+    private void initPager()
     {
         //Set up pager and adapter to show list screens
         mPager = (ViewPager)findViewById(R.id.pager);
@@ -114,6 +102,15 @@ public class MainActivity extends SelectSongsActivity implements TextView.OnClic
         mPager.setCurrentItem(0);
     }
 
+
+    private void updateAfterPreferenceChange()
+    {
+        //If preferences have changed respond accordingly
+        if (((SlimPlayerApplication) getApplicationContext()).isPreferencesChanged()) {
+            initPager();
+            ((SlimPlayerApplication) getApplicationContext()).consumePreferenceChange();
+        }
+    }
 
 
 }

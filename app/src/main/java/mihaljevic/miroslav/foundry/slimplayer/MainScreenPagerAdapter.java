@@ -9,17 +9,11 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.preference.PreferenceManager;
-import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.prefs.Preferences;
 
 /**
  * Created by Miroslav on 25.9.2016..
@@ -42,9 +36,6 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
 
     //Array of screen names/keys that user selected
     private List<String> mScreensList;
-
-    //Collection of fragments for different screens
-    private Map<String, ListFragment> mFragmentMap;
 
     //Context where this adapter is used
     private Context mContext;
@@ -71,7 +62,7 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
     }
 
     //Method that clears all cached fragments from pager with pagerID
-    public void clearCachedFragments(FragmentManager fragmentManager, int pagerID)
+    private void clearCachedFragments(FragmentManager fragmentManager, int pagerID)
     {
         //If there are any fragments before in fragment manager, clear them
         List<Fragment> fragments = fragmentManager.getFragments();
@@ -80,23 +71,20 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
             FragmentTransaction transaction = fragmentManager.beginTransaction();
             for (Fragment fragment : fragments)
             {
-                if (fragment != null)
+                //Check if fragment isn't null and that it is coming from view pager
+                //NOTE - it might happen that one day fragment tag doesn't contain pager ID...
+                //...or it might happen that it is not in format "switcher:*pager_id*"
+                if (fragment != null && fragment.getTag().contains("switcher:" + pagerID))
                 {
-                    //Check if fragment isn't null and that it is coming from view pager
-                    //NOTE - it might happen one day that pagerID is some low number like position and
-                    // ...it would delete all non null fragments (not really bad, but unnecessary
-                    if (fragment.getTag().contains("" + pagerID));
-                    {
-                        transaction.remove(fragment);
-                    }
+                    transaction.remove(fragment);
                 }
             }
-            transaction.commitAllowingStateLoss();
+            transaction.commitNowAllowingStateLoss();
         }
     }
 
     //Method that loads screen names from preferences
-    public void loadScreenNames(SharedPreferences preferences)
+    private void loadScreenNames(SharedPreferences preferences)
     {
         Resources resources = mContext.getResources();
         mScreensList = new ArrayList<>(6);
@@ -104,7 +92,7 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
         for (String key : allScreenKeys)
         {
             if (preferences.getBoolean(key,true))
-                ((ArrayList) mScreensList).add(key);
+                mScreensList.add(key);
         }
         ((ArrayList) mScreensList).trimToSize();
 

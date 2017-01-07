@@ -6,7 +6,12 @@ import android.database.Cursor;
 import android.provider.MediaStore;
 import android.view.View;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+
+import static mihaljevic.miroslav.foundry.slimplayer.PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY;
+import static mihaljevic.miroslav.foundry.slimplayer.PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2;
 
 /**
  * Fragment used for displaying of different categories like all genres, all abums etc.
@@ -68,11 +73,30 @@ public class CategoryRecyclerFragment extends SlimRecyclerFragment {
 
         if (data != null && requestCode == PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2 && data.hasExtra(PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY))
         {
+            if (!(mContext instanceof SelectSongsActivity))
+                return;
+
+            SelectSongsActivity selectSongActivity = ((SelectSongsActivity) mContext);
+
             //Add all selected IDs to existing song ID collection
             List<String> IDs = data.getStringArrayListExtra(PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY);
             for (String id : IDs)
             {
-                ((SelectSongsActivity) mContext).getSelectedSongsList().add(id);
+                selectSongActivity.getSelectedSongsList().add(id);
+            }
+
+            //Check if we need to close this activity right now (this is if user confirmed his selection)
+            if (data.hasExtra(SelectSongsActivity.SELECTING_FINISHED_KEY))
+            {
+                Set<String> selectedSongs = selectSongActivity.getSelectedSongsList();
+                int request_code = selectSongActivity.getIntent().getIntExtra(SlimActivity.REQUEST_CODE_KEY, SELECT_SONGS_REQUEST_2);
+
+                Intent intent = new Intent();
+                intent.putStringArrayListExtra(SELECTED_SONGS_KEY,new ArrayList<>(selectedSongs));
+                intent.putExtra(SelectSongsActivity.SELECTING_FINISHED_KEY,true);
+
+                selectSongActivity.setResult(request_code,intent);
+                selectSongActivity.finish();
             }
         }
     }

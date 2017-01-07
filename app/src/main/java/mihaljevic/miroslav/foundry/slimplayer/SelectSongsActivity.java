@@ -9,12 +9,18 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
+import static mihaljevic.miroslav.foundry.slimplayer.PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY;
+import static mihaljevic.miroslav.foundry.slimplayer.PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2;
+
 /**
  *
  *
  */
 
 public abstract class SelectSongsActivity extends BackHandledFragmentActivity {
+
+    //Key used to identify whether the user has finished selecting and it is time to exit all selection activities
+    public static final String SELECTING_FINISHED_KEY = "selecting_finished";
 
     //Are we selecting songs for playlists
     protected boolean mSelectSongsForResult;
@@ -62,8 +68,12 @@ public abstract class SelectSongsActivity extends BackHandledFragmentActivity {
                 if (mSelectedSongIdsList.size() > 0)
                 {
                     Intent intent = new Intent();
-                    intent.putStringArrayListExtra(PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY,new ArrayList<>(mSelectedSongIdsList));
-                    setResult(getIntent().getIntExtra(SlimActivity.REQUEST_CODE_KEY,PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2),intent);
+                    int request_code = getIntent().getIntExtra(SlimActivity.REQUEST_CODE_KEY, SELECT_SONGS_REQUEST_2);
+
+                    intent.putStringArrayListExtra(SELECTED_SONGS_KEY,new ArrayList<>(mSelectedSongIdsList));
+                    intent.putExtra(SelectSongsActivity.SELECTING_FINISHED_KEY,true);
+
+                    setResult(request_code,intent);
                     finish();
                 }
                 else
@@ -83,18 +93,23 @@ public abstract class SelectSongsActivity extends BackHandledFragmentActivity {
     public void onBackPressed() {
         super.onBackPressed();
 
-        /*if (mSelectSongsForResult)
+        if (mSelectSongsForResult)
         {
             //If user pressed back but has songs selected then we will set that as result
-            if (mSelectedSongIdsList.size() > 0) {
+            if (mSelectedSongIdsList.size() > 0)
+            {
                 Intent intent = new Intent();
-                intent.putStringArrayListExtra(PlaylistSongsFragment.SELECTED_SONGS_KEY,(ArrayList) mSelectedSongIdsList);
-                setResult(getIntent().getIntExtra(SlimActivity.REQUEST_CODE_KEY, PlaylistSongsFragment.SELECT_SONGS_REQUEST_2), intent);
+                int result_code = getIntent().getIntExtra(SlimActivity.REQUEST_CODE_KEY, SELECT_SONGS_REQUEST_2);
+
+                intent.putStringArrayListExtra(SELECTED_SONGS_KEY,new ArrayList<>(mSelectedSongIdsList));
+
+                setResult(result_code, intent);
                 finish();
-            } else {
+            } else
+            {
                 finish();
             }
-        }*/
+        }
     }
 
     public boolean isSelectSongsForResult()

@@ -52,11 +52,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public static final String  NOTIFICATION_ACTION_SWIPE = "mihaljevic.miroslav.foundry.slimplayer.action.swipe";
 
 
-    //Points to location of our custom font file
-    //public static final String ICON_FONT_PATH = "fonts/icons.ttf";
-
-    //private Map<String,Bitmap> mBitmapIcons;
-
     private MediaPlayerBinder mBinder = new MediaPlayerBinder();
 
     public MediaPlayer mPlayer;
@@ -68,8 +63,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     private AsyncTask<Void, Void, Void> mCurrentPlayTask;
 
-   // private Cursor mCursor;
-    //private List<Song> mSongList;
     private Songs mSongs;
     private int mPosition;
     private int mCount;
@@ -88,13 +81,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     //Used to detect if headphones are plugged in
     private BroadcastReceiver mHeadsetChangeReceiver = new HeadsetChangeReceiver();
-    /*private BroadcastReceiver mHeadsetChangeReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-
-
-        }
-    };*/
 
     public MediaPlayerService() {
     }
@@ -178,33 +164,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 case NOTIFICATION_ACTION_SWIPE:
                     stopAndClearList();
                     break;
-
             }
-            /*if (action.equals(NOTIFICATION_ACTION_CLOSE))
-            {
-                stopAndClearList();
-                NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-                notificationManager.cancel(NOTIFICATION_PLAYER_ID);
-            }
-            else if (action.equals(NOTIFICATION_ACTION_PREVIOUS))
-            {
-                playPrevious();
-            }
-            else if(action.equals(NOTIFICATION_ACTION_PLAY_PAUSE))
-            {
-                if (mPlaying)
-                    pause();
-                else
-                    resume();
-            }
-            else if (action.equals(NOTIFICATION_ACTION_NEXT))
-            {
-                playNext();
-            }
-            else if (action.equals(NOTIFICATION_ACTION_SWIPE))
-            {
-                stopAndClearList();
-            }*/
         }
 
 
@@ -251,10 +211,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     }
 
     @Override
-    public void onAudioFocusChange(int focusChange) {
+    public void onAudioFocusChange(int focusChange)
+    {
         if (focusChange <= 0 && mPlaying)
         {
-                pause();
+            pause();
         }
         else
         {
@@ -264,7 +225,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     public void play(int position)
     {
-        Log.v(TAG,"play() - position " + position);
+        Log.v(TAG,"play() position: " + position);
 
         //If something is wrong then do nothing
         if (mPosition == position || position < 0 || position >= mCount || mSongs == null)
@@ -293,7 +254,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
                     //If this task is cancelled, no need to do anything
                     if (isCancelled()) {
-                        Log.d(TAG,"Current play task is cancelled");
+                        Log.i(TAG,"Current play task is cancelled");
                         return null;
                     }
 
@@ -302,7 +263,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
                     //If this task is cancelled, no need to do anything
                     if (isCancelled()) {
-                        Log.d(TAG,"Current play task is cancelled");
+                        Log.i(TAG,"Current play task is cancelled");
                         return null;
                     }
 
@@ -563,6 +524,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         {
             notificationView.setImageViewBitmap(R.id.notification_icon,artBitmap);
             bigNotificationView.setImageViewBitmap(R.id.notification_icon,artBitmap);
+        }
+        else
+        {
+            //Load default image
+            notificationView.setImageViewResource(R.id.notification_icon,R.mipmap.ic_launcher);
+            bigNotificationView.setImageViewResource(R.id.notification_icon,R.mipmap.ic_launcher);
         }
 
 

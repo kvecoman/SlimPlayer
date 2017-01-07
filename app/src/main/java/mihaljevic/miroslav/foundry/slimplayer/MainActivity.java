@@ -26,10 +26,9 @@ import android.widget.TextView;
 //TODO - make visual style for project
 //TODO - make visualization
 //TODO - ability for some code parts/methods to fail without throwing exception (or with catching exception)
-//TODO - 2 step process of adding to playlist?????? - songs from step 1 are added to step 2 and when user confirms everything is added at same moment
-//TODO - auto number increment for playlist names
-    //TODO - selecting songs for playlists without home screen
-    //TODO - deselect lists after a menu action is completed
+//TODO - selecting songs for playlists without home screen
+//TODO - deselect lists after a menu action is completed
+//TODO - after pressing to play one song from list while another is playing, selected song is immediately done and switched to next song - BUG
 
 //TODO - continue here - keep rolling
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{

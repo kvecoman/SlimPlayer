@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.preference.PreferenceManager;
 import android.text.InputType;
 import android.util.SparseBooleanArray;
 import android.view.Menu;
@@ -25,6 +26,10 @@ public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
 
     private AlertDialog mCreatePlaylistDialog;
     private EditText mCreatePlaylistEditText;
+
+    //We use this to check if default name with auto number has been used or not
+    private String mDefaultPlaylistName;
+    private int mPlaylistNumber;
 
     public PlaylistsRecyclerFragment() {
         // Required empty public constructor
@@ -88,7 +93,23 @@ public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
                                     {
                                         @Override
                                         protected Long doInBackground(String... params) {
-                                            return Utils.createPlaylist(getContext(),params[0]);
+                                            String playlistName = params[0];
+
+                                            //Create playlist
+                                            long playlistId = Utils.createPlaylist(getContext(),playlistName);
+
+                                            if (playlistId > 0 && Utils.equalsIncludingNull(mDefaultPlaylistName,playlistName))
+                                            {
+                                                //Increase the auto number for default playlist name
+                                                mPlaylistNumber++;
+                                                PreferenceManager
+                                                        .getDefaultSharedPreferences(getContext())
+                                                        .edit()
+                                                        .putInt(getString(R.string.pref_key_playlist_number),mPlaylistNumber)
+                                                        .apply();
+                                            }
+
+                                            return playlistId;
                                         }
 
                                         @Override
@@ -113,6 +134,14 @@ public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
         mCreatePlaylistDialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
             public void onShow(DialogInterface dialog) {
+                //Construct default playlist name
+                mPlaylistNumber = PreferenceManager.getDefaultSharedPreferences(getContext()).getInt(getString(R.string.pref_key_playlist_number),1);
+                mDefaultPlaylistName = getString(R.string.playlist_default_name) + " " + mPlaylistNumber;
+
+                //Set-up playlist name edit text
+                mCreatePlaylistEditText.setText(mDefaultPlaylistName);
+                mCreatePlaylistEditText.selectAll();
+
                 //Code to automatically show soft keyboard when dialog is shown
                 InputMethodManager imm = (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT,0);
@@ -173,10 +202,9 @@ public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
         }
         else if (item.getItemId() == R.id.playlist_create)
         {
-            //Create new playlist
-            mCreatePlaylistEditText.setText(R.string.playlist_default_name);
-            mCreatePlaylistEditText.selectAll();
 
+
+            //Show dialog to create playlist
             mCreatePlaylistDialog.show();
         }
 

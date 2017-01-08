@@ -4,6 +4,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 import android.content.Intent;
 import android.database.Cursor;
 import android.provider.MediaStore;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -46,7 +47,8 @@ public class CategoryRecyclerFragment extends SlimRecyclerFragment {
                     ScreenBundles.getBundleForSubScreen(mCurrentSource, cursor, mContext ));
             intent.putExtra(SlimActivity.REQUEST_CODE_KEY,PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2);
 
-            startActivityForResult(intent, PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2);
+            if (mContext instanceof AppCompatActivity)
+                ((AppCompatActivity)mContext).startActivityForResult(intent, PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2);
         }
         else
         {
@@ -70,6 +72,7 @@ public class CategoryRecyclerFragment extends SlimRecyclerFragment {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        /*super.onActivityResult(requestCode, resultCode,data);
 
         if (data != null && requestCode == PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2 && data.hasExtra(PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY))
         {
@@ -98,7 +101,7 @@ public class CategoryRecyclerFragment extends SlimRecyclerFragment {
                 selectSongActivity.setResult(request_code,intent);
                 selectSongActivity.finish();
             }
-        }
+        }*/
     }
 
 }

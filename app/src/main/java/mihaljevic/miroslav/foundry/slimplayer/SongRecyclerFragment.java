@@ -137,6 +137,7 @@ public class SongRecyclerFragment extends SlimRecyclerFragment {
                 Intent intent = new Intent(mContext,AddToPlaylistActivity.class);
                 intent.putExtra(AddToPlaylistActivity.ID_LIST_KEY,(ArrayList)idList);
                 startActivity(intent);
+                deselect();
             }
         }
 

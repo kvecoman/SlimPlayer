@@ -35,21 +35,38 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
     //Array of screen names/keys that user selected
     private List<String> mScreensList;
 
+    //In some cases we want to avoid showing home screen,so we check it with this
+    private boolean mShowHomeScreen;
+
     //Context where this adapter is used
     private Context mContext;
 
-    public MainScreenPagerAdapter(FragmentManager fragmentManager, Context context, int pagerID)
+    /*public MainScreenPagerAdapter(FragmentManager fragmentManager, Context context, int pagerID)
+    {
+        this(fragmentManager,context,pagerID,true);
+    }*/
+
+    public MainScreenPagerAdapter(FragmentManager fragmentManager, Context context, int pagerID,boolean showHomeScreen)
     {
         super(fragmentManager);
 
         mContext = context;
 
+        mShowHomeScreen = showHomeScreen;
 
         //Clear cached fragments (otherwise we see old fragments instead of new ones)
         clearCachedFragments(fragmentManager,pagerID);
 
         //Load screen names (only screens that user selected)
         loadScreenNames(PreferenceManager.getDefaultSharedPreferences(mContext));
+
+        //Remove home screen if we don't want to show it
+        if (!mShowHomeScreen)
+        {
+            mScreensList.remove(mContext.getString(R.string.pref_key_home_screen));
+        }
+
+        mNumScreens = ((ArrayList) mScreensList).size();
 
         //If none of the screens are selected, then we will show EmptyMessage fragment
         if (mNumScreens == 0)
@@ -94,7 +111,6 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
         }
         ((ArrayList) mScreensList).trimToSize();
 
-        mNumScreens = ((ArrayList) mScreensList).size();
     }
 
     //Note - caching of fragments is already done internally, we only need to do first time init here

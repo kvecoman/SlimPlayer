@@ -1,15 +1,19 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static mihaljevic.miroslav.foundry.slimplayer.PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY;
+import static mihaljevic.miroslav.foundry.slimplayer.PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST;
 import static mihaljevic.miroslav.foundry.slimplayer.PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2;
 
 /**
@@ -91,7 +95,7 @@ public abstract class SelectSongsActivity extends BackHandledFragmentActivity {
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
+
 
         if (mSelectSongsForResult)
         {
@@ -104,12 +108,45 @@ public abstract class SelectSongsActivity extends BackHandledFragmentActivity {
                 intent.putStringArrayListExtra(SELECTED_SONGS_KEY,new ArrayList<>(mSelectedSongIdsList));
 
                 setResult(result_code, intent);
-                finish();
-            } else
+                //finish();
+            }/* else
             {
+                finish();
+            }*/
+        }
+
+        super.onBackPressed();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        //REQUEST CODE 2 case - we are still selecting but we just take IDs that were selected in forResult activity
+        if (data != null && requestCode == PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2 && data.hasExtra(PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY))
+        {
+
+            //Add all selected IDs to existing song ID collection
+            List<String> IDs = data.getStringArrayListExtra(PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY);
+            for (String id : IDs)
+            {
+                mSelectedSongIdsList.add(id);
+            }
+
+            //Check if we need to close this activity right now (this is if user confirmed his selection)
+            if (data.hasExtra(SelectSongsActivity.SELECTING_FINISHED_KEY))
+            {
+                int request_code = getIntent().getIntExtra(SlimActivity.REQUEST_CODE_KEY, SELECT_SONGS_REQUEST);
+
+                Intent intent = new Intent();
+                intent.putStringArrayListExtra(SELECTED_SONGS_KEY,new ArrayList<>(mSelectedSongIdsList));
+                intent.putExtra(SelectSongsActivity.SELECTING_FINISHED_KEY,true);
+
+                setResult(request_code,intent);
                 finish();
             }
         }
+
     }
 
     public boolean isSelectSongsForResult()

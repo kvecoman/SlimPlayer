@@ -7,5 +7,8 @@
     <bool name="pref_artists_default">true</bool>
     <bool name="pref_genres_default">true</bool>
 
-    <integer name="notification_icon_size_sp">20</integer>
+    <!--<integer name="notification_icon_size_sp">20</integer>-->
+
+    <!-- Number of items shown in home screen -->
+    <integer name="num_homescreen_items">5</integer>
 </resources>

@@ -26,14 +26,14 @@ public class SongListAsyncLoader extends AsyncTaskLoader<List<Song>>
 
     public SongListAsyncLoader(Context context, Cursor cursor,String audioIdField) {
         super(context);
-        Log.d(TAG,"Constructor");
+        Log.v(TAG,"Constructor");
         mCursor = cursor;
         mAudioIdField = audioIdField;
     }
 
     @Override
     public List<Song> loadInBackground() {
-        Log.d(TAG, "loadInBackground()");
+        Log.v(TAG, "loadInBackground()");
         Cursor cursor = mCursor;
         List<Song> songList = new ArrayList<>();
         Song song;

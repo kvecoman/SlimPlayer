@@ -30,7 +30,7 @@ public class CursorSongs implements Songs {
 
     CursorSongs(Cursor cursor)
     {
-        Log.d(TAG, "Constructor");
+        Log.v(TAG, "Constructor");
         init(cursor);
 
         mRetriever = new MediaMetadataRetriever();
@@ -38,10 +38,10 @@ public class CursorSongs implements Songs {
 
     private void init(Cursor cursor)
     {
-        Log.d(TAG, "init()");
+        Log.v(TAG, "init()");
         if (cursor == null || cursor.isClosed() || cursor.getCount() == 0)
         {
-            Log.d(TAG, "Failed to init CursorSongs");
+            Log.w(TAG, "Failed to init CursorSongs");
             return;
         }
 

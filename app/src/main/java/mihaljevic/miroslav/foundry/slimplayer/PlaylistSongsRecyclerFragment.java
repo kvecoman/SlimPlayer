@@ -72,7 +72,6 @@ public class PlaylistSongsRecyclerFragment extends SongRecyclerFragment {
 
                 startActivityForResult(intent,SELECT_SONGS_REQUEST);
 
-
             }
         }
         else

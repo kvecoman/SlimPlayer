@@ -22,14 +22,14 @@ import android.view.ViewGroup;
  */
 public class HomeFragment extends Fragment {
 
-    //TODO - move somewhere else?
-    public static final int NUMBER_OF_HOMESCREEN_ITEMS = 5;
-
     private RecyclerView mRecyclerView;
 
     private RecyclerView.LayoutManager mLayoutManager;
 
     private HomeAdapter mAdapter;
+
+    //Number of items shownin home screen
+    private int mNumberOfItems;
 
     //Here we store update task so we can check its status
     private AsyncTask<Void,Void,Void> mUpdateDatasetTask;
@@ -61,7 +61,7 @@ public class HomeFragment extends Fragment {
         mLayoutManager = new GridLayoutManager(getContext(),2);
         mRecyclerView.setLayoutManager(mLayoutManager);
 
-
+        mNumberOfItems = getContext().getResources().getInteger(R.integer.num_homescreen_items);
 
         //For now we just init adapter and set it to recycler view, data loading starts later
         mAdapter = new HomeAdapter(getContext(),null);
@@ -111,7 +111,7 @@ public class HomeFragment extends Fragment {
 
                 Cursor cursor = (new StatsDbHelper(getContext())).getReadableDatabase().query(StatsContract.SourceStats.TABLE_NAME,
                         new String[] {StatsContract.SourceStats.COLUMN_NAME_SOURCE,StatsContract.SourceStats.COLUMN_NAME_PARAMETER,StatsContract.SourceStats.COLUMN_NAME_DISPLAY_NAME, StatsContract.SourceStats.COLUMN_NAME_LAST_POSITION},
-                        null,null,null,null, StatsContract.SourceStats.COLUMN_NAME_RECENT_FREQUENCY + " DESC",String.valueOf(NUMBER_OF_HOMESCREEN_ITEMS));
+                        null,null,null,null, StatsContract.SourceStats.COLUMN_NAME_RECENT_FREQUENCY + " DESC",String.valueOf(mNumberOfItems));
                 mAdapter.setCursor(cursor);
 
 

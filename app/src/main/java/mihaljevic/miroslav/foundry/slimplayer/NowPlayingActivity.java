@@ -3,21 +3,18 @@ package mihaljevic.miroslav.foundry.slimplayer;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.support.v4.view.ViewPager;
 import android.os.Bundle;
+import android.support.v4.view.ViewPager;
 import android.support.v7.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 
-public class NowPlayingActivity extends BackHandledFragmentActivity implements MediaPlayerService.SongPlayListener,ViewPager.OnPageChangeListener {
+public class NowPlayingActivity extends BackHandledFragmentActivity implements MediaPlayerService.SongPlayListener,ViewPager.OnPageChangeListener, View.OnClickListener {
 
-    //TODO -check if this class can be optimized
+    //TODO - check if this class can be optimized
 
-    /*public static final String SONG_COUNT_KEY = "song_count";
-    public static final String SONG_POSITION_KEY = "song_position";*/
-
-    private SlimPlayerApplication mApplication;
 
     private ViewPager mPager;
     private NowPlayingPagerAdapter mPagerAdapter;
@@ -28,7 +25,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pager);
 
-        mApplication = ((SlimPlayerApplication)getApplicationContext());
+        //mApplication = ((SlimPlayerApplication)getApplicationContext());
 
         mPager = (ViewPager)findViewById(R.id.pager);
         mPager.addOnPageChangeListener(this);
@@ -51,27 +48,27 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
                 FileSongs songs = new FileSongs();
                 songs.addFile(dataUri.getPath());
 
-                mApplication.getMediaPlayerService().playList(songs,0);
+                getPlayerService().playList(songs,0);
             }
 
         }
 
 
         //If pager is not set with intent extras, then set it with MediaPlayerService
-        if (mPagerAdapter == null && mApplication.isMediaPlayerServiceBound())
+        if (mPagerAdapter == null && SlimPlayerApplication.getInstance().isMediaPlayerServiceBound())
         {
             //Check that media player service has any list loaded and is ready to play
-            if (mApplication.getMediaPlayerService().isReadyToPlay())
+            if (getPlayerService().isReadyToPlay())
             {
-                mPagerAdapter = new NowPlayingPagerAdapter(getSupportFragmentManager(),NowPlayingActivity.this,mApplication.getMediaPlayerService().getCount());
+                mPagerAdapter = new NowPlayingPagerAdapter(getSupportFragmentManager(),NowPlayingActivity.this,getPlayerService().getCount());
                 mPager.setAdapter(mPagerAdapter);
-                mPager.setCurrentItem(mApplication.getMediaPlayerService().getPosition());
+                mPager.setCurrentItem(getPlayerService().getPosition());
             }
 
         }
 
         //When we are connected request current play info (NOTE - this has been in onResume before, unknown effects could occur)
-        mApplication.getMediaPlayerService().registerPlayListener(NowPlayingActivity.this);
+        getPlayerService().registerPlayListener(NowPlayingActivity.this);
 
     }
 
@@ -97,7 +94,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
 
     public void updatePagerWithCurrentSong()
     {
-        int playPosition = mApplication.getMediaPlayerService().getPosition();
+        int playPosition = getPlayerService().getPosition();
 
         if (playPosition == mPager.getCurrentItem() || playPosition < 0 || playPosition >= mPagerAdapter.getCount())
             return;
@@ -121,13 +118,35 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
         }
     }
 
+    public MediaPlayerService getPlayerService()
+    {
+        return SlimPlayerApplication.getInstance().getMediaPlayerService();
+    }
+
+    //Handle onscreen taps, change between play/pause
+    @Override
+    public void onClick(View v)
+    {
+        if (getPlayerService().isReadyToPlay())
+        {
+            if (getPlayerService().isPlaying())
+            {
+                getPlayerService().pause();
+            }
+            else
+            {
+                getPlayerService().resumeOrPlay(getPager().getCurrentItem());
+            }
+        }
+    }
+
 
 
     @Override
     protected void onStop() {
         super.onStop();
 
-        mApplication.getMediaPlayerService().unregisterPlayListener(this);
+        getPlayerService().unregisterPlayListener(this);
     }
 
 
@@ -151,10 +170,11 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
 
     @Override
-    public void onPageSelected(int position) {
-
-        mApplication.getMediaPlayerService().play(position);
-
+    public void onPageSelected(int position)
+    {
+        //Play this position only if it is not currently being played
+        if (getPlayerService().getPosition() != position)
+            getPlayerService().play(position);
     }
 
     @Override

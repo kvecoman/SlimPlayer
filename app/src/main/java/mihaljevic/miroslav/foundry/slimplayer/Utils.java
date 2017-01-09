@@ -213,7 +213,7 @@ public final class Utils {
 
     public static Cursor querySongListCursor(Context context, Bundle args)
     {
-        Log.d(TAG,"queryCursor()");
+        Log.v(TAG,"queryCursor()");
 
         if (args == null)
             return null;
@@ -293,8 +293,7 @@ public final class Utils {
 
         if (source.equals(context.getString(R.string.pref_key_all_screen)))
         {
-            //TODO - move to resource
-            displayName = "All songs";
+            displayName = context.getString(R.string.all_songs_screen_title);
         }
         else if(source.equals(context.getString(R.string.pref_key_playlists_screen)))
         {

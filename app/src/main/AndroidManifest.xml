@@ -31,11 +31,12 @@
         <service
             android:name=".MediaPlayerService"
             android:enabled="true"
-            android:exported="true" >
+            android:exported="false" >
 
         </service>
 
         <activity android:name=".AddToPlaylistActivity" />
+
         <activity
             android:name=".NowPlayingActivity"
             android:launchMode="singleTop"

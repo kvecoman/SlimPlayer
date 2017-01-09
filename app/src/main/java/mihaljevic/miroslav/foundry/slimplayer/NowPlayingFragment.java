@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -26,8 +27,11 @@ import android.widget.TextView;
  *
  * @author Miroslav Mihaljević
  */
-public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarChangeListener, MediaPlayerService.SongResumeListener, MediaPlayerService.SongPlayListener, View.OnClickListener{
+public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarChangeListener, MediaPlayerService.SongResumeListener, MediaPlayerService.SongPlayListener{
 
+    private final String TAG = getClass().getSimpleName();
+
+    //TODO - check if this class can be optimized - logs are set now
     public static final String SONG_POSITION_KEY = "song_position";
 
     private Context mContext;
@@ -81,6 +85,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        Log.v(TAG,"onCreateView()");
 
         // Inflate the layout for this fragment
         mContentView = inflater.inflate(R.layout.fragment_now_playing, container, false);
@@ -92,19 +97,23 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        Log.v(TAG,"onActivityCreated()");
+
         //Make sure that we get onCreateOptionsMenu() call
         setHasOptionsMenu(true);
 
         mContext = getContext();
 
         mSeekBar = (SeekBar) mContentView.findViewById(R.id.seek_bar);
+        mSeekBar.setProgress(0);
         mSeekBar.setOnSeekBarChangeListener(this);
         mSeekBarHandler = new Handler();
 
         mPlayer = getPlayerService().getMediaPlayer();
 
         //Handle taps on screen
-        mContentView.setOnClickListener(this);
+        if (mContext instanceof View.OnClickListener)
+            mContentView.setOnClickListener((View.OnClickListener)mContext);
 
 
         //Get song position that this fragment represents
@@ -140,12 +149,15 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     public void onResume() {
         super.onResume();
 
+        Log.v(TAG,"onResume()");
+
         //Indicate to resume updating seek bar
         bindSeekBarToPlayer();
     }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        Log.v(TAG,"onCreateOptionsMenu()");
         //super.onCreateOptionsMenu(menu, inflater);
 
         //OnCreateOptionsMenu is called when fragment is really visible in pager, we use that phenomena
@@ -159,6 +171,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     @Override
     public void onStop() {
         super.onStop();
+        Log.v(TAG,"onStop()");
 
         //Pause updating seek bar
         mSeekBarBound = false;
@@ -167,6 +180,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.v(TAG,"onDestroy()");
 
         //End seek bar binding
         //mSeekBarBound = false;
@@ -176,31 +190,9 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     }
 
 
-
-    //TODO - this code can go back to activity
-    //Handle onscreen taps, change between play/pause
-    @Override
-    public void onClick(View v) {
-
-        if (getPlayerService().isReadyToPlay())
-        {
-            if (getPlayerService().isPlaying())
-            {
-                getPlayerService().pause();
-            }
-            else
-            {
-                if (getContext() instanceof NowPlayingActivity)
-                {
-                    getPlayerService().resumeOrPlay(((NowPlayingActivity) getContext()).getPager().getCurrentItem());
-                }
-            }
-        }
-    }
-
     public void loadSongInfo()
     {
-
+        Log.v(TAG,"loadSongInfo()");
         Songs songs = getPlayerService().getSongs();
 
         mSeekBar.setMax(((int) songs.getDuration(mPosition)));
@@ -216,6 +208,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     //Tries to load album art if it exist (with async task)
     public void loadArtAsync()
     {
+        Log.v(TAG,"loadArtAsync()");
         final float viewRatio = (float)mContentView.getWidth() / (float)mContentView.getHeight();
 
         new AsyncTask<Void,Void,Bitmap>(){
@@ -246,6 +239,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     //This connects seek bar to current song that is played by media player service
     public void bindSeekBarToPlayer()
     {
+        Log.v(TAG,"bindSeekBarToPlayer()");
         mSeekBarBound = true;
         if (mContext instanceof FragmentActivity)
         {
@@ -262,6 +256,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     //Called when song is resumed from paused state (when user taps to play)
     @Override
     public void onSongResume() {
+        Log.v(TAG,"onSongResume()");
         //Start again updating seek bar
         bindSeekBarToPlayer();
     }
@@ -269,6 +264,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     //This also can come from tap
     @Override
     public void onPlay(Songs songs, int position) {
+        Log.v(TAG,"onPlay()");
         bindSeekBarToPlayer();
     }
 
@@ -278,6 +274,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         //Only if touch is coming from user then seek song
         if (mPlayer != null && fromUser)
         {
+            Log.d(TAG,"onProgressChanged() - user changed progress");
             mPlayer.seekTo(progress);
         }
     }

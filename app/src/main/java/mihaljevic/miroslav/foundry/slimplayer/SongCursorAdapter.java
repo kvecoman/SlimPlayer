@@ -26,13 +26,13 @@ public class SongCursorAdapter extends CursorAdapter {
 
     public SongCursorAdapter(Context context, Cursor c, boolean autoRequery, String displayField) {
         super(context, c, autoRequery);
-        Log.d(TAG,"Constructor");
+        Log.v(TAG,"Constructor()");
         mDisplayField = displayField;
     }
 
     public SongCursorAdapter(Context context, Cursor c, int flags, String displayField) {
         super(context, c, flags);
-        Log.d(TAG,"Constructor");
+        Log.v(TAG,"Constructor()");
         mDisplayField = displayField;
 
     }
@@ -42,9 +42,7 @@ public class SongCursorAdapter extends CursorAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         synchronized (getCursor())
         {
-            //Log.d(TAG, "getView() - acquired cursor lock");
             View v = super.getView(position, convertView, parent);
-            //Log.d(TAG, "getView() - released cursor lock");
             return v;
         }
     }

@@ -109,9 +109,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         refreshRepeat();
 
         //Register to detect headphones in/out
-        //TODO - see what is with this, will it work on older versions
-        if (Build.VERSION.SDK_INT >= 21)
-            registerReceiver(mHeadsetChangeReceiver, new IntentFilter(AudioManager.ACTION_HEADSET_PLUG));
+        registerReceiver(mHeadsetChangeReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
 
         //Try to get last playback state (if there is none, nothing will happen)
         new AsyncTask<Void,Void,Integer>(){
@@ -228,7 +226,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         Log.v(TAG,"play() position: " + position);
 
         //If something is wrong then do nothing
-        if (mPosition == position || position < 0 || position >= mCount || mSongs == null)
+        if (position < 0 || position >= mCount || mSongs == null)
             return;
 
         if (mCurrentPlayTask != null)
@@ -252,21 +250,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                     mPlayer.setDataSource(mSongs.getData(mPosition));
                     mPlayer.setOnCompletionListener(MediaPlayerService.this);
 
-                    //If this task is cancelled, no need to do anything
-                    if (isCancelled()) {
-                        Log.i(TAG,"Current play task is cancelled");
-                        return null;
-                    }
-
                     mPlayer.prepare();
                     mPlayer.start();
-
-                    //If this task is cancelled, no need to do anything
-                    if (isCancelled()) {
-                        Log.i(TAG,"Current play task is cancelled");
-                        return null;
-                    }
-
 
                     mPlaying = true;
                     mStopped = false;
@@ -283,6 +268,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
             @Override
             protected void onPostExecute(Void aVoid) {
+
                 showNotification(false, true);
                 //Notify NowPlayingActivity that we changed playing song
                 notifyListenersPlay();
@@ -451,25 +437,25 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     public void registerPlayListener(SongPlayListener listener)
     {
-        Log.d(TAG,"registerPlayListener - " + listener.toString());
+        Log.v(TAG,"registerPlayListener - " + listener.toString());
         mOnPlayListeners.add(listener);
     }
 
     public void unregisterPlayListener(SongPlayListener listener)
     {
-        Log.d(TAG,"unregisterPlayListener - " + listener.toString());
+        Log.v(TAG,"unregisterPlayListener - " + listener.toString());
         mOnPlayListeners.remove(listener);
     }
 
     public void registerResumeListener(SongResumeListener listener)
     {
-        Log.d(TAG,"registerResumeListener - " + listener.toString());
+        Log.v(TAG,"registerResumeListener - " + listener.toString());
         mOnResumeListeners.add(listener);
     }
 
     public void unregisterResumeListener(SongResumeListener listener)
     {
-        Log.d(TAG,"unregisterResumeListener - " + listener.toString());
+        Log.v(TAG,"unregisterResumeListener - " + listener.toString());
         mOnResumeListeners.remove(listener);
     }
 
@@ -600,8 +586,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public void playList(Songs songs, int startPosition,final String source,final String parameter)
     {
 
-        setSongs(songs,source,parameter);
-        play(startPosition);
+        //Set songs source and note if it is different than before
+        boolean isSourceChanged = setSongs(songs,source,parameter);
+
+        //We call play only if the source have changed
+        if (isSourceChanged)
+            play(startPosition);
 
     }
 
@@ -614,14 +604,17 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         play(startPosition);
     }
 
-    public void setSongs(Songs songs, @Nullable final String source, @Nullable final String parameter)
+    //Returns whether the source is different than one before
+    public boolean setSongs(Songs songs, @Nullable final String source, @Nullable final String parameter)
     {
-        Log.d(TAG,"setSongs()");
+        Log.v(TAG,"setSongs()");
+
+        boolean isSourceChanged = true;
 
         if (songs == null) {
             //We have nothing, respond appropriately
             stopAndClearList();
-            return;
+            return isSourceChanged;
         }
 
         if (source == null)
@@ -633,6 +626,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         {
             //If we have source
 
+            //If the source is different then update stats database
             if (!Utils.equalsIncludingNull(mSongsSource,source) || !Utils.equalsIncludingNull(mSongsParameter,parameter))
             {
 
@@ -645,6 +639,14 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                         return null;
                     }
                 }.execute();
+
+                //This is starting position before we find out anything (this is only if source or parameter have changed)
+                mPosition = -1;
+            }
+            else
+            {
+                //Note that the source is same as before
+                isSourceChanged = false;
             }
 
             mSongsSource = source;
@@ -656,13 +658,13 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                     .putString(SONGLIST_PARAMETER_KEY, parameter).apply();
         }
 
-        //This is starting position before we find out anything
-        mPosition = -1;
 
         //Get song count and song list
         mCount = songs.getCount();
         mSongs = songs;
         mReadyToPlay = true;
+
+        return isSourceChanged;
 
     }
 

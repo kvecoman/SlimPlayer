@@ -200,7 +200,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
 
     protected void loadDataAsync()
     {
-        Log.d(TAG,"loadDataAsync()");
+        Log.v(TAG,"loadDataAsync()");
         //Load cursor and connect it to cursor adapter
         new AsyncTask<Void,Void,Cursor>()
         {

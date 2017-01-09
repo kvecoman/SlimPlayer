@@ -34,7 +34,7 @@ public class SlimPlayerApplication extends Application {
     protected ServiceConnection mServiceConnection = new ServiceConnection(){
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d(TAG,"onServiceConnected()");
+            Log.v(TAG,"onServiceConnected()");
 
 
             MediaPlayerService.MediaPlayerBinder playerBinder = (MediaPlayerService.MediaPlayerBinder)service;
@@ -47,7 +47,7 @@ public class SlimPlayerApplication extends Application {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            Log.d(TAG,"onServiceDisconnected()");
+            Log.v(TAG,"onServiceDisconnected()");
 
             SlimPlayerApplication.this.mServiceBound = false;
 

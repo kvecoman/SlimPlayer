@@ -22,13 +22,13 @@ import android.widget.TextView;
 //TODO - $$_PROFIT_$$
 
 //TODO - indicate that tap paused or resumed the song
-//TODO - loadDataAsync() bug, sometimes during normal work, CursorClosedException is thrown, locate when it is called
+//TODO - loadDataAsync() bug, sometimes during normal work, CursorClosedException is thrown, locate when it is called - BUG - mozda rijeseno
 //TODO - make visual style for project
 //TODO - make visualization
 //TODO - ability for some code parts/methods to fail without throwing exception (or with catching exception)
-//TODO - after pressing to play one song from list while another is playing, selected song is immediately done and switched to next song - BUG
+//TODO - after pressing to play one song from list while another is playing, selected song is immediately done and switched to next song - BUG - mozda rijeseno
 
-//TODO - continue here - keep rolling
+//TODO - continue here - optimize now playing fragment
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";

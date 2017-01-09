@@ -1,6 +1,7 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
@@ -90,6 +91,21 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
         updateRepeatIcon(menu);
 
         return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+
+        if (isTaskRoot())
+        {
+            //If we came from notification and this activity is task root then we want back button to return (open) Main activity
+            Intent intent = new Intent(this,MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            return;
+        }
+
+        super.onBackPressed();
     }
 
     public void updatePagerWithCurrentSong()

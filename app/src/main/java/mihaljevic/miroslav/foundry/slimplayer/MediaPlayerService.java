@@ -530,10 +530,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         //Show play screen/main action
         //We build intent with MainActivity as parent activity in stack
         intent = new Intent(this, NowPlayingActivity.class);
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-        stackBuilder.addParentStack(NowPlayingActivity.class);
-        stackBuilder.addNextIntent(intent);
-        pendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        pendingIntent = PendingIntent.getActivity(this,0,intent,0);
         builder.setContentIntent(pendingIntent);
 
         //Close action

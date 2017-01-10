@@ -27,8 +27,15 @@ import android.widget.TextView;
 //TODO - make visualization
 //TODO - ability for some code parts/methods to fail without throwing exception (or with catching exception)
 //TODO - after pressing to play one song from list while another is playing, selected song is immediately done and switched to next song - BUG - mozda rijeseno
+//TODO - add optimizations for screen rotations
+//TODO - make exit button much better or remove it
+//TODO - mp3 playback might need its own thread not just AsyncTask
+//TODO - close statsDbHelper in MediaPlayerService (either when they are instantiated or as a singleton class)
+//TODO - support for headphone controls (and to disble them when headphones aren't plugged in)
+//TODO - tap on player won't continue song after we have canceled notification - BUG
+//TODO - if there aren't enough sources, home screen will display same ones in row
 
-//TODO - continue here - optimize now playing fragment
+//TODO - continue here - keep rolling
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";

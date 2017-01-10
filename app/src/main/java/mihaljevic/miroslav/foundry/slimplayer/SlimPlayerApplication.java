@@ -73,14 +73,14 @@ public class SlimPlayerApplication extends Application {
         super.onCreate();
     }
 
-    @Override
+    /*@Override
     public void onTerminate() {
-        //Unbind service
+
         if (mServiceBound)
             unbindService(mServiceConnection);
 
         super.onTerminate();
-    }
+    }*/
 
     public static SlimPlayerApplication getInstance()
     {

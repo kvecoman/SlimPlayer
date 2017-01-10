@@ -94,7 +94,11 @@ public class HomeFragment extends Fragment {
     @Override
     public void onDestroy() {
 
-        mAdapter.closeCursor();
+        //We need this check because onDestroy() is called at awkward times
+        if (mAdapter != null)
+            mAdapter.closeCursor();
+
+        StatsDbHelper.closeInstance();
 
         super.onDestroy();
     }
@@ -109,7 +113,7 @@ public class HomeFragment extends Fragment {
             @Override
             protected Void doInBackground(Void... params) {
 
-                Cursor cursor = (new StatsDbHelper(getContext())).getReadableDatabase().query(StatsContract.SourceStats.TABLE_NAME,
+                Cursor cursor = ( StatsDbHelper.getInstance(getContext())).getReadableDatabase().query(StatsContract.SourceStats.TABLE_NAME,
                         new String[] {StatsContract.SourceStats.COLUMN_NAME_SOURCE,StatsContract.SourceStats.COLUMN_NAME_PARAMETER,StatsContract.SourceStats.COLUMN_NAME_DISPLAY_NAME, StatsContract.SourceStats.COLUMN_NAME_LAST_POSITION},
                         null,null,null,null, StatsContract.SourceStats.COLUMN_NAME_RECENT_FREQUENCY + " DESC",String.valueOf(mNumberOfItems));
                 mAdapter.setCursor(cursor);

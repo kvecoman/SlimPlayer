@@ -23,7 +23,31 @@ public class StatsDbHelper extends SQLiteOpenHelper {
 
     private Context mContext;
 
-    public StatsDbHelper(Context context)
+    private static StatsDbHelper sInstance;
+
+    public static StatsDbHelper getInstance(Context context)
+    {
+
+        if (sInstance == null)
+        {
+            Log.d("StatsDbHelper","New instance created");
+            sInstance = new StatsDbHelper(context);
+        }
+
+        return sInstance;
+    }
+
+    public static void closeInstance()
+    {
+        Log.v("StatsDbHelper","closeInstance()");
+        if (sInstance != null)
+        {
+            sInstance.close();
+            sInstance = null;
+        }
+    }
+
+    private StatsDbHelper(Context context)
     {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
 

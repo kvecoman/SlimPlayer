@@ -54,6 +54,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     private MediaPlayerBinder mBinder = new MediaPlayerBinder();
 
+    //Indicated whether the service has foreground status or not (it might not be accuarate, we don't know if startForeground will actually set it)
+    private boolean mForeground = false;
+
+    //TODO - this public???
     public MediaPlayer mPlayer;
 
     private boolean mPlaying = false;
@@ -72,8 +76,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private String mSongsSource;
     private String mSongsParameter;
 
+    //Whther we repeat plalist at end
     private boolean mRepeatPlaylist;
 
+    //List of all play and resume listeners
     private List<SongPlayListener> mOnPlayListeners;
     private List<SongResumeListener> mOnResumeListeners;
 
@@ -144,8 +150,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             {
                 case NOTIFICATION_ACTION_CLOSE:
                     stopAndClearList();
-                    NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-                    notificationManager.cancel(NOTIFICATION_PLAYER_ID);
+                    /*NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+                    notificationManager.cancel(NOTIFICATION_PLAYER_ID);*/
+                    stopForeground(true);
+                    mForeground = false;
                     break;
                 case NOTIFICATION_ACTION_PREVIOUS:
                     playPrevious();
@@ -159,9 +167,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 case NOTIFICATION_ACTION_NEXT:
                     playNext();
                     break;
-                case NOTIFICATION_ACTION_SWIPE:
+                /*case NOTIFICATION_ACTION_SWIPE:
                     stopAndClearList();
-                    break;
+                    stopForeground(true);
+                    mForeground = false;
+                    break;*/
             }
         }
 
@@ -177,11 +187,24 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     @Override
     public void onDestroy() {
+        Log.v(TAG,"onDestroy()");
 
         mAudioManager.abandonAudioFocus(this);
         unregisterReceiver(mHeadsetChangeReceiver);
+
+        if (mPlayer != null)
+        {
+            mPlayer.stop();
+            mPlayer.release();
+            mPlayer = null;
+        }
+
+        //TODO - all close instance calls except this to application onDestroy
+        StatsDbHelper.closeInstance();
+
         super.onDestroy();
     }
+
 
     public class MediaPlayerBinder extends Binder {
         MediaPlayerService getService(){
@@ -279,7 +302,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                     new AsyncTask<Void,Void,Void>(){
                         @Override
                         protected Void doInBackground(Void... params) {
-                            StatsDbHelper statsDbHelper = new StatsDbHelper(MediaPlayerService.this);
+                            StatsDbHelper statsDbHelper = StatsDbHelper.getInstance(MediaPlayerService.this);
                             statsDbHelper.updateLastPosition(mSongsSource,mSongsParameter,mPosition);
                             return null;
                         }
@@ -572,9 +595,16 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         //Build and show notification
         Notification notification = builder.build();
 
+        //If the service is already foreground the just update the notification
+        if (mForeground)
+        {
+            NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+            notificationManager.notify(NOTIFICATION_PLAYER_ID, notification);
+        }
+        else
+            startForeground(NOTIFICATION_PLAYER_ID, notification);
 
-        NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-        notificationManager.notify(NOTIFICATION_PLAYER_ID, notification);
+
     }
 
 
@@ -632,7 +662,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 new AsyncTask<Void,Void,Void>(){
                     @Override
                     protected Void doInBackground(Void... params) {
-                        StatsDbHelper statsDbHelper = new StatsDbHelper(MediaPlayerService.this);
+                        StatsDbHelper statsDbHelper = StatsDbHelper.getInstance(MediaPlayerService.this);
                         statsDbHelper.updateStats(source,parameter);
                         return null;
                     }

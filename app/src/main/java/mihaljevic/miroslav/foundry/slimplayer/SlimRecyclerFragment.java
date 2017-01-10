@@ -115,7 +115,9 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         super.onDestroy();
 
         //Adapter will check if cursor is used by media player service and close it appropriately
-        mAdapter.closeCursor();
+        //Also we need to check if adapter exists because of screen rotation calls
+        if (mAdapter != null)
+            mAdapter.closeCursor();
     }
 
     @Override

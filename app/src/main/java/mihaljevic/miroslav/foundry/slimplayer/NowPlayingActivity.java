@@ -26,8 +26,6 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pager);
 
-        //mApplication = ((SlimPlayerApplication)getApplicationContext());
-
         mPager = (ViewPager)findViewById(R.id.pager);
         mPager.addOnPageChangeListener(this);
     }

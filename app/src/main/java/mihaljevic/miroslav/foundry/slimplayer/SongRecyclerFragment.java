@@ -19,7 +19,7 @@ import java.util.List;
  *
  * @author Miroslav Mihaljević
  */
-public class SongRecyclerFragment extends SlimRecyclerFragment {
+public class SongRecyclerFragment extends SlimRecyclerFragment implements SlimPlayerApplication.PlayerServiceListener {
 
     //If bundle contains this key
     public static final String PLAY_POSITION_KEY = "play_position";
@@ -28,6 +28,8 @@ public class SongRecyclerFragment extends SlimRecyclerFragment {
 
     //Provides easy access to cursor and fields within it
     protected CursorSongs mSongs;
+
+    private MediaPlayerService mPlayerService;
 
 
     public SongRecyclerFragment() {
@@ -54,14 +56,16 @@ public class SongRecyclerFragment extends SlimRecyclerFragment {
         {
             activateSelectMode();
         }
+
+        SlimPlayerApplication.getInstance().registerPlayerServiceListener(this);
     }
 
     //Media player service can't be assigned as member variable at init time because it is not bound, so we just use this
     //... all the time
-    private MediaPlayerService getPlayerService()
+   /* private MediaPlayerService getPlayerService()
     {
         return SlimPlayerApplication.getInstance().getMediaPlayerService();
-    }
+    }*/
 
     @Override
     protected void onDataLoaded(Cursor cursor) {
@@ -69,21 +73,17 @@ public class SongRecyclerFragment extends SlimRecyclerFragment {
 
         mSongs = new CursorSongs(cursor);
 
-        //If we are in normal mode
-        if (!mSelectSongsForResult)
-        {
-            //Check if we need to start any song right now
-            if (getArguments().containsKey(PLAY_POSITION_KEY))
-            {
-                int play_position = getArguments().getInt(PLAY_POSITION_KEY);
-
-                getPlayerService().playList(mSongs,play_position, mCurrentSource,getArguments().getString(ScreenBundles.CURSOR_PARAMETER_KEY));
-
-                //Once we have started the intended song from intent, we delete it so we don't start it again and again
-                getArguments().remove(PLAY_POSITION_KEY);
-            }
-        }
+        autoPlayFromBundle();
     }
+
+    @Override
+    public void onPlayerServiceBound(MediaPlayerService playerService) {
+        mPlayerService = playerService;
+
+        autoPlayFromBundle();
+    }
+
+
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
@@ -103,6 +103,13 @@ public class SongRecyclerFragment extends SlimRecyclerFragment {
             }
         }
         super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        SlimPlayerApplication.getInstance().unregisterPlayerServiceListener(this);
     }
 
     @Override
@@ -144,16 +151,31 @@ public class SongRecyclerFragment extends SlimRecyclerFragment {
         return super.onOptionsItemSelected(item);
     }
 
+    //Automatically start playing if it is said so from the bundle (home-screen case)
+    private void autoPlayFromBundle()
+    {
+        //If we are in normal mode
+        if (!mSelectSongsForResult && getArguments().containsKey(PLAY_POSITION_KEY) && mPlayerService != null && mSongs != null)
+        {
+            int play_position = getArguments().getInt(PLAY_POSITION_KEY);
+
+            mPlayerService.playListIfChanged(mSongs,play_position, mCurrentSource,getArguments().getString(ScreenBundles.CURSOR_PARAMETER_KEY));
+
+            //Once we have started the intended song from intent, we delete it so we don't start it again and again
+            getArguments().remove(PLAY_POSITION_KEY);
+        }
+    }
+
     @Override
     public void onClick(View v) {
 
         int position = mRecyclerView.getChildLayoutPosition(v);
 
         //If we are not selecting items, then we want to play them
-        if (!mSelectMode && !mSelectSongsForResult && mSongs != null)
+        if (!mSelectMode && !mSelectSongsForResult && mSongs != null && mPlayerService != null)
         {
             //Pass list of songs from which we play and play current position
-            getPlayerService().playList(mSongs,position, mCurrentSource,getArguments().getString(ScreenBundles.CURSOR_PARAMETER_KEY));
+            mPlayerService.playList(mSongs,position, mCurrentSource,getArguments().getString(ScreenBundles.CURSOR_PARAMETER_KEY));
 
             //Start NowPlayingActivity
             Intent intent = new Intent(mContext,NowPlayingActivity.class);

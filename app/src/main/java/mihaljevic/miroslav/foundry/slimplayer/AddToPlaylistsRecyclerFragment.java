@@ -25,9 +25,11 @@ public class AddToPlaylistsRecyclerFragment extends PlaylistsRecyclerFragment {
 
     @Override
     public void onClick(View v) {
-        //int position = mRecyclerView.getChildLayoutPosition(v);
+        int position = mRecyclerView.getChildLayoutPosition(v);
 
         Cursor cursor = mAdapter.getCursor();
+        cursor.moveToPosition(position);
+
         final List<String> ids  = getActivity().getIntent().getStringArrayListExtra(AddToPlaylistActivity.ID_LIST_KEY);
         final long playlistId = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
 

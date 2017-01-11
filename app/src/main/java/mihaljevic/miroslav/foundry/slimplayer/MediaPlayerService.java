@@ -58,7 +58,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private boolean mForeground = false;
 
     //TODO - this public???
-    public MediaPlayer mPlayer;
+    private MediaPlayer mPlayer;
 
     private boolean mPlaying = false;
     private boolean mStopped = true;
@@ -83,6 +83,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private List<SongPlayListener> mOnPlayListeners;
     private List<SongResumeListener> mOnResumeListeners;
 
+    //We use this to check whether the service will stop when all components are unbound
+    private boolean mPendingStop = false;
+
 
 
     //Used to detect if headphones are plugged in
@@ -91,15 +94,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public MediaPlayerService() {
     }
 
-    @Override
-    public IBinder onBind(Intent intent) {
-        return mBinder;
-    }
 
 
     @Override
     public void onCreate()
     {
+        Log.v(TAG,"onCreate()");
         super.onCreate();
 
         mPlayer = new MediaPlayer();
@@ -117,29 +117,16 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         //Register to detect headphones in/out
         registerReceiver(mHeadsetChangeReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
 
-        //Try to get last playback state (if there is none, nothing will happen)
-        new AsyncTask<Void,Void,Integer>(){
-            @Override
-            protected Integer doInBackground(Void... params)
-            {
-                return recreateLastPlaybackState();
-            }
-
-            @Override
-            protected void onPostExecute(Integer result) {
-                //If we could recreate state then play the position
-                if (result != -1)
-                    play(result);
-            }
-        }.execute();
-
     }
+
+
 
 
 
     //NOTE - THIS IS CALLED WHEN SERVICE IS CALLED WHILE IT IS ALREADY RUNNING
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.v(TAG,"onStartCommand()");
 
         //Get action from intent while checking for null
         String action = intent == null ? null : intent.getAction();
@@ -149,11 +136,13 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             switch (action)
             {
                 case NOTIFICATION_ACTION_CLOSE:
-                    stopAndClearList();
+                    stop();
                     /*NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
                     notificationManager.cancel(NOTIFICATION_PLAYER_ID);*/
                     stopForeground(true);
                     mForeground = false;
+                    stopSelf();
+                    mPendingStop = true;
                     break;
                 case NOTIFICATION_ACTION_PREVIOUS:
                     playPrevious();
@@ -175,9 +164,15 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             }
         }
 
-
-        return super.onStartCommand(intent, flags, startId);
+        return START_NOT_STICKY;
     }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mBinder;
+    }
+
+
 
     @Override
     public boolean onUnbind(Intent intent)
@@ -231,6 +226,25 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         return -1;
     }
 
+    //Try to get last playback state (if there is none, nothing will happen)
+    public void playLastStateAsync()
+    {
+        new AsyncTask<Void,Void,Integer>(){
+            @Override
+            protected Integer doInBackground(Void... params)
+            {
+                return recreateLastPlaybackState();
+            }
+
+            @Override
+            protected void onPostExecute(Integer result) {
+                //If we could recreate state then play the position
+                if (result != -1)
+                    play(result);
+            }
+        }.execute();
+    }
+
     @Override
     public void onAudioFocusChange(int focusChange)
     {
@@ -256,6 +270,13 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             mCurrentPlayTask.cancel(true);
 
         mPosition = position;
+
+        //If we are about to stop, prevent that
+        if (mPendingStop)
+        {
+            startService(new Intent(this,MediaPlayerService.class));
+            mPendingStop = false;
+        }
 
         //Save current position so we can get it later on
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -602,7 +623,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             notificationManager.notify(NOTIFICATION_PLAYER_ID, notification);
         }
         else
+        {
             startForeground(NOTIFICATION_PLAYER_ID, notification);
+            mForeground = true;
+        }
 
 
     }
@@ -610,8 +634,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 
 
+
     //Sets the list and starts playing, source string is one of screen keys or something else (if list is from files or something)
-    public void playList(Songs songs, int startPosition,final String source,final String parameter)
+    public void playListIfChanged(Songs songs, int startPosition, final String source, final String parameter)
     {
 
         //Set songs source and note if it is different than before
@@ -621,6 +646,16 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         if (isSourceChanged)
             play(startPosition);
 
+    }
+
+    public void playList(Songs songs, int startPosition, final String source, final String parameter)
+    {
+        //Set songs source and note if it is different than before
+        boolean isSourceChanged = setSongs(songs,source,parameter);
+
+        //We always call play except when we are already playing same song
+        if (!(!isSourceChanged && mPosition == startPosition))
+            play(startPosition);
     }
 
 
@@ -717,8 +752,15 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         return mSongs;
     }
 
+    //Indicates if list is loaded that can be played
     public boolean isReadyToPlay() {
         return mReadyToPlay;
+    }
+
+    //Indicates only if media player is stopped
+    public boolean isStopped()
+    {
+        return mStopped;
     }
 
     public MediaPlayer getMediaPlayer()

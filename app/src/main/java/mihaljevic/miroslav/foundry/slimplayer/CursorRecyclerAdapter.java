@@ -2,6 +2,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
@@ -29,7 +30,7 @@ public class CursorRecyclerAdapter extends RecyclerView.Adapter<CursorRecyclerAd
     private SparseBooleanArray mSelectedItems; //Array of selected items, init is done outside
 
 
-    public CursorRecyclerAdapter(Context context, Cursor cursor, String displayField, View.OnClickListener listener, SparseBooleanArray selectedItemsArray)
+    public CursorRecyclerAdapter(Context context, Cursor cursor, String displayField, @Nullable View.OnClickListener listener, SparseBooleanArray selectedItemsArray)
     {
         mContext = context;
         mCursor = cursor;
@@ -98,7 +99,8 @@ public class CursorRecyclerAdapter extends RecyclerView.Adapter<CursorRecyclerAd
 
     public void closeCursor()
     {
-        if (mCursor != null && !mCursor.isClosed() && !SlimPlayerApplication.getInstance().getMediaPlayerService().isCursorUsed(mCursor))
+        if (mCursor != null && !mCursor.isClosed() && SlimPlayerApplication.getInstance().isMediaPlayerServiceBound() &&
+                !SlimPlayerApplication.getInstance().getMediaPlayerServiceIfBound().isCursorUsed(mCursor))
         {
             mCursor.close();
         }

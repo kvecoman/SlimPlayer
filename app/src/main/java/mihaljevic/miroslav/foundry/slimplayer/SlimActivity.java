@@ -52,7 +52,10 @@ public abstract class SlimActivity extends AppCompatActivity {
                     item.setIcon(R.drawable.ic_repeat_gray_24dp);
 
                 preferences.edit().putBoolean(getString(R.string.pref_key_repeat),repeat).apply();
-                SlimPlayerApplication.getInstance().getMediaPlayerService().refreshRepeat();
+
+                //This will only refresh repeat if MediaServicePlayer is bound
+                if (SlimPlayerApplication.getInstance().isMediaPlayerServiceBound())
+                    SlimPlayerApplication.getInstance().getMediaPlayerServiceIfBound().refreshRepeat();
                 break;
             case R.id.settings:
                 //Start settings screen

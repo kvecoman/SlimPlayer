@@ -15,7 +15,7 @@ public class HeadsetChangeReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
 
-        MediaPlayerService playerService = SlimPlayerApplication.getInstance().getMediaPlayerService();
+        MediaPlayerService playerService = SlimPlayerApplication.getInstance().getMediaPlayerServiceIfBound();
 
         //If something is wrong just return
         if (!intent.hasExtra("state") || playerService == null)

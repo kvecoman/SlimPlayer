@@ -34,10 +34,8 @@ import android.widget.TextView;
 //TODO - support for headphone controls (and to disble them when headphones aren't plugged in)
 //TODO - tap on player won't continue song after we have canceled notification - BUG
 //TODO - if there aren't enough sources, home screen will display same ones in row
-//TODO - NowPlayingActivity should load song info and album art independently of MediaPlayerService
-//TODO - problem with album art in NowPlayingFragment when rotating screen (it isn't loaded)
 
-//TODO - continue here - new system of connecting to MediaPlayerService, check if listeners are unregistered correctly and if app, activities and player service are properly finished
+//TODO - keep rolling
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener, SlimPlayerApplication.PlayerServiceListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";

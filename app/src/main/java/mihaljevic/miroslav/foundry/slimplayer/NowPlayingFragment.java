@@ -3,7 +3,6 @@ package mihaljevic.miroslav.foundry.slimplayer;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -42,6 +41,10 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
     private View mContentView;
     private SeekBar mSeekBar;
+
+    private boolean mAlbumArtDisplayed = false;
+    private boolean mOnGlobalLayoutCalled = false;
+    private Bitmap mAlbumArt;
 
     private Handler mSeekBarHandler;
     private boolean mSeekBarBound;
@@ -86,7 +89,18 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         // Required empty public constructor
     }
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
+        Log.v(TAG,"onCreate()");
+
+        //Make sure that we get onCreateOptionsMenu() call
+        setHasOptionsMenu(true);
+
+        //Keep alive this fragment after configuration changes (so we can re-use data)
+        setRetainInstance(true);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -105,15 +119,15 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
         Log.v(TAG,"onActivityCreated()");
 
-        //Make sure that we get onCreateOptionsMenu() call
-        setHasOptionsMenu(true);
-
         mContext = getContext();
 
         mSeekBar = (SeekBar) mContentView.findViewById(R.id.seek_bar);
         mSeekBar.setProgress(0);
         mSeekBar.setOnSeekBarChangeListener(this);
         mSeekBarHandler = new Handler();
+
+        //Start retrieving MediaPlayerService
+        SlimPlayerApplication.getInstance().registerPlayerServiceListener(this);
 
 
         //Handle taps on screen
@@ -129,6 +143,10 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         }
 
 
+        //Load album art if it is not loaded already (we do this here after we get MediaPlayerService with registering listener)
+        if (mAlbumArt == null)
+            loadArtAsync();
+
         //Little hack so we know that UI is already set up when we need to use it
         mContentView.getViewTreeObserver().addOnGlobalLayoutListener(this);
 
@@ -138,7 +156,9 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     public void onStart() {
         super.onStart();
 
+        //Here we again register MediaPlayerService just in case (it won't be duplicated)
         SlimPlayerApplication.getInstance().registerPlayerServiceListener(this);
+
     }
 
     @Override
@@ -176,15 +196,23 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     }
 
     @Override
-    public void onGlobalLayout() {
+    public void onGlobalLayout()
+    {
+        //We keep this listener for as long as we need until we get valid width and height values
+        if (mContentView.getWidth() <= 0 || mContentView.getHeight() <= 0)
+            return;
+
+
+        mOnGlobalLayoutCalled = true;
 
         if (Build.VERSION.SDK_INT >= 16)
             mContentView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
         else
             mContentView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
 
-        //Load album art if it exist
-        loadArtAsync();
+        //This will crop and display album art
+        if (!mAlbumArtDisplayed && mAlbumArt != null && mOnGlobalLayoutCalled)
+            displayArtAsync();
 
     }
 
@@ -205,6 +233,18 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
             mPlayerService.unregisterResumeListener(this);
             mPlayerService.unregisterPlayListener(this);
         }
+    }
+
+    //Here we do cleanup of things expecting hosting activity will be recreated, so we don't want to leak anything
+    @Override
+    public void onDetach() {
+        super.onDetach();
+
+        mContext = null;
+        mContentView = null;
+        mAlbumArtDisplayed = false;
+        mOnGlobalLayoutCalled = false;
+        mSeekBarHandler = null;
     }
 
     @Override
@@ -233,24 +273,55 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         ((TextView) mContentView.findViewById(R.id.song_title)).setText(songs.getTitle(mPosition));
         ((TextView) mContentView.findViewById(R.id.song_artist)).setText(songs.getArtist(mPosition));
 
-
-
     }
 
-    //Tries to load album art if it exist (with async task)
+    //Tries to load album art if it exist (with async task), returns true if task is going to be executed
     public void loadArtAsync()
     {
         Log.v(TAG,"loadArtAsync()");
+
+
+        new AsyncTask<Void,Void,Void>()
+        {
+
+            @Override
+            protected Void doInBackground(Void... params)
+            {
+
+                if (mPlayerService == null)
+                    return null;
+
+                //Load art
+                mAlbumArt = mPlayerService.getSongs().getArt(mPosition);
+
+                return null;
+
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+
+                //This will crop and display album art
+                if (!mAlbumArtDisplayed && mAlbumArt != null && mOnGlobalLayoutCalled)
+                    displayArtAsync();
+            }
+        }.execute();
+    }
+
+    private void displayArtAsync()
+    {
+        Log.v(TAG,"displayArtAsync()");
+
+        if (mContentView.getWidth() <= 0 || mContentView.getHeight() <= 0)
+            return;
+
         final float viewRatio = (float)mContentView.getWidth() / (float)mContentView.getHeight();
 
         new AsyncTask<Void,Void,Bitmap>(){
             @Override
             protected Bitmap doInBackground(Void... params) {
-                if (mPlayerService == null)
-                    return null;
-
                 //We crop album art so it fits screen(s)
-                return Utils.cropBitmapToRatio(mPlayerService.getSongs().getArt(mPosition),viewRatio);
+                return Utils.cropBitmapToRatio(mAlbumArt,viewRatio);
             }
 
             @Override
@@ -266,9 +337,11 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
                 {
                     mContentView.setBackgroundDrawable(new BitmapDrawable(getResources(),bitmap));
                 }
-            }
-        }.execute();
 
+                mAlbumArtDisplayed = true;
+            }
+
+        }.execute();
     }
 
     //This connects seek bar to current song that is played by media player service

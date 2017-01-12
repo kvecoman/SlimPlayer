@@ -8,8 +8,8 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.util.Log;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by Miroslav on 15.11.2016..
@@ -28,7 +28,7 @@ public class SlimPlayerApplication extends Application {
     private boolean mPreferencesChanged = false;
 
     //List of listeners that need to be called when service is connected
-    private List<PlayerServiceListener> mServiceBoundListeners;
+    private Set<PlayerServiceListener> mServiceBoundListeners;
 
     private MediaPlayerService mPlayerService;
     private boolean mServiceBound;
@@ -77,7 +77,7 @@ public class SlimPlayerApplication extends Application {
         /*startService(new Intent(this,MediaPlayerService.class));*/
 
         //Init list for listeners
-        mServiceBoundListeners = new ArrayList<>();
+        mServiceBoundListeners = new HashSet<>();
 
         //Init MediaPlayerService
         //bindService(new Intent(this, MediaPlayerService.class), mServiceConnection, Context.BIND_AUTO_CREATE);

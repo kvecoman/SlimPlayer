@@ -14,6 +14,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 
 /**
@@ -21,7 +22,7 @@ import android.view.ViewGroup;
  *
  * @author Miroslav Mihaljević
  */
-public class HomeFragment extends Fragment implements View.OnClickListener/*, SlimPlayerApplication.PlayerServiceListener */{
+public class HomeFragment extends Fragment implements View.OnClickListener /*, SlimPlayerApplication.PlayerServiceListener */{
 
     private RecyclerView mRecyclerView;
 
@@ -36,6 +37,24 @@ public class HomeFragment extends Fragment implements View.OnClickListener/*, Sl
     private AsyncTask<Void,Void,Void> mUpdateDatasetTask;
 
     //private MediaPlayerService mPlayerService;
+
+    private RecyclerView.AdapterDataObserver mDataObserver = new RecyclerView.AdapterDataObserver() {
+        @Override
+        public void onChanged() {
+            TextView emptyText = (TextView) getView().findViewById(R.id.empty_text);
+
+            if (emptyText == null)
+                return;
+
+            if (mAdapter == null || mAdapter.getItemCount() == 0)
+            {
+                emptyText.setVisibility(View.VISIBLE);
+                return;
+            }
+            emptyText.setVisibility(View.GONE);
+
+        }
+    };
 
 
     public HomeFragment() {
@@ -69,6 +88,9 @@ public class HomeFragment extends Fragment implements View.OnClickListener/*, Sl
         //For now we just init adapter and set it to recycler view, data loading starts later
         mAdapter = new HomeAdapter(getContext(),null,this);
         mRecyclerView.setAdapter(mAdapter);
+
+        //Set up observer so we know when to show empty message
+        mAdapter.registerAdapterDataObserver(mDataObserver);
 
         //Make sure onCreateOptionsMenu() is called
         setHasOptionsMenu(true);
@@ -110,8 +132,10 @@ public class HomeFragment extends Fragment implements View.OnClickListener/*, Sl
     public void onDestroy() {
 
         //We need this check because onDestroy() is called at awkward times
-        if (mAdapter != null)
+        if (mAdapter != null) {
+            mAdapter.unregisterAdapterDataObserver(mDataObserver);
             mAdapter.closeCursor();
+        }
 
         StatsDbHelper.closeInstance();
 

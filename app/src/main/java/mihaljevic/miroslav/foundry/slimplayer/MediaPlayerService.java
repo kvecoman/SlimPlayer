@@ -30,7 +30,9 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 public class MediaPlayerService extends Service implements MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
@@ -57,7 +59,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     //Indicated whether the service has foreground status or not (it might not be accuarate, we don't know if startForeground will actually set it)
     private boolean mForeground = false;
 
-    //TODO - this public???
     private MediaPlayer mPlayer;
 
     private boolean mPlaying = false;
@@ -80,8 +81,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private boolean mRepeatPlaylist;
 
     //List of all play and resume listeners
-    private List<SongPlayListener> mOnPlayListeners;
-    private List<SongResumeListener> mOnResumeListeners;
+    private Set<SongPlayListener> mOnPlayListeners;
+    private Set<SongResumeListener> mOnResumeListeners;
 
     //We use this to check whether the service will stop when all components are unbound
     private boolean mPendingStop = false;
@@ -105,8 +106,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         mPlayer = new MediaPlayer();
         mPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
 
-        mOnPlayListeners = new ArrayList<>();
-        mOnResumeListeners = new ArrayList<>();
+        mOnPlayListeners = new HashSet<>();
+        mOnResumeListeners = new HashSet<>();
 
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         mAudioManager.requestAudioFocus(this,AudioManager.STREAM_MUSIC,AudioManager.AUDIOFOCUS_GAIN);
@@ -339,6 +340,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     //This is called when song is finished playing
     @Override
     public void onCompletion(MediaPlayer mp) {
+        Log.v(TAG,"onCompletion()");
+
         //Continue to next song only if we are set to be playing
         if (mPlaying) {
             MediaPlayerService.this.playNext();
@@ -382,7 +385,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public void playNext()
     {
         //If the player is not even started then just dont do anything
-        if (mPosition == -1)
+        if (mPosition == -1 || mStopped || !mReadyToPlay)
             return;
 
         if (mPosition == mCount - 1)
@@ -408,7 +411,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public void playPrevious()
     {
         //If the player is not even started then just don't do anything
-        if (mPosition == -1 || mPosition == 0)
+        if (mPosition == -1 || mPosition == 0 || mStopped || !mReadyToPlay)
             return;
 
 

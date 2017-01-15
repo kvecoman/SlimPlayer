@@ -39,6 +39,9 @@ public abstract class SlimActivity extends AppCompatActivity {
         //Activate corresponding action that was selected in menu
         switch (id)
         {
+            case R.id.test_activity:
+                startActivity(new Intent(this, TestActivity.class));
+                break;
             case R.id.toggle_repeat:
                 //Toggle repeat action - whether to repeat playlist or not at the end
                 SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);

@@ -22,7 +22,8 @@ public class CursorRecyclerAdapter extends RecyclerView.Adapter<CursorRecyclerAd
     private Context mContext;
     private Cursor mCursor;
 
-    private String mDisplayField; //Name of field we use to display in row/item
+    private int mLayoutId;
+    private String [] mDisplayFields; //Name of field we use to display in row/item
 
     private View.OnClickListener mOnClickListener;
 
@@ -30,11 +31,12 @@ public class CursorRecyclerAdapter extends RecyclerView.Adapter<CursorRecyclerAd
     private SparseBooleanArray mSelectedItems; //Array of selected items, init is done outside
 
 
-    public CursorRecyclerAdapter(Context context, Cursor cursor, String displayField, @Nullable View.OnClickListener listener, SparseBooleanArray selectedItemsArray)
+    public CursorRecyclerAdapter(Context context, Cursor cursor, int layoutId, String [] displayFields, @Nullable View.OnClickListener listener, @Nullable SparseBooleanArray selectedItemsArray)
     {
         mContext = context;
         mCursor = cursor;
-        mDisplayField = displayField;
+        mLayoutId = layoutId;
+        mDisplayFields = displayFields;
         mOnClickListener = listener;
         mSelectedItems = selectedItemsArray;
     }
@@ -43,7 +45,7 @@ public class CursorRecyclerAdapter extends RecyclerView.Adapter<CursorRecyclerAd
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
     {
         //Inflate and return row view
-        View v = LayoutInflater.from(mContext).inflate(R.layout.recycler_item,parent,false);
+        View v = LayoutInflater.from(mContext).inflate(mLayoutId,parent,false);
         return new ViewHolder(v, mOnClickListener);
     }
 
@@ -54,20 +56,34 @@ public class CursorRecyclerAdapter extends RecyclerView.Adapter<CursorRecyclerAd
             return;
 
         String text;
+        View view;
 
         mCursor.moveToPosition(position);
-        text = mCursor.getString(mCursor.getColumnIndex(mDisplayField));
-        holder.mTextView.setText(text);
+
+        //Cycle and populate all text views in single row(item)
+        for (int i = 0;i < mDisplayFields.length;i++)
+        {
+            text = mCursor.getString(mCursor.getColumnIndex(mDisplayFields[i]));
+            view = holder.findViewById(mContext.getResources().getIdentifier("item_text" + i,"id",mContext.getPackageName()));
+
+            if (view != null && view instanceof TextView)
+                ((TextView)view).setText(text);
+
+        }
 
         //Check if this item needs to be selected
-        if (mSelectedItems.get(position))
+        if (mSelectedItems != null)
         {
-            holder.mParentView.setSelected(true);
+            if (mSelectedItems.get(position))
+            {
+                holder.mParentView.setSelected(true);
+            }
+            else
+            {
+                holder.mParentView.setSelected(false);
+            }
         }
-        else
-        {
-            holder.mParentView.setSelected(false);
-        }
+
     }
 
     @Override
@@ -110,13 +126,11 @@ public class CursorRecyclerAdapter extends RecyclerView.Adapter<CursorRecyclerAd
     public static class ViewHolder extends RecyclerView.ViewHolder
     {
         public View mParentView;
-        public TextView mTextView;
 
         public ViewHolder(View v)
         {
             super(v);
             mParentView = v;
-            mTextView = (TextView)v.findViewById(R.id.recycler_item_text);
         }
 
         public ViewHolder(View v, View.OnClickListener listener)
@@ -132,6 +146,11 @@ public class CursorRecyclerAdapter extends RecyclerView.Adapter<CursorRecyclerAd
             //Check if listener is also instance of long click listener
             if (listener instanceof View.OnLongClickListener)
                 v.setOnLongClickListener(((View.OnLongClickListener) listener));
+        }
+
+        public View findViewById(int id)
+        {
+            return mParentView.findViewById(id);
         }
 
 

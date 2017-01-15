@@ -26,7 +26,7 @@ import android.widget.TextView;
  *
  * @author Miroslav Mihaljević
  */
-public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarChangeListener, MediaPlayerService.SongResumeListener, MediaPlayerService.SongPlayListener,
+public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarChangeListener, MediaPlayerService.SongResumeListener,
                                                             SlimPlayerApplication.PlayerServiceListener, ViewTreeObserver.OnGlobalLayoutListener{
 
     private final String TAG = getClass().getSimpleName();
@@ -181,7 +181,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
             return;
 
         mPlayerService.registerResumeListener(this);
-        mPlayerService.registerPlayListener(this);
+        //mPlayerService.registerPlayListener(this);
         bindSeekBarToPlayer();
 
 
@@ -231,7 +231,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         if (mPlayerService != null)
         {
             mPlayerService.unregisterResumeListener(this);
-            mPlayerService.unregisterPlayListener(this);
+            //mPlayerService.unregisterPlayListener(this);
         }
     }
 
@@ -369,12 +369,12 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         bindSeekBarToPlayer();
     }
 
-    //This also can come from tap
-    @Override
+
+    /*@Override
     public void onPlay(Songs songs, int position) {
         Log.v(TAG,"onPlay()");
         bindSeekBarToPlayer();
-    }
+    }*/
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {

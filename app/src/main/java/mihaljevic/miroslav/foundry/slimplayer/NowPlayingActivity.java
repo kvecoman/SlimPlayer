@@ -11,7 +11,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 
-public class NowPlayingActivity extends BackHandledFragmentActivity implements MediaPlayerService.SongPlayListener,ViewPager.OnPageChangeListener, View.OnClickListener, SlimPlayerApplication.PlayerServiceListener {
+public class NowPlayingActivity extends BackHandledFragmentActivity implements MediaPlayerService.SongPlayListener, ViewPager.OnPageChangeListener, View.OnClickListener, SlimPlayerApplication.PlayerServiceListener {
 
     //TODO - check if this class can be optimized
 

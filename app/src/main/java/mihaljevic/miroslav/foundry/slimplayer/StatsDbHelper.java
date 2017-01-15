@@ -18,7 +18,7 @@ import android.util.Log;
 public class StatsDbHelper extends SQLiteOpenHelper {
     protected final String TAG = getClass().getSimpleName();
 
-    public static final int DATABASE_VERSION = 8;
+    public static final int DATABASE_VERSION = 9;
     public static final String DATABASE_NAME = "Stats.db";
 
     private Context mContext;

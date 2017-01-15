@@ -46,12 +46,12 @@ public final class ScreenBundles {
         }
         else if (currentScreen.equals(context.getString(R.string.pref_key_albums_screen)))
         {
-            parameter = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Albums._ID));
+            parameter = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID));
             bundle = ScreenBundles.getSongsByAlbumBundle(context,parameter);
         }
         else if (currentScreen.equals(context.getString(R.string.pref_key_artists_screen)))
         {
-            parameter = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Artists._ID));
+            parameter = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST_ID));
             bundle = ScreenBundles.getSongsByArtistsBundle(context,parameter);
         }
         else if (currentScreen.equals(context.getString(R.string.pref_key_genres_screen)))
@@ -120,6 +120,7 @@ public final class ScreenBundles {
         }*/
 
 
+        bundle.putString(CURSOR_PARAMETER_KEY,""); //Empty string just so we don't mess up database
         bundle.putString(CURSOR_SOURCE_KEY,cursorScreen);
         bundle.putString(CURSOR_URI_KEY,uri);
         bundle.putStringArray(CURSOR_PROJECTION_KEY,projection);
@@ -171,6 +172,7 @@ public final class ScreenBundles {
         String [] projection = {
                 MediaStore.Audio.Media._ID,
                 MediaStore.Audio.Media.ALBUM,
+                MediaStore.Audio.Media.ALBUM_ID,
                 MediaStore.Audio.Media.DATA
         };
         String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0 AND (" + addDirectoryCheckSQL(context) + ")" + ") GROUP BY (" + MediaStore.Audio.Media.ALBUM;
@@ -213,6 +215,7 @@ public final class ScreenBundles {
         String [] projection = {
                 MediaStore.Audio.Media._ID,
                 MediaStore.Audio.Media.ARTIST,
+                MediaStore.Audio.Media.ARTIST_ID,
                 MediaStore.Audio.Media.DATA
         };
         String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0 AND (" + addDirectoryCheckSQL(context) + ")" + ") GROUP BY (" + MediaStore.Audio.Media.ARTIST;
@@ -322,6 +325,7 @@ public final class ScreenBundles {
                 MediaStore.Audio.Media.DISPLAY_NAME,
                 MediaStore.Audio.Media.ARTIST,
                 MediaStore.Audio.Media.ALBUM,
+                MediaStore.Audio.Media.ALBUM_ID,
                 MediaStore.Audio.Media.DURATION,
                 MediaStore.Audio.Media.DATA
         };
@@ -358,14 +362,15 @@ public final class ScreenBundles {
                 MediaStore.Audio.Media.TITLE,
                 MediaStore.Audio.Media.DISPLAY_NAME,
                 MediaStore.Audio.Media.ARTIST,
+                MediaStore.Audio.Media.ARTIST_ID,
                 MediaStore.Audio.Media.ALBUM,
                 MediaStore.Audio.Media.DURATION,
                 MediaStore.Audio.Media.DATA
         };
         String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0 AND (" +
                                                 addDirectoryCheckSQL(context) + ") AND " +
-                                                MediaStore.Audio.Media.ARTIST_ID + "=?";
-        String [] selectionArgs = {parameter};
+                                                MediaStore.Audio.Media.ARTIST_ID + "=" + parameter;
+        String [] selectionArgs = null;
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
 
 

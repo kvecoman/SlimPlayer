@@ -87,7 +87,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
             //If we have bundle, then load data accordingly
             mCurrentSource = bundle.getString(ScreenBundles.CURSOR_SOURCE_KEY);
             //Here is cursor null,but it will be set-up properly after loadDataAsync() is called
-            mAdapter = new CursorRecyclerAdapter(mContext,null, bundle.getString(DISPLAY_FIELD_KEY),this,mSelectedItems);
+            mAdapter = new CursorRecyclerAdapter(mContext,null, R.layout.recycler_item,new String[] {bundle.getString(DISPLAY_FIELD_KEY)},this,mSelectedItems);
             mRecyclerView.setAdapter(mAdapter);
         }
 
@@ -217,15 +217,6 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
             }
         }.execute();
 
-        //Random data for debug purposes
-        /*String[] columns = new String[] {"display_field"};
-
-        MatrixCursor matrixCursor = new MatrixCursor(columns,300);
-        for (int i = 0;i < 300;i++)
-        {
-            matrixCursor.addRow(new Object[] {i});
-        }
-        mAdapter.swapCursor(matrixCursor);*/
 
     }
 

@@ -1,10 +1,11 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.Service;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -13,15 +14,20 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.os.PowerManager;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.TaskStackBuilder;
+import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaBrowserServiceCompat;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -34,8 +40,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static android.media.browse.MediaBrowser.MediaItem.FLAG_BROWSABLE;
+import static android.media.browse.MediaBrowser.MediaItem.FLAG_PLAYABLE;
 
-public class MediaPlayerService extends Service implements MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
+
+public class MediaPlayerService extends MediaBrowserServiceCompat implements MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 
     protected final String TAG = getClass().getSimpleName();
 
@@ -68,7 +77,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     private AsyncTask<Void, Void, Void> mCurrentPlayTask;
 
-    private Songs mSongs;
+    private List<MediaBrowserCompat.MediaItem> mMediaQueue;
     private int mPosition;
     private int mCount;
     private boolean mReadyToPlay = false; //Indicates if we have list loaded
@@ -77,7 +86,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private String mSongsSource;
     private String mSongsParameter;
 
-    //Whther we repeat plalist at end
+    //Whther we repeat playlist at end
     private boolean mRepeatPlaylist;
 
     //List of all play and resume listeners
@@ -88,9 +97,19 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private boolean mPendingStop = false;
 
 
-
     //Used to detect if headphones are plugged in
     private BroadcastReceiver mHeadsetChangeReceiver = new HeadsetChangeReceiver();
+
+
+
+    private static final String MEDIA_ROOT_ID = "root_id";
+
+    private MediaSessionCompat mMediaSession;
+
+    private PlaybackStateCompat.Builder mStateBuilder;
+
+    private MusicProvider mMusicProvider;
+
 
     public MediaPlayerService() {
     }
@@ -102,6 +121,31 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     {
         Log.v(TAG,"onCreate()");
         super.onCreate();
+
+        Intent intent = new Intent(this, this.getClass());
+        PendingIntent pendingIntent = PendingIntent.getActivity(this,0,intent,0);
+        mMediaSession = new MediaSessionCompat(this,TAG,new ComponentName(this,HeadsetChangeReceiver.class),pendingIntent);
+
+        mMediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
+
+        mStateBuilder = new PlaybackStateCompat.Builder().setActions(PlaybackStateCompat.ACTION_PLAY | PlaybackStateCompat.ACTION_PLAY_PAUSE);
+        mMediaSession.setPlaybackState(mStateBuilder.build());
+
+        mMediaSession.setCallback(new MediaSessionCallback());
+
+        if (Build.VERSION.SDK_INT >= 21) //Lollipop 5.0
+        {
+            Intent mediaButtonIntent = new Intent(Intent.ACTION_MEDIA_BUTTON);
+            mediaButtonIntent.setClass(this,MediaPlayerService.class);
+            PendingIntent mbrIntent = PendingIntent.getService(this, 0, mediaButtonIntent, 0);
+            mMediaSession.setMediaButtonReceiver(mbrIntent);
+        }
+
+        setSessionToken(mMediaSession.getSessionToken());
+
+        mMusicProvider = MusicProvider.getInstance();
+        mMusicProvider.registerDataListener(this);
+
 
         mPlayer = new MediaPlayer();
         mPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
@@ -118,14 +162,89 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         //Register to detect headphones in/out
         registerReceiver(mHeadsetChangeReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
 
+
+
+    }
+
+
+
+    @Nullable
+    @Override
+    public BrowserRoot onGetRoot(@NonNull String clientPackageName, int clientUid, @Nullable Bundle rootHints) {
+
+        //TODO - validation of client
+
+        return new BrowserRoot(MEDIA_ROOT_ID,rootHints);
+    }
+
+    @Override
+    public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowserCompat.MediaItem>> result) {
+        onLoadChildren(parentId, result, null);
+    }
+
+    @Override
+    public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowserCompat.MediaItem>> result,@Nullable Bundle options) {
+
+        String parameter = null;
+        List<MediaBrowserCompat.MediaItem> mediaItems = new ArrayList<>();
+        List<MediaMetadataCompat> mediaMetadataList;
+        MediaBrowserCompat.MediaItem mediaItem;
+        int flag;
+
+        if (options != null && options.containsKey(ScreenBundles.PARAMETER_KEY))
+            parameter = options.getString(ScreenBundles.PARAMETER_KEY);
+
+
+        mediaMetadataList = mMusicProvider.loadMedia(parentId,parameter);
+
+        //If we don't have parameter, then it must be category (browsable)
+        flag = parameter == null ? MediaBrowserCompat.MediaItem.FLAG_BROWSABLE : MediaBrowserCompat.MediaItem.FLAG_PLAYABLE;
+
+        //Only exception for flag rule above is if screen is all songs screen
+        if (parentId == Const.ALL_SCREEN)
+            flag = MediaBrowserCompat.MediaItem.FLAG_PLAYABLE;
+
+        for (MediaMetadataCompat metadata : mediaMetadataList)
+        {
+            mediaItem = new MediaBrowserCompat.MediaItem(metadata.getDescription(), flag);
+            mediaItems.add(mediaItem);
+        }
+
+        result.sendResult(mediaItems);
+    }
+
+
+
+    private final class MediaSessionCallback extends MediaSessionCompat.Callback
+    {
+        @Override
+        public void onPlay() {
+
+        }
     }
 
 
 
 
 
-    //NOTE - THIS IS CALLED WHEN SERVICE IS CALLED WHILE IT IS ALREADY RUNNING
-    @Override
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.v(TAG,"onStartCommand()");
 
@@ -168,18 +287,18 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         return START_NOT_STICKY;
     }
 
-    @Override
+    /*@Override
     public IBinder onBind(Intent intent) {
         return mBinder;
-    }
+    }*/
 
 
 
-    @Override
+   /* @Override
     public boolean onUnbind(Intent intent)
     {
         return super.onUnbind(intent);
-    }
+    }*/
 
     @Override
     public void onDestroy() {
@@ -187,6 +306,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
         mAudioManager.abandonAudioFocus(this);
         unregisterReceiver(mHeadsetChangeReceiver);
+        mMusicProvider.unregisterDataListener();
 
         if (mPlayer != null)
         {
@@ -197,6 +317,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
         //TODO - all close instance calls except this to application onDestroy
         StatsDbHelper.closeInstance();
+
+
 
         super.onDestroy();
     }
@@ -219,8 +341,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
         if (source != null)
         {
-            Bundle bundle = ScreenBundles.getBundleForSubScreen(this,source,parameter);
-            CursorSongs songs = new CursorSongs(Utils.querySongListCursor(this,bundle));
+            Bundle bundle = ScreenBundles.getBundleForSubScreen(source,parameter);
+            CursorSongs songs = new CursorSongs(Utils.queryMedia(bundle));
             setSongs(songs,source,parameter);
             return position;
         }
@@ -264,7 +386,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         Log.v(TAG,"play() position: " + position);
 
         //If something is wrong then do nothing
-        if (position < 0 || position >= mCount || mSongs == null)
+        if (position < 0 || position >= mCount || mMediaQueue == null)
             return;
 
         if (mCurrentPlayTask != null)
@@ -283,7 +405,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         preferences.edit().putInt(SONGLIST_POSITION_KEY,mPosition).apply();
 
-        Toast.makeText(getApplicationContext(),mSongs.getData(mPosition),Toast.LENGTH_SHORT).show();
+        final Uri mediaFileUri = mMediaQueue.get(mPosition).getDescription().getMediaUri();
+
+        Utils.toastShort(mediaFileUri.toString());
 
         mCurrentPlayTask = new AsyncTask<Void, Void, Void>() {
             @Override
@@ -292,7 +416,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 {
                     //Set up media player and start playing when ready
                     mPlayer.reset();
-                    mPlayer.setDataSource(mSongs.getData(mPosition));
+                    mPlayer.setDataSource(MediaPlayerService.this, mediaFileUri );
                     mPlayer.setOnCompletionListener(MediaPlayerService.this);
 
                     mPlayer.prepare();
@@ -438,7 +562,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     {
         mCount = 0;
         mPosition = -1;
-        mSongs = null;
+        mMediaQueue = null;
         mSongsSource = null;
         mSongsParameter = null;
         mReadyToPlay = false;
@@ -467,16 +591,17 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         mRepeatPlaylist = preferences.getBoolean(getString(R.string.pref_key_repeat),true);
     }
 
+    @Deprecated
     public boolean isCursorUsed(Cursor cursor)
     {
         if (cursor == null)
             return false;
 
-        if (mSongs != null && mSongs instanceof CursorSongs)
+        /*if (mSongs != null && mSongs instanceof CursorSongs)
         {
             if (cursor == ((CursorSongs)mSongs).getCursor())
                 return true;
-        }
+        }*/
 
         return false;
     }
@@ -512,7 +637,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         {
             for (SongPlayListener listener : mOnPlayListeners)
             {
-                    listener.onPlay(mSongs, mPosition);
+                    listener.onPlay(mMediaQueue, mPosition);
             }
         }
         catch (ConcurrentModificationException e)
@@ -536,9 +661,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         RemoteViews notificationView = new RemoteViews(getPackageName(),R.layout.notification_player);
         RemoteViews bigNotificationView = new RemoteViews(getPackageName(), R.layout.notification_player_big);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        MediaBrowserCompat.MediaItem currentMediaItem = mMediaQueue.get(mPosition);
 
-        notificationView.setTextViewText(R.id.notification_title,mSongs.getTitle(mPosition));
-        bigNotificationView.setTextViewText(R.id.notification_title,mSongs.getTitle(mPosition));
+        notificationView.setTextViewText(R.id.notification_title,currentMediaItem.getDescription().getTitle());
+        bigNotificationView.setTextViewText(R.id.notification_title,currentMediaItem.getDescription().getTitle());
 
         notificationView.setImageViewResource(R.id.notification_play, playIcon ? R.drawable.ic_play_arrow_ltgray_36dp : R.drawable.ic_pause_ltgray_36dp);
         bigNotificationView.setImageViewResource(R.id.notification_play, playIcon ? R.drawable.ic_play_arrow_ltgray_54dp : R.drawable.ic_pause_ltgray_54dp);
@@ -552,7 +678,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 .setContentIntent(PendingIntent.getActivity(this,0,new Intent(this,NowPlayingActivity.class),0));
 
         //Check if we have album art in mp3 and try to add it to player
-        Bitmap artBitmap = mSongs.getArt(mPosition);
+        //TODO - fix bitmap art loading and uncomment
+        /*Bitmap artBitmap = mSongs.getArt(mPosition);
         if (artBitmap != null)
         {
             notificationView.setImageViewBitmap(R.id.notification_icon,artBitmap);
@@ -563,12 +690,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             //Load default image
             notificationView.setImageViewResource(R.id.notification_icon,R.mipmap.ic_launcher);
             bigNotificationView.setImageViewResource(R.id.notification_icon,R.mipmap.ic_launcher);
-        }
+        }*/
 
 
         //If needed, set the ticker text with song title
         if (ticker)
-            builder.setTicker(mSongs.getTitle(mPosition));
+            builder.setTicker(currentMediaItem.getDescription().getTitle());
 
         //Set-up control actions
         Intent intent;
@@ -639,11 +766,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 
     //Sets the list and starts playing, source string is one of screen keys or something else (if list is from files or something)
-    public void playListIfChanged(Songs songs, int startPosition, final String source, final String parameter)
+    public void playListIfChanged(List<MediaBrowserCompat.MediaItem> mediaQueue, int startPosition, final String source, final String parameter)
     {
 
         //Set songs source and note if it is different than before
-        boolean isSourceChanged = setSongs(songs,source,parameter);
+        boolean isSourceChanged = setSongs(mediaQueue,source,parameter);
 
         //We call play only if the source have changed
         if (isSourceChanged)
@@ -651,10 +778,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     }
 
-    public void playList(Songs songs, int startPosition, final String source, final String parameter)
+    public void playList(List<MediaBrowserCompat.MediaItem> mediaQueue, int startPosition, final String source, final String parameter)
     {
         //Set songs source and note if it is different than before
-        boolean isSourceChanged = setSongs(songs,source,parameter);
+        boolean isSourceChanged = setSongs(mediaQueue,source,parameter);
 
         //We always call play except when we are already playing same song
         if (!(!isSourceChanged && mPosition == startPosition))
@@ -664,20 +791,20 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 
     //Set the list and start playing
-    public void playList(Songs songs, int startPosition)
+    public void playList(List<MediaBrowserCompat.MediaItem> mediaQueue, int startPosition)
     {
-        setSongs(songs,null,null);
+        setSongs(mediaQueue,null,null);
         play(startPosition);
     }
 
     //Returns whether the source is different than one before
-    public boolean setSongs(Songs songs, @Nullable final String source, @Nullable final String parameter)
+    public boolean setSongs(List<MediaBrowserCompat.MediaItem> mediaQueue, @Nullable final String source, @Nullable final String parameter)
     {
         Log.v(TAG,"setSongs()");
 
         boolean isSourceChanged = true;
 
-        if (songs == null) {
+        if (mediaQueue == null) {
             //We have nothing, respond appropriately
             stopAndClearList();
             return isSourceChanged;
@@ -726,8 +853,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 
         //Get song count and song list
-        mCount = songs.getCount();
-        mSongs = songs;
+        mCount = mediaQueue.size();
+        mMediaQueue = mediaQueue;
         mReadyToPlay = true;
 
         return isSourceChanged;
@@ -750,9 +877,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     }*/
 
-    public Songs getSongs()
+    public List<MediaBrowserCompat.MediaItem> getSongs()
     {
-        return mSongs;
+        return mMediaQueue;
     }
 
     //Indicates if list is loaded that can be played
@@ -812,7 +939,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     public interface SongPlayListener
     {
-        void onPlay(Songs songs, int position);
+        void onPlay(List<MediaBrowserCompat.MediaItem> mediaQueue, int position);
     }
 
     public interface SongResumeListener

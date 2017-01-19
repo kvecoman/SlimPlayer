@@ -4,6 +4,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
+import android.support.v4.media.MediaBrowserCompat;
 import android.view.View;
 import android.widget.Toast;
 
@@ -11,7 +12,7 @@ import java.util.List;
 
 /**
  *
- * Fragment with functionality to add selected songs to playlist
+ * Fragment with functionality to add previously selected songs to playlist
  *
  * @author Miroslav Mihaljević
  */
@@ -25,17 +26,17 @@ public class AddToPlaylistsRecyclerFragment extends PlaylistsRecyclerFragment {
 
     @Override
     public void onClick(View v) {
-        int position = mRecyclerView.getChildLayoutPosition(v);
 
-        Cursor cursor = mAdapter.getCursor();
-        cursor.moveToPosition(position);
 
+        final int position = mRecyclerView.getChildLayoutPosition(v);
+
+        final List<MediaBrowserCompat.MediaItem> mediaItems = mAdapter.getMediaItemsList();
         final List<String> ids  = getActivity().getIntent().getStringArrayListExtra(AddToPlaylistActivity.ID_LIST_KEY);
-        final long playlistId = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
+        final long playlistId = Long.parseLong(mediaItems.get(position).getMediaId());
 
         //Insert songs in playlist
-        new AsyncTask<Void,Void,Integer>(){
-
+        new AsyncTask<Void,Void,Integer>()
+        {
             @Override
             protected Integer doInBackground(Void... params)
             {
@@ -43,12 +44,14 @@ public class AddToPlaylistsRecyclerFragment extends PlaylistsRecyclerFragment {
                 if (ids == null)
                     return null;
 
-                return Utils.insertIntoPlaylist(getContext(),ids,playlistId);
+                return Utils.insertIntoPlaylist(ids,playlistId);
             }
 
             @Override
-            protected void onPostExecute(Integer result) {
-                Toast.makeText(mContext,result + " " + getString(R.string.playlist_add_succes),Toast.LENGTH_SHORT).show();
+            protected void onPostExecute(Integer result)
+            {
+                Utils.toastShort(result + " " + getString(R.string.playlist_add_succes));
+                MusicProvider.getInstance().invalidateDataAndNotify(mCurrentSource,mediaItems.get(position).getMediaId());
             }
         }.execute();
 

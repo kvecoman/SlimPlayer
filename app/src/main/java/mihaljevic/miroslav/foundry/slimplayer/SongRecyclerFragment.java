@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.v4.media.MediaBrowserCompat;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.Menu;
@@ -27,9 +29,9 @@ public class SongRecyclerFragment extends SlimRecyclerFragment implements SlimPl
 
 
     //Provides easy access to cursor and fields within it
-    protected CursorSongs mSongs;
+    //protected CursorSongs mSongs;
 
-    private MediaPlayerService mPlayerService;
+    //private MediaPlayerService mPlayerService;
 
 
     public SongRecyclerFragment() {
@@ -68,17 +70,16 @@ public class SongRecyclerFragment extends SlimRecyclerFragment implements SlimPl
     }*/
 
     @Override
-    protected void onDataLoaded(Cursor cursor) {
-        super.onDataLoaded(cursor);
+    protected void onDataLoaded(@NonNull String parentId, List<MediaBrowserCompat.MediaItem> children, @NonNull Bundle options) {
+        super.onDataLoaded(parentId, children, options);
 
-        mSongs = new CursorSongs(cursor);
 
         autoPlayFromBundle();
     }
 
     @Override
     public void onPlayerServiceBound(MediaPlayerService playerService) {
-        mPlayerService = playerService;
+        //mPlayerService = playerService;
 
         autoPlayFromBundle();
     }
@@ -120,12 +121,13 @@ public class SongRecyclerFragment extends SlimRecyclerFragment implements SlimPl
         {
             if (item.getItemId() == R.id.playlist_add)
             {
+
                 //Get all checked positions
                 //NOTE - this looks a little bit messed after the migration to recycler view from list view
                 SparseBooleanArray checkedPositions = mSelectedItems;
 
 
-                Cursor cursor = mAdapter.getCursor();
+                List<MediaBrowserCompat.MediaItem> mediaItemsList = mAdapter.getMediaItemsList();
                 List<String> idList = new ArrayList<>();
 
                 //Transfer IDs from selected songs to ID list
@@ -135,8 +137,7 @@ public class SongRecyclerFragment extends SlimRecyclerFragment implements SlimPl
 
                     if (checkedPositions.get(position))
                     {
-                        cursor.moveToPosition(position);
-                        idList.add(cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media._ID)));
+                        idList.add(mediaItemsList.get(position).getMediaId());
                     }
                 }
 
@@ -154,33 +155,36 @@ public class SongRecyclerFragment extends SlimRecyclerFragment implements SlimPl
     //Automatically start playing if it is said so from the bundle (home-screen case)
     private void autoPlayFromBundle()
     {
+        //TODO - fix this and make it play position
         //If we are in normal mode
-        if (!mSelectSongsForResult && getArguments().containsKey(PLAY_POSITION_KEY) && mPlayerService != null && mSongs != null)
+        /*if (!mSelectSongsForResult && getArguments().containsKey(PLAY_POSITION_KEY) && mPlayerService != null && mSongs != null)
         {
             int play_position = getArguments().getInt(PLAY_POSITION_KEY);
 
-            mPlayerService.playListIfChanged(mSongs,play_position, mCurrentSource,getArguments().getString(ScreenBundles.CURSOR_PARAMETER_KEY));
+            mPlayerService.playListIfChanged(mSongs,play_position, mCurrentSource,getArguments().getString(ScreenBundles.PARAMETER_KEY));
 
             //Once we have started the intended song from intent, we delete it so we don't start it again and again
             getArguments().remove(PLAY_POSITION_KEY);
-        }
+        }*/
     }
 
     @Override
     public void onClick(View v) {
 
         int position = mRecyclerView.getChildLayoutPosition(v);
+        List<MediaBrowserCompat.MediaItem> mediaItems = mAdapter.getMediaItemsList();
 
+        //TODO - fix this, make this play the item
         //If we are not selecting items, then we want to play them
-        if (!mSelectMode && !mSelectSongsForResult && mSongs != null && mPlayerService != null)
+        /*if (!mSelectMode && !mSelectSongsForResult && mSongs != null && mPlayerService != null)
         {
             //Pass list of songs from which we play and play current position
-            mPlayerService.playList(mSongs,position, mCurrentSource,getArguments().getString(ScreenBundles.CURSOR_PARAMETER_KEY));
+            mPlayerService.playList(mSongs,position, mCurrentSource,getArguments().getString(ScreenBundles.PARAMETER_KEY));
 
             //Start NowPlayingActivity
             Intent intent = new Intent(mContext,NowPlayingActivity.class);
             startActivity(intent);
-        }
+        }*/
 
         //If we are selecting items
         if (mSelectMode)
@@ -192,11 +196,11 @@ public class SongRecyclerFragment extends SlimRecyclerFragment implements SlimPl
         if (mSelectSongsForResult)
         {
             if (isItemSelected(position)) {
-                ((SelectSongsActivity) mContext).getSelectedSongsList().add(mSongs.getId(position) + "");
+                ((SelectSongsActivity) mContext).getSelectedSongsList().add(mediaItems.get(position).getMediaId());
             }
             else
             {
-                ((SelectSongsActivity) mContext).getSelectedSongsList().remove(mSongs.getId(position) + "");
+                ((SelectSongsActivity) mContext).getSelectedSongsList().remove(mediaItems.get(position).getMediaId());
             }
         }
     }

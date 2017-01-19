@@ -78,24 +78,7 @@ public class PlaylistSongsRecyclerFragment extends SongRecyclerFragment {
         {
             if (item.getItemId() == R.id.delete_item)
             {
-                new AsyncTask<SparseBooleanArray,Void,Integer>()
-                {
-                    @Override
-                    protected Integer doInBackground(SparseBooleanArray... params) {
-
-                        return Utils.deleteFromList(getContext(),
-                                mAdapter.getCursor(),
-                                MediaStore.Audio.Playlists.Members.getContentUri("external",Long.valueOf(getArguments().getString(ScreenBundles.CURSOR_PARAMETER_KEY))),
-                                params[0]);
-                    }
-
-                    @Override
-                    protected void onPostExecute(Integer result) {
-                        Toast.makeText(mContext,result + " items deleted",Toast.LENGTH_SHORT).show();
-                        deselect();
-                        loadDataAsync();
-                    }
-                }.execute(mSelectedItems);
+                deleteItemsAsync(MediaStore.Audio.Playlists.Members.getContentUri("external",Long.valueOf(mCurrentParameter)),MediaStore.Audio.Playlists.Members.AUDIO_ID);
             }
             else
             {
@@ -125,13 +108,16 @@ public class PlaylistSongsRecyclerFragment extends SongRecyclerFragment {
                     if (ids == null)
                         return null;
 
-                    return Utils.insertIntoPlaylist(getContext(),ids,Long.valueOf(getArguments().getString(ScreenBundles.CURSOR_PARAMETER_KEY)));
+                    return Utils.insertIntoPlaylist(ids,Long.valueOf(getArguments().getString(ScreenBundles.PARAMETER_KEY)));
                 }
 
                 @Override
                 protected void onPostExecute(Integer result) {
-                    Toast.makeText(mContext,result + " " + getString(R.string.playlist_add_succes),Toast.LENGTH_SHORT).show();
-                    loadDataAsync();
+
+                    Utils.toastShort(result + " " + getString(R.string.playlist_add_succes));
+
+                    refreshData();
+
                 }
             }.execute();
         }

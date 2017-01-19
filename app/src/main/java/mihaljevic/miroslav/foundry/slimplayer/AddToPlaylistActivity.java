@@ -21,7 +21,7 @@ public class AddToPlaylistActivity extends SlimActivity {
         setContentView(R.layout.activity_fragment_holder);
 
         //Acquire bundle to query all playlists
-        Bundle fragmentBundle = ScreenBundles.getPlaylistsBundle(this);
+        Bundle fragmentBundle = ScreenBundles.getPlaylistsBundle();
 
         if (fragmentBundle != null)
         {

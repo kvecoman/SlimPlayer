@@ -1,15 +1,17 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 
+import android.content.ComponentName;
 import android.content.Context;
-import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.media.MediaBrowserCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -17,7 +19,7 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import static mihaljevic.miroslav.foundry.slimplayer.ScreenBundles.DISPLAY_FIELD_KEY;
+import java.util.List;
 
 /**
  *
@@ -35,10 +37,12 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
     protected Context mContext;
 
     protected RecyclerView mRecyclerView;
-    protected CursorRecyclerAdapter mAdapter;
+    protected MediaAdapter mAdapter;
 
     //Current source for this fragment (all songs, songs by genre, songs by artist etc...)
     protected String mCurrentSource;
+    protected String mCurrentParameter;
+    protected Bundle mSubscriptionBundle;
 
     //Are we only selecting songs for playlists
     protected boolean mSelectSongsForResult;
@@ -47,6 +51,58 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
     protected boolean mSelectMode = false;
 
     protected SparseBooleanArray mSelectedItems;
+
+    protected MediaBrowserCompat mMediaBrowser;
+
+    protected final MediaBrowserCompat.ConnectionCallback mConnectionCallbacks = new MediaBrowserCompat.ConnectionCallback(){
+        @Override
+        public void onConnected() {
+            super.onConnected();
+
+
+
+            mMediaBrowser.subscribe(mCurrentSource, mSubscriptionBundle, mSubscriptionCallbacks);
+        }
+
+        @Override
+        public void onConnectionSuspended() {
+            super.onConnectionSuspended();
+        }
+
+        @Override
+        public void onConnectionFailed() {
+            super.onConnectionFailed();
+        }
+    };
+
+
+    protected final MediaBrowserCompat.SubscriptionCallback mSubscriptionCallbacks = new MediaBrowserCompat.SubscriptionCallback() {
+        @Override
+        public void onChildrenLoaded(@NonNull String parentId, List<MediaBrowserCompat.MediaItem> children) {
+            onDataLoaded(parentId, children, null);
+        }
+
+        @Override
+        public void onChildrenLoaded(@NonNull String parentId, List<MediaBrowserCompat.MediaItem> children, @NonNull Bundle options) {
+            onDataLoaded(parentId, children, options);
+        }
+
+        @Override
+        public void onError(@NonNull String parentId) {
+
+        }
+
+        @Override
+        public void onError(@NonNull String parentId, @NonNull Bundle options) {
+
+        }
+    };
+
+    protected void onDataLoaded(@NonNull String parentId, List<MediaBrowserCompat.MediaItem> children, @NonNull Bundle options)
+    {
+        mAdapter.setMediaItemsList(children);
+        mAdapter.notifyDataSetChanged();
+    }
 
 
     public SlimRecyclerFragment() {
@@ -70,26 +126,30 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         setHasOptionsMenu(true);
 
         mContext = getContext();
-        mRecyclerView = (RecyclerView) getView().findViewById(R.id.recycler_view);
 
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(mContext));
-        mRecyclerView.setHasFixedSize(true);
-
-        //Add dividers
-        mRecyclerView.addItemDecoration(new DividerItemDecoration(mRecyclerView.getContext(), ((LinearLayoutManager) mRecyclerView.getLayoutManager()).getOrientation()));
-
-        //Set selection
+        //Set up selection
         mSelectedItems = new SparseBooleanArray();
 
-        Bundle bundle = getArguments();
-        if (bundle != null)
-        {
-            //If we have bundle, then load data accordingly
-            mCurrentSource = bundle.getString(ScreenBundles.CURSOR_SOURCE_KEY);
-            //Here is cursor null,but it will be set-up properly after loadDataAsync() is called
-            mAdapter = new CursorRecyclerAdapter(mContext,null, R.layout.recycler_item,new String[] {bundle.getString(DISPLAY_FIELD_KEY)},this,mSelectedItems);
-            mRecyclerView.setAdapter(mAdapter);
-        }
+        //Adapter is inited here, but data will be loaded later
+        mAdapter = new MediaAdapter(mContext, null, R.layout.recycler_item, this, mSelectedItems);
+
+        //Set up recycler view
+        mRecyclerView = (RecyclerView) getView().findViewById(R.id.recycler_view);
+        mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(mContext));
+        mRecyclerView.setAdapter(mAdapter);
+        mRecyclerView.addItemDecoration(new DividerItemDecoration(mRecyclerView.getContext(), ((LinearLayoutManager) mRecyclerView.getLayoutManager()).getOrientation()));
+
+
+
+
+        //Get current source and parameter
+        mCurrentSource = getArguments().getString(ScreenBundles.SOURCE_KEY);
+        mCurrentParameter = getArguments().getString(ScreenBundles.PARAMETER_KEY);
+
+        mSubscriptionBundle = new Bundle();
+        mSubscriptionBundle.putString(ScreenBundles.PARAMETER_KEY, mCurrentParameter);
+
 
         //Check if we are selecting songs for playlists
         if (mContext instanceof SelectSongsActivity)
@@ -100,6 +160,9 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
             }
         }
 
+        //Init media browser
+        mMediaBrowser = new MediaBrowserCompat(getContext(), new ComponentName(getContext(),MediaPlayerService.class), mConnectionCallbacks, null);
+
     }
 
     @Override
@@ -107,8 +170,21 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         super.onStart();
 
         //With every showing of this fragment, load data
-        loadDataAsync();
+        //loadDataAsync();
+
+        mMediaBrowser.connect();
     }
+
+
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        mMediaBrowser.disconnect();
+    }
+
+
 
     @Override
     public void onDestroy() {
@@ -116,8 +192,8 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
 
         //Adapter will check if cursor is used by media player service and close it appropriately
         //Also we need to check if adapter exists because of screen rotation calls
-        if (mAdapter != null)
-            mAdapter.closeCursor();
+       /* if (mAdapter != null)
+            mAdapter.closeCursor();*/
     }
 
     @Override
@@ -200,7 +276,39 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         return mSelectedItems.get(pos);
     }
 
-    protected void loadDataAsync()
+    protected void refreshData()
+    {
+        MusicProvider.getInstance().invalidateDataAndNotify(mCurrentSource,mCurrentParameter);
+    }
+
+    protected void deleteItemsAsync(final Uri uri,final String idField)
+    {
+        new AsyncTask<SparseBooleanArray,Void,Integer>()
+        {
+            @Override
+            protected Integer doInBackground(SparseBooleanArray... params) {
+
+                SparseBooleanArray selectedPositions = params[0];
+
+                return Utils.deleteFromList(
+                                        mAdapter.getMediaItemsList(),
+                                        uri,
+                                        selectedPositions,
+                                        idField);
+            }
+
+            @Override
+            protected void onPostExecute(Integer result) {
+
+                //TODO - text to resource
+                Utils.toastShort(result + " items deleted");
+                deselect();
+                refreshData();
+            }
+        }.execute(mSelectedItems);
+    }
+
+    /*protected void loadDataAsync()
     {
         Log.v(TAG,"loadDataAsync()");
         //Load cursor and connect it to cursor adapter
@@ -208,7 +316,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         {
             @Override
             protected Cursor doInBackground(Void... params) {
-                return Utils.querySongListCursor(mContext,getArguments());
+                return Utils.queryMedia(getArguments());
             }
 
             @Override
@@ -218,12 +326,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         }.execute();
 
 
-    }
+    }*/
 
-
-    protected void onDataLoaded(Cursor cursor)
-    {
-        mAdapter.swapCursor(cursor);
-    }
 
 }

@@ -26,12 +26,12 @@
     <!--Keys used in preferences and possibly in some other cases-->
     <string name="pref_key_tabs">pref_key_tabs</string>
 
-    <string name="pref_key_home_screen">pref_key_home_screen</string>
-    <string name="pref_key_all_screen">pref_key_all_screen</string>
-    <string name="pref_key_playlists_screen">pref_key_playlists_screen</string>
-    <string name="pref_key_albums_screen">pref_key_albums_screen</string>
-    <string name="pref_key_artists_screen">pref_key_artists_screen</string>
-    <string name="pref_key_genres_screen">pref_key_genres_screen</string>
+    <string name="pref_key_home_screen">home_screen</string>
+    <string name="pref_key_all_screen">all_screen</string>
+    <string name="pref_key_playlists_screen">playlists_screen</string>
+    <string name="pref_key_albums_screen">albums_screen</string>
+    <string name="pref_key_artists_screen">artists_screen</string>
+    <string name="pref_key_genres_screen">genres_screen</string>
 
     <string name="pref_key_directories_set">pref_key_directories_set</string>
 

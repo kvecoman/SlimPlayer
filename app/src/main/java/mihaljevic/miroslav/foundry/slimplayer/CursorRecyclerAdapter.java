@@ -17,6 +17,7 @@ import android.widget.TextView;
  * @author Miroslav Mihaljević
  */
 
+@Deprecated
 public class CursorRecyclerAdapter extends RecyclerView.Adapter<CursorRecyclerAdapter.ViewHolder> {
 
     private Context mContext;

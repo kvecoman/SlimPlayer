@@ -32,6 +32,9 @@
             android:name=".MediaPlayerService"
             android:enabled="true"
             android:exported="false" >
+            <intent-filter>
+                <action android:name="android.media.browse.MediaBrowserService"/>
+            </intent-filter>
 
         </service>
 
@@ -55,6 +58,13 @@
             </intent-filter>
         </activity>
         <activity android:name=".TestActivity" />
+
+        <!-- This needs to be removed, used as hack to avoid bug -->
+        <receiver android:name=".HeadsetChangeReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
 
 
     </application>

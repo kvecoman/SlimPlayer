@@ -28,16 +28,16 @@ public class SlimPlayerApplication extends Application {
     private boolean mPreferencesChanged = false;
 
     //List of listeners that need to be called when service is connected
-    private Set<PlayerServiceListener> mServiceBoundListeners;
+    /*private Set<PlayerServiceListener> mServiceBoundListeners;
 
     private MediaPlayerService mPlayerService;
-    private boolean mServiceBound;
+    private boolean mServiceBound;*/
 
     //Used to check whether we have alreadytried to play last state from previous instance run
     private boolean mPlayedLastState = false;
 
     //Here we set-up service connection that is used when service is started
-    protected ServiceConnection mServiceConnection = new ServiceConnection(){
+   /* protected ServiceConnection mServiceConnection = new ServiceConnection(){
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             Log.v(TAG,"onServiceConnected()");
@@ -65,7 +65,7 @@ public class SlimPlayerApplication extends Application {
             SlimPlayerApplication.this.mServiceBound = false;
             SlimPlayerApplication.this.mPlayerService = null;
         }
-    };
+    };*/
 
     @Override
     public void onCreate()
@@ -77,7 +77,7 @@ public class SlimPlayerApplication extends Application {
         /*startService(new Intent(this,MediaPlayerService.class));*/
 
         //Init list for listeners
-        mServiceBoundListeners = new HashSet<>();
+        //mServiceBoundListeners = new HashSet<>();
 
         //Init MediaPlayerService
         //bindService(new Intent(this, MediaPlayerService.class), mServiceConnection, Context.BIND_AUTO_CREATE);
@@ -100,13 +100,13 @@ public class SlimPlayerApplication extends Application {
         return sInstance;
     }
 
-    public MediaPlayerService getMediaPlayerServiceIfBound() {
+    /*public MediaPlayerService getMediaPlayerServiceIfBound() {
         return mPlayerService;
     }
 
     public boolean isMediaPlayerServiceBound() {
         return mServiceBound;
-    }
+    }*/
 
     //We indicate to any interested component that preferences have changed
     public void notifyPreferencesChanged() {mPreferencesChanged = true;}
@@ -117,7 +117,7 @@ public class SlimPlayerApplication extends Application {
     //Components notify that the have responded to changes
     public void consumePreferenceChange() {mPreferencesChanged = false;}
 
-    public void registerPlayerServiceListener(PlayerServiceListener listener)
+    /*public void registerPlayerServiceListener(PlayerServiceListener listener)
     {
         Log.v(TAG,"registerPlayerServiceListener() - " + listener);
         //If the service is already bound then serve listener right now
@@ -163,7 +163,7 @@ public class SlimPlayerApplication extends Application {
     public interface PlayerServiceListener
     {
         void onPlayerServiceBound(MediaPlayerService playerService);
-    }
+    }*/
 
 
 }

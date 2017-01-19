@@ -63,7 +63,7 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
         //Remove home screen if we don't want to show it
         if (!mShowHomeScreen)
         {
-            mScreensList.remove(mContext.getString(R.string.pref_key_home_screen));
+            mScreensList.remove(Const.HOME_SCREEN);
         }
 
         mNumScreens = ((ArrayList) mScreensList).size();
@@ -131,44 +131,44 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
             fragment.setArguments(args);
             return fragment;
         }
-        else if (mScreensList.get(position).equals(mContext.getString(R.string.pref_key_home_screen)))
+        else if (mScreensList.get(position).equals(Const.HOME_SCREEN))
         {
             fragment = new HomeFragment();
         }
-        else if (mScreensList.get(position).equals(mContext.getString(R.string.pref_key_all_screen)))
+        else if (mScreensList.get(position).equals(Const.ALL_SCREEN))
         {
             fragment = new SongRecyclerFragment();
-            args = ScreenBundles.getAllSongsBundle(mContext);
+            args = ScreenBundles.getAllSongsBundle();
             fragment.setArguments(args);
         }
-        else if (mScreensList.get(position).equals(mContext.getString(R.string.pref_key_playlists_screen)))
+        else if (mScreensList.get(position).equals(Const.PLAYLISTS_SCREEN))
         {
             fragment = new PlaylistsRecyclerFragment();
-            args = ScreenBundles.getPlaylistsBundle(mContext);
+            args = ScreenBundles.getPlaylistsBundle();
             fragment.setArguments(args);
         }
-        else if (mScreensList.get(position).equals(mContext.getString(R.string.pref_key_albums_screen)))
+        else if (mScreensList.get(position).equals(Const.ALBUMS_SCREEN))
         {
             fragment = new CategoryRecyclerFragment();
-            args = ScreenBundles.getAlbumsBundle(mContext);
+            args = ScreenBundles.getAlbumsBundle();
             fragment.setArguments(args);
         }
-        else if (mScreensList.get(position).equals(mContext.getString(R.string.pref_key_artists_screen)))
+        else if (mScreensList.get(position).equals(Const.ARTISTS_SCREEN))
         {
             fragment = new CategoryRecyclerFragment();
-            args = ScreenBundles.getArtistsBundle(mContext);
+            args = ScreenBundles.getArtistsBundle();
             fragment.setArguments(args);
         }
-        else if (mScreensList.get(position).equals(mContext.getString(R.string.pref_key_genres_screen)))
+        else if (mScreensList.get(position).equals(Const.GENRES_SCREEN))
         {
             fragment = new CategoryRecyclerFragment();
-            args = ScreenBundles.getGenresBundle(mContext);
+            args = ScreenBundles.getGenresBundle();
             fragment.setArguments(args);
         }
         else
         {
             fragment = new SongRecyclerFragment();
-            args = ScreenBundles.getAllSongsBundle(mContext);
+            args = ScreenBundles.getAllSongsBundle();
             fragment.setArguments(args);
         }
 

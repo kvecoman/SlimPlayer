@@ -188,7 +188,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
         //MediaPlayerService playerService = SlimPlayerApplication.getInstance().getMediaPlayerService();
 
         //Get bundle
-        Bundle bundle = ScreenBundles.getBundleForSubScreen(v.getContext(),source,parameter);
+        Bundle bundle = ScreenBundles.getBundleForSubScreen(source,parameter);
 
         //Insert last remembered position
         bundle.putInt(SongRecyclerFragment.PLAY_POSITION_KEY,playPosition);

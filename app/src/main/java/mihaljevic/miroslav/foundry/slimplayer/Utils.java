@@ -2,30 +2,21 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.provider.MediaStore;
+import android.support.v4.media.MediaBrowserCompat;
 import android.util.Log;
 import android.util.SparseBooleanArray;
-import android.util.TypedValue;
 import android.view.View;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by Miroslav on 23.11.2016..
@@ -38,15 +29,17 @@ public final class Utils {
 
     protected static final String TAG = Utils.class.getSimpleName();
 
+    private static SlimPlayerApplication sAppContext = SlimPlayerApplication.getInstance();
+
     private Utils(){}
 
     //Render custom font
-    /*public static Bitmap renderFont(Context context, String text, int color, float fontSizeSP, String path)
+    /*public static Bitmap renderFont(String text, int color, float fontSizeSP, String path)
     {
-        int fontSizePX = convertDipToPix(context, fontSizeSP);
+        int fontSizePX = convertDipToPix(sAppContext, fontSizeSP);
         int pad = (fontSizePX / 9);
         Paint paint = new Paint();
-        Typeface typeface = Typeface.createFromAsset(context.getAssets(), path);
+        Typeface typeface = Typeface.createFromAsset(sAppContext.getAssets(), path);
         paint.setAntiAlias(true);
         paint.setTypeface(typeface);
         paint.setColor(color);
@@ -62,9 +55,9 @@ public final class Utils {
 
     }
 
-    public static int convertDipToPix(Context context,float dip)
+    public static int convertDipToPix(,float dip)
     {
-        int value = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, context.getResources().getDisplayMetrics());
+        int value = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, sAppContext.getResources().getDisplayMetrics());
         return value;
     }*/
 
@@ -109,10 +102,10 @@ public final class Utils {
         return false;
     }
 
-    public static boolean checkIfPlaylistExist(Context context, String playlistName)
+    public static boolean checkIfPlaylistExist(String playlistName)
     {
         //Check if playlist with that name already exists
-        Cursor playlistsCursor = context.getContentResolver().query(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,
+        Cursor playlistsCursor = sAppContext.getContentResolver().query(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,
                                                         new String [] {MediaStore.Audio.Playlists._ID,MediaStore.Audio.Playlists.NAME},null,null,null);
         for (int i = 0;i < playlistsCursor.getCount();i++)
         {
@@ -128,7 +121,7 @@ public final class Utils {
     }
 
     //Creates playlist and returns id
-    public static long createPlaylist(Context context, String playlistName)
+    public static long createPlaylist( String playlistName)
     {
         //Create content values with new playlist info
         ContentValues inserts = new ContentValues();
@@ -137,10 +130,10 @@ public final class Utils {
         inserts.put(MediaStore.Audio.Playlists.DATE_MODIFIED, System.currentTimeMillis());
 
         //Insert new playlist values
-        Uri uri = context.getContentResolver().insert(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,inserts);
+        Uri uri = sAppContext.getContentResolver().insert(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,inserts);
 
         //Get ID of newly created playlist
-        Cursor c = context.getContentResolver().query(uri, new String[]{MediaStore.Audio.Playlists._ID},null,null,null);
+        Cursor c = sAppContext.getContentResolver().query(uri, new String[]{MediaStore.Audio.Playlists._ID},null,null,null);
         c.moveToFirst();
         long pId = c.getLong(0);
         c.close();
@@ -149,14 +142,14 @@ public final class Utils {
     }
 
     //Returns number of inserted items
-    public static int insertIntoPlaylist(Context context, List<String> IDs, long playlistId)
+    public static int insertIntoPlaylist( List<String> IDs, long playlistId)
     {
         //long [] IDs = data.getLongArrayExtra(PlaylistSongsFragment.SELECTED_SONGS_KEY);
         //long playlistId = ;
         Uri playlistUri = MediaStore.Audio.Playlists.Members.getContentUri("external",playlistId);
         List<ContentValues> valuesList = new ArrayList<>();
 
-        Cursor playlistCursor = context.getContentResolver().query(playlistUri,new String[]{MediaStore.Audio.Playlists.Members._ID, MediaStore.Audio.Playlists.Members.AUDIO_ID},null,null,null);
+        Cursor playlistCursor = sAppContext.getContentResolver().query(playlistUri,new String[]{MediaStore.Audio.Playlists.Members._ID, MediaStore.Audio.Playlists.Members.AUDIO_ID},null,null,null);
         int songCount = playlistCursor.getCount();
 
         ContentValues values;
@@ -174,7 +167,7 @@ public final class Utils {
             }
         }
 
-        ContentResolver resolver = context.getContentResolver();
+        ContentResolver resolver = sAppContext.getContentResolver();
         ContentValues[] valuesArray = new ContentValues[valuesList.size()];
         valuesList.toArray(valuesArray);
         int result = resolver.bulkInsert(playlistUri, valuesArray);
@@ -184,54 +177,55 @@ public final class Utils {
 
     }
 
-    public static int deleteFromList(Context context, Cursor cursor, Uri uri, SparseBooleanArray checkedPositions)
+    public static int deleteFromList(List<MediaBrowserCompat.MediaItem> mediaItems, Uri uri, SparseBooleanArray checkedPositions, String id_field)
     {
         int position = -1;
-        long id;
+        String id;
         int deletedCount = 0;
 
-        if (cursor == null || cursor.isClosed() || cursor.getColumnIndex("_id") == -1)
+        if (mediaItems == null)
             return  0;
 
         for (int i = 0;i < checkedPositions.size();i++)
         {
             position = checkedPositions.keyAt(i);
 
-            if (position >= 0 && position < cursor.getCount() && checkedPositions.get(position))
+            if (position >= 0 && position < mediaItems.size() && checkedPositions.get(position))
             {
-                cursor.moveToPosition(position);
-                id = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
-                deletedCount += context.getContentResolver().delete(  uri,
-                        "_id" + "=?",
-                        new String  [] {id + ""});
+                id = mediaItems.get(position).getMediaId();
+                deletedCount += sAppContext.getContentResolver().delete(  uri,
+                        id_field + "=?",
+                        new String  [] {id});
             }
 
         }
 
         return deletedCount;
+
     }
 
-    public static Cursor querySongListCursor(Context context, Bundle args)
+    //Bundle contains data with keys from ScreenBundles
+    public static Cursor queryMedia(Bundle args)
     {
-        Log.v(TAG,"queryCursor()");
+        Log.v(TAG,"queryMedia()");
 
         if (args == null)
             return null;
 
         //Create query that will fetch songs that we need for this screen
-        Uri uri = Uri.parse(args.getString(ScreenBundles.CURSOR_URI_KEY));
-        String [] projection = args.getStringArray(ScreenBundles.CURSOR_PROJECTION_KEY);
-        String selection = args.getString(ScreenBundles.CURSOR_SELECTION_KEY);
-        String [] selectionArgs = args.getStringArray(ScreenBundles.CURSOR_SELECTION_ARGS_KEY);
-        String sortOrder = args.getString(ScreenBundles.CURSOR_SORT_ORDER_KEY);
+        Uri uri = Uri.parse(args.getString(ScreenBundles.URI_KEY));
+        String [] projection = args.getStringArray(ScreenBundles.PROJECTION_KEY);
+        String selection = args.getString(ScreenBundles.SELECTION_KEY);
+        String [] selectionArgs = args.getStringArray(ScreenBundles.SELECTION_ARGS_KEY);
+        String sortOrder = args.getString(ScreenBundles.SORT_ORDER_KEY);
 
-        return context.getContentResolver().query(uri,projection,selection,selectionArgs,sortOrder);
+        return sAppContext.getContentResolver().query(uri,projection,selection,selectionArgs,sortOrder);
     }
 
     //Method that detects empty genres and stores that list into preferences
-    public static int deleteEmptyGenres(Context context)
+    public static int deleteEmptyGenres()
     {
-        ContentResolver resolver = context.getContentResolver();
+        ContentResolver resolver = sAppContext.getContentResolver();
         int count = 0;
         Cursor genresCursor = resolver.query(MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI,
                 new String[]{MediaStore.Audio.Genres._ID},null,null,null);
@@ -281,21 +275,21 @@ public final class Utils {
 
 
     //Gets display name either for playlist or genre or artist etc.
-    public static String getDisplayName(Context context, String source, String parameter)
+    public static String getDisplayName( String source, String parameter)
     {
 
         String displayName = null;
         Cursor cursor;
-        ContentResolver resolver = context.getContentResolver();
+        ContentResolver resolver = sAppContext.getContentResolver();
 
         if (source == null)
             return null;
 
-        if (source.equals(context.getString(R.string.pref_key_all_screen)))
+        if (source.equals(Const.ALL_SCREEN))
         {
-            displayName = context.getString(R.string.all_songs_screen_title);
+            displayName = sAppContext.getString(R.string.all_songs_screen_title);
         }
-        else if(source.equals(context.getString(R.string.pref_key_playlists_screen)))
+        else if(source.equals(Const.PLAYLISTS_SCREEN))
         {
             cursor = resolver.query(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,new String[]{MediaStore.Audio.Playlists.NAME}, MediaStore.Audio.Playlists._ID + "=" + parameter,null,null);
             if (cursor.getCount() == 0)
@@ -304,7 +298,7 @@ public final class Utils {
             cursor.moveToFirst();
             displayName = cursor.getString(0);
         }
-        else if (source.equals(context.getString(R.string.pref_key_albums_screen)))
+        else if (source.equals(Const.ALBUMS_SCREEN))
         {
             cursor = resolver.query(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,new String[]{MediaStore.Audio.Albums.ALBUM}, MediaStore.Audio.Albums._ID + "=" + parameter,null,null);
             if (cursor.getCount() == 0)
@@ -313,7 +307,7 @@ public final class Utils {
             cursor.moveToFirst();
             displayName = cursor.getString(0);
         }
-        else if (source.equals(context.getString(R.string.pref_key_artists_screen)))
+        else if (source.equals(Const.ARTISTS_SCREEN))
         {
             cursor = resolver.query(MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI,new String[]{MediaStore.Audio.Artists.ARTIST}, MediaStore.Audio.Artists._ID + "=" + parameter,null,null);
             if (cursor.getCount() == 0)
@@ -322,7 +316,7 @@ public final class Utils {
             cursor.moveToFirst();
             displayName = cursor.getString(0);
         }
-        else if (source.equals(context.getString(R.string.pref_key_genres_screen)))
+        else if (source.equals(Const.GENRES_SCREEN))
         {
             cursor = resolver.query(MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI,new String[]{MediaStore.Audio.Genres.NAME}, MediaStore.Audio.Genres._ID + "=" + parameter,null,null);
             if (cursor.getCount() == 0)
@@ -362,5 +356,15 @@ public final class Utils {
         }
 
         return resultBitmap;
+    }
+
+    public static void toastShort(String text)
+    {
+        Toast.makeText(SlimPlayerApplication.getInstance(),text,Toast.LENGTH_SHORT).show();
+    }
+
+    public static void toastLong(String text)
+    {
+        Toast.makeText(SlimPlayerApplication.getInstance(),text,Toast.LENGTH_LONG).show();
     }
 }

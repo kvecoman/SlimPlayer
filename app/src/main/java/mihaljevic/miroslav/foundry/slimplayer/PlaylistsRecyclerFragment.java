@@ -75,7 +75,7 @@ public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
                             protected Boolean doInBackground(String... params) {
                                 mPlaylistName = params[0];
 
-                                return Utils.checkIfPlaylistExist(mContext, mPlaylistName);
+                                return Utils.checkIfPlaylistExist(mPlaylistName);
                             }
 
                             @Override
@@ -83,7 +83,7 @@ public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
                                 //If playlist already exist
                                 if (result)
                                 {
-                                    Toast.makeText(mContext,getString(R.string.toast_playlist_exists),Toast.LENGTH_SHORT).show();
+                                    Utils.toastShort(getString(R.string.toast_playlist_exists));
                                     mCreatePlaylistEditText.selectAll();
                                 }
                                 else
@@ -96,7 +96,7 @@ public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
                                             String playlistName = params[0];
 
                                             //Create playlist
-                                            long playlistId = Utils.createPlaylist(getContext(),playlistName);
+                                            long playlistId = Utils.createPlaylist(playlistName);
 
                                             if (playlistId > 0 && Utils.equalsIncludingNull(mDefaultPlaylistName,playlistName))
                                             {
@@ -115,7 +115,8 @@ public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
                                         @Override
                                         protected void onPostExecute(Long result) {
                                             //Refresh data
-                                            loadDataAsync();
+                                            refreshData();
+
                                         }
                                     }.execute(mPlaylistName);
                                 }
@@ -183,27 +184,10 @@ public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
 
         if (item.getItemId() == R.id.delete_item)
         {
-            //Delete playlists
-            new AsyncTask<SparseBooleanArray,Void,Integer>()
-            {
-                @Override
-                protected Integer doInBackground(SparseBooleanArray... params) {
-
-                    return Utils.deleteFromList(getContext(), mAdapter.getCursor(), MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,params[0]);
-                }
-
-                @Override
-                protected void onPostExecute(Integer result) {
-                    Toast.makeText(mContext,result + " items deleted",Toast.LENGTH_SHORT).show();
-                    loadDataAsync();
-                    deselect();
-                }
-            }.execute(mSelectedItems);
-
+            deleteItemsAsync(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, MediaStore.Audio.Playlists._ID);
         }
         else if (item.getItemId() == R.id.playlist_create)
         {
-
 
             //Show dialog to create playlist
             mCreatePlaylistDialog.show();

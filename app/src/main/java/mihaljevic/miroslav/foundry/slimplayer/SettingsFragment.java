@@ -43,7 +43,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
 
                 //Delete empty genres
-                int deletedGenres = Utils.deleteEmptyGenres(getContext());
+                int deletedGenres = Utils.deleteEmptyGenres();
                 if (BuildConfig.DEBUG)
                     Toast.makeText(getContext(),deletedGenres + " genres deleted",Toast.LENGTH_SHORT).show();
 

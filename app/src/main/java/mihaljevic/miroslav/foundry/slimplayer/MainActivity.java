@@ -36,7 +36,7 @@ import junit.framework.Test;
 //TODO - updateDataAsync called twice every time in SlimRecyclerFragment
 
 
-//TODO - continue here - implement all Media classes stated in developer guide
+//TODO - continue here - continue in recreateLastPlaybackState, you need MusicProvider to return MediaItems and then use that instead of metadata
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener, SlimPlayerApplication.PlayerServiceListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";

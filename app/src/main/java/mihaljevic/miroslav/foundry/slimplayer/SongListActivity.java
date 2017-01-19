@@ -30,22 +30,23 @@ public class SongListActivity extends SelectSongsActivity {
         Fragment fragment = null;
 
         //Retrieve bundle intended to be sent with SlimListFragment
-        Bundle fragmentBundle = getIntent().getBundleExtra(FRAGMENT_BUNDLE_KEY);
+        Bundle fragmentBundle = getIntent().getExtras();
+
 
         //Check if everything is okay with bundle
-        if (fragmentBundle == null || !fragmentBundle.containsKey(ScreenBundles.CURSOR_SOURCE_KEY))
+        if (fragmentBundle == null || !getIntent().hasExtra(ScreenBundles.SOURCE_KEY))
         {
             Log.i(TAG, "onCreate() - Could not load data list fragment, loading empty one instead");
             //If something is wrong with bundle just show empty fragment
             fragment = new EmptyMessageFragment();
-            Bundle args = new Bundle();
-            args.putString(EmptyMessageFragment.MESSAGE_KEY,getString(R.string.empty_songlist));
+            fragmentBundle = new Bundle();
+            fragmentBundle.putString(EmptyMessageFragment.MESSAGE_KEY,getString(R.string.empty_songlist));
         }
 
         //If there is bundle for fragment then create that fragment and add it to container
         if (fragmentBundle != null)
         {
-            mSource = fragmentBundle.getString(ScreenBundles.CURSOR_SOURCE_KEY);
+            mSource = fragmentBundle.getString(ScreenBundles.SOURCE_KEY);
 
             //If we are opening playlist then load PlaylistSongsFragment
             if (Utils.equalsIncludingNull(mSource,getString(R.string.pref_key_playlists_screen)))

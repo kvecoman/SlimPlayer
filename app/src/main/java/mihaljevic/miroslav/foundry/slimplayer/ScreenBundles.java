@@ -18,18 +18,6 @@ public final class ScreenBundles {
 
     public static SlimPlayerApplication sAppContext = SlimPlayerApplication.getInstance();
 
-    //Keys that are used when transferring data about different screens
-    public static final String SOURCE_KEY = "source"; //Which screen, like all songs, genres etc
-
-    public static final String PARAMETER_KEY = "parameter"; //ID of playlist, or artist, something like that
-    public static final String URI_KEY = "uri";
-    public static final String PROJECTION_KEY = "projection";
-    public static final String SELECTION_KEY = "selection";
-    public static final String SELECTION_ARGS_KEY = "selection_args";
-    public static final String SORT_ORDER_KEY = "sort_order";
-
-    public static final String DISPLAY_FIELD_KEY = "display_field";
-
     //Private constructor to make it non-instantiable
     private ScreenBundles(){}
 
@@ -189,15 +177,15 @@ public final class ScreenBundles {
         }*/
 
 
-        bundle.putString(PARAMETER_KEY,""); //Empty string just so we don't mess up database
-        bundle.putString(SOURCE_KEY,cursorScreen);
-        bundle.putString(URI_KEY,uri);
-        bundle.putStringArray(PROJECTION_KEY,projection);
-        bundle.putString(SELECTION_KEY,selection);
-        bundle.putStringArray(SELECTION_ARGS_KEY,selectionArgs);
-        bundle.putString(SORT_ORDER_KEY,sortOrder);
+        bundle.putString( Const.PARAMETER_KEY,""); //Empty string just so we don't mess up database
+        bundle.putString( Const.SOURCE_KEY,cursorScreen);
+        bundle.putString( Const.URI_KEY,uri);
+        bundle.putStringArray( Const.PROJECTION_KEY,projection);
+        bundle.putString( Const.SELECTION_KEY,selection);
+        bundle.putStringArray( Const.SELECTION_ARGS_KEY,selectionArgs);
+        bundle.putString( Const.SORT_ORDER_KEY,sortOrder);
 
-        bundle.putString(DISPLAY_FIELD_KEY,MediaStore.Audio.Media.TITLE);
+        bundle.putString( Const.DISPLAY_FIELD_KEY,MediaStore.Audio.Media.TITLE);
 
         return bundle;
     }
@@ -218,14 +206,14 @@ public final class ScreenBundles {
         String [] selectionArgs = null;
         String sortOrder = MediaStore.Audio.Playlists.NAME + " ASC";
 
-        bundle.putString(SOURCE_KEY,cursorScreen);
-        bundle.putString(URI_KEY,uri);
-        bundle.putStringArray(PROJECTION_KEY,projection);
-        bundle.putString(SELECTION_KEY,selection);
-        bundle.putStringArray(SELECTION_ARGS_KEY,selectionArgs);
-        bundle.putString(SORT_ORDER_KEY,sortOrder);
+        bundle.putString( Const.SOURCE_KEY,cursorScreen);
+        bundle.putString( Const.URI_KEY,uri);
+        bundle.putStringArray( Const.PROJECTION_KEY,projection);
+        bundle.putString( Const.SELECTION_KEY,selection);
+        bundle.putStringArray( Const.SELECTION_ARGS_KEY,selectionArgs);
+        bundle.putString( Const.SORT_ORDER_KEY,sortOrder);
 
-        bundle.putString(DISPLAY_FIELD_KEY,MediaStore.Audio.Playlists.NAME);
+        bundle.putString( Const.DISPLAY_FIELD_KEY,MediaStore.Audio.Playlists.NAME);
 
         return bundle;
     }
@@ -258,14 +246,14 @@ public final class ScreenBundles {
         String [] selectionArgs = null;
         String sortOrder = MediaStore.Audio.Albums.ALBUM + " ASC";*/
 
-        bundle.putString(SOURCE_KEY,cursorScreen);
-        bundle.putString(URI_KEY,uri);
-        bundle.putStringArray(PROJECTION_KEY,projection);
-        bundle.putString(SELECTION_KEY,selection);
-        bundle.putStringArray(SELECTION_ARGS_KEY,selectionArgs);
-        bundle.putString(SORT_ORDER_KEY,sortOrder);
+        bundle.putString( Const.SOURCE_KEY,cursorScreen);
+        bundle.putString( Const.URI_KEY,uri);
+        bundle.putStringArray( Const.PROJECTION_KEY,projection);
+        bundle.putString( Const.SELECTION_KEY,selection);
+        bundle.putStringArray( Const.SELECTION_ARGS_KEY,selectionArgs);
+        bundle.putString( Const.SORT_ORDER_KEY,sortOrder);
 
-        bundle.putString(DISPLAY_FIELD_KEY,MediaStore.Audio.Media.ALBUM);
+        bundle.putString( Const.DISPLAY_FIELD_KEY,MediaStore.Audio.Media.ALBUM);
 
         return bundle;
     }
@@ -301,14 +289,14 @@ public final class ScreenBundles {
         String [] selectionArgs = null;
         String sortOrder = MediaStore.Audio.Artists.ARTIST + " ASC";*/
 
-        bundle.putString(SOURCE_KEY,cursorScreen);
-        bundle.putString(URI_KEY,uri);
-        bundle.putStringArray(PROJECTION_KEY,projection);
-        bundle.putString(SELECTION_KEY,selection);
-        bundle.putStringArray(SELECTION_ARGS_KEY,selectionArgs);
-        bundle.putString(SORT_ORDER_KEY,sortOrder);
+        bundle.putString( Const.SOURCE_KEY,cursorScreen);
+        bundle.putString( Const.URI_KEY,uri);
+        bundle.putStringArray( Const.PROJECTION_KEY,projection);
+        bundle.putString( Const.SELECTION_KEY,selection);
+        bundle.putStringArray( Const.SELECTION_ARGS_KEY,selectionArgs);
+        bundle.putString( Const.SORT_ORDER_KEY,sortOrder);
 
-        bundle.putString(DISPLAY_FIELD_KEY,MediaStore.Audio.Artists.ARTIST);
+        bundle.putString( Const.DISPLAY_FIELD_KEY,MediaStore.Audio.Artists.ARTIST);
 
         return bundle;
     }
@@ -331,14 +319,14 @@ public final class ScreenBundles {
         String [] selectionArgs = null;
         String sortOrder = MediaStore.Audio.Genres.NAME + " ASC";
 
-        bundle.putString(SOURCE_KEY,cursorScreen);
-        bundle.putString(URI_KEY,uri);
-        bundle.putStringArray(PROJECTION_KEY,projection);
-        bundle.putString(SELECTION_KEY,selection);
-        bundle.putStringArray(SELECTION_ARGS_KEY,selectionArgs);
-        bundle.putString(SORT_ORDER_KEY,sortOrder);
+        bundle.putString( Const.SOURCE_KEY,cursorScreen);
+        bundle.putString( Const.URI_KEY,uri);
+        bundle.putStringArray( Const.PROJECTION_KEY,projection);
+        bundle.putString( Const.SELECTION_KEY,selection);
+        bundle.putStringArray( Const.SELECTION_ARGS_KEY,selectionArgs);
+        bundle.putString( Const.SORT_ORDER_KEY,sortOrder);
 
-        bundle.putString(DISPLAY_FIELD_KEY,MediaStore.Audio.Genres.NAME);
+        bundle.putString( Const.DISPLAY_FIELD_KEY,MediaStore.Audio.Genres.NAME);
 
         return bundle;
     }
@@ -367,15 +355,15 @@ public final class ScreenBundles {
         String sortOrder = MediaStore.Audio.Playlists.Members.TITLE + " ASC";
 
 
-        bundle.putString(PARAMETER_KEY,parameter);
-        bundle.putString(SOURCE_KEY,cursorScreen);
-        bundle.putString(URI_KEY,uri);
-        bundle.putStringArray(PROJECTION_KEY,projection);
-        bundle.putString(SELECTION_KEY,selection);
-        bundle.putStringArray(SELECTION_ARGS_KEY,selectionArgs);
-        bundle.putString(SORT_ORDER_KEY,sortOrder);
+        bundle.putString( Const.PARAMETER_KEY,parameter);
+        bundle.putString( Const.SOURCE_KEY,cursorScreen);
+        bundle.putString( Const.URI_KEY,uri);
+        bundle.putStringArray( Const.PROJECTION_KEY,projection);
+        bundle.putString( Const.SELECTION_KEY,selection);
+        bundle.putStringArray( Const.SELECTION_ARGS_KEY,selectionArgs);
+        bundle.putString( Const.SORT_ORDER_KEY,sortOrder);
 
-        bundle.putString(DISPLAY_FIELD_KEY,MediaStore.Audio.Playlists.Members.TITLE);
+        bundle.putString( Const.DISPLAY_FIELD_KEY,MediaStore.Audio.Playlists.Members.TITLE);
 
         return bundle;
     }
@@ -405,15 +393,15 @@ public final class ScreenBundles {
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
 
 
-        bundle.putString(PARAMETER_KEY,parameter);
-        bundle.putString(SOURCE_KEY,cursorScreen);
-        bundle.putString(URI_KEY,uri);
-        bundle.putStringArray(PROJECTION_KEY,projection);
-        bundle.putString(SELECTION_KEY,selection);
-        bundle.putStringArray(SELECTION_ARGS_KEY,selectionArgs);
-        bundle.putString(SORT_ORDER_KEY,sortOrder);
+        bundle.putString( Const.PARAMETER_KEY,parameter);
+        bundle.putString( Const.SOURCE_KEY,cursorScreen);
+        bundle.putString( Const.URI_KEY,uri);
+        bundle.putStringArray( Const.PROJECTION_KEY,projection);
+        bundle.putString( Const.SELECTION_KEY,selection);
+        bundle.putStringArray( Const.SELECTION_ARGS_KEY,selectionArgs);
+        bundle.putString( Const.SORT_ORDER_KEY,sortOrder);
 
-        bundle.putString(DISPLAY_FIELD_KEY,MediaStore.Audio.Media.TITLE);
+        bundle.putString( Const.DISPLAY_FIELD_KEY,MediaStore.Audio.Media.TITLE);
 
         return bundle;
     }
@@ -443,15 +431,15 @@ public final class ScreenBundles {
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
 
 
-        bundle.putString(PARAMETER_KEY,parameter);
-        bundle.putString(SOURCE_KEY,cursorScreen);
-        bundle.putString(URI_KEY,uri);
-        bundle.putStringArray(PROJECTION_KEY,projection);
-        bundle.putString(SELECTION_KEY,selection);
-        bundle.putStringArray(SELECTION_ARGS_KEY,selectionArgs);
-        bundle.putString(SORT_ORDER_KEY,sortOrder);
+        bundle.putString( Const.PARAMETER_KEY,parameter);
+        bundle.putString( Const.SOURCE_KEY,cursorScreen);
+        bundle.putString( Const.URI_KEY,uri);
+        bundle.putStringArray( Const.PROJECTION_KEY,projection);
+        bundle.putString( Const.SELECTION_KEY,selection);
+        bundle.putStringArray( Const.SELECTION_ARGS_KEY,selectionArgs);
+        bundle.putString( Const.SORT_ORDER_KEY,sortOrder);
 
-        bundle.putString(DISPLAY_FIELD_KEY,MediaStore.Audio.Media.TITLE);
+        bundle.putString( Const.DISPLAY_FIELD_KEY,MediaStore.Audio.Media.TITLE);
 
         return bundle;
     }
@@ -479,15 +467,15 @@ public final class ScreenBundles {
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
 
 
-        bundle.putString(PARAMETER_KEY,parameter);
-        bundle.putString(SOURCE_KEY,cursorScreen);
-        bundle.putString(URI_KEY,uri);
-        bundle.putStringArray(PROJECTION_KEY,projection);
-        bundle.putString(SELECTION_KEY,selection);
-        bundle.putStringArray(SELECTION_ARGS_KEY,selectionArgs);
-        bundle.putString(SORT_ORDER_KEY,sortOrder);
+        bundle.putString( Const.PARAMETER_KEY,parameter);
+        bundle.putString( Const.SOURCE_KEY,cursorScreen);
+        bundle.putString( Const.URI_KEY,uri);
+        bundle.putStringArray( Const.PROJECTION_KEY,projection);
+        bundle.putString( Const.SELECTION_KEY,selection);
+        bundle.putStringArray( Const.SELECTION_ARGS_KEY,selectionArgs);
+        bundle.putString( Const.SORT_ORDER_KEY,sortOrder);
 
-        bundle.putString(DISPLAY_FIELD_KEY,MediaStore.Audio.Media.TITLE);
+        bundle.putString( Const.DISPLAY_FIELD_KEY,MediaStore.Audio.Media.TITLE);
 
         return bundle;
     }

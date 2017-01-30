@@ -2,7 +2,6 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 
 import android.content.Intent;
-import android.database.Cursor;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -35,8 +34,8 @@ public class CategoryRecyclerFragment extends SlimRecyclerFragment {
             String parameter = mAdapter.getMediaItemsList().get(position).getMediaId();
 
             //Choose bundle and send it to songList fragment
-            intent.putExtra(ScreenBundles.SOURCE_KEY, mCurrentSource);
-            intent.putExtra(ScreenBundles.PARAMETER_KEY, parameter);
+            intent.putExtra( Const.SOURCE_KEY, mCurrentSource);
+            intent.putExtra( Const.PARAMETER_KEY, parameter);
             intent.putExtra(SlimActivity.REQUEST_CODE_KEY,PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2);
 
             //We let the hosting activity to handle results of selecting songs
@@ -51,8 +50,8 @@ public class CategoryRecyclerFragment extends SlimRecyclerFragment {
             String parameter = mAdapter.getMediaItemsList().get(position).getMediaId();
 
             //Choose bundle and send it to songList fragment
-            intent.putExtra(ScreenBundles.SOURCE_KEY, mCurrentSource);
-            intent.putExtra(ScreenBundles.PARAMETER_KEY, parameter);
+            intent.putExtra( Const.SOURCE_KEY, mCurrentSource);
+            intent.putExtra( Const.PARAMETER_KEY, parameter);
 
             //Start next screen
             startActivity(intent);

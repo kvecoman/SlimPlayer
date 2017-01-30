@@ -36,8 +36,8 @@ import junit.framework.Test;
 //TODO - updateDataAsync called twice every time in SlimRecyclerFragment
 
 
-//TODO - continue here - continue in recreateLastPlaybackState, you need MusicProvider to return MediaItems and then use that instead of metadata
-public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener, SlimPlayerApplication.PlayerServiceListener{
+//TODO - continue here - continue with restoring functionallity, add seekTo functionality, also after adding runable and handler in service it started the problems with switching nearby songs
+public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";
 
@@ -78,18 +78,18 @@ public class MainActivity extends SelectSongsActivity implements TextView.OnClic
         updateAfterPreferenceChange();
 
         //We do this only to make sure service is alive throughout app
-        SlimPlayerApplication.getInstance().registerPlayerServiceListener(this);
+        //SlimPlayerApplication.getInstance().registerPlayerServiceListener(this);
     }
 
-    //We hace this only to keep MediaPlayerService alive
-    @Override
-    public void onPlayerServiceBound(MediaPlayerService playerService) {}
+    //We have this only to keep MediaPlayerService alive
+    /*@Override
+    public void onPlayerServiceBound(MediaPlayerService playerService) {}*/
 
     @Override
     protected void onStop() {
         super.onStop();
 
-        SlimPlayerApplication.getInstance().unregisterPlayerServiceListener(this);
+        //SlimPlayerApplication.getInstance().unregisterPlayerServiceListener(this);
     }
 
     @Override

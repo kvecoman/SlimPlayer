@@ -6,8 +6,10 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -53,6 +55,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
     protected SparseBooleanArray mSelectedItems;
 
     protected MediaBrowserCompat mMediaBrowser;
+    protected MediaControllerCompat mMediaController;
 
     protected final MediaBrowserCompat.ConnectionCallback mConnectionCallbacks = new MediaBrowserCompat.ConnectionCallback(){
         @Override
@@ -62,6 +65,17 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
 
 
             mMediaBrowser.subscribe(mCurrentSource, mSubscriptionBundle, mSubscriptionCallbacks);
+
+            try
+            {
+                mMediaController = new MediaControllerCompat( getContext(), mMediaBrowser.getSessionToken() );
+                mMediaController.registerCallback( mControllerCallbacks );
+            }
+            catch (RemoteException e){
+                e.printStackTrace();
+            }
+
+            //TODO - init session callbacks
         }
 
         @Override
@@ -79,24 +93,35 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
     protected final MediaBrowserCompat.SubscriptionCallback mSubscriptionCallbacks = new MediaBrowserCompat.SubscriptionCallback() {
         @Override
         public void onChildrenLoaded(@NonNull String parentId, List<MediaBrowserCompat.MediaItem> children) {
+            super.onChildrenLoaded( parentId, children );
+
             onDataLoaded(parentId, children, null);
         }
 
         @Override
         public void onChildrenLoaded(@NonNull String parentId, List<MediaBrowserCompat.MediaItem> children, @NonNull Bundle options) {
+            super.onChildrenLoaded( parentId, children, options );
+
             onDataLoaded(parentId, children, options);
         }
 
         @Override
         public void onError(@NonNull String parentId) {
+            super.onError( parentId );
 
         }
 
         @Override
         public void onError(@NonNull String parentId, @NonNull Bundle options) {
+            super.onError( parentId, options );
 
         }
     };
+
+    protected MediaControllerCompat.Callback mControllerCallbacks = new MediaControllerCompat.Callback()
+    {
+    };
+
 
     protected void onDataLoaded(@NonNull String parentId, List<MediaBrowserCompat.MediaItem> children, @NonNull Bundle options)
     {
@@ -144,11 +169,11 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
 
 
         //Get current source and parameter
-        mCurrentSource = getArguments().getString(ScreenBundles.SOURCE_KEY);
-        mCurrentParameter = getArguments().getString(ScreenBundles.PARAMETER_KEY);
+        mCurrentSource = getArguments().getString( Const.SOURCE_KEY);
+        mCurrentParameter = getArguments().getString( Const.PARAMETER_KEY);
 
         mSubscriptionBundle = new Bundle();
-        mSubscriptionBundle.putString(ScreenBundles.PARAMETER_KEY, mCurrentParameter);
+        mSubscriptionBundle.putString( Const.PARAMETER_KEY, mCurrentParameter);
 
 
         //Check if we are selecting songs for playlists
@@ -181,7 +206,11 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
     public void onStop() {
         super.onStop();
 
-        mMediaBrowser.disconnect();
+        if (mMediaController != null)
+            mMediaController.unregisterCallback( mControllerCallbacks );
+
+        if (mMediaBrowser.isConnected())
+            mMediaBrowser.disconnect();
     }
 
 
@@ -190,10 +219,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
     public void onDestroy() {
         super.onDestroy();
 
-        //Adapter will check if cursor is used by media player service and close it appropriately
-        //Also we need to check if adapter exists because of screen rotation calls
-       /* if (mAdapter != null)
-            mAdapter.closeCursor();*/
+
     }
 
     @Override

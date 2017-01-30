@@ -1,6 +1,5 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
-import android.content.ContentResolver;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -13,21 +12,23 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by Miroslav on 16.1.2017..
+ *
+ * Singleton class that loads
  */
 
 public class MusicProvider {
     private final String TAG = getClass().getSimpleName();
 
+
+
     //private List<MediaMetadataCompat> mMusicMetadataList;
 
-    private Map<DoubleKey,List<MediaMetadataCompat>> mMusicMetadataMap;
+    private Map<DoubleKey,List<MediaBrowserCompat.MediaItem>> mMusicItemsMap;
 
     //private Map<String, String> mCursorMetadataKeys;
 
@@ -53,7 +54,7 @@ public class MusicProvider {
 
 
     private MusicProvider(){
-        mMusicMetadataMap = new HashMap<>();
+        mMusicItemsMap = new HashMap<>();
         /*mCursorMetadataKeys = new HashMap<>();
         buildCursorMetadataKeys();*/
     }
@@ -136,33 +137,38 @@ public class MusicProvider {
         mState = State.READY;
     }*/
 
-    public List<MediaMetadataCompat> loadMedia(String source, String parameter)
+    public List<MediaBrowserCompat.MediaItem> loadMedia(String source, String parameter)
     {
-        Bundle bundle;
-        MediaMetadataCompat mediaMetadata;
-        MediaMetadataCompat.Builder metadataBuilder;
-        String mediaUriStr;
-        List<MediaMetadataCompat> mediaMetadataList;
-        DoubleKey doubleKey = new DoubleKey(source, parameter);
+        Bundle                              cursorBundle;
+        MediaMetadataCompat                 mediaMetadata;
+        MediaMetadataCompat.Builder         metadataBuilder;
+        String                              mediaUriStr;
+        MediaBrowserCompat.MediaItem        mediaItem;
+        List<MediaBrowserCompat.MediaItem>  mediaItemsList;
+        DoubleKey                           doubleKey;
 
-        if (mMusicMetadataMap.containsKey(doubleKey))
+        doubleKey = new DoubleKey(source, parameter);
+
+        //Return existing list if we have it cached
+        if (mMusicItemsMap.containsKey(doubleKey))
         {
-            mediaMetadataList = mMusicMetadataMap.get(doubleKey);
+            mediaItemsList = mMusicItemsMap.get(doubleKey);
 
-            if (mediaMetadataList != null)
-                return mediaMetadataList;
+            if (mediaItemsList != null)
+                return mediaItemsList;
         }
 
+        //Retrieve appropriate cursorBundle for cursor
         if (parameter == null)
-            bundle = ScreenBundles.getBundleForMainScreen(source);
+            cursorBundle = ScreenBundles.getBundleForMainScreen(source);
         else
-            bundle = ScreenBundles.getBundleForSubScreen(source, parameter);
+            cursorBundle = ScreenBundles.getBundleForSubScreen(source, parameter);
 
-        if (bundle == null)
+        if (cursorBundle == null)
             return null;
 
-
-        Cursor cursor = Utils.queryMedia(bundle);
+        //Load cursor using parameters from cursorBundle
+        Cursor cursor = Utils.queryMedia(cursorBundle);
 
         if (cursor == null)
         {
@@ -170,8 +176,9 @@ public class MusicProvider {
             return null;
         }
 
-        mediaMetadataList = new ArrayList<>(cursor.getCount());
+        mediaItemsList = new ArrayList<>(cursor.getCount());
 
+        //Check whether we load songs or categories and build metadata for it from cursor
         if (source.equals(Const.ALL_SCREEN) || parameter != null)
         {
             //If we are loading songs
@@ -182,15 +189,19 @@ public class MusicProvider {
                 mediaUriStr = Uri.parse(cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA))).toString();
 
                 metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID,cursor.getString(0))
-                    .putString(MediaMetadataCompat.METADATA_KEY_TITLE,cursor.getString(1))
-                    .putString(MediaMetadataCompat.METADATA_KEY_ALBUM,cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM)))
-                    .putString(MediaMetadataCompat.METADATA_KEY_ARTIST,cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)))
-                    .putLong(MediaMetadataCompat.METADATA_KEY_DURATION,cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION)))
-                    .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI,mediaUriStr);
+                                .putString(MediaMetadataCompat.METADATA_KEY_TITLE,cursor.getString(1))
+                                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM,cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM)))
+                                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST,cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)))
+                                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION,cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION)))
+                                .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI,mediaUriStr);
 
                 mediaMetadata = metadataBuilder.build();
 
-                mediaMetadataList.add(mediaMetadata);
+                //Get media item with description that has bundled media metadata object in it
+                mediaItem = bundleMetadata( mediaMetadata );
+
+
+                mediaItemsList.add(mediaItem);
             }
         }
         else
@@ -205,7 +216,9 @@ public class MusicProvider {
 
                 mediaMetadata = metadataBuilder.build();
 
-                mediaMetadataList.add(mediaMetadata);
+                mediaItem = new MediaBrowserCompat.MediaItem(mediaMetadata.getDescription(), MediaBrowserCompat.MediaItem.FLAG_BROWSABLE);
+
+                mediaItemsList.add(mediaItem);
 
             }
         }
@@ -213,25 +226,50 @@ public class MusicProvider {
 
         cursor.close();
 
+        //Cache this list for later retrieval
+        mMusicItemsMap.put(doubleKey, mediaItemsList);
 
-
-        mMusicMetadataMap.put(doubleKey, mediaMetadataList);
-
-        return mediaMetadataList;
+        return mediaItemsList;
 
     }
 
+    public MediaBrowserCompat.MediaItem bundleMetadata(MediaMetadataCompat metadata)
+    {
+        MediaBrowserCompat.MediaItem        mediaItem;
+        Bundle                              descriptionBundle;
+        MediaDescriptionCompat              mediaDescription;
+        MediaDescriptionCompat.Builder      descriptionBuilder;
+
+        //We use media description's cursorBundle as means to carry around mediaMetadata
+        descriptionBundle = new Bundle();
+        descriptionBundle.putParcelable( Const.METADATA_KEY, metadata  );
+
+        descriptionBuilder = new MediaDescriptionCompat.Builder();
+        descriptionBuilder  .setMediaId  ( metadata.getString( MediaMetadataCompat.METADATA_KEY_MEDIA_ID ) )
+                            .setTitle   ( metadata.getString( MediaMetadataCompat.METADATA_KEY_TITLE ) )
+                            .setMediaUri( Uri.parse( metadata.getString( MediaMetadataCompat.METADATA_KEY_MEDIA_URI ) ) )
+                            .setExtras  ( descriptionBundle );
+
+        mediaDescription = descriptionBuilder.build();
+
+        mediaItem = new MediaBrowserCompat.MediaItem(mediaDescription, MediaBrowserCompat.MediaItem.FLAG_PLAYABLE);
+
+        return mediaItem;
+    }
+
+    //Discard all cached lists so that we load fresh data when media service calls
     public void invalidateAllData()
     {
-        mMusicMetadataMap = new HashMap<>();
+        mMusicItemsMap = new HashMap<>();
     }
 
+    //Discard only one list and notify media service to make a call to load list again
     public void invalidateDataAndNotify(String source, String parameter)
     {
         Bundle bundle = new Bundle();
-        bundle.putString(ScreenBundles.PARAMETER_KEY,parameter);
+        bundle.putString( Const.PARAMETER_KEY,parameter);
 
-        mMusicMetadataMap.remove(new DoubleKey(source, parameter));
+        mMusicItemsMap.remove(new DoubleKey(source, parameter));
         if (mListener != null)
             mListener.notifyChildrenChanged(source, bundle);
     }

@@ -116,11 +116,11 @@ public class CursorRecyclerAdapter extends RecyclerView.Adapter<CursorRecyclerAd
 
     public void closeCursor()
     {
-        if (mCursor != null && !mCursor.isClosed() && SlimPlayerApplication.getInstance().isMediaPlayerServiceBound() &&
+        /*if (mCursor != null && !mCursor.isClosed() && SlimPlayerApplication.getInstance().isMediaPlayerServiceBound() &&
                 !SlimPlayerApplication.getInstance().getMediaPlayerServiceIfBound().isCursorUsed(mCursor))
         {
             mCursor.close();
-        }
+        }*/
     }
 
 

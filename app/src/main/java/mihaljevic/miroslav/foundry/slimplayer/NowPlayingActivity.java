@@ -1,17 +1,28 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.RemoteException;
+import android.support.annotation.NonNull;
+import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import java.util.List;
 
-public class NowPlayingActivity extends BackHandledFragmentActivity implements MediaPlayerService.SongPlayListener, ViewPager.OnPageChangeListener, View.OnClickListener, SlimPlayerApplication.PlayerServiceListener {
+
+public class NowPlayingActivity extends BackHandledFragmentActivity implements  ViewPager.OnPageChangeListener, View.OnClickListener
+{
 
     //TODO - check if this class can be optimized
 
@@ -19,23 +30,116 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
     private ViewPager mPager;
     private NowPlayingPagerAdapter mPagerAdapter;
 
-    private MediaPlayerService mPlayerService;
+    private String mQueueSource;
+    private String mQueueParameter;
+
+    protected MediaBrowserCompat mMediaBrowser;
+    protected MediaControllerCompat mMediaController;
+
+    private MediaBrowserCompat.ConnectionCallback mConnectionCallbacks = new MediaBrowserCompat.ConnectionCallback(){
+        @Override
+        public void onConnected()
+        {
+            super.onConnected();
 
 
-    @Override
+
+            try
+            {
+                mMediaController = new MediaControllerCompat( NowPlayingActivity.this, mMediaBrowser.getSessionToken() );
+                mMediaController.registerCallback( mMediaControllerCallbacks );
+
+                startFilePlayingIfNeeded();
+
+                //First time data init
+                mMediaControllerCallbacks.onQueueChanged( mMediaController.getQueue() );
+
+
+            }
+            catch (RemoteException e){
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void onConnectionSuspended()
+        {
+            super.onConnectionSuspended();
+        }
+
+        @Override
+        public void onConnectionFailed()
+        {
+            super.onConnectionFailed();
+        }
+    };
+
+    /*private MediaBrowserCompat.SubscriptionCallback mSubscriptionCallbacks = new MediaBrowserCompat.SubscriptionCallback()
+    {
+        @Override
+        public void onChildrenLoaded( @NonNull String parentId, List<MediaBrowserCompat.MediaItem> children )
+        {
+            super.onChildrenLoaded( parentId, children );
+            onChildrenLoaded( parentId, children, null );
+        }
+
+        @Override
+        public void onChildrenLoaded( @NonNull String parentId, List<MediaBrowserCompat.MediaItem> children, @NonNull Bundle options )
+        {
+            super.onChildrenLoaded( parentId, children, options );
+
+            //We get this callback only if we are playing from file
+        }
+    };*/
+
+    private MediaControllerCompat.Callback mMediaControllerCallbacks = new MediaControllerCompat.Callback()
+    {
+        @Override
+        public void onQueueChanged( List<MediaSessionCompat.QueueItem> queue )
+        {
+            super.onQueueChanged( queue );
+
+            initPagerAdapter( queue );
+        }
+
+        @Override
+        public void onPlaybackStateChanged( PlaybackStateCompat state )
+        {
+            super.onPlaybackStateChanged( state );
+
+            int activeQueueId;
+            int stateInt;
+
+            activeQueueId = (int)state.getActiveQueueItemId();
+            stateInt = state.getState();
+
+            if (stateInt == PlaybackStateCompat.STATE_PLAYING)
+            {
+                //Check if we need to switch to current page
+                if (activeQueueId != mPager.getCurrentItem())
+                    updatePagerWithCurrentSong();
+            }
+        }
+
+    };
+
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pager);
 
         mPager = (ViewPager)findViewById(R.id.pager);
         mPager.addOnPageChangeListener(this);
+
+        mMediaBrowser = new MediaBrowserCompat( this, new ComponentName( this, MediaPlayerService.class ), mConnectionCallbacks, null );
     }
 
     @Override
     protected void onStart() {
         super.onStart();
 
-        SlimPlayerApplication.getInstance().registerPlayerServiceListener(this);
+
+        mMediaBrowser.connect();
     }
 
 
@@ -44,7 +148,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
     protected void onResume() {
         super.onResume();
 
-        //Update pager with current song when we return to this activity
+        //Update pager with current song when we return to this activity (if we are connected to media service)
         updatePagerWithCurrentSong();
     }
 
@@ -60,7 +164,8 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
         return true;
     }
 
-    @Override
+    //TODO - this code needs to go in onSubscribe or onChildrenLoaded (now only filePlaying needs to be done)
+    /*@Override
     public void onPlayerServiceBound(MediaPlayerService playerService) {
         mPlayerService = playerService;
 
@@ -70,7 +175,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
 
         //When we are connected request current play info
         mPlayerService.registerPlayListener(NowPlayingActivity.this);
-    }
+    }*/
 
     @Override
     public void onBackPressed() {
@@ -91,64 +196,77 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
     protected void onStop() {
         super.onStop();
 
-        if (mPlayerService != null)
-           mPlayerService.unregisterPlayListener(this);
 
-        SlimPlayerApplication.getInstance().unregisterPlayerServiceListener(this);
+        mMediaController.unregisterCallback( mMediaControllerCallbacks );
+        mMediaBrowser.disconnect();
     }
 
-
+    @Override
+    protected void onDestroy()
+    {
+        Log.v(TAG, "onDestroy()");
+        super.onDestroy();
+    }
 
     //Check if we need to start playing a file
     private void startFilePlayingIfNeeded()
     {
-        Intent intent = getIntent();
+        Intent intent;
+        Uri fileUri;
+        Bundle extras;
+
+        intent = getIntent();
 
         //Here we handle if playback is started from file
-        if (intent != null && intent.getAction() != null && intent.getAction().equals(Intent.ACTION_VIEW) && mPlayerService != null)
+        if (intent != null && intent.getAction() != null && intent.getAction().equals(Intent.ACTION_VIEW) && mMediaBrowser.isConnected())
         {
             //This activity is called from outside, when playing audio files
-            Uri dataUri = intent.getData();
+            fileUri = intent.getData();
+            extras = new Bundle(  );
 
-            if (dataUri.getScheme().contains("file"))
+
+            if (fileUri.getScheme().contains("file"))
             {
-                FileSongs songs = new FileSongs();
-                songs.addFile(dataUri.getPath());
+                extras.putString( Const.SOURCE_KEY,     Const.FILE_URI_KEY );
+                extras.putString( Const.PARAMETER_KEY,  fileUri.toString() );
+                extras.putInt   ( Const.POSITION_KEY,   0 );
 
-                mPlayerService.playList(songs,0);
+                //We use position as mediaID
+                mMediaController.getTransportControls().playFromMediaId( "0", extras );
             }
+
 
         }
     }
 
-    private void initPagerAdapter()
+    private void initPagerAdapter( List<MediaSessionCompat.QueueItem> queue )
     {
-        //If pager is not set with intent extras, then set it with MediaPlayerService
-        if (mPagerAdapter == null && mPlayerService != null)
-        {
-            //Check that media player service has any list loaded and is ready to play
-            if (mPlayerService.isReadyToPlay())
-            {
-                mPagerAdapter = new NowPlayingPagerAdapter(getSupportFragmentManager(),NowPlayingActivity.this,mPlayerService.getCount());
-                mPager.setAdapter(mPagerAdapter);
-                mPager.setCurrentItem(mPlayerService.getPosition());
-            }
 
-        }
+        mPagerAdapter = new NowPlayingPagerAdapter(getSupportFragmentManager(), queue);
+        mPager.setAdapter(mPagerAdapter);
+
+        updatePagerWithCurrentSong();
     }
 
     public void updatePagerWithCurrentSong()
     {
-        if (mPlayerService == null)
+        int position;
+        PlaybackStateCompat playbackState;
+
+        if (!mMediaBrowser.isConnected())
             return;
 
-        int playPosition = mPlayerService.getPosition();
+        playbackState = mMediaController.getPlaybackState();
 
-        if (playPosition == mPager.getCurrentItem() || playPosition < 0 || playPosition >= mPagerAdapter.getCount())
+        if (playbackState == null)
             return;
 
-        mPager.setCurrentItem(playPosition);
+        position = (int)playbackState.getActiveQueueItemId();
 
+        if (position != PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN && position >= 0 && position < mPagerAdapter.getCount())
+        {
+            mPager.setCurrentItem( position );
+        }
     }
 
     public void updateRepeatIcon(Menu menu)
@@ -166,51 +284,37 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
         }
     }
 
-    /*public MediaPlayerService getPlayerService()
-    {
-        return SlimPlayerApplication.getInstance().getMediaPlayerService();
-    }*/
 
     //Handle onscreen taps, change between play/pause
     @Override
     public void onClick(View v)
     {
-        if (mPlayerService == null)
-            return;
 
-        if (mPlayerService.isReadyToPlay())
+        PlaybackStateCompat playbackState;
+        int state;
+
+        playbackState = mMediaController.getPlaybackState();
+        state = playbackState.getState();
+
+
+        switch(state)
         {
-            if (mPlayerService.isPlaying())
-            {
-                mPlayerService.pause();
-            }
-            else
-            {
-                mPlayerService.resumeOrPlay(getPager().getCurrentItem());
-            }
+            case PlaybackStateCompat.STATE_PLAYING:
+                //Pause playback
+                mMediaController.getTransportControls().pause();
+                break;
+            case PlaybackStateCompat.STATE_PAUSED:
+                //Resume playback
+                mMediaController.getTransportControls().play();
+                break;
+            case PlaybackStateCompat.STATE_STOPPED:
+                mMediaController.getTransportControls().skipToQueueItem( mPager.getCurrentItem() );
+                break;
         }
+
+
     }
 
-
-
-
-
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
-        return super.onOptionsItemSelected(item);
-    }
-
-
-    public ViewPager getPager() {
-        return mPager;
-    }
-
-    @Override
-    public void onPlay(Songs songs, int position) {
-        mPager.setCurrentItem(position,true);
-    }
 
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
@@ -218,11 +322,11 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements M
     @Override
     public void onPageSelected(int position)
     {
-        if (mPlayerService == null || mPlayerService.getPosition() == position)
+        if (!mMediaBrowser.isConnected() || mMediaController == null || mMediaController.getPlaybackState().getActiveQueueItemId() == position)
             return;
 
         //Play this position when user selects it
-        mPlayerService.play(position);
+        mMediaController.getTransportControls().skipToQueueItem( mPager.getCurrentItem() );
     }
 
     @Override

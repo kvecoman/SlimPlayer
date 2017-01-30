@@ -5,6 +5,9 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.media.session.MediaSessionCompat;
+
+import java.util.List;
 
 /**
  * Created by Miroslav on 15.11.2016..
@@ -15,25 +18,34 @@ import android.support.v4.app.FragmentStatePagerAdapter;
  */
 public class NowPlayingPagerAdapter extends FragmentStatePagerAdapter {
 
+    private int mCount = 0;
 
-    private int mCount;
+    private List<MediaSessionCompat.QueueItem> mQueue;
 
 
-    public NowPlayingPagerAdapter(FragmentManager fragmentManager, Context context, int count)
+    public NowPlayingPagerAdapter(FragmentManager fragmentManager, List<MediaSessionCompat.QueueItem> queue)
     {
         super(fragmentManager);
 
-        mCount = count;
+        mQueue = queue;
+
+        if (mQueue != null)
+            mCount = mQueue.size();
+
     }
 
     @Override
     public Fragment getItem(int position) {
         Fragment fragment = new NowPlayingFragment();
-        Bundle bundle = new Bundle();
-        bundle.putInt(NowPlayingFragment.SONG_POSITION_KEY,position);
-        fragment.setArguments(bundle);
+
+        Bundle args = mQueue.get( position ).getDescription().getExtras();
+        args.putInt( Const.POSITION_KEY, position );
+        fragment.setArguments(args);
+
+
         return fragment;
     }
+
 
     @Override
     public int getCount() {

@@ -11,11 +11,13 @@ import android.content.Intent;
  * @author Miroslav Mihaljević
  */
 
+@Deprecated
 public class HeadsetChangeReceiver extends BroadcastReceiver {
     @Override
-    public void onReceive(Context context, Intent intent) {
+    public void onReceive(Context context, Intent intent)
+    {
 
-        MediaPlayerService playerService = SlimPlayerApplication.getInstance().getMediaPlayerServiceIfBound();
+        /*MediaPlayerService playerService = SlimPlayerApplication.getInstance().getMediaPlayerServiceIfBound();
 
         //If something is wrong just return
         if (!intent.hasExtra("state") || playerService == null)
@@ -26,6 +28,6 @@ public class HeadsetChangeReceiver extends BroadcastReceiver {
         if (intent.getIntExtra("state",0) == 0)
         {
             playerService.pause();
-        }
+        }*/
     }
 }

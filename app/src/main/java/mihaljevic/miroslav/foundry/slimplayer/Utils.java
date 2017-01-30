@@ -213,11 +213,11 @@ public final class Utils {
             return null;
 
         //Create query that will fetch songs that we need for this screen
-        Uri uri = Uri.parse(args.getString(ScreenBundles.URI_KEY));
-        String [] projection = args.getStringArray(ScreenBundles.PROJECTION_KEY);
-        String selection = args.getString(ScreenBundles.SELECTION_KEY);
-        String [] selectionArgs = args.getStringArray(ScreenBundles.SELECTION_ARGS_KEY);
-        String sortOrder = args.getString(ScreenBundles.SORT_ORDER_KEY);
+        Uri uri = Uri.parse(args.getString( Const.URI_KEY));
+        String [] projection = args.getStringArray( Const.PROJECTION_KEY);
+        String selection = args.getString( Const.SELECTION_KEY);
+        String [] selectionArgs = args.getStringArray( Const.SELECTION_ARGS_KEY);
+        String sortOrder = args.getString( Const.SORT_ORDER_KEY);
 
         return sAppContext.getContentResolver().query(uri,projection,selection,selectionArgs,sortOrder);
     }
@@ -366,5 +366,19 @@ public final class Utils {
     public static void toastLong(String text)
     {
         Toast.makeText(SlimPlayerApplication.getInstance(),text,Toast.LENGTH_LONG).show();
+    }
+
+    public static int determineMediaFlag(String source, String parameter)
+    {
+        int flag;
+
+        //If we don't have parameter, then it must be category (browsable)
+        flag = parameter == null ? MediaBrowserCompat.MediaItem.FLAG_BROWSABLE : MediaBrowserCompat.MediaItem.FLAG_PLAYABLE;
+
+        //Only exception for flag rule above is if screen is all songs screen
+        if (source == Const.ALL_SCREEN)
+            flag = MediaBrowserCompat.MediaItem.FLAG_PLAYABLE;
+
+        return flag;
     }
 }

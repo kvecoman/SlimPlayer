@@ -1,5 +1,6 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -7,9 +8,15 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -20,66 +27,79 @@ import android.view.ViewTreeObserver;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import java.util.List;
+
 /**
  *
  * Fragment that displays info about current song that is played by media service
  *
  * @author Miroslav Mihaljević
  */
-public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarChangeListener, MediaPlayerService.SongResumeListener,
-                                                            SlimPlayerApplication.PlayerServiceListener, ViewTreeObserver.OnGlobalLayoutListener{
+public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarChangeListener, ViewTreeObserver.OnGlobalLayoutListener{
 
     private final String TAG = getClass().getSimpleName();
 
-    //TODO - check if this class can be optimized - logs are set now
-    public static final String SONG_POSITION_KEY = "song_position";
 
     private Context mContext;
 
     private int mPosition;
 
-
-    private View mContentView;
+    private View    mContentView;
     private SeekBar mSeekBar;
 
     private boolean mAlbumArtDisplayed = false;
     private boolean mOnGlobalLayoutCalled = false;
-    private Bitmap mAlbumArt;
+    private Bitmap  mAlbumArt;
 
-    private Handler mSeekBarHandler;
-    private boolean mSeekBarBound;
 
-    private MediaPlayerService mPlayerService;
+    protected MediaBrowserCompat    mMediaBrowser;
+    protected MediaControllerCompat mMediaController;
 
-    //Runnable that runs on UI thread and updates seek bar
-    private Runnable mSeekBarRunnable = new Runnable() {
+    protected MediaBrowserCompat.ConnectionCallback mConnectionCallbacks = new MediaBrowserCompat.ConnectionCallback()
+    {
         @Override
-        public void run() {
+        public void onConnected()
+        {
 
-
-
-            if (mSeekBar == null ||
-                    !mSeekBarBound ||
-                    mPlayerService == null ||
-                    mPlayerService.getMediaPlayer() == null)
-                return;
-
-            if (mPosition != mPlayerService.getPosition() || mPlayerService.isStopped()) {
-                mSeekBar.setProgress(0);
-                return;
+            try
+            {
+                mMediaController = new MediaControllerCompat( getContext(), mMediaBrowser.getSessionToken() );
+                mMediaController.registerCallback( mControllerCallbacks );
             }
+            catch (RemoteException e){
+                e.printStackTrace();
+            }
+        }
 
-            //This is down here (and not in first IF) so we allow seek bar to be set to 0 if the player is stopped
-            if (!mPlayerService.isPlaying())
-                return;
+        @Override
+        public void onConnectionSuspended()
+        {}
 
+        @Override
+        public void onConnectionFailed()
+        {}
+    };
 
-            int position = mPlayerService.getMediaPlayer().getCurrentPosition();
-            mSeekBar.setProgress(position);
+    private MediaControllerCompat.Callback mControllerCallbacks = new MediaControllerCompat.Callback()
+    {
+        @Override
+        public void onPlaybackStateChanged( PlaybackStateCompat state )
+        {
+            super.onPlaybackStateChanged( state );
 
-
-            if (mSeekBarHandler != null)
-                mSeekBarHandler.postDelayed(this, 1000);
+            if (state.getState() == PlaybackStateCompat.STATE_PLAYING || state.getState() == PlaybackStateCompat.STATE_PAUSED)
+            {
+                //Update this seek bar
+                if (state.getActiveQueueItemId() == mPosition)
+                {
+                    mSeekBar.setProgress( (int)state.getPosition() );
+                }
+                else
+                {
+                    //If this is not active fragment, then set seek bar to 0
+                    mSeekBar.setProgress( 0 );
+                }
+            }
         }
     };
 
@@ -92,7 +112,6 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         Log.v(TAG,"onCreate()");
 
         //Make sure that we get onCreateOptionsMenu() call
@@ -124,23 +143,11 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         mSeekBar = (SeekBar) mContentView.findViewById(R.id.seek_bar);
         mSeekBar.setProgress(0);
         mSeekBar.setOnSeekBarChangeListener(this);
-        mSeekBarHandler = new Handler();
-
-        //Start retrieving MediaPlayerService
-        SlimPlayerApplication.getInstance().registerPlayerServiceListener(this);
 
 
         //Handle taps on screen
         if (mContext instanceof View.OnClickListener)
             mContentView.setOnClickListener((View.OnClickListener)mContext);
-
-
-        //Get song position that this fragment represents
-        Bundle args = getArguments();
-        if (args != null)
-        {
-            mPosition = args.getInt(SONG_POSITION_KEY);
-        }
 
 
         //Load album art if it is not loaded already (we do this here after we get MediaPlayerService with registering listener)
@@ -150,56 +157,32 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         //Little hack so we know that UI is already set up when we need to use it
         mContentView.getViewTreeObserver().addOnGlobalLayoutListener(this);
 
+        mMediaBrowser = new MediaBrowserCompat( getContext(), new ComponentName( getContext(), MediaPlayerService.class ), mConnectionCallbacks, null );
+
+        loadSongInfo();
     }
 
     @Override
     public void onStart() {
         super.onStart();
 
-        //Here we again register MediaPlayerService just in case (it won't be duplicated)
-        SlimPlayerApplication.getInstance().registerPlayerServiceListener(this);
+        mMediaBrowser.connect();
 
     }
 
     @Override
     public void onResume() {
         super.onResume();
-
         Log.v(TAG,"onResume()");
 
-        //Indicate to resume updating seek bar
-        bindSeekBarToPlayer();
     }
 
-    //OnCreateOptionsMenu is called when fragment is really visible in pager, we use that phenomena
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        Log.v(TAG,"onCreateOptionsMenu()");
-        //super.onCreateOptionsMenu(menu, inflater);
-
-        if (mPlayerService == null)
-            return;
-
-        mPlayerService.registerResumeListener(this);
-        //mPlayerService.registerPlayListener(this);
-        bindSeekBarToPlayer();
-
-
-    }
-
-    @Override
-    public void onPlayerServiceBound(MediaPlayerService playerService) {
-        mPlayerService = playerService;
-
-        loadSongInfo();
-
-    }
 
     @Override
     public void onGlobalLayout()
     {
         //We keep this listener for as long as we need until we get valid width and height values
-        if (mContentView.getWidth() <= 0 || mContentView.getHeight() <= 0)
+        if (mContentView == null || mContentView.getWidth() <= 0 || mContentView.getHeight() <= 0)
             return;
 
 
@@ -223,16 +206,14 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         super.onStop();
         Log.v(TAG,"onStop()");
 
-        //Pause updating seek bar
-        mSeekBarBound = false;
 
-        SlimPlayerApplication.getInstance().unregisterPlayerServiceListener(this);
+        if (mMediaController != null)
+            mMediaController.unregisterCallback( mControllerCallbacks );
 
-        if (mPlayerService != null)
-        {
-            mPlayerService.unregisterResumeListener(this);
-            //mPlayerService.unregisterPlayListener(this);
-        }
+        if (mMediaBrowser != null)
+            mMediaBrowser.disconnect();
+
+
     }
 
     //Here we do cleanup of things expecting hosting activity will be recreated, so we don't want to leak anything
@@ -244,7 +225,6 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         mContentView = null;
         mAlbumArtDisplayed = false;
         mOnGlobalLayoutCalled = false;
-        mSeekBarHandler = null;
     }
 
     @Override
@@ -252,26 +232,36 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         super.onDestroy();
         Log.v(TAG,"onDestroy()");
 
-        //End seek bar binding
-        mSeekBarHandler = null;
 
     }
 
 
     public void loadSongInfo()
     {
+        //Bind song info to this fragment
         Log.v(TAG,"loadSongInfo()");
 
-        if (mPlayerService == null)
+        Bundle args;
+        MediaMetadataCompat metadata;
+
+        args = getArguments();
+
+        if (args == null)
             return;
 
-        Songs songs = mPlayerService.getSongs();
+        metadata = args.getParcelable( Const.METADATA_KEY );
 
-        mSeekBar.setMax(((int) songs.getDuration(mPosition)));
+        if (metadata == null)
+            return;
+
+        mPosition = args.getInt(Const.POSITION_KEY, -1);
+
+
+        mSeekBar.setMax((int)metadata.getLong( MediaMetadataCompat.METADATA_KEY_DURATION ));
 
         //Update text views with new info
-        ((TextView) mContentView.findViewById(R.id.song_title)).setText(songs.getTitle(mPosition));
-        ((TextView) mContentView.findViewById(R.id.song_artist)).setText(songs.getArtist(mPosition));
+        ((TextView) mContentView.findViewById(R.id.song_title)).setText(metadata.getString( MediaMetadataCompat.METADATA_KEY_TITLE ));
+        ((TextView) mContentView.findViewById(R.id.song_artist)).setText(metadata.getString( MediaMetadataCompat.METADATA_KEY_ARTIST ));
 
     }
 
@@ -288,11 +278,12 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
             protected Void doInBackground(Void... params)
             {
 
-                if (mPlayerService == null)
-                    return null;
+                /*if (mPlayerService == null)
+                    return null;*/
 
+                //TODO - fix, uncomment
                 //Load art
-                mAlbumArt = mPlayerService.getSongs().getArt(mPosition);
+                //mAlbumArt = mPlayerService.getSongs().getArt(mPosition);
 
                 return null;
 
@@ -344,46 +335,22 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         }.execute();
     }
 
-    //This connects seek bar to current song that is played by media player service
-    public void bindSeekBarToPlayer()
-    {
-        Log.v(TAG,"bindSeekBarToPlayer()");
-        mSeekBarBound = true;
-        if (mContext instanceof FragmentActivity)
-        {
-            ((FragmentActivity) mContext).runOnUiThread(mSeekBarRunnable);
-        }
-    }
 
-    /*private MediaPlayerService getPlayerService()
-    {
-        return SlimPlayerApplication.getInstance().getMediaPlayerService();
-    }*/
-
-
-    //Called when song is resumed from paused state (when user taps to play)
-    @Override
-    public void onSongResume() {
-        Log.v(TAG,"onSongResume()");
-        //Start again updating seek bar
-        bindSeekBarToPlayer();
-    }
-
-
-    /*@Override
-    public void onPlay(Songs songs, int position) {
-        Log.v(TAG,"onPlay()");
-        bindSeekBarToPlayer();
-    }*/
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 
-        //Only if touch is coming from user then seek song
-        if (mPlayerService != null && mPlayerService.getMediaPlayer() != null && fromUser)
+        if (!mMediaBrowser.isConnected())
+            return;
+
+        long actions = mMediaController.getPlaybackState().getActions();
+
+        //Only if touch is coming from user then seek song (and that action is available)
+        if (fromUser && (actions & PlaybackStateCompat.ACTION_SEEK_TO) == PlaybackStateCompat.ACTION_SEEK_TO)
         {
-            Log.d(TAG,"onProgressChanged() - user changed progress");
-            mPlayerService.getMediaPlayer().seekTo(progress);
+            Log.v(TAG,"onProgressChanged() - user changed progress");
+
+            mMediaController.getTransportControls().seekTo( progress );
         }
     }
 

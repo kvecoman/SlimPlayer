@@ -15,6 +15,10 @@ import java.util.List;
 
 /**
  * Created by Miroslav on 17.1.2017..
+ *
+ * Recycler adapter that takes MediaItems from MediaBrowserService and displays them
+ *
+ * @author Miroslav Mihaljević
  */
 
 public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.ViewHolder> {
@@ -87,7 +91,8 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.ViewHolder> 
         return mMediaItemsList;
     }
 
-    public void setMediaItemsList(List<MediaBrowserCompat.MediaItem> mediaItemsList) {
+    public void setMediaItemsList(List<MediaBrowserCompat.MediaItem> mediaItemsList)
+    {
         this.mMediaItemsList = mediaItemsList;
     }
 

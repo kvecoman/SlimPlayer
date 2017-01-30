@@ -2,11 +2,10 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.support.annotation.NonNull;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.Menu;
@@ -21,7 +20,7 @@ import java.util.List;
  *
  * @author Miroslav Mihaljević
  */
-public class SongRecyclerFragment extends SlimRecyclerFragment implements SlimPlayerApplication.PlayerServiceListener {
+public class SongRecyclerFragment extends SlimRecyclerFragment{
 
     //If bundle contains this key
     public static final String PLAY_POSITION_KEY = "play_position";
@@ -32,6 +31,15 @@ public class SongRecyclerFragment extends SlimRecyclerFragment implements SlimPl
     //protected CursorSongs mSongs;
 
     //private MediaPlayerService mPlayerService;
+
+    protected class ControllerCallbacks extends MediaControllerCompat.Callback
+    {
+        @Override
+        public void onPlaybackStateChanged( PlaybackStateCompat state )
+        {
+            super.onPlaybackStateChanged( state );
+        }
+    }
 
 
     public SongRecyclerFragment() {
@@ -44,7 +52,7 @@ public class SongRecyclerFragment extends SlimRecyclerFragment implements SlimPl
     {
         super.onActivityCreated(savedInstanceState);
 
-
+        mControllerCallbacks = new ControllerCallbacks();
 
     }
 
@@ -59,7 +67,7 @@ public class SongRecyclerFragment extends SlimRecyclerFragment implements SlimPl
             activateSelectMode();
         }
 
-        SlimPlayerApplication.getInstance().registerPlayerServiceListener(this);
+        //SlimPlayerApplication.getInstance().registerPlayerServiceListener(this);
     }
 
     //Media player service can't be assigned as member variable at init time because it is not bound, so we just use this
@@ -69,20 +77,18 @@ public class SongRecyclerFragment extends SlimRecyclerFragment implements SlimPl
         return SlimPlayerApplication.getInstance().getMediaPlayerService();
     }*/
 
-    @Override
+    /*@Override
     protected void onDataLoaded(@NonNull String parentId, List<MediaBrowserCompat.MediaItem> children, @NonNull Bundle options) {
         super.onDataLoaded(parentId, children, options);
 
+    }*/
 
-        autoPlayFromBundle();
-    }
-
-    @Override
+    /*@Override
     public void onPlayerServiceBound(MediaPlayerService playerService) {
         //mPlayerService = playerService;
 
         autoPlayFromBundle();
-    }
+    }*/
 
 
 
@@ -110,7 +116,7 @@ public class SongRecyclerFragment extends SlimRecyclerFragment implements SlimPl
     public void onStop() {
         super.onStop();
 
-        SlimPlayerApplication.getInstance().unregisterPlayerServiceListener(this);
+        //SlimPlayerApplication.getInstance().unregisterPlayerServiceListener(this);
     }
 
     @Override
@@ -152,21 +158,7 @@ public class SongRecyclerFragment extends SlimRecyclerFragment implements SlimPl
         return super.onOptionsItemSelected(item);
     }
 
-    //Automatically start playing if it is said so from the bundle (home-screen case)
-    private void autoPlayFromBundle()
-    {
-        //TODO - fix this and make it play position
-        //If we are in normal mode
-        /*if (!mSelectSongsForResult && getArguments().containsKey(PLAY_POSITION_KEY) && mPlayerService != null && mSongs != null)
-        {
-            int play_position = getArguments().getInt(PLAY_POSITION_KEY);
 
-            mPlayerService.playListIfChanged(mSongs,play_position, mCurrentSource,getArguments().getString(ScreenBundles.PARAMETER_KEY));
-
-            //Once we have started the intended song from intent, we delete it so we don't start it again and again
-            getArguments().remove(PLAY_POSITION_KEY);
-        }*/
-    }
 
     @Override
     public void onClick(View v) {
@@ -174,17 +166,26 @@ public class SongRecyclerFragment extends SlimRecyclerFragment implements SlimPl
         int position = mRecyclerView.getChildLayoutPosition(v);
         List<MediaBrowserCompat.MediaItem> mediaItems = mAdapter.getMediaItemsList();
 
-        //TODO - fix this, make this play the item
+
         //If we are not selecting items, then we want to play them
-        /*if (!mSelectMode && !mSelectSongsForResult && mSongs != null && mPlayerService != null)
+        if (!mSelectMode && !mSelectSongsForResult && mMediaBrowser.isConnected())
         {
-            //Pass list of songs from which we play and play current position
-            mPlayerService.playList(mSongs,position, mCurrentSource,getArguments().getString(ScreenBundles.PARAMETER_KEY));
+            Bundle bundle;
+            Intent intent;
+
+            bundle = new Bundle();
+            bundle.putString( Const.SOURCE_KEY, mCurrentSource );
+            bundle.putString( Const.PARAMETER_KEY, mCurrentParameter );
+            bundle.putInt( Const.POSITION_KEY, position );
+
+            mMediaController.getTransportControls().playFromMediaId( mediaItems.get( position ).getMediaId(), bundle );
 
             //Start NowPlayingActivity
-            Intent intent = new Intent(mContext,NowPlayingActivity.class);
+            intent = new Intent(mContext,NowPlayingActivity.class);
+            intent.putExtra( Const.POSITION_KEY, position );
+
             startActivity(intent);
-        }*/
+        }
 
         //If we are selecting items
         if (mSelectMode)

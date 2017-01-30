@@ -126,6 +126,9 @@ public class StatsDbHelper extends SQLiteOpenHelper {
     {
         Log.v(TAG,"updateLastPosition()");
 
+        if (source == null)
+            return;
+
         new AsyncTask<Void,Void,Void>(){
             @Override
             protected Void doInBackground(Void... params) {

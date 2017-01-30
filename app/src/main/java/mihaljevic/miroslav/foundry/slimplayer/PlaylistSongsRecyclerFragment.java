@@ -6,7 +6,6 @@ import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.util.Log;
-import android.util.SparseBooleanArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -108,7 +107,7 @@ public class PlaylistSongsRecyclerFragment extends SongRecyclerFragment {
                     if (ids == null)
                         return null;
 
-                    return Utils.insertIntoPlaylist(ids,Long.valueOf(getArguments().getString(ScreenBundles.PARAMETER_KEY)));
+                    return Utils.insertIntoPlaylist(ids,Long.valueOf(getArguments().getString( Const.PARAMETER_KEY)));
                 }
 
                 @Override

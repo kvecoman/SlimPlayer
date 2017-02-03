@@ -4,6 +4,8 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -33,33 +35,6 @@ public final class Utils {
 
     private Utils(){}
 
-    //Render custom font
-    /*public static Bitmap renderFont(String text, int color, float fontSizeSP, String path)
-    {
-        int fontSizePX = convertDipToPix(sAppContext, fontSizeSP);
-        int pad = (fontSizePX / 9);
-        Paint paint = new Paint();
-        Typeface typeface = Typeface.createFromAsset(sAppContext.getAssets(), path);
-        paint.setAntiAlias(true);
-        paint.setTypeface(typeface);
-        paint.setColor(color);
-        paint.setTextSize(fontSizePX);
-
-        int textWidth = (int) (paint.measureText(text) + pad*2);
-        int height = (int) (fontSizePX / 0.75);
-        Bitmap bitmap = Bitmap.createBitmap(textWidth, height, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        float xOriginal = pad;
-        canvas.drawText(text, xOriginal, fontSizePX, paint);
-        return bitmap;
-
-    }
-
-    public static int convertDipToPix(,float dip)
-    {
-        int value = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, sAppContext.getResources().getDisplayMetrics());
-        return value;
-    }*/
 
 
     //Helper function to set and calculate height of list view (assuming all rows are same)
@@ -227,10 +202,10 @@ public final class Utils {
     {
         ContentResolver resolver = sAppContext.getContentResolver();
         int count = 0;
-        Cursor genresCursor = resolver.query(MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI,
-                new String[]{MediaStore.Audio.Genres._ID},null,null,null);
+        Cursor genresCursor = resolver.query( MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI,
+                new String[]{ MediaStore.Audio.Genres._ID }, null, null, null );
 
-        if (genresCursor == null)
+        if ( genresCursor == null )
             return 0;
 
         int id;
@@ -238,17 +213,17 @@ public final class Utils {
         genresCursor.moveToFirst();
         do
         {
-            id = genresCursor.getInt(0);
-            cursor = resolver.query(MediaStore.Audio.Genres.Members.getContentUri("external", id),
-                    new String[]{MediaStore.Audio.Genres.Members._ID},null,null,null);
-            if (cursor.getCount() == 0)
+            id = genresCursor.getInt( 0 );
+            cursor = resolver.query( MediaStore.Audio.Genres.Members.getContentUri( "external", id ),
+                    new String[]{ MediaStore.Audio.Genres.Members._ID }, null, null, null );
+            if ( cursor.getCount() == 0 )
             {
                 //Here we delete if genre is empty
-                resolver.delete(MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI,MediaStore.Audio.Genres._ID + "=" + id,null);
+                resolver.delete( MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI, MediaStore.Audio.Genres._ID + "=" + id, null );
                 count++;
             }
             cursor.close();
-        }while(genresCursor.moveToNext());
+        } while ( genresCursor.moveToNext() );
 
         genresCursor.close();
 
@@ -368,7 +343,7 @@ public final class Utils {
         Toast.makeText(SlimPlayerApplication.getInstance(),text,Toast.LENGTH_LONG).show();
     }
 
-    public static int determineMediaFlag(String source, String parameter)
+    /*public static int determineMediaFlag(String source, String parameter)
     {
         int flag;
 
@@ -380,5 +355,33 @@ public final class Utils {
             flag = MediaBrowserCompat.MediaItem.FLAG_PLAYABLE;
 
         return flag;
+    }*/
+
+    public static Bitmap getArt( Uri fileUri )
+    {
+        Bitmap bitmap;
+        MediaMetadataRetriever retriever;
+        byte[] data;
+
+        bitmap = null;
+        retriever = new MediaMetadataRetriever();
+
+        try
+        {
+            retriever.setDataSource( fileUri.getPath() );
+
+            data = retriever.getEmbeddedPicture();
+
+            if (data != null)
+                bitmap = BitmapFactory.decodeByteArray( data, 0, data.length );
+        }
+        catch (IllegalArgumentException e)
+        {
+            e.printStackTrace();
+        }
+
+        retriever.release();
+        return bitmap;
+
     }
 }

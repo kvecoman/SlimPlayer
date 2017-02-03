@@ -142,6 +142,7 @@ public class MusicProvider {
         Bundle                              cursorBundle;
         MediaMetadataCompat                 mediaMetadata;
         MediaMetadataCompat.Builder         metadataBuilder;
+        Uri                                 mediaUri;
         String                              mediaUriStr;
         MediaBrowserCompat.MediaItem        mediaItem;
         List<MediaBrowserCompat.MediaItem>  mediaItemsList;
@@ -186,14 +187,18 @@ public class MusicProvider {
             {
                 metadataBuilder = new MediaMetadataCompat.Builder();
 
-                mediaUriStr = Uri.parse(cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA))).toString();
 
-                metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID,cursor.getString(0))
-                                .putString(MediaMetadataCompat.METADATA_KEY_TITLE,cursor.getString(1))
-                                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM,cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM)))
-                                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST,cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)))
-                                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION,cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION)))
-                                .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI,mediaUriStr);
+                mediaUri = Uri.parse(cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA)));
+                mediaUriStr = mediaUri.toString();
+
+                metadataBuilder
+                        .putString  ( MediaMetadataCompat.METADATA_KEY_MEDIA_ID,    cursor.getString( 0 ) )
+                        .putString  ( MediaMetadataCompat.METADATA_KEY_TITLE,       cursor.getString( 1 ) )
+                        .putString  ( MediaMetadataCompat.METADATA_KEY_ALBUM,       cursor.getString( cursor.getColumnIndex( MediaStore.Audio.Media.ALBUM ) ) )
+                        .putString  ( MediaMetadataCompat.METADATA_KEY_ARTIST,      cursor.getString( cursor.getColumnIndex( MediaStore.Audio.Media.ARTIST ) ) )
+                        .putLong    ( MediaMetadataCompat.METADATA_KEY_DURATION,    cursor.getLong( cursor.getColumnIndex( MediaStore.Audio.Media.DURATION ) ) )
+                        .putString  ( MediaMetadataCompat.METADATA_KEY_MEDIA_URI,   mediaUriStr );
+                        /*.putBitmap  ( MediaMetadataCompat.METADATA_KEY_ART,         Utils.getArt( mediaUri ) );*/
 
                 mediaMetadata = metadataBuilder.build();
 

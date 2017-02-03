@@ -9,7 +9,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
@@ -22,27 +23,29 @@ import android.os.Handler;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaBrowserServiceCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.support.v7.app.NotificationCompat;
 import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.RemoteViews;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.animation.GlideAnimation;
+import com.bumptech.glide.request.target.NotificationTarget;
+import com.bumptech.glide.request.target.SimpleTarget;
+
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 
-//TODO - setQueueTitle in media session to name of list (Trening, Pitbull, Rock etc...)
-//TODO - what the fuck are you supposed to do with action play (and its onPlay() callback)
-//TODO - use noisyAudioReciever and AudioManager like in example in Playback class play function
+//TODO - fetch embeded album art
+
 public class MediaPlayerService extends MediaBrowserServiceCompat implements MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 
     protected final String TAG = getClass().getSimpleName();
@@ -53,7 +56,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     public static final String SONGLIST_POSITION_KEY = "SONGLIST_POSITION";
 
     //Notification ID
-    public static final int NOTIFICATION_PLAYER_ID = 1;
+    public static final int NOTIFICATION_PLAYER_ID = 111;
 
     public static final String  NOTIFICATION_ACTION_CLOSE = "mihaljevic.miroslav.foundry.slimplayer.action.close";
     public static final String  NOTIFICATION_ACTION_PREVIOUS = "mihaljevic.miroslav.foundry.slimplayer.action.previous";
@@ -62,17 +65,18 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     public static final String  NOTIFICATION_ACTION_SWIPE = "mihaljevic.miroslav.foundry.slimplayer.action.swipe";
 
 
-    private MediaPlayerBinder mBinder = new MediaPlayerBinder();
+    //private MediaPlayerBinder mBinder = new MediaPlayerBinder();
 
     //Indicated whether the service has foreground status or not (it might not be accuarate, we don't know if startForeground will actually set it)
-    private boolean mForeground = false;
+    //private boolean mForeground = false;
 
     private MediaPlayer mPlayer;
 
-    private boolean mPlaying = false;
-    private boolean mStopped = true;
+    /*private boolean mPlaying = false;
+    private boolean mStopped = true;*/
 
     private AudioManager mAudioManager;
+    private boolean mAudioFocus = false;
 
     private AsyncTask<Void, Void, Void> mCurrentPlayTask;
 
@@ -81,7 +85,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     private int mPosition = -1;
     private int mCount = 0;
     private int mState = PlaybackStateCompat.STATE_NONE;
-    private boolean mReadyToPlay = false; //Indicates if we have list loaded
+    //private boolean mReadyToPlay = false; //Indicates if we have list loaded
 
     //Source and parameter of currently used song list
     private String mQueueSource;
@@ -95,7 +99,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     private Set<SongResumeListener> mOnResumeListeners;*/
 
     //We use this to check whether the service will stop when all components are unbound
-    private boolean mPendingStop = false;
+    //private boolean mPendingStop = false;
 
 
     private Handler mHandler;
@@ -123,18 +127,38 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         @Override
         public void onReceive( Context context, Intent intent )
         {
-            MediaPlayerService playerService = MediaPlayerService.this;
 
             //If something is wrong just return
-            if (!intent.hasExtra("state") || playerService == null)
+            if (!intent.hasExtra("state") )
                 return;
 
 
             //If headset is plugged out, pause the playback
             if (intent.getIntExtra("state",0) == 0)
             {
-                playerService.pause();
+                if (mState == PlaybackStateCompat.STATE_PLAYING)
+                {
+                    pause();
+                }
             }
+        }
+    };
+
+
+    private BroadcastReceiver mNoisyReceiver = new BroadcastReceiver()
+    {
+        @Override
+        public void onReceive( Context context, Intent intent )
+        {
+            //If something is wrong just return
+            if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals( intent.getAction() ))
+            {
+                if (mState == PlaybackStateCompat.STATE_PLAYING)
+                {
+                    pause();
+                }
+            }
+
         }
     };
 
@@ -160,16 +184,19 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         Log.v(TAG,"onCreate()");
         super.onCreate();
 
-        Intent intent = new Intent(getApplicationContext(), NowPlayingActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent intent;
+        PendingIntent pendingIntent;
 
-        mMediaSession = new MediaSessionCompat(this,TAG,new ComponentName(this,HeadsetChangeReceiver.class),pendingIntent);
+        intent = new Intent(getApplicationContext(), NowPlayingActivity.class);
+        pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        mMediaSession = new MediaSessionCompat(this,TAG,new ComponentName(this,mHeadsetChangeReceiver.getClass()),pendingIntent);
         mMediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
         mMediaSession.setCallback(new MediaSessionCallback());
+        mMediaSession.setActive( true );
 
-        mStateBuilder = new PlaybackStateCompat.Builder().setActions(PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID);
-        mMediaSession.setPlaybackState(mStateBuilder.build());
 
+        updateState( PlaybackStateCompat.STATE_NONE );
 
         setSessionToken(mMediaSession.getSessionToken());
 
@@ -191,19 +218,19 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         mPlayer = new MediaPlayer();
         mPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
 
-        /*mOnPlayListeners = new HashSet<>();
-        mOnResumeListeners = new HashSet<>();*/
+
 
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        mAudioManager.requestAudioFocus(this,AudioManager.STREAM_MUSIC,AudioManager.AUDIOFOCUS_GAIN);
-
-        //Get last known repeat status from preferences
-        //refreshRepeat();
 
         //Register to detect headphones in/out
         registerReceiver(mHeadsetChangeReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
 
+        registerReceiver( mNoisyReceiver, new IntentFilter( AudioManager.ACTION_AUDIO_BECOMING_NOISY ) );
+
         mHandler = new Handler();
+
+        //Recreate last remembered state
+        playLastStateAsync();
 
     }
 
@@ -281,8 +308,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                 }
             }
 
-            String source = null;
-            String parameter = null;
+            String source;
+            String parameter;
             int position;
             int i;
 
@@ -290,6 +317,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             parameter = extras.getString( Const.PARAMETER_KEY, null );
             position  = extras.getInt( Const.POSITION_KEY, -1 );
 
+            if (source == null)
+                return;
 
             //NOTE - we use skipToQueueItem() for this
             //If we have something loaded and position of it, try to play that
@@ -380,11 +409,14 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         int     count;
         String oldSource;
         String oldParameter;
+        Bundle sessionExtras;
+        final String queueTitle;
 
 
         isSourceChanged = true;
         oldSource = mQueueSource;
         oldParameter = mQueueParameter;
+        sessionExtras = new Bundle();
 
         //Since we are changing queue let's set state to none before we know anything
         stopAndClearList();
@@ -456,25 +488,35 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
 
         mCount = mQueue.size();
-        mReadyToPlay = true;
+        //mReadyToPlay = true;
 
 
+        sessionExtras.putString( Const.SOURCE_KEY,      source );
+        sessionExtras.putString( Const.PARAMETER_KEY,   parameter );
 
         //State stopped means that nothing is playing but we have media loaded
         updateState( PlaybackStateCompat.STATE_STOPPED );
+
+        queueTitle = Utils.getDisplayName( source, parameter );
+
+        mMediaSession.setExtras( sessionExtras );
         mMediaSession.setQueue( mQueue );
+
+        if (queueTitle != null)
+            mMediaSession.setQueueTitle( queueTitle );
 
 
         //If the source is different then update stats database
-        if (!Utils.equalsIncludingNull( oldSource,source) || !Utils.equalsIncludingNull( oldParameter,parameter))
+        if (!source.equals( Const.FILE_URI_KEY ) && (!Utils.equalsIncludingNull( oldSource,source) || !Utils.equalsIncludingNull( oldParameter,parameter)))
         {
 
-
-            new AsyncTask<Void,Void,Void>(){
+            new AsyncTask<Void,Void,Void>()
+            {
                 @Override
-                protected Void doInBackground(Void... params) {
+                protected Void doInBackground(Void... params)
+                {
                     StatsDbHelper statsDbHelper = StatsDbHelper.getInstance(MediaPlayerService.this);
-                    statsDbHelper.updateStats(source,parameter);
+                    statsDbHelper.updateStats(source,parameter, queueTitle);
                     return null;
                 }
             }.execute();
@@ -502,7 +544,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
 
     //Sets the list and starts playing, source string is one of screen keys or something else (if list is from files or something)
-    public void playListIfChanged(final String source, final String parameter, int startPosition)
+    /*public void playListIfChanged(final String source, final String parameter, int startPosition)
     {
 
         //Set songs source and note if it is different than before
@@ -512,9 +554,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         if (isSourceChanged)
             play(startPosition);
 
-    }
+    }*/
 
-    public void playList(final String source, final String parameter, final int startPosition)
+    /*public void playList(final String source, final String parameter, final int startPosition)
     {
         //Set songs source and note if it is different than before
         boolean isSourceChanged = setQueue(source,parameter);
@@ -522,7 +564,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         //We always call play except when we are already playing same song
         if (!(!isSourceChanged && mPosition == startPosition))
             play(startPosition);
-    }
+    }*/
 
 
     //Updates media session PlaybackState
@@ -618,18 +660,17 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             {
                 case NOTIFICATION_ACTION_CLOSE:
                     stop();
-                    /*NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-                    notificationManager.cancel(NOTIFICATION_PLAYER_ID);*/
-                    stopForeground(true);
-                    mForeground = false;
-                    stopSelf();
-                    mPendingStop = true;
+                    NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+                    notificationManager.cancel(NOTIFICATION_PLAYER_ID);
+                    //stopForeground(true);
+                    //mForeground = false;
+                    //mPendingStop = true;
                     break;
                 case NOTIFICATION_ACTION_PREVIOUS:
                     playPrevious();
                     break;
                 case NOTIFICATION_ACTION_PLAY_PAUSE:
-                    if (mPlaying)
+                    if (mState == PlaybackStateCompat.STATE_PLAYING)
                         pause();
                     else
                         resume();
@@ -637,11 +678,11 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                 case NOTIFICATION_ACTION_NEXT:
                     playNext();
                     break;
-                /*case NOTIFICATION_ACTION_SWIPE:
+                case NOTIFICATION_ACTION_SWIPE:
                     stopAndClearList();
-                    stopForeground(true);
-                    mForeground = false;
-                    break;*/
+                    //stopForeground(true);
+                    //mForeground = false;
+                    break;
             }
         }
 
@@ -665,8 +706,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     public void onDestroy() {
         Log.v(TAG,"onDestroy()");
 
-        mAudioManager.abandonAudioFocus(this);
+        giveUpAudioFocus();
         unregisterReceiver(mHeadsetChangeReceiver);
+        unregisterReceiver( mNoisyReceiver );
         mMusicProvider.unregisterDataListener();
         mMediaSession.release();
 
@@ -677,7 +719,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             mPlayer = null;
         }
 
-        //TODO - all close instance calls except this to application onDestroy
+
         StatsDbHelper.closeInstance();
 
 
@@ -686,24 +728,30 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     }
 
 
-    public class MediaPlayerBinder extends Binder {
+    /*public class MediaPlayerBinder extends Binder {
         MediaPlayerService getService(){
             return MediaPlayerService.this;
         }
-    }
+    }*/
 
     //Returns position of last played song
     private int recreateLastPlaybackState()
     {
         //Recreate last playback state
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        String source = prefs.getString( SONGLIST_SOURCE_KEY, null );
-        String parameter = prefs.getString( SONGLIST_PARAMETER_KEY, null );
-        int position = prefs.getInt( SONGLIST_POSITION_KEY, 0 );
+        SharedPreferences prefs;
+        String source;
+        String parameter;
+        int position;
+
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+        source =    prefs.getString ( SONGLIST_SOURCE_KEY, null );
+        parameter = prefs.getString ( SONGLIST_PARAMETER_KEY, null );
+        position =  prefs.getInt    ( SONGLIST_POSITION_KEY, 0 );
 
         if (source != null)
         {
-            List<MediaBrowserCompat.MediaItem> mediaItems = MusicProvider.getInstance().loadMedia(source, parameter);
+            //List<MediaBrowserCompat.MediaItem> mediaItems = MusicProvider.getInstance().loadMedia(source, parameter);
             setQueue( source, parameter );
             return position;
         }
@@ -713,57 +761,90 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     //Try to get last playback state (if there is none, nothing will happen)
     public void playLastStateAsync()
     {
-        new AsyncTask<Void,Void,Integer>(){
+        new AsyncTask<Void, Void, Integer>()
+        {
             @Override
-            protected Integer doInBackground(Void... params)
+            protected Integer doInBackground( Void... params )
             {
                 return recreateLastPlaybackState();
             }
 
             @Override
-            protected void onPostExecute(Integer result) {
+            protected void onPostExecute( Integer result )
+            {
                 //If we could recreate state then play the position
-                if (result != -1)
-                    play(result);
+                if ( result != -1 )
+                    play( result );
             }
         }.execute();
+    }
+
+    private void tryToGetAudioFocus()
+    {
+        if (!mAudioFocus)
+        {
+            if ( mAudioManager.requestAudioFocus( this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN ) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
+            {
+                mAudioFocus = true;
+            }
+        }
+    }
+
+    private void giveUpAudioFocus()
+    {
+        if (mAudioFocus)
+        {
+            if ( mAudioManager.abandonAudioFocus( this ) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED )
+            {
+                mAudioFocus = false;
+            }
+        }
     }
 
     @Override
     public void onAudioFocusChange(int focusChange)
     {
-        if (focusChange <= 0 && mPlaying)
+        if (focusChange <= 0 && mState == PlaybackStateCompat.STATE_PLAYING)
         {
             pause();
         }
-        else
+        /*else
         {
             resume();
-        }
+        }*/
     }
 
     public void play(int position)
     {
-        Log.v(TAG,"play() position: " + position);
+        Log.v( TAG, "play() position: " + position );
 
         //If something is wrong then do nothing
-        if (mState == PlaybackStateCompat.STATE_NONE || position < 0 || position >= mCount || mQueue == null)
+        if ( mState == PlaybackStateCompat.STATE_NONE || position < 0 || position >= mCount || mQueue == null )
             return;
+
+        tryToGetAudioFocus();
+
+        if (!mAudioFocus)
+        {
+            //If we failed to get audio focus just stop and return
+            stop();
+            return;
+        }
 
         updateState( PlaybackStateCompat.STATE_SKIPPING_TO_QUEUE_ITEM );
 
         //If we have active task for playing, cancel it
-        if (mCurrentPlayTask != null)
-            mCurrentPlayTask.cancel(true);
+        if ( mCurrentPlayTask != null )
+            mCurrentPlayTask.cancel( true );
 
         mPosition = position;
 
         //If we are about to stop, prevent that
-        if (mPendingStop)
+        /*if (mPendingStop)
         {
             startService(new Intent(this,MediaPlayerService.class));
             mPendingStop = false;
-        }
+        }*/
 
         //Save current position so we can get it later on
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -788,10 +869,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                     mPlayer.prepare();
                     mPlayer.start();
 
-                    mPlaying = true;
-                    mStopped = false;
-
-
+                    /*mPlaying = true;
+                    mStopped = false;*/
 
 
                 }
@@ -807,17 +886,13 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             protected void onPostExecute(Void aVoid)
             {
 
+                showNotification2(false, true);
 
-                showNotification(false, true);
+                //Set service as started
+                startService( new Intent( getApplicationContext(), MediaPlayerService.class ) );
 
                 //Update playback state
-                mState = PlaybackStateCompat.STATE_PLAYING;
-                mStateBuilder = new PlaybackStateCompat.Builder()
-                        .setActions( PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID | PlaybackStateCompat.ACTION_PLAY_PAUSE | PlaybackStateCompat.ACTION_PAUSE | PlaybackStateCompat.ACTION_SKIP_TO_QUEUE_ITEM
-                                | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS | PlaybackStateCompat.ACTION_SKIP_TO_NEXT)
-                        .setState( mState, mPlayer.getCurrentPosition(), 1.0f )
-                        .setActiveQueueItemId( mPosition );
-                mMediaSession.setPlaybackState( mStateBuilder.build() );
+                updateState( PlaybackStateCompat.STATE_PLAYING );
 
                 mHandler.post( mSeekBarRunnable );
 
@@ -851,7 +926,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         Log.v(TAG,"onCompletion()");
 
         //Continue to next song only if we are set to be playing
-        if (mPlaying || mState == PlaybackStateCompat.STATE_PLAYING)
+        if (/*mPlaying ||*/ mState == PlaybackStateCompat.STATE_PLAYING)
         {
             MediaPlayerService.this.playNext();
         }
@@ -859,12 +934,13 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     public void pause()
     {
-        if (mPlayer != null && (mPlaying || mState == PlaybackStateCompat.STATE_PLAYING))
+        if (mPlayer != null && (/*mPlaying ||*/ mState == PlaybackStateCompat.STATE_PLAYING))
         {
-            mPlaying = false;
+            /*mPlaying = false;*/
             mPlayer.pause();
+            giveUpAudioFocus();
             updateState( PlaybackStateCompat.STATE_PAUSED );
-            showNotification(true,false);
+            showNotification2(true,false);
         }
     }
 
@@ -872,17 +948,22 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     {
         if (mPlayer != null && (mPosition != -1 || mState == PlaybackStateCompat.STATE_PAUSED))
         {
-            mPlaying = true;
+            /*mPlaying = true;*/
+            tryToGetAudioFocus();
+
+            if (!mAudioFocus)
+                return;
+
             mPlayer.start();
             updateState( PlaybackStateCompat.STATE_PLAYING );
-            showNotification(false, false);
+            showNotification2(false, false);
         }
     }
 
     //Function that tries to resume playback if the song is loaded, or load and play the song if not
     public void resumeOrPlay(int position)
     {
-        if (position == mPosition && (!mStopped || mState == PlaybackStateCompat.STATE_PAUSED))
+        if (position == mPosition && (/*!mStopped ||*/ mState == PlaybackStateCompat.STATE_PAUSED))
         {
             resume();
         }
@@ -895,7 +976,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     public void playNext()
     {
         //If the player is not even started then just dont do anything
-        if (mPosition == -1 || mStopped || !mReadyToPlay || mState == PlaybackStateCompat.STATE_NONE || mState == PlaybackStateCompat.STATE_STOPPED)
+        if (mPosition == -1 || /*mStopped || !mReadyToPlay ||*/ mState == PlaybackStateCompat.STATE_NONE || mState == PlaybackStateCompat.STATE_STOPPED)
             return;
 
         if (mPosition == mCount - 1)
@@ -921,7 +1002,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     public void playPrevious()
     {
         //If the player is not even started then just don't do anything
-        if (mPosition == -1 || mPosition == 0 || mStopped || !mReadyToPlay || mState == PlaybackStateCompat.STATE_NONE || mState == PlaybackStateCompat.STATE_STOPPED)
+        if (mPosition == -1 || mPosition == 0 || mState == PlaybackStateCompat.STATE_NONE || mState == PlaybackStateCompat.STATE_STOPPED)
             return;
 
 
@@ -935,10 +1016,13 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
         if (mPlayer != null)
         {
-            mState = PlaybackStateCompat.STATE_STOPPED;
-            updateState( mState );
-            mPlaying = false;
-            mStopped = true;
+            updateState( PlaybackStateCompat.STATE_STOPPED );
+
+            giveUpAudioFocus();
+
+            //Allow this service to be destroyed (only if it becomes non-bound from all activities)
+            stopSelf();
+
             mPosition = -1;
 
             if (mPlayer.isPlaying())
@@ -956,9 +1040,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         mQueue = null;
         mQueueSource = null;
         mQueueParameter = null;
-        mReadyToPlay = false;
-        mState = PlaybackStateCompat.STATE_NONE;
-        updateState( mState );
+        updateState( PlaybackStateCompat.STATE_NONE );
 
     }
 
@@ -990,16 +1072,180 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     }
 
 
+    public void showNotification2(final boolean playIcon,final boolean ticker)
+    {
+        final NotificationManager notificationManager;
+
+        notificationManager = (NotificationManager )getSystemService(NOTIFICATION_SERVICE);
+
+        new AsyncTask<Void, Void, Notification>()
+        {
+
+            @Override
+            protected Notification doInBackground( Void... params )
+            {
+
+                NotificationCompat.MediaStyle   mediaStyle;
+                NotificationCompat.Builder      builder;
+                MediaSessionCompat.QueueItem    currentQueueItem;
+                MediaMetadataCompat             mediaMetadata;
+                Intent          intent;
+                PendingIntent   pendingIntent;
+                Notification    notification;
+                String          filePath;
+                String          artist;
+                Bitmap          art;
+
+
+                currentQueueItem = mQueue.get( mPosition );
+
+                mediaMetadata = currentQueueItem.getDescription().getExtras().getParcelable( Const.METADATA_KEY );
+
+                filePath = Uri.parse( mediaMetadata.getString( MediaMetadataCompat.METADATA_KEY_MEDIA_URI ) ).toString();
+                artist = mediaMetadata.getString( MediaMetadataCompat.METADATA_KEY_ARTIST );
+                art = null;
+
+                //Load album art
+                try
+                {
+                    art = Glide.with( MediaPlayerService.this )
+                            .load( new EmbeddedArtGlide( filePath ) )
+                            .asBitmap()
+                            .override( 200, 200 )
+                            .centerCrop()
+                            .into( 200, 200 )
+                            .get();
+
+                }
+                catch ( InterruptedException e )
+                {
+                    e.printStackTrace();
+                }
+                catch ( ExecutionException e )
+                {
+                    //This is called if image loading fails for any reason, mostly because there is no image
+                }
+
+                //If there is no album art just download default art
+                if ( art == null )
+                {
+
+                    try
+                    {
+                        art = Glide.with( MediaPlayerService.this )
+                                .load( R.mipmap.ic_launcher )
+                                .asBitmap()
+                                .into( 200, 200 )
+                                .get();
+
+                    }
+                    catch ( InterruptedException e )
+                    {
+                        e.printStackTrace();
+                    }
+                    catch ( ExecutionException e )
+                    {
+                        //This is called if image loading fails for any reason, mostly because there is no image
+                    }
+                }
+
+
+                //Create close button intent
+                intent = new Intent( getApplicationContext(), MediaPlayerService.class );
+                intent.setAction( NOTIFICATION_ACTION_CLOSE );
+                pendingIntent = PendingIntent.getService( getApplicationContext(), 0, intent, 0 );
+
+                mediaStyle = new NotificationCompat.MediaStyle();
+                mediaStyle.setMediaSession( mMediaSession.getSessionToken() );
+                mediaStyle.setCancelButtonIntent( pendingIntent );
+                mediaStyle.setShowActionsInCompactView( 1, 2 );
+                mediaStyle.setShowCancelButton( true );
+
+
+                builder = new NotificationCompat.Builder( MediaPlayerService.this );
+                builder.setSmallIcon( R.mipmap.ic_launcher )
+                        .setLargeIcon( art )
+                        .setContentTitle( currentQueueItem.getDescription().getTitle() )
+                        .setContentText( artist )
+                        .setOngoing( !playIcon )
+                        .setAutoCancel( false )
+                        .setShowWhen( false )
+                        .setStyle( mediaStyle );
+
+                //If needed, set the ticker text with song title
+                if ( ticker )
+                    builder.setTicker( currentQueueItem.getDescription().getTitle() );
+
+                //Show play screen/main action
+                //We build intent with MainActivity as parent activity in stack
+                intent = new Intent( getApplicationContext(), NowPlayingActivity.class );
+                intent.setFlags( Intent.FLAG_ACTIVITY_CLEAR_TOP );
+                pendingIntent = PendingIntent.getActivity( MediaPlayerService.this, 0, intent, 0 );
+                builder.setContentIntent( pendingIntent );
+
+                intent = new Intent( getApplicationContext(), MediaPlayerService.class );
+                intent.setAction( NOTIFICATION_ACTION_SWIPE );
+                pendingIntent = PendingIntent.getService( getApplicationContext(), 0, intent, 0 );
+                builder.setDeleteIntent( pendingIntent );
+
+                //TODO - action titles to resource
+                builder.addAction( generateAction( R.drawable.ic_skip_previous_ltgray_36dp, "Play Previous", NOTIFICATION_ACTION_PREVIOUS ) );
+                builder.addAction( generateAction( playIcon ? R.drawable.ic_play_arrow_ltgray_36dp : R.drawable.ic_pause_ltgray_36dp, playIcon ? "Play" : "Pause", NOTIFICATION_ACTION_PLAY_PAUSE ) );
+                builder.addAction( generateAction( R.drawable.ic_skip_next_ltgray_36dp, "Play next", NOTIFICATION_ACTION_NEXT ) );
+
+
+                notification = builder.build();
+
+                return notification;
+
+            }
+
+            @Override
+            protected void onPostExecute( Notification notification )
+            {
+                super.onPostExecute( notification );
+
+                notificationManager.notify(NOTIFICATION_PLAYER_ID, notification);
+            }
+        }.execute();
+
+
+
+
+        //If the service is already foreground the just update the notification
+        /*if (mForeground)
+        {
+            NotificationManager notificationManager = (NotificationManager )getSystemService(NOTIFICATION_SERVICE);
+            notificationManager.notify(NOTIFICATION_PLAYER_ID, notification);
+        }
+        else
+        {
+            startForeground(NOTIFICATION_PLAYER_ID, notification);
+            mForeground = true;
+        }*/
+
+    }
+
+    private NotificationCompat.Action generateAction(int icon,  String title, String action)
+    {
+        Intent intent;
+        PendingIntent pendingIntent;
+
+        intent = new Intent(this,this.getClass());
+        intent.setAction(action);
+        pendingIntent = PendingIntent.getService(this,0,intent,0);
+
+        return new NotificationCompat.Action.Builder( icon, title, pendingIntent ).build();
+    }
 
 
 
 
 
     //Display notification player for this service
-    public void showNotification(boolean playIcon, boolean ticker)
+    /*public void showNotification(boolean playIcon, boolean ticker)
     {
-        //TODO - fix, uncomment
-        /*RemoteViews notificationView = new RemoteViews(getPackageName(),R.layout.notification_player);
+        RemoteViews notificationView = new RemoteViews(getPackageName(),R.layout.notification_player);
         RemoteViews bigNotificationView = new RemoteViews(getPackageName(), R.layout.notification_player_big);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
         MediaSessionCompat.QueueItem currentQueueItem = mQueue.get(mPosition);
@@ -1012,7 +1258,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
         //Set-up notification
         builder.setSmallIcon(R.mipmap.ic_launcher)
-                .setOngoing(false)
+                .setOngoing(true)
                 .setAutoCancel(false)
                 .setContent(notificationView)
                 .setCustomBigContentView(bigNotificationView)
@@ -1089,17 +1335,17 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         //If the service is already foreground the just update the notification
         if (mForeground)
         {
-            NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+            NotificationManager notificationManager = (NotificationManager )getSystemService(NOTIFICATION_SERVICE);
             notificationManager.notify(NOTIFICATION_PLAYER_ID, notification);
         }
         else
         {
             startForeground(NOTIFICATION_PLAYER_ID, notification);
             mForeground = true;
-        }*/
+        }
 
 
-    }
+    }*/
 
 
 

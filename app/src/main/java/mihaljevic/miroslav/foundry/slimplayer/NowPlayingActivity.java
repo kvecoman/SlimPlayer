@@ -24,7 +24,7 @@ import java.util.List;
 public class NowPlayingActivity extends BackHandledFragmentActivity implements  ViewPager.OnPageChangeListener, View.OnClickListener
 {
 
-    //TODO - check if this class can be optimized
+    //TODO - save loaded queue using some kind of fragment and saving instance of it
 
 
     private ViewPager mPager;
@@ -52,7 +52,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
                 startFilePlayingIfNeeded();
 
                 //First time data init
-                mMediaControllerCallbacks.onQueueChanged( mMediaController.getQueue() );
+                initPagerAdapter( mMediaController.getQueue() );
 
 
             }
@@ -99,7 +99,12 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         {
             super.onQueueChanged( queue );
 
-            initPagerAdapter( queue );
+            //Only if pager adapter is empty then we want to load queue
+            if (mPagerAdapter.getData() == null)
+            {
+                initPagerAdapter( queue );
+            }
+
         }
 
         @Override
@@ -127,6 +132,16 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pager);
+
+        Intent intent;
+
+        intent = getIntent(); //TODO - check if null and get source
+
+        if (intent != null && intent.hasExtra( Const.SOURCE_KEY ))
+        {
+            mQueueSource = intent.getStringExtra( Const.SOURCE_KEY );
+            mQueueParameter = intent.getStringExtra( Const.PARAMETER_KEY );
+        }
 
         mPager = (ViewPager)findViewById(R.id.pager);
         mPager.addOnPageChangeListener(this);
@@ -309,6 +324,22 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
                 break;
             case PlaybackStateCompat.STATE_STOPPED:
                 mMediaController.getTransportControls().skipToQueueItem( mPager.getCurrentItem() );
+                break;
+            case PlaybackStateCompat.STATE_NONE:
+                Bundle bundle;
+                int position;
+                String mediaId;
+
+                position = mPager.getCurrentItem();
+
+                mediaId = mPagerAdapter.getData().get( position ).getDescription().getMediaId();
+
+                bundle = new Bundle();
+                bundle.putString( Const.SOURCE_KEY, mQueueSource );
+                bundle.putString( Const.PARAMETER_KEY, mQueueParameter );
+                bundle.putInt( Const.POSITION_KEY,  position);
+
+                mMediaController.getTransportControls().playFromMediaId(mediaId, bundle );
                 break;
         }
 

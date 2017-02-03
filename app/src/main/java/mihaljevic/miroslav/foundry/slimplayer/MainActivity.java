@@ -24,19 +24,17 @@ import junit.framework.Test;
 //TODO - $$_PROFIT_$$
 
 //TODO - indicate that tap paused or resumed the song
-//TODO - loadDataAsync() bug, sometimes during normal work, CursorClosedException is thrown, locate when it is called - BUG - mozda rijeseno
 //TODO - make visual style for project
 //TODO - make visualization
 //TODO - ability for some code parts/methods to fail without throwing exception (or with catching exception)
-//TODO - after pressing to play one song from list while another is playing, selected song is immediately done and switched to next song - BUG - MediaPlayerService
 //TODO - add optimizations for screen rotations (already done for NowPlayingFragment)
 //TODO - mp3 playback might need its own thread not just AsyncTask
-//TODO - close statsDbHelper in MediaPlayerService (either when they are instantiated or as a singleton class)
-//TODO - support for headphone controls (and to disble them when headphones aren't plugged in)
+//TODO - support for headphone controls (and to disable them when headphones aren't plugged in)
 //TODO - updateDataAsync called twice every time in SlimRecyclerFragment
+//TODO - loading art in nowplayingFragment sometimes doesn't succeed, maybe when you put media loading async it will work
 
 
-//TODO - continue here - continue with restoring functionallity, add seekTo functionality, also after adding runable and handler in service it started the problems with switching nearby songs
+//TODO - continue here - make home fragment work, fix bug with notification not being posted if there is no embedded art
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";

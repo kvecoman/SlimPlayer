@@ -52,5 +52,10 @@ public class NowPlayingPagerAdapter extends FragmentStatePagerAdapter {
         return mCount;
     }
 
+    public List<MediaSessionCompat.QueueItem> getData()
+    {
+        return mQueue;
+    }
+
 
 }

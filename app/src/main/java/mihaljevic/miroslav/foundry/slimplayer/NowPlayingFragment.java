@@ -1,9 +1,11 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -27,6 +29,10 @@ import android.view.ViewTreeObserver;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.animation.GlideAnimation;
+import com.bumptech.glide.request.target.SimpleTarget;
+
 import java.util.List;
 
 /**
@@ -47,9 +53,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     private View    mContentView;
     private SeekBar mSeekBar;
 
-    private boolean mAlbumArtDisplayed = false;
-    private boolean mOnGlobalLayoutCalled = false;
-    private Bitmap  mAlbumArt;
+    private MediaMetadataCompat mMetadata;
 
 
     protected MediaBrowserCompat    mMediaBrowser;
@@ -118,7 +122,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         setHasOptionsMenu(true);
 
         //Keep alive this fragment after configuration changes (so we can re-use data)
-        setRetainInstance(true);
+        //setRetainInstance(true);
     }
 
     @Override
@@ -135,8 +139,9 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
         Log.v(TAG,"onActivityCreated()");
+
+        String mediaPath;
 
         mContext = getContext();
 
@@ -150,16 +155,15 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
             mContentView.setOnClickListener((View.OnClickListener)mContext);
 
 
-        //Load album art if it is not loaded already (we do this here after we get MediaPlayerService with registering listener)
-        if (mAlbumArt == null)
-            loadArtAsync();
+        loadSongInfo();
+
 
         //Little hack so we know that UI is already set up when we need to use it
         mContentView.getViewTreeObserver().addOnGlobalLayoutListener(this);
 
         mMediaBrowser = new MediaBrowserCompat( getContext(), new ComponentName( getContext(), MediaPlayerService.class ), mConnectionCallbacks, null );
 
-        loadSongInfo();
+
     }
 
     @Override
@@ -185,17 +189,17 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         if (mContentView == null || mContentView.getWidth() <= 0 || mContentView.getHeight() <= 0)
             return;
 
+        //Now that we have valid width and height values, display album art
+        displayArtAsync();
 
-        mOnGlobalLayoutCalled = true;
 
+        //Once we display art we don't need this callback anymore
         if (Build.VERSION.SDK_INT >= 16)
             mContentView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
         else
             mContentView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
 
-        //This will crop and display album art
-        if (!mAlbumArtDisplayed && mAlbumArt != null && mOnGlobalLayoutCalled)
-            displayArtAsync();
+
 
     }
 
@@ -223,8 +227,6 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
         mContext = null;
         mContentView = null;
-        mAlbumArtDisplayed = false;
-        mOnGlobalLayoutCalled = false;
     }
 
     @Override
@@ -242,97 +244,69 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         Log.v(TAG,"loadSongInfo()");
 
         Bundle args;
-        MediaMetadataCompat metadata;
 
         args = getArguments();
 
         if (args == null)
             return;
 
-        metadata = args.getParcelable( Const.METADATA_KEY );
+        mMetadata = args.getParcelable( Const.METADATA_KEY );
 
-        if (metadata == null)
+        if (mMetadata == null)
             return;
 
         mPosition = args.getInt(Const.POSITION_KEY, -1);
 
 
-        mSeekBar.setMax((int)metadata.getLong( MediaMetadataCompat.METADATA_KEY_DURATION ));
+        mSeekBar.setMax((int)mMetadata.getLong( MediaMetadataCompat.METADATA_KEY_DURATION ));
 
         //Update text views with new info
-        ((TextView) mContentView.findViewById(R.id.song_title)).setText(metadata.getString( MediaMetadataCompat.METADATA_KEY_TITLE ));
-        ((TextView) mContentView.findViewById(R.id.song_artist)).setText(metadata.getString( MediaMetadataCompat.METADATA_KEY_ARTIST ));
+        ((TextView) mContentView.findViewById(R.id.song_title)).setText(mMetadata.getString( MediaMetadataCompat.METADATA_KEY_TITLE ));
+        ((TextView) mContentView.findViewById(R.id.song_artist)).setText(mMetadata.getString( MediaMetadataCompat.METADATA_KEY_ARTIST ));
 
     }
 
-    //Tries to load album art if it exist (with async task), returns true if task is going to be executed
-    public void loadArtAsync()
-    {
-        Log.v(TAG,"loadArtAsync()");
 
-
-        new AsyncTask<Void,Void,Void>()
-        {
-
-            @Override
-            protected Void doInBackground(Void... params)
-            {
-
-                /*if (mPlayerService == null)
-                    return null;*/
-
-                //TODO - fix, uncomment
-                //Load art
-                //mAlbumArt = mPlayerService.getSongs().getArt(mPosition);
-
-                return null;
-
-            }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-
-                //This will crop and display album art
-                if (!mAlbumArtDisplayed && mAlbumArt != null && mOnGlobalLayoutCalled)
-                    displayArtAsync();
-            }
-        }.execute();
-    }
-
+    //Get album art and display it (if it exists)
     private void displayArtAsync()
     {
         Log.v(TAG,"displayArtAsync()");
 
-        if (mContentView.getWidth() <= 0 || mContentView.getHeight() <= 0)
+        if ( mContentView.getWidth() <= 0 || mContentView.getHeight() <= 0 )
             return;
 
-        final float viewRatio = (float)mContentView.getWidth() / (float)mContentView.getHeight();
+        String mediaPath;
+        int width;
+        int height;
 
-        new AsyncTask<Void,Void,Bitmap>(){
-            @Override
-            protected Bitmap doInBackground(Void... params) {
-                //We crop album art so it fits screen(s)
-                return Utils.cropBitmapToRatio(mAlbumArt,viewRatio);
-            }
+        mediaPath = Uri.parse(mMetadata.getString( MediaMetadataCompat.METADATA_KEY_MEDIA_URI ) ).toString();
+        width = mContentView.getWidth();
+        height = mContentView.getHeight();
 
-            @Override
-            protected void onPostExecute(Bitmap bitmap) {
-                if (bitmap == null)
-                    return;
-
-                //Update background with album art if it exist
-                if(Build.VERSION.SDK_INT >= 16) {
-                    mContentView.setBackground(new BitmapDrawable(getResources(),bitmap));
-                }
-                else
+        Glide   .with(this)
+                .load( new EmbeddedArtGlide( mediaPath ) )
+                .asBitmap()
+                .override( width, height )
+                .centerCrop()
+                .into( new SimpleTarget<Bitmap>()
                 {
-                    mContentView.setBackgroundDrawable(new BitmapDrawable(getResources(),bitmap));
-                }
+                    @Override
+                    public void onResourceReady( Bitmap bitmap, GlideAnimation<? super Bitmap> glideAnimation )
+                    {
+                        if (bitmap == null)
+                            return;
 
-                mAlbumArtDisplayed = true;
-            }
+                        if ( Build.VERSION.SDK_INT >= 16 )
+                        {
+                            mContentView.setBackground( new BitmapDrawable( getResources(), bitmap ) );
+                        }
+                        else
+                        {
+                            mContentView.setBackgroundDrawable( new BitmapDrawable( getResources(), bitmap ) );
+                        }
+                    }
+                } );
 
-        }.execute();
     }
 
 
@@ -340,10 +314,15 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 
-        if (!mMediaBrowser.isConnected())
+        if ( mMediaBrowser == null || !mMediaBrowser.isConnected())
             return;
 
         long actions = mMediaController.getPlaybackState().getActions();
+
+        if (fromUser)
+        {
+            fromUser = true;
+        }
 
         //Only if touch is coming from user then seek song (and that action is available)
         if (fromUser && (actions & PlaybackStateCompat.ACTION_SEEK_TO) == PlaybackStateCompat.ACTION_SEEK_TO)

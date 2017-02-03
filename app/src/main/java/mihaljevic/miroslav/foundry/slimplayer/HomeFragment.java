@@ -137,7 +137,6 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
             mAdapter.closeCursor();
         }
 
-        StatsDbHelper.closeInstance();
 
         super.onDestroy();
     }
@@ -171,27 +170,28 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
     }
 
     @Override
-    public void onClick(View v) {
-        int position = mRecyclerView.getChildLayoutPosition(v);
+    public void onClick( View v )
+    {
+        int position = mRecyclerView.getChildLayoutPosition( v );
         Cursor cursor = mAdapter.getCursor();
 
-        if (cursor == null || cursor.isClosed())
+        if ( cursor == null || cursor.isClosed() )
             return;
 
-        cursor.moveToPosition(position);
+        cursor.moveToPosition( position );
 
-        String source = cursor.getString(cursor.getColumnIndex(StatsContract.SourceStats.COLUMN_NAME_SOURCE));
-        String parameter = cursor.getString(cursor.getColumnIndex(StatsContract.SourceStats.COLUMN_NAME_PARAMETER));
-        int playPosition = cursor.getInt(cursor.getColumnIndex(StatsContract.SourceStats.COLUMN_NAME_LAST_POSITION));
+        String source = cursor.getString( cursor.getColumnIndex( StatsContract.SourceStats.COLUMN_NAME_SOURCE ) );
+        String parameter = cursor.getString( cursor.getColumnIndex( StatsContract.SourceStats.COLUMN_NAME_PARAMETER ) );
+        int playPosition = cursor.getInt( cursor.getColumnIndex( StatsContract.SourceStats.COLUMN_NAME_LAST_POSITION ) );
 
 
         //MediaPlayerService playerService = SlimPlayerApplication.getInstance().getMediaPlayerService();
 
         //Get bundle
-        Bundle bundle = ScreenBundles.getBundleForSubScreen(source,parameter);
+        Bundle bundle = ScreenBundles.getBundleForSubScreen( source, parameter );
 
         //Insert last remembered position
-        bundle.putInt(SongRecyclerFragment.PLAY_POSITION_KEY,playPosition);
+        bundle.putInt( SongRecyclerFragment.PLAY_POSITION_KEY, playPosition );
 
         //Check if the same list is already playing
         /*if (playerService != null && !(Utils.equalsIncludingNull(playerService.getSongsSource(),source) && Utils.equalsIncludingNull(playerService.getSongsParameter(),parameter)))
@@ -200,10 +200,10 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
         }*/
 
 
-        Intent intent = new Intent(v.getContext(),SongListActivity.class);
-        intent.putExtra(SongListActivity.FRAGMENT_BUNDLE_KEY, bundle);
+        Intent intent = new Intent( v.getContext(), SongListActivity.class );
+        intent.putExtra( SongListActivity.FRAGMENT_BUNDLE_KEY, bundle );
 
         //Start activity
-        v.getContext().startActivity(intent);
+        v.getContext().startActivity( intent );
     }
 }

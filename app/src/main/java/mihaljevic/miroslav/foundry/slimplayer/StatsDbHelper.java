@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 /**
@@ -71,13 +72,14 @@ public class StatsDbHelper extends SQLiteOpenHelper {
 
 
     //TODO - what happens if database is reconstructed and id's for sources are different (it will be reset after N list changes)
-    public void updateStats(final String source,final String parameter)
+    public void updateStats( final String source,@Nullable final String parameter, @Nullable final String displayName)
     {
         Log.v(TAG,"updateStats()");
 
         final int N = 10; //Number of last records we scan //TODO - make this number generic
 
-        new AsyncTask<Void,Void,Void>(){
+        new AsyncTask<Void,Void,Void>()
+        {
             @Override
             protected Void doInBackground(Void... params) {
 
@@ -88,7 +90,7 @@ public class StatsDbHelper extends SQLiteOpenHelper {
                 ContentValues sourceStatsValues = new ContentValues();
                 sourceStatsValues.put(StatsContract.SourceStats.COLUMN_NAME_SOURCE,source);
                 sourceStatsValues.put(StatsContract.SourceStats.COLUMN_NAME_PARAMETER,parameter);
-                sourceStatsValues.put(StatsContract.SourceStats.COLUMN_NAME_DISPLAY_NAME, Utils.getDisplayName(source,parameter));
+                sourceStatsValues.put(StatsContract.SourceStats.COLUMN_NAME_DISPLAY_NAME,displayName == null ? Utils.getDisplayName(source,parameter) : displayName);
                 statsDb.insertWithOnConflict(StatsContract.SourceStats.TABLE_NAME,null,sourceStatsValues,SQLiteDatabase.CONFLICT_IGNORE);
 
                 //Insert row in source_records

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 import android.util.SparseBooleanArray;
@@ -20,17 +21,17 @@ import java.util.List;
  *
  * @author Miroslav Mihaljević
  */
+//TODO - restore auto play feature (when list is selected from home screen and uses PLAY_POSITION_KEY)
 public class SongRecyclerFragment extends SlimRecyclerFragment{
 
     //If bundle contains this key
     public static final String PLAY_POSITION_KEY = "play_position";
 
+    //Indicate whether this list/queue is loaded in MediaPlayerService
+    protected boolean mQueueLoaded = false;
 
 
-    //Provides easy access to cursor and fields within it
-    //protected CursorSongs mSongs;
 
-    //private MediaPlayerService mPlayerService;
 
     protected class ControllerCallbacks extends MediaControllerCompat.Callback
     {
@@ -38,6 +39,39 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
         public void onPlaybackStateChanged( PlaybackStateCompat state )
         {
             super.onPlaybackStateChanged( state );
+        }
+
+        @Override
+        public void onQueueChanged( List<MediaSessionCompat.QueueItem> queue )
+        {
+            super.onQueueChanged( queue );
+
+            PlaybackStateCompat playbackState;
+            Bundle extras;
+            String source;
+            String parameter;
+
+            extras = mMediaController.getExtras();
+
+            if (extras == null)
+            {
+                mQueueLoaded = false;
+                return;
+            }
+
+            source = extras.getString( Const.SOURCE_KEY, null );
+            parameter = extras.getString( Const.PARAMETER_KEY, null );
+
+
+            //If the source is different than the one this list represents
+            if (!Utils.equalsIncludingNull( mCurrentSource,source) || !Utils.equalsIncludingNull( mCurrentParameter,parameter))
+            {
+                mQueueLoaded = false;
+            }
+            else
+            {
+                mQueueLoaded = true;
+            }
         }
     }
 
@@ -70,12 +104,6 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
         //SlimPlayerApplication.getInstance().registerPlayerServiceListener(this);
     }
 
-    //Media player service can't be assigned as member variable at init time because it is not bound, so we just use this
-    //... all the time
-   /* private MediaPlayerService getPlayerService()
-    {
-        return SlimPlayerApplication.getInstance().getMediaPlayerService();
-    }*/
 
     /*@Override
     protected void onDataLoaded(@NonNull String parentId, List<MediaBrowserCompat.MediaItem> children, @NonNull Bundle options) {
@@ -83,12 +111,6 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
 
     }*/
 
-    /*@Override
-    public void onPlayerServiceBound(MediaPlayerService playerService) {
-        //mPlayerService = playerService;
-
-        autoPlayFromBundle();
-    }*/
 
 
 
@@ -173,15 +195,26 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
             Bundle bundle;
             Intent intent;
 
-            bundle = new Bundle();
-            bundle.putString( Const.SOURCE_KEY, mCurrentSource );
-            bundle.putString( Const.PARAMETER_KEY, mCurrentParameter );
-            bundle.putInt( Const.POSITION_KEY, position );
 
-            mMediaController.getTransportControls().playFromMediaId( mediaItems.get( position ).getMediaId(), bundle );
+            if (mQueueLoaded)
+            {
+                mMediaController.getTransportControls().skipToQueueItem( position );
+            }
+            else
+            {
+                bundle = new Bundle();
+                bundle.putString( Const.SOURCE_KEY, mCurrentSource );
+                bundle.putString( Const.PARAMETER_KEY, mCurrentParameter );
+                bundle.putInt( Const.POSITION_KEY, position );
+
+                mMediaController.getTransportControls().playFromMediaId( mediaItems.get( position ).getMediaId(), bundle );
+            }
+
 
             //Start NowPlayingActivity
             intent = new Intent(mContext,NowPlayingActivity.class);
+            intent.putExtra( Const.SOURCE_KEY, mCurrentSource );
+            intent.putExtra( Const.PARAMETER_KEY, mCurrentParameter );
             intent.putExtra( Const.POSITION_KEY, position );
 
             startActivity(intent);

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<allowed_callers>
+    <signing_certificate name="SlimPlayer" package="mihaljevic.miroslav.foundry.slimplayer">
+        MIIB3TCCAUYCAQEwDQYJKoZIhvcNAQEFBQAwNzEWMBQGA1UEAwwNQW5kcm9pZCBEZWJ1ZzEQMA4GA1UECg
+        wHQW5kcm9pZDELMAkGA1UEBhMCVVMwHhcNMTcwMTMxMjEwNDU3WhcNNDcwMTI0MjEwNDU3WjA3MRYwFAYD
+        VQQDDA1BbmRyb2lkIERlYnVnMRAwDgYDVQQKDAdBbmRyb2lkMQswCQYDVQQGEwJVUzCBnzANBgkqhkiG9w
+        0BAQEFAAOBjQAwgYkCgYEAyhfNNhFhoZtLsxngaSvB61FVCOt67+/BOlJjN0oggKxRWBTgalEX78zRMA85
+        WStZz6Qu6IRM9UtYOx7TmGqQqwLqQ97oIjykZzcuj00WhGCg4SGUAECdLoRLtCzipWnRQbLGtkA8ntNfeU
+        lIzwNcq4a4Jcstf6aXszvihPGOA+0CAwEAATANBgkqhkiG9w0BAQUFAAOBgQBxuoZAanBkZq1spRX54qOi
+        rdEerdgBemJ7Wl6NxMPfBvk8iFCrJHtMvWXGYQFXI0Bz3YMb5jeTphRD4/Xj2rdpAQjfz9ykZpzWh9CPD9
+        op/9wpea3UA/ct0WwlsqkV+yqrhuSXtiLDTqStENu+W1vX2lRCZpYGU87FsBN9rtn+Yg==
+    </signing_certificate>
+</allowed_callers>

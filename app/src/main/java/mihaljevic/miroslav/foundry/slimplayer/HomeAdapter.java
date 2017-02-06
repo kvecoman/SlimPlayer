@@ -54,9 +54,9 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
         text = mCursor.getString(mCursor.getColumnIndex(StatsContract.SourceStats.COLUMN_NAME_DISPLAY_NAME));
         holder.mTextView.setText(text);
 
-        /*holder.mSource = mCursor.getString(mCursor.getColumnIndex(StatsContract.SourceStats.COLUMN_NAME_SOURCE));
-        holder.mParameter = mCursor.getString(mCursor.getColumnIndex(StatsContract.SourceStats.COLUMN_NAME_PARAMETER));
-        holder.mPlayPosition = mCursor.getInt(mCursor.getColumnIndex(StatsContract.SourceStats.COLUMN_NAME_LAST_POSITION));*/
+        /*holder.mSource =        mCursor.getString(mCursor.getColumnIndex(StatsContract.SourceStats.COLUMN_NAME_SOURCE));
+        holder.mParameter =     mCursor.getString(mCursor.getColumnIndex(StatsContract.SourceStats.COLUMN_NAME_PARAMETER));
+        holder.mPlayPosition =  mCursor.getInt(mCursor.getColumnIndex(StatsContract.SourceStats.COLUMN_NAME_LAST_POSITION));*/
     }
 
     @Override

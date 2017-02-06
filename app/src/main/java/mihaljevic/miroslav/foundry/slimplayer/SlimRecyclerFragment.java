@@ -8,6 +8,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -36,14 +37,14 @@ import java.util.List;
 public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment implements View.OnClickListener, View.OnLongClickListener {
     protected final String TAG = getClass().getSimpleName();
 
-    protected Context mContext;
+    //protected Context mContext;
 
     protected RecyclerView mRecyclerView;
     protected MediaAdapter mAdapter;
 
     //Current source for this fragment (all songs, songs by genre, songs by artist etc...)
-    protected String mCurrentSource;
-    protected String mCurrentParameter;
+    protected String mSource;
+    protected String mParameter;
     protected Bundle mSubscriptionBundle;
 
     //Are we only selecting songs for playlists
@@ -57,14 +58,23 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
     protected MediaBrowserCompat mMediaBrowser;
     protected MediaControllerCompat mMediaController;
 
-    protected final MediaBrowserCompat.ConnectionCallback mConnectionCallbacks = new MediaBrowserCompat.ConnectionCallback(){
+    protected MediaBrowserCompat.ConnectionCallback     mConnectionCallbacks;
+    protected MediaBrowserCompat.SubscriptionCallback   mSubscriptionCallbacks;
+    protected MediaControllerCompat.Callback            mControllerCallbacks;
+
+
+    protected class ConnectionCallbacks extends MediaBrowserCompat.ConnectionCallback
+    {
         @Override
-        public void onConnected() {
+        public void onConnected()
+        {
             super.onConnected();
 
+            String rootId; //If we get correct root id from getRoot it means we are allowed to get data
 
+            rootId = mMediaBrowser.getRoot();
 
-            mMediaBrowser.subscribe(mCurrentSource, mSubscriptionBundle, mSubscriptionCallbacks);
+            mMediaBrowser.subscribe( rootId, mSubscriptionBundle, mSubscriptionCallbacks);
 
             try
             {
@@ -75,7 +85,6 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
                 e.printStackTrace();
             }
 
-            //TODO - init session callbacks
         }
 
         @Override
@@ -87,10 +96,10 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         public void onConnectionFailed() {
             super.onConnectionFailed();
         }
-    };
+    }
 
-
-    protected final MediaBrowserCompat.SubscriptionCallback mSubscriptionCallbacks = new MediaBrowserCompat.SubscriptionCallback() {
+    protected class SubscriptionCallbacks extends MediaBrowserCompat.SubscriptionCallback
+    {
         @Override
         public void onChildrenLoaded(@NonNull String parentId, List<MediaBrowserCompat.MediaItem> children) {
             super.onChildrenLoaded( parentId, children );
@@ -116,11 +125,10 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
             super.onError( parentId, options );
 
         }
-    };
+    }
 
-    protected MediaControllerCompat.Callback mControllerCallbacks = new MediaControllerCompat.Callback()
-    {
-    };
+
+    protected class ControllerCallbacks extends MediaControllerCompat.Callback {}
 
 
     protected void onDataLoaded(@NonNull String parentId, List<MediaBrowserCompat.MediaItem> children, @NonNull Bundle options)
@@ -134,6 +142,17 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         // Required empty public constructor
     }
 
+    @Override
+    public void onCreate( @Nullable Bundle savedInstanceState )
+    {
+        super.onCreate( savedInstanceState );
+
+        //Set all media callback objects to this fragment's implementation of them
+        mConnectionCallbacks =      new ConnectionCallbacks();
+        mSubscriptionCallbacks =    new SubscriptionCallbacks();
+        mControllerCallbacks =      new ControllerCallbacks();
+    }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -141,6 +160,8 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_slim_recycler, container, false);
     }
+
+
 
     //Most of the init is done here
     @Override
@@ -150,18 +171,18 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
 
         setHasOptionsMenu(true);
 
-        mContext = getContext();
+        //mContext = getContext();
 
         //Set up selection
         mSelectedItems = new SparseBooleanArray();
 
         //Adapter is inited here, but data will be loaded later
-        mAdapter = new MediaAdapter(mContext, null, R.layout.recycler_item, this, mSelectedItems);
+        mAdapter = new MediaAdapter(getContext(), null, R.layout.recycler_item, this, mSelectedItems);
 
         //Set up recycler view
         mRecyclerView = (RecyclerView) getView().findViewById(R.id.recycler_view);
         mRecyclerView.setHasFixedSize(true);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(mContext));
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.addItemDecoration(new DividerItemDecoration(mRecyclerView.getContext(), ((LinearLayoutManager) mRecyclerView.getLayoutManager()).getOrientation()));
 
@@ -169,17 +190,18 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
 
 
         //Get current source and parameter
-        mCurrentSource = getArguments().getString( Const.SOURCE_KEY);
-        mCurrentParameter = getArguments().getString( Const.PARAMETER_KEY);
+        mSource = getArguments().getString( Const.SOURCE_KEY);
+        mParameter = getArguments().getString( Const.PARAMETER_KEY);
 
         mSubscriptionBundle = new Bundle();
-        mSubscriptionBundle.putString( Const.PARAMETER_KEY, mCurrentParameter);
+        mSubscriptionBundle.putString( Const.SOURCE_KEY, mSource );
+        mSubscriptionBundle.putString( Const.PARAMETER_KEY, mParameter );
 
 
         //Check if we are selecting songs for playlists
-        if (mContext instanceof SelectSongsActivity)
+        if (getContext() instanceof SelectSongsActivity)
         {
-            if (((SelectSongsActivity)mContext).isSelectSongsForResult())
+            if (((SelectSongsActivity)getContext()).isSelectSongsForResult())
             {
                 mSelectSongsForResult = true;
             }
@@ -304,7 +326,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
 
     protected void refreshData()
     {
-        MusicProvider.getInstance().invalidateDataAndNotify(mCurrentSource,mCurrentParameter);
+        MusicProvider.getInstance().invalidateDataAndNotify( mSource, mParameter );
     }
 
     protected void deleteItemsAsync(final Uri uri,final String idField)
@@ -326,8 +348,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
             @Override
             protected void onPostExecute(Integer result) {
 
-                //TODO - text to resource
-                Utils.toastShort(result + " items deleted");
+                Utils.toastShort(result + getString( R.string.toast_items_deleted ));
                 deselect();
                 refreshData();
             }

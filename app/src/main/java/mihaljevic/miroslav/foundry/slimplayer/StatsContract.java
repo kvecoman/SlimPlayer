@@ -26,7 +26,7 @@ public final class StatsContract {
         public static final String COLUMN_NAME_RECENT_FREQUENCY = "recent_frequency";
         public static final String COLUMN_NAME_LAST_PLAY = "last_play";
 
-        //TODO - varchar instead of text?
+
         public static final String SQL_CREATE = "CREATE TABLE " + TABLE_NAME +
                                                 " (" +
                                                 COLUMN_NAME_SOURCE + " TEXT," +

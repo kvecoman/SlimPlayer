@@ -17,10 +17,10 @@ import java.util.List;
  */
 public class PlaylistSongsRecyclerFragment extends SongRecyclerFragment {
 
-    public static final int SELECT_SONGS_REQUEST = 1;
+    public static final int SELECT_SONGS_REQUEST = 23; //Random number
 
     //We use this request when we are in secondary screen like songs by specific genre
-    public static final int SELECT_SONGS_REQUEST_2 = 2;
+    public static final int SELECT_SONGS_REQUEST_2 = 56; //Random number
 
     public static final String ACTION_SELECT_SONGS = "action_select_songs";
 
@@ -77,7 +77,7 @@ public class PlaylistSongsRecyclerFragment extends SongRecyclerFragment {
         {
             if (item.getItemId() == R.id.delete_item)
             {
-                deleteItemsAsync(MediaStore.Audio.Playlists.Members.getContentUri("external",Long.valueOf(mCurrentParameter)),MediaStore.Audio.Playlists.Members.AUDIO_ID);
+                deleteItemsAsync(MediaStore.Audio.Playlists.Members.getContentUri("external",Long.valueOf( mParameter )),MediaStore.Audio.Playlists.Members.AUDIO_ID);
             }
             else
             {

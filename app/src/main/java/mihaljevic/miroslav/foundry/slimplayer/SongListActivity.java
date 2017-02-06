@@ -16,7 +16,7 @@ public class SongListActivity extends SelectSongsActivity {
     protected final String TAG = getClass().getSimpleName();
 
     //Key for bundle that is intended to be sent with SlimRecyclerFragment
-    public static final String FRAGMENT_BUNDLE_KEY = "fragment_bundle";
+    //public static final String FRAGMENT_BUNDLE_KEY = "fragment_bundle";
 
     private String mSource;
 
@@ -41,6 +41,8 @@ public class SongListActivity extends SelectSongsActivity {
             fragment = new EmptyMessageFragment();
             fragmentBundle = new Bundle();
             fragmentBundle.putString(EmptyMessageFragment.MESSAGE_KEY,getString(R.string.empty_songlist));
+
+
         }
 
         //If there is bundle for fragment then create that fragment and add it to container

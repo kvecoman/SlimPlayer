@@ -53,16 +53,13 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.ViewHolder> 
     @Override
     public void onBindViewHolder(MediaAdapter.ViewHolder holder, int position) {
         String text;
-        View view;
+        TextView textView;
 
 
         text = mMediaItemsList.get(position).getDescription().getTitle().toString();
-        //TODO - multiple fields are removed, solve this
-        view = holder.findViewById(mContext.getResources().getIdentifier("item_text" + 0,"id",mContext.getPackageName()));
+        textView = (TextView)holder.findViewById(R.id.title);
 
-        if (view != null && view instanceof TextView)
-            ((TextView)view).setText(text);
-
+        textView.setText( text );
 
         //Check if this item needs to be selected
         if (mSelectedItems != null)

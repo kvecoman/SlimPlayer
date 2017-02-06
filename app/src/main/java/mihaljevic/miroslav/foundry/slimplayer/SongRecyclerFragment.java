@@ -1,8 +1,10 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -21,11 +23,9 @@ import java.util.List;
  *
  * @author Miroslav Mihaljević
  */
-//TODO - restore auto play feature (when list is selected from home screen and uses PLAY_POSITION_KEY)
+
 public class SongRecyclerFragment extends SlimRecyclerFragment{
 
-    //If bundle contains this key
-    public static final String PLAY_POSITION_KEY = "play_position";
 
     //Indicate whether this list/queue is loaded in MediaPlayerService
     protected boolean mQueueLoaded = false;
@@ -33,7 +33,7 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
 
 
 
-    protected class ControllerCallbacks extends MediaControllerCompat.Callback
+    protected class ControllerCallbacks extends SlimRecyclerFragment.ControllerCallbacks
     {
         @Override
         public void onPlaybackStateChanged( PlaybackStateCompat state )
@@ -46,7 +46,6 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
         {
             super.onQueueChanged( queue );
 
-            PlaybackStateCompat playbackState;
             Bundle extras;
             String source;
             String parameter;
@@ -64,7 +63,7 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
 
 
             //If the source is different than the one this list represents
-            if (!Utils.equalsIncludingNull( mCurrentSource,source) || !Utils.equalsIncludingNull( mCurrentParameter,parameter))
+            if (!Utils.equalsIncludingNull( mSource,source) || !Utils.equalsIncludingNull( mParameter,parameter))
             {
                 mQueueLoaded = false;
             }
@@ -78,6 +77,17 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
 
     public SongRecyclerFragment() {
         // Required empty public constructor
+    }
+
+    @Override
+    public void onCreate( @Nullable Bundle savedInstanceState )
+    {
+        super.onCreate( savedInstanceState );
+
+        //Set all media callback objects to this fragment's implementation of them
+        mConnectionCallbacks =      new ConnectionCallbacks();
+        mSubscriptionCallbacks =    new SubscriptionCallbacks();
+        mControllerCallbacks =      new ControllerCallbacks();
     }
 
     //Most of the init is done here
@@ -97,11 +107,9 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
 
         //If we are selecting songs for result then we need to enforce select mode, so we don't play songs here
         if (mSelectSongsForResult)
-        {
             activateSelectMode();
-        }
 
-        //SlimPlayerApplication.getInstance().registerPlayerServiceListener(this);
+
     }
 
 
@@ -135,14 +143,15 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
     }
 
     @Override
-    public void onStop() {
+    public void onStop()
+    {
         super.onStop();
 
-        //SlimPlayerApplication.getInstance().unregisterPlayerServiceListener(this);
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
 
         //Allow this option only if we are in normal mode
         if (mSelectMode && !mSelectSongsForResult)
@@ -170,7 +179,7 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
                 }
 
                 //Here we call add to playlists activity and pass ID list
-                Intent intent = new Intent(mContext,AddToPlaylistActivity.class);
+                Intent intent = new Intent(getContext(),AddToPlaylistActivity.class);
                 intent.putExtra(AddToPlaylistActivity.ID_LIST_KEY,(ArrayList)idList);
                 startActivity(intent);
                 deselect();
@@ -185,8 +194,13 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
     @Override
     public void onClick(View v) {
 
-        int position = mRecyclerView.getChildLayoutPosition(v);
-        List<MediaBrowserCompat.MediaItem> mediaItems = mAdapter.getMediaItemsList();
+        int position;
+        List<MediaBrowserCompat.MediaItem> mediaItems;
+        Context context;
+
+        position =      mRecyclerView.getChildLayoutPosition(v);
+        mediaItems =    mAdapter.getMediaItemsList();
+        context =       getContext();
 
 
         //If we are not selecting items, then we want to play them
@@ -203,8 +217,8 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
             else
             {
                 bundle = new Bundle();
-                bundle.putString( Const.SOURCE_KEY, mCurrentSource );
-                bundle.putString( Const.PARAMETER_KEY, mCurrentParameter );
+                bundle.putString( Const.SOURCE_KEY, mSource );
+                bundle.putString( Const.PARAMETER_KEY, mParameter );
                 bundle.putInt( Const.POSITION_KEY, position );
 
                 mMediaController.getTransportControls().playFromMediaId( mediaItems.get( position ).getMediaId(), bundle );
@@ -212,9 +226,9 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
 
 
             //Start NowPlayingActivity
-            intent = new Intent(mContext,NowPlayingActivity.class);
-            intent.putExtra( Const.SOURCE_KEY, mCurrentSource );
-            intent.putExtra( Const.PARAMETER_KEY, mCurrentParameter );
+            intent = new Intent(context,NowPlayingActivity.class);
+            intent.putExtra( Const.SOURCE_KEY, mSource );
+            intent.putExtra( Const.PARAMETER_KEY, mParameter );
             intent.putExtra( Const.POSITION_KEY, position );
 
             startActivity(intent);
@@ -230,11 +244,11 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
         if (mSelectSongsForResult)
         {
             if (isItemSelected(position)) {
-                ((SelectSongsActivity) mContext).getSelectedSongsList().add(mediaItems.get(position).getMediaId());
+                ((SelectSongsActivity) context).getSelectedSongsList().add(mediaItems.get(position).getMediaId());
             }
             else
             {
-                ((SelectSongsActivity) mContext).getSelectedSongsList().remove(mediaItems.get(position).getMediaId());
+                ((SelectSongsActivity) context).getSelectedSongsList().remove(mediaItems.get(position).getMediaId());
             }
         }
     }

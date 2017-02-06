@@ -22,7 +22,7 @@ public class StatsDbHelper extends SQLiteOpenHelper {
     public static final int DATABASE_VERSION = 9;
     public static final String DATABASE_NAME = "Stats.db";
 
-    private Context mContext;
+
 
     private static StatsDbHelper sInstance;
 
@@ -32,7 +32,7 @@ public class StatsDbHelper extends SQLiteOpenHelper {
         if (sInstance == null)
         {
             Log.d("StatsDbHelper","New instance created");
-            sInstance = new StatsDbHelper(context);
+            sInstance = new StatsDbHelper();
         }
 
         return sInstance;
@@ -48,11 +48,10 @@ public class StatsDbHelper extends SQLiteOpenHelper {
         }
     }
 
-    private StatsDbHelper(Context context)
+    private StatsDbHelper()
     {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        super(SlimPlayerApplication.getInstance(), DATABASE_NAME, null, DATABASE_VERSION);
 
-        mContext = context;
     }
 
     @Override
@@ -71,12 +70,11 @@ public class StatsDbHelper extends SQLiteOpenHelper {
     }
 
 
-    //TODO - what happens if database is reconstructed and id's for sources are different (it will be reset after N list changes)
+
     public void updateStats( final String source,@Nullable final String parameter, @Nullable final String displayName)
     {
         Log.v(TAG,"updateStats()");
 
-        final int N = 10; //Number of last records we scan //TODO - make this number generic
 
         new AsyncTask<Void,Void,Void>()
         {
@@ -102,13 +100,13 @@ public class StatsDbHelper extends SQLiteOpenHelper {
                 //Delete old obsolete values from source records
                 statsDb.execSQL("DELETE FROM " + StatsContract.SourceRecords.TABLE_NAME + " WHERE " +
                         StatsContract.SourceRecords._ID + " NOT IN (" + "SELECT " + StatsContract.SourceRecords._ID + " FROM " +
-                        "(SELECT " + StatsContract.SourceRecords._ID + " FROM " + StatsContract.SourceRecords.TABLE_NAME + " ORDER BY " + StatsContract.SourceRecords._ID + " DESC LIMIT " + N + ") )");
+                        "(SELECT " + StatsContract.SourceRecords._ID + " FROM " + StatsContract.SourceRecords.TABLE_NAME + " ORDER BY " + StatsContract.SourceRecords._ID + " DESC LIMIT " + Const.STATS_RECORDS_SCANNED + ") )");
 
                 //Update recent frequency of this source
                 statsDb.execSQL("UPDATE " + StatsContract.SourceStats.TABLE_NAME + " SET " + StatsContract.SourceStats.COLUMN_NAME_RECENT_FREQUENCY +
                         "=(SELECT COUNT() FROM " +
                         "(SELECT * FROM " + StatsContract.SourceRecords.TABLE_NAME +
-                        " ORDER BY " + StatsContract.SourceRecords._ID + " DESC LIMIT " + N + ")" +
+                        " ORDER BY " + StatsContract.SourceRecords._ID + " DESC LIMIT " + Const.STATS_RECORDS_SCANNED + ")" +
                         " GROUP BY " + StatsContract.SourceRecords.COLUMN_NAME_SOURCE + ", " + StatsContract.SourceRecords.COLUMN_NAME_PARAMETER +
                         " HAVING " + StatsContract.SourceRecords.COLUMN_NAME_SOURCE + "='" + source + "' AND "
                         + StatsContract.SourceRecords.COLUMN_NAME_PARAMETER + "='" + parameter + "') " +

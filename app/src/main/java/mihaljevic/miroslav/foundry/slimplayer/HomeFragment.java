@@ -1,12 +1,16 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 
+import android.content.ComponentName;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -36,7 +40,8 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
     //Here we store update task so we can check its status
     private AsyncTask<Void,Void,Void> mUpdateDatasetTask;
 
-    //private MediaPlayerService mPlayerService;
+    private MediaBrowserCompat mMediaBrowser;
+    private MediaControllerCompat mMediaController;
 
     private RecyclerView.AdapterDataObserver mDataObserver = new RecyclerView.AdapterDataObserver() {
         @Override
@@ -56,6 +61,36 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
         }
     };
 
+    protected class ConnectionCallbacks extends MediaBrowserCompat.ConnectionCallback
+    {
+        @Override
+        public void onConnected()
+        {
+            super.onConnected();
+
+            try
+            {
+                mMediaController = new MediaControllerCompat( getContext(), mMediaBrowser.getSessionToken() );
+            }
+            catch (RemoteException e)
+            {
+                e.printStackTrace();;
+            }
+        }
+
+        @Override
+        public void onConnectionSuspended()
+        {
+            super.onConnectionSuspended();
+        }
+
+        @Override
+        public void onConnectionFailed()
+        {
+            super.onConnectionFailed();
+        }
+    }
+
 
     public HomeFragment() {
         // Required empty public constructor
@@ -73,21 +108,19 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        //Find recycler view
-        mRecyclerView = (RecyclerView) getView().findViewById(R.id.home_recycler_view);
-
-        //Set that it has fixed site
-        mRecyclerView.setHasFixedSize(true);
-
-        //Set layout manager for recycler view
         mLayoutManager = new GridLayoutManager(getContext(),2);
-        mRecyclerView.setLayoutManager(mLayoutManager);
-
-        mNumberOfItems = getContext().getResources().getInteger(R.integer.num_homescreen_items);
 
         //For now we just init adapter and set it to recycler view, data loading starts later
         mAdapter = new HomeAdapter(getContext(),null,this);
+
+        //Find recycler view
+        mRecyclerView = (RecyclerView) getView().findViewById(R.id.home_recycler_view);
+        mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setAdapter(mAdapter);
+
+        mNumberOfItems = getContext().getResources().getInteger(R.integer.num_homescreen_items);
+
 
         //Set up observer so we know when to show empty message
         mAdapter.registerAdapterDataObserver(mDataObserver);
@@ -95,13 +128,15 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
         //Make sure onCreateOptionsMenu() is called
         setHasOptionsMenu(true);
 
+        mMediaBrowser = new MediaBrowserCompat( getContext(), new ComponentName( getContext(), MediaPlayerService.class ), new ConnectionCallbacks(), null );
+
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
-
-        //SlimPlayerApplication.getInstance().registerPlayerServiceListener(this);
+    public void onStart()
+    {
+        super.onStart();
+        mMediaBrowser.connect();
     }
 
     @Override
@@ -110,6 +145,13 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
 
         //We call this here so we make sure we always have latest last play positions
         updateDatasetAsync();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        mMediaBrowser.disconnect();
     }
 
     //HACK TO KNOW IF THIS FRAGMENT IS VISIBLE ONE IN PAGER
@@ -122,11 +164,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
 
     }
 
-    /*@Override
-    public void onPlayerServiceBound(MediaPlayerService playerService) {
-        //Player service has been bound, get its object
-        mPlayerService = playerService;
-    }*/
+
 
     @Override
     public void onDestroy() {
@@ -172,38 +210,52 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
     @Override
     public void onClick( View v )
     {
-        int position = mRecyclerView.getChildLayoutPosition( v );
-        Cursor cursor = mAdapter.getCursor();
+        int     position;
+        Cursor  cursor;
+        String  source;
+        String  parameter;
+        int     playPosition;
+        Intent  intent;
+        Bundle  extras;
+        String  sessionSource;
+        String  sessionParameter;
+
+        position =  mRecyclerView.getChildLayoutPosition( v );
+        cursor =    mAdapter.getCursor();
 
         if ( cursor == null || cursor.isClosed() )
             return;
 
         cursor.moveToPosition( position );
 
-        String source = cursor.getString( cursor.getColumnIndex( StatsContract.SourceStats.COLUMN_NAME_SOURCE ) );
-        String parameter = cursor.getString( cursor.getColumnIndex( StatsContract.SourceStats.COLUMN_NAME_PARAMETER ) );
-        int playPosition = cursor.getInt( cursor.getColumnIndex( StatsContract.SourceStats.COLUMN_NAME_LAST_POSITION ) );
+        source =        cursor.getString( cursor.getColumnIndex( StatsContract.SourceStats.COLUMN_NAME_SOURCE ) );
+        parameter =     cursor.getString( cursor.getColumnIndex( StatsContract.SourceStats.COLUMN_NAME_PARAMETER ) );
+        playPosition =  cursor.getInt( cursor.getColumnIndex( StatsContract.SourceStats.COLUMN_NAME_LAST_POSITION ) );
 
 
-        //MediaPlayerService playerService = SlimPlayerApplication.getInstance().getMediaPlayerService();
+        intent = new Intent( getContext(), SongListActivity.class );
 
-        //Get bundle
-        Bundle bundle = ScreenBundles.getBundleForSubScreen( source, parameter );
+        intent.putExtra( Const.SOURCE_KEY,      source );
+        intent.putExtra( Const.PARAMETER_KEY,   parameter );
+        intent.putExtra( Const.POSITION_KEY,    playPosition );
 
-        //Insert last remembered position
-        bundle.putInt( SongRecyclerFragment.PLAY_POSITION_KEY, playPosition );
 
-        //Check if the same list is already playing
-        /*if (playerService != null && !(Utils.equalsIncludingNull(playerService.getSongsSource(),source) && Utils.equalsIncludingNull(playerService.getSongsParameter(),parameter)))
+        //Check if we can start playing
+        if ( mMediaBrowser != null && mMediaBrowser.isConnected() && mMediaController != null )
         {
+            extras = mMediaController.getExtras();
 
-        }*/
+            sessionSource =     extras == null ? null : extras.getString( Const.SOURCE_KEY );
+            sessionParameter =  extras == null ? null : extras.getString( Const.PARAMETER_KEY );
 
-
-        Intent intent = new Intent( v.getContext(), SongListActivity.class );
-        intent.putExtra( SongListActivity.FRAGMENT_BUNDLE_KEY, bundle );
+            //Check if we need to start playing
+            if ( Utils.isSourceDifferent( source, parameter, sessionSource, sessionParameter ) )
+            {
+                mMediaController.getTransportControls().playFromMediaId( Const.UNKNOWN,  intent.getExtras() );
+            }
+        }
 
         //Start activity
-        v.getContext().startActivity( intent );
+        getContext().startActivity( intent );
     }
 }

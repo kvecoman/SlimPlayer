@@ -46,13 +46,17 @@ public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
 
     public void initCreatePlaylistDialog()
     {
+        final Context context;
+
+        context = getContext();
+
         //Set up edit text that will be used in alert dialog to get playlist name
-        mCreatePlaylistEditText = new EditText(mContext);
+        mCreatePlaylistEditText = new EditText(context);
         mCreatePlaylistEditText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
 
 
         //Build alert dialog that will take name of new playlist
-        mCreatePlaylistDialog = new AlertDialog.Builder(mContext)
+        mCreatePlaylistDialog = new AlertDialog.Builder(context)
                 .setTitle("Create new playlist")
                 .setMessage("Enter playlist name!")
                 .setView(mCreatePlaylistEditText)
@@ -144,7 +148,7 @@ public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
                 mCreatePlaylistEditText.selectAll();
 
                 //Code to automatically show soft keyboard when dialog is shown
-                InputMethodManager imm = (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
+                InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT,0);
             }
         });

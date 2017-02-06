@@ -30,11 +30,9 @@ import junit.framework.Test;
 //TODO - add optimizations for screen rotations (already done for NowPlayingFragment)
 //TODO - mp3 playback might need its own thread not just AsyncTask
 //TODO - support for headphone controls (and to disable them when headphones aren't plugged in)
-//TODO - updateDataAsync called twice every time in SlimRecyclerFragment
-//TODO - loading art in nowplayingFragment sometimes doesn't succeed, maybe when you put media loading async it will work
 
 
-//TODO - continue here - make home fragment work, fix bug with notification not being posted if there is no embedded art
+//TODO - package validation is done, go on (when playlist is created/deleted it is not updated right now), adding to playlist fromc ategories also doesn't work
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";

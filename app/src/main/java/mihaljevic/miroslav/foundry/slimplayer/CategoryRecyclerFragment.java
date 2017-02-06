@@ -1,6 +1,7 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 
+import android.content.Context;
 import android.content.Intent;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
@@ -24,33 +25,38 @@ public class CategoryRecyclerFragment extends SlimRecyclerFragment {
     public void onClick(View v) {
 
 
-        int position = mRecyclerView.getChildLayoutPosition(v);
+        int position;
+        Context context;
+
+        context = getContext();
+        position = mRecyclerView.getChildLayoutPosition(v);
 
         if (mSelectSongsForResult)
         {
             Intent intent = new Intent(PlaylistSongsRecyclerFragment.ACTION_SELECT_SONGS, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,getContext(),SongListActivity.class);
 
+
             //Choose bundle and send it to songList fragment
             String parameter = mAdapter.getMediaItemsList().get(position).getMediaId();
 
             //Choose bundle and send it to songList fragment
-            intent.putExtra( Const.SOURCE_KEY, mCurrentSource);
+            intent.putExtra( Const.SOURCE_KEY, mSource );
             intent.putExtra( Const.PARAMETER_KEY, parameter);
             intent.putExtra(SlimActivity.REQUEST_CODE_KEY,PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2);
 
             //We let the hosting activity to handle results of selecting songs
-            if (mContext instanceof AppCompatActivity)
-                ((AppCompatActivity)mContext).startActivityForResult(intent, PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2);
+            if (context instanceof AppCompatActivity)
+                ((AppCompatActivity)context).startActivityForResult(intent, PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2);
         }
         else
         {
             //If we are in normal mode just start activity
-            Intent intent = new Intent(mContext,SongListActivity.class);
+            Intent intent = new Intent(context,SongListActivity.class);
 
             String parameter = mAdapter.getMediaItemsList().get(position).getMediaId();
 
             //Choose bundle and send it to songList fragment
-            intent.putExtra( Const.SOURCE_KEY, mCurrentSource);
+            intent.putExtra( Const.SOURCE_KEY, mSource );
             intent.putExtra( Const.PARAMETER_KEY, parameter);
 
             //Start next screen

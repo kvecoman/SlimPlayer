@@ -1,12 +1,9 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 
-import android.database.Cursor;
 import android.os.AsyncTask;
-import android.provider.MediaStore;
 import android.support.v4.media.MediaBrowserCompat;
 import android.view.View;
-import android.widget.Toast;
 
 import java.util.List;
 
@@ -51,7 +48,7 @@ public class AddToPlaylistsRecyclerFragment extends PlaylistsRecyclerFragment {
             protected void onPostExecute(Integer result)
             {
                 Utils.toastShort(result + " " + getString(R.string.playlist_add_succes));
-                MusicProvider.getInstance().invalidateDataAndNotify(mCurrentSource,mediaItems.get(position).getMediaId());
+                MusicProvider.getInstance().invalidateDataAndNotify( mSource,mediaItems.get(position).getMediaId());
             }
         }.execute();
 

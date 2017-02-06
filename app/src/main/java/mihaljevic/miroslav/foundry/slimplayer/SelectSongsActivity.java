@@ -63,29 +63,32 @@ public abstract class SelectSongsActivity extends BackHandledFragmentActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
-        int id = item.getItemId();
+        int id;
+        Intent intent;
+        int request_code;
+
+        id = item.getItemId();
+        intent = new Intent();
+        request_code = getIntent().getIntExtra(SlimActivity.REQUEST_CODE_KEY, SELECT_SONGS_REQUEST_2);
 
         switch (id)
         {
             //If the user user is finished with selecting songs
             case R.id.accept_selected_songs:
-                if (mSelectedSongIdsList.size() > 0)
-                {
-                    Intent intent = new Intent();
-                    int request_code = getIntent().getIntExtra(SlimActivity.REQUEST_CODE_KEY, SELECT_SONGS_REQUEST_2);
 
-                    intent.putStringArrayListExtra(SELECTED_SONGS_KEY,new ArrayList<>(mSelectedSongIdsList));
-                    intent.putExtra(SelectSongsActivity.SELECTING_FINISHED_KEY,true);
 
-                    setResult(request_code,intent);
-                    finish();
-                }
-                else
-                {
-                    finish();
-                }
+                intent.putStringArrayListExtra(SELECTED_SONGS_KEY,new ArrayList<>(mSelectedSongIdsList));
+                intent.putExtra(SelectSongsActivity.SELECTING_FINISHED_KEY,true);
+
+                setResult(request_code,intent);
+                finish();
+
                 break;
             case R.id.cancel_selected_songs:
+
+                //We send signal that we want to finish whole proccess of selecting songs
+                intent.putExtra(SelectSongsActivity.SELECTING_FINISHED_KEY,true);
+                setResult(request_code, intent);
                 finish();
                 break;
         }
@@ -94,26 +97,23 @@ public abstract class SelectSongsActivity extends BackHandledFragmentActivity {
     }
 
     @Override
-    public void onBackPressed() {
+    public void onBackPressed()
+    {
 
-
-        if (mSelectSongsForResult)
+        //Code to get song id's even if
+        /*if (mSelectSongsForResult)
         {
             //If user pressed back but has songs selected then we will set that as result
             if (mSelectedSongIdsList.size() > 0)
             {
-                Intent intent = new Intent();
-                int result_code = getIntent().getIntExtra(SlimActivity.REQUEST_CODE_KEY, SELECT_SONGS_REQUEST_2);
+                Intent intent =     new Intent();
+                int result_code =   getIntent().getIntExtra( SlimActivity.REQUEST_CODE_KEY, SELECT_SONGS_REQUEST_2 );
 
-                intent.putStringArrayListExtra(SELECTED_SONGS_KEY,new ArrayList<>(mSelectedSongIdsList));
+                intent.putStringArrayListExtra( SELECTED_SONGS_KEY, new ArrayList<>( mSelectedSongIdsList ) );
 
-                setResult(result_code, intent);
-                //finish();
-            }/* else
-            {
-                finish();
-            }*/
-        }
+                setResult( result_code, intent );
+            }
+        }*/
 
         super.onBackPressed();
     }
@@ -121,6 +121,9 @@ public abstract class SelectSongsActivity extends BackHandledFragmentActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2 && data != null && data.getBooleanExtra(SelectSongsActivity.SELECTING_FINISHED_KEY, false))
+            finish();
 
         //REQUEST CODE 2 case - we are still selecting but we just take IDs that were selected in forResult activity
         if (data != null && requestCode == PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2 && data.hasExtra(PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY))

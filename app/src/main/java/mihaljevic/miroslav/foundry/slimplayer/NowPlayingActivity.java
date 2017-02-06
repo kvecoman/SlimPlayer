@@ -135,7 +135,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
         Intent intent;
 
-        intent = getIntent(); //TODO - check if null and get source
+        intent = getIntent();
 
         if (intent != null && intent.hasExtra( Const.SOURCE_KEY ))
         {
@@ -179,18 +179,6 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         return true;
     }
 
-    //TODO - this code needs to go in onSubscribe or onChildrenLoaded (now only filePlaying needs to be done)
-    /*@Override
-    public void onPlayerServiceBound(MediaPlayerService playerService) {
-        mPlayerService = playerService;
-
-        startFilePlayingIfNeeded();
-
-        initPagerAdapter();
-
-        //When we are connected request current play info
-        mPlayerService.registerPlayListener(NowPlayingActivity.this);
-    }*/
 
     @Override
     public void onBackPressed() {

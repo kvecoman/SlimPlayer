@@ -83,12 +83,19 @@
     <!--Toast texts-->
     <string name="toast_playlist_exists">Playlist with that name already exists</string>
     <string name="toast_exit_confirm">Press back again to exit</string>
+    <string name="toast_items_deleted"> items deleted</string>
 
     <!-- Used as display name in home screen-->
     <string name="all_songs_screen_title">All songs</string>
 
     <!-- Default text-->
     <string name="hello_blank_fragment">Nothing to show</string>
+
+    <!-- Notification player titles -->
+    <string name="title_play_previous">Play previous</string>
+    <string name="title_play_next">Play nexts</string>
+    <string name="title_play">Play</string>
+    <string name="title_pause">Pause</string>
 
 
 </resources>

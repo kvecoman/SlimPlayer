@@ -31,4 +31,8 @@ public final class Const {
     public static final String [] SCREENS = new String[] {HOME_SCREEN, ALL_SCREEN, PLAYLISTS_SCREEN, ALBUMS_SCREEN, ARTISTS_SCREEN, GENRES_SCREEN};
 
     public static final String FILE_URI_KEY = "file_uri";
+
+    public static final String UNKNOWN = "-1";
+
+    public static final int STATS_RECORDS_SCANNED = 10; //Number of records we scan in stats database to determine items fro home screen
 }

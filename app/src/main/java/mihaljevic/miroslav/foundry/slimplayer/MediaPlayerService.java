@@ -44,7 +44,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 
-//TODO - fetch embeded album art
 
 public class MediaPlayerService extends MediaBrowserServiceCompat implements MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 
@@ -164,13 +163,15 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
 
 
-    private static final String MEDIA_ROOT_ID = "root_id";
+    private static final String MEDIA_ROOT_ID = "slim_player_root";
 
     private MediaSessionCompat mMediaSession;
 
     private PlaybackStateCompat.Builder mStateBuilder;
 
     private MusicProvider mMusicProvider;
+
+    private PackageValidator mPackageValidator;
 
 
     public MediaPlayerService() {
@@ -232,6 +233,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         //Recreate last remembered state
         playLastStateAsync();
 
+        mPackageValidator = PackageValidator.getInstance();
+
     }
 
 
@@ -240,9 +243,10 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     @Override
     public BrowserRoot onGetRoot(@NonNull String clientPackageName, int clientUid, @Nullable Bundle rootHints) {
 
-        //TODO - validation of client
+        if (mPackageValidator.validate( clientPackageName, clientUid ))
+            return new BrowserRoot(MEDIA_ROOT_ID, rootHints);
 
-        return new BrowserRoot(MEDIA_ROOT_ID,rootHints);
+        return null;
     }
 
     @Override
@@ -254,17 +258,22 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowserCompat.MediaItem>> result,@Nullable Bundle options)
     {
 
-        String parameter = null;
+        String source;
+        String parameter;
         List<MediaBrowserCompat.MediaItem> mediaItems;
 
         //Obtain parameter from bundle if it exist
-        if (options != null && options.containsKey( Const.PARAMETER_KEY))
-            parameter = options.getString( Const.PARAMETER_KEY);
+        if (options == null || !parentId.equals( MEDIA_ROOT_ID ))
+            return;
+
+        source =    options.getString( Const.SOURCE_KEY );
+        parameter = options.getString( Const.PARAMETER_KEY);
+
 
 
         //Load media from music provider
         //TODO - this to another thread, you use detach function of result
-        mediaItems = mMusicProvider.loadMedia(parentId,parameter);
+        mediaItems = mMusicProvider.loadMedia(source,parameter);
 
 
         result.sendResult(mediaItems);
@@ -335,11 +344,11 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             setQueue( source, parameter );
 
             //Check if bundle provided correct play position
-            if (!(position >= 0 && position < mQueue.size() && mQueue.get( position ).getDescription().getMediaId().equals( mediaId )))
+            if (!(position >= 0 && position < mQueue.size() && (mediaId.equals( Const.UNKNOWN ) || mQueue.get( position ).getDescription().getMediaId().equals( mediaId ))))
                 position = -1;
 
             //If position from bundle wasn't correct, try to find it here
-            if (position == -1)
+            if (position == -1 && !mediaId.equals( Const.UNKNOWN ))
             {
                 for (i = 0;i < mQueue.size(); i++)
                 {
@@ -405,6 +414,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
         List<MediaBrowserCompat.MediaItem>  mediaItems;
         MediaSessionCompat.QueueItem        queueItem;
+        MediaBrowserCompat.MediaItem        mediaItem;
         boolean isSourceChanged;
         int     count;
         String oldSource;
@@ -413,7 +423,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         final String queueTitle;
 
 
-        isSourceChanged = true;
         oldSource = mQueueSource;
         oldParameter = mQueueParameter;
         sessionExtras = new Bundle();
@@ -427,39 +436,15 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
 
         //If we are loading from file
-        if (source == Const.FILE_URI_KEY)
+        if (source.equals(Const.FILE_URI_KEY))
         {
-            MediaMetadataCompat metadata;
-            MediaMetadataCompat.Builder metadataBuilder;
-            MediaMetadataRetriever retriever;
-            Uri fileUri;
-            String fileUriString;
-            MediaBrowserCompat.MediaItem mediaItem;
-
-            metadataBuilder = new MediaMetadataCompat.Builder(  );
-            retriever = new MediaMetadataRetriever();
-            fileUriString = parameter;
-            fileUri = Uri.parse( fileUriString );
 
             mediaItems = new ArrayList<>(1);
 
-            if (fileUri == null)
+            mediaItem = Utils.mediaFromFile( parameter );
+
+            if (mediaItem == null)
                 return true;
-
-            retriever.setDataSource( fileUri.getPath() );
-
-            metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, "0")
-                            .putString(MediaMetadataCompat.METADATA_KEY_TITLE, retriever.extractMetadata( MediaMetadataRetriever.METADATA_KEY_TITLE ))
-                            .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, retriever.extractMetadata( MediaMetadataRetriever.METADATA_KEY_ALBUM ))
-                            .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, retriever.extractMetadata( MediaMetadataRetriever.METADATA_KEY_ARTIST ))
-                            .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, Long.parseLong(retriever.extractMetadata( MediaMetadataRetriever.METADATA_KEY_DURATION )))
-                            .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI, fileUriString);
-
-
-            metadata = metadataBuilder.build();
-
-            //Get media item with metadata bundled in its media description object
-            mediaItem = mMusicProvider.bundleMetadata( metadata );
 
             mediaItems.add( mediaItem );
 
@@ -488,7 +473,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
 
         mCount = mQueue.size();
-        //mReadyToPlay = true;
 
 
         sessionExtras.putString( Const.SOURCE_KEY,      source );
@@ -505,9 +489,11 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         if (queueTitle != null)
             mMediaSession.setQueueTitle( queueTitle );
 
+        isSourceChanged = Utils.isSourceDifferent( source, oldSource, parameter, oldParameter );
 
-        //If the source is different then update stats database
-        if (!source.equals( Const.FILE_URI_KEY ) && (!Utils.equalsIncludingNull( oldSource,source) || !Utils.equalsIncludingNull( oldParameter,parameter)))
+
+        //If the source is different and not file then update stats database
+        if (!source.equals( Const.FILE_URI_KEY ) &&  isSourceChanged)
         {
 
             new AsyncTask<Void,Void,Void>()
@@ -521,15 +507,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                 }
             }.execute();
         }
-        else
-        {
-            //Note that the source is same as before
-            isSourceChanged = false;
-        }
 
         mQueueSource = source;
         mQueueParameter = parameter;
-
 
 
         //Save song list source in preferences so we remember this list for auto-start playback
@@ -1188,10 +1168,10 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                 pendingIntent = PendingIntent.getService( getApplicationContext(), 0, intent, 0 );
                 builder.setDeleteIntent( pendingIntent );
 
-                //TODO - action titles to resource
-                builder.addAction( generateAction( R.drawable.ic_skip_previous_ltgray_36dp, "Play Previous", NOTIFICATION_ACTION_PREVIOUS ) );
-                builder.addAction( generateAction( playIcon ? R.drawable.ic_play_arrow_ltgray_36dp : R.drawable.ic_pause_ltgray_36dp, playIcon ? "Play" : "Pause", NOTIFICATION_ACTION_PLAY_PAUSE ) );
-                builder.addAction( generateAction( R.drawable.ic_skip_next_ltgray_36dp, "Play next", NOTIFICATION_ACTION_NEXT ) );
+
+                builder.addAction( generateAction( R.drawable.ic_skip_previous_ltgray_36dp, getString( R.string.title_play_previous ), NOTIFICATION_ACTION_PREVIOUS ) );
+                builder.addAction( generateAction( playIcon ? R.drawable.ic_play_arrow_ltgray_36dp : R.drawable.ic_pause_ltgray_36dp, playIcon ? getString( R.string.title_play ) : getString( R.string.title_pause ), NOTIFICATION_ACTION_PLAY_PAUSE ) );
+                builder.addAction( generateAction( R.drawable.ic_skip_next_ltgray_36dp, getString( R.string.title_play_next), NOTIFICATION_ACTION_NEXT ) );
 
 
                 notification = builder.build();

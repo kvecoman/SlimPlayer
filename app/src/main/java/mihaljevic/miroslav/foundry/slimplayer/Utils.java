@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaMetadataCompat;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.View;
@@ -304,7 +305,7 @@ public final class Utils {
         return displayName;
     }
 
-    public static Bitmap cropBitmapToRatio(Bitmap bitmap, float ratio)
+    /*public static Bitmap cropBitmapToRatio(Bitmap bitmap, float ratio)
     {
         if (bitmap == null || ratio <= 0)
             return null;
@@ -331,7 +332,7 @@ public final class Utils {
         }
 
         return resultBitmap;
-    }
+    }*/
 
     public static void toastShort(String text)
     {
@@ -341,6 +342,53 @@ public final class Utils {
     public static void toastLong(String text)
     {
         Toast.makeText(SlimPlayerApplication.getInstance(),text,Toast.LENGTH_LONG).show();
+    }
+
+    public static boolean isSourceDifferent(String source1, String parameter1, String source2, String parameter2)
+    {
+        boolean different;
+
+        //Here we check if the source and parameters are same, but if both sources are null then we take them as they are different
+        different = !(  Utils.equalsIncludingNull( source1, source2 ) &&
+                        Utils.equalsIncludingNull( parameter1, parameter2 )
+                        && source1 != null );                               //This actually checks if both sources are null(because first line would fail if they are not same)
+                                                                            // ...and if they are, "different" will be true
+
+        return different;
+    }
+
+    public static MediaBrowserCompat.MediaItem mediaFromFile(String fileUriString)
+    {
+        MediaMetadataCompat metadata;
+        MediaMetadataCompat.Builder metadataBuilder;
+        MediaMetadataRetriever retriever;
+        Uri fileUri;
+        MediaBrowserCompat.MediaItem mediaItem;
+
+        metadataBuilder = new MediaMetadataCompat.Builder(  );
+        retriever = new MediaMetadataRetriever();
+        fileUri = Uri.parse( fileUriString );
+
+
+        if (fileUri == null)
+            return null;
+
+        retriever.setDataSource( fileUri.getPath() );
+
+        metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, "0")
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, retriever.extractMetadata( MediaMetadataRetriever.METADATA_KEY_TITLE ))
+                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, retriever.extractMetadata( MediaMetadataRetriever.METADATA_KEY_ALBUM ))
+                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, retriever.extractMetadata( MediaMetadataRetriever.METADATA_KEY_ARTIST ))
+                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, Long.parseLong(retriever.extractMetadata( MediaMetadataRetriever.METADATA_KEY_DURATION )))
+                .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI, fileUriString);
+
+
+        metadata = metadataBuilder.build();
+
+        //Get media item with metadata bundled in its media description object
+        mediaItem = MusicProvider.getInstance().bundleMetadata( metadata );
+
+        return mediaItem;
     }
 
     /*public static int determineMediaFlag(String source, String parameter)
@@ -357,7 +405,7 @@ public final class Utils {
         return flag;
     }*/
 
-    public static Bitmap getArt( Uri fileUri )
+    /*public static Bitmap getArt( Uri fileUri )
     {
         Bitmap bitmap;
         MediaMetadataRetriever retriever;
@@ -383,5 +431,5 @@ public final class Utils {
         retriever.release();
         return bitmap;
 
-    }
+    }*/
 }

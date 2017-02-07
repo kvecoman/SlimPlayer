@@ -11,15 +11,16 @@ import android.support.v4.media.MediaMetadataCompat;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Miroslav on 16.1.2017..
  *
- * Singleton class that loads
+ * Singleton class that loads music metadata items, thread safe
+ *
+ * Heavily inspired by android music service sample
+ *
+ * @author Miroslav Mihaljević
  */
 
 public class MusicProvider {
@@ -31,13 +32,8 @@ public class MusicProvider {
     private LRUCache<String, List<MediaBrowserCompat.MediaItem>> mMusicItemsCache;
 
 
-    private State mState = State.NOT_READY;
-
     private MediaBrowserServiceCompat mListener;
 
-    public enum State {
-        NOT_READY, LOADING, READY;
-    }
 
     private static MusicProvider sInstance;
 
@@ -183,10 +179,11 @@ public class MusicProvider {
     }
 
     //Discard all cached lists so that we load fresh data when media service calls
-    public void invalidateAllData()
+    //NOTE - if this becomes used, then all usages of cache should be synchronized on "this" object
+    /*public void invalidateAllData()
     {
         mMusicItemsCache = new LRUCache<>(CACHED_ITEMS_CAPACITY);
-    }
+    }*/
 
     //Discard only one list and notify media service to make a call to load list again
     public void invalidateDataAndNotify(String source, String parameter)
@@ -197,16 +194,20 @@ public class MusicProvider {
         parentString = Utils.createParentString( source, parameter );
 
         mMusicItemsCache.remove(parentString);
-        if (mListener != null)
-            mListener.notifyChildrenChanged(parentString);
+
+        synchronized ( this )
+        {
+            if ( mListener != null )
+                mListener.notifyChildrenChanged( parentString );
+        }
     }
 
-    public void registerDataListener(MediaBrowserServiceCompat service)
+    public synchronized void registerDataListener(MediaBrowserServiceCompat service)
     {
         mListener = service;
     }
 
-    public void unregisterDataListener()
+    public synchronized void unregisterDataListener()
     {
         mListener = null;
     }

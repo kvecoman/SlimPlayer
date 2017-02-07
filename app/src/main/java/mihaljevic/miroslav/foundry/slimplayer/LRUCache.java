@@ -1,14 +1,5 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
-import android.util.Log;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
-
 /**
  * Created by miroslav on 07.02.17..
  *
@@ -19,15 +10,13 @@ import java.util.concurrent.ConcurrentMap;
 
 public class LRUCache<K, V>
 {
-    private final String TAG = getClass().getSimpleName();
 
     private int mCapacity;
     private int mSize = 0;
-    //private HashMap<K, Node<K,V>> mMap;
     private Node<K,V> mFirst;
     private Node<K,V> mLast;
 
-    class Node<T, U>
+    private class Node<T, U>
     {
         Node<T,U> previous;
         Node<T,U> next;
@@ -52,9 +41,6 @@ public class LRUCache<K, V>
     public LRUCache(int capacity)
     {
         mCapacity = capacity;
-
-        //mMap = new HashMap<>( capacity, 1.1f );
-
     }
 
     public synchronized void put(K key, V value)
@@ -77,10 +63,6 @@ public class LRUCache<K, V>
             mLast = node;
             mSize++;
 
-            //mFirst.previous = mLast;
-            //mLast.next = mFirst;
-
-            //mMap.put( key, node );
         }
         else if (mSize < mCapacity)
         {
@@ -89,7 +71,6 @@ public class LRUCache<K, V>
             mFirst = node;
             mSize++;
 
-            //mMap.put( key, node );
         }
         else if (mSize == mCapacity)
         {
@@ -114,7 +95,7 @@ public class LRUCache<K, V>
 
         frontNode( node );
 
-        mFirst = mFirst; //DEBUG PURPOSES
+        //mFirst = mFirst; //DEBUG PURPOSES
 
         return mFirst.value;
 
@@ -122,11 +103,8 @@ public class LRUCache<K, V>
 
     private synchronized void frontNode(Node<K,V> node)
     {
-        if (node == mFirst)
-        {
-            return;
-        }
-        else if (node == mLast)
+
+        if (node == mLast)
         {
             mFirst.next = mLast;
             mFirst = mLast;
@@ -134,8 +112,10 @@ public class LRUCache<K, V>
             mLast.previous = null;
             mFirst.next = null;
         }
-        else
+        else if (node != mFirst)
         {
+            //Case when node isn't first nor last
+
             //Cut out node out of middle
             node.previous.next = node.next;
             node.next.previous = node.previous;
@@ -161,7 +141,7 @@ public class LRUCache<K, V>
             node = node.previous;
         }
 
-        return node;
+        return null;
     }
 
     public synchronized void remove(K key)
@@ -194,7 +174,7 @@ public class LRUCache<K, V>
     }
 
     //DEBUG METHOD - only used to verify correct behaviour of cache
-    private List<Node<K,V>> listAllNodes()
+    /*private List<Node<K,V>> listAllNodes()
     {
         List<Node<K,V>> list;
         Node<K,V> node;
@@ -211,6 +191,6 @@ public class LRUCache<K, V>
         }
 
         return  list;
-    }
+    }*/
 
 }

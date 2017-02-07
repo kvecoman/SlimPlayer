@@ -6,9 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.media.MediaBrowserCompat;
-import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
-import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.Menu;
@@ -31,20 +29,28 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
     protected boolean mQueueLoaded = false;
 
 
+    protected class ConnectionCallbacks extends SlimRecyclerFragment.ConnectionCallbacks
+    {
+        @Override
+        public void onConnected()
+        {
+            super.onConnected();
+
+            //Run first time check of whether our list is loaded in media service
+            mControllerCallbacks.onQueueChanged( mMediaController.getQueue() );
+        }
+    }
 
 
     protected class ControllerCallbacks extends SlimRecyclerFragment.ControllerCallbacks
     {
-        @Override
-        public void onPlaybackStateChanged( PlaybackStateCompat state )
-        {
-            super.onPlaybackStateChanged( state );
-        }
 
         @Override
         public void onQueueChanged( List<MediaSessionCompat.QueueItem> queue )
         {
             super.onQueueChanged( queue );
+
+            //We use this callback to check if our queue is loaded in media service
 
             Bundle extras;
             String source;
@@ -62,15 +68,8 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
             parameter = extras.getString( Const.PARAMETER_KEY, null );
 
 
-            //If the source is different than the one this list represents
-            if (!Utils.equalsIncludingNull( mSource,source) || !Utils.equalsIncludingNull( mParameter,parameter))
-            {
-                mQueueLoaded = false;
-            }
-            else
-            {
-                mQueueLoaded = true;
-            }
+            //Determine if this queue is actually loaded in media service
+            mQueueLoaded = Utils.equalsIncludingNull( mSource,source) && Utils.equalsIncludingNull( mParameter,parameter);
         }
     }
 
@@ -109,15 +108,9 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
         if (mSelectSongsForResult)
             activateSelectMode();
 
-
     }
 
 
-    /*@Override
-    protected void onDataLoaded(@NonNull String parentId, List<MediaBrowserCompat.MediaItem> children, @NonNull Bundle options) {
-        super.onDataLoaded(parentId, children, options);
-
-    }*/
 
 
 
@@ -142,12 +135,7 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
         super.onPrepareOptionsMenu(menu);
     }
 
-    @Override
-    public void onStop()
-    {
-        super.onStop();
 
-    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
@@ -210,12 +198,17 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
             Intent intent;
 
 
+            //Check if this queue is already loaded, no need to load it again
             if (mQueueLoaded)
             {
-                mMediaController.getTransportControls().skipToQueueItem( position );
+                //Play song only if it is not already playing
+                if (mMediaController.getPlaybackState().getActiveQueueItemId() != position)
+                    mMediaController.getTransportControls().skipToQueueItem( position );
             }
             else
             {
+                //We need to load queue
+
                 bundle = new Bundle();
                 bundle.putString( Const.SOURCE_KEY, mSource );
                 bundle.putString( Const.PARAMETER_KEY, mParameter );
@@ -257,6 +250,8 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
     public boolean onLongClick(View v) {
         if (!mSelectMode)
         {
+            //Activate select mode and select pressed item
+
             activateSelectMode();
             setItemSelected(mRecyclerView.getChildLayoutPosition(v),true,v);
         }

@@ -32,7 +32,7 @@ import junit.framework.Test;
 //TODO - support for headphone controls (and to disable them when headphones aren't plugged in)
 
 
-
+//TODO - continue here - display song name and artist on lock screen
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";

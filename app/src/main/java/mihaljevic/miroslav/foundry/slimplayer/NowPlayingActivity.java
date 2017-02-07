@@ -24,7 +24,7 @@ import java.util.List;
 public class NowPlayingActivity extends BackHandledFragmentActivity implements  ViewPager.OnPageChangeListener, View.OnClickListener
 {
 
-    //TODO - save loaded queue using some kind of fragment and saving instance of it
+    //TODO - save loaded queue using some kind of fragment and saving instance of it (not so necessary after implementing LRU cache)
 
 
     private ViewPager mPager;

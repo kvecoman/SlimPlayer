@@ -15,6 +15,8 @@ import java.util.Map;
 
 /**
  * Created by miroslav on 05.02.17..
+ *
+ * Inspired by package validator from MediaBrowserService sample
  */
 
 

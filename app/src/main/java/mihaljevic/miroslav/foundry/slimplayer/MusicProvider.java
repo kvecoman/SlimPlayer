@@ -12,6 +12,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,13 +25,11 @@ import java.util.Map;
 public class MusicProvider {
     private final String TAG = getClass().getSimpleName();
 
+    private static int CACHED_ITEMS_CAPACITY = 7;
 
 
-    //private List<MediaMetadataCompat> mMusicMetadataList;
+    private LRUCache<String, List<MediaBrowserCompat.MediaItem>> mMusicItemsCache;
 
-    private Map<DoubleKey,List<MediaBrowserCompat.MediaItem>> mMusicItemsMap;
-
-    //private Map<String, String> mCursorMetadataKeys;
 
     private State mState = State.NOT_READY;
 
@@ -54,88 +53,10 @@ public class MusicProvider {
 
 
     private MusicProvider(){
-        mMusicItemsMap = new HashMap<>();
-        /*mCursorMetadataKeys = new HashMap<>();
-        buildCursorMetadataKeys();*/
+        mMusicItemsCache = new LRUCache<>(CACHED_ITEMS_CAPACITY);
     }
 
-    /*private void buildCursorMetadataKeys()
-    {
-        mCursorMetadataKeys.put(MediaStore.Audio.Media._ID, MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
-        mCursorMetadataKeys.put(MediaStore.Audio.Playlists._ID, MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
-        mCursorMetadataKeys.put(MediaStore.Audio.Genres._ID, MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
-        mCursorMetadataKeys.put(MediaStore.Audio.Playlists.Members.AUDIO_ID, MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
-        mCursorMetadataKeys.put(MediaStore.Audio.Playlists.Members.TITLE, MediaMetadataCompat.METADATA_KEY_TITLE);
-        mCursorMetadataKeys.put(MediaStore.Audio.Playlists.Members.ARTIST, MediaMetadataCompat.METADATA_KEY_ARTIST);
-        mCursorMetadataKeys.put(MediaStore.Audio.Playlists.Members.ALBUM, MediaMetadataCompat.METADATA_KEY_ALBUM);
-        mCursorMetadataKeys.put(MediaStore.Audio.Genres.NAME, MediaMetadataCompat.METADATA_KEY_GENRE);
 
-    }*/
-
-
-    /*public void loadMedia()
-    {
-        Log.v(TAG,"loadMedia()");
-        mState = State.LOADING;
-
-        mMusicMetadataList = new ArrayList<>();
-        MediaBrowserCompat.MediaItem item;
-        MediaDescriptionCompat description;
-        MediaMetadataCompat metadata;
-        String mediaUriStr;
-        SlimMetadata slimMetadata;
-        String albumId;
-        String artistId;
-
-        ContentResolver contentResolver = SlimPlayerApplication.getInstance().getContentResolver();
-
-        Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        String [] projection = new String [] {
-                MediaStore.Audio.Media._ID,
-                MediaStore.Audio.Media.TITLE,
-                MediaStore.Audio.Media.ALBUM_ID,
-                MediaStore.Audio.Media.ALBUM,
-                MediaStore.Audio.Media.ARTIST_ID,
-                MediaStore.Audio.Media.ARTIST,
-                MediaStore.Audio.Media.DURATION,
-                MediaStore.Audio.Media.DATA
-        };
-        String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0 AND (" + ScreenBundles.addDirectoryCheckSQL() + ")";
-        String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
-
-        Cursor cursor = contentResolver.query(uri,projection,selection,null,sortOrder);
-
-        if (cursor == null)
-        {
-            Log.w(TAG,"Cursor is null");
-            return;
-        }
-
-        while (cursor.moveToNext())
-        {
-            mediaUriStr = Uri.parse(cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA))).toString();
-
-            metadata = new MediaMetadataCompat.Builder()
-                        .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID,cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media._ID)))
-                        .putString(MediaMetadataCompat.METADATA_KEY_TITLE,cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)))
-                        .putString(MediaMetadataCompat.METADATA_KEY_ALBUM,cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM)))
-                        .putString(MediaMetadataCompat.METADATA_KEY_ARTIST,cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)))
-                        .putLong(MediaMetadataCompat.METADATA_KEY_DURATION,cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION)))
-                        .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI,mediaUriStr)
-                        .build();
-
-            albumId = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID));
-            artistId = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST_ID));
-
-            slimMetadata = new SlimMetadata(metadata,albumId,artistId);
-
-            mMusicMetadataList.add(slimMetadata);
-        }
-
-        cursor.close();
-
-        mState = State.READY;
-    }*/
 
     public List<MediaBrowserCompat.MediaItem> loadMedia(String source, String parameter)
     {
@@ -146,18 +67,18 @@ public class MusicProvider {
         String                              mediaUriStr;
         MediaBrowserCompat.MediaItem        mediaItem;
         List<MediaBrowserCompat.MediaItem>  mediaItemsList;
-        DoubleKey                           doubleKey;
+        String                              parentKey;
 
-        doubleKey = new DoubleKey(source, parameter);
+        //doubleKey = new DoubleKey(source, parameter);
+        parentKey = Utils.createParentString( source, parameter );
+
+        //Try to retrieve cached list if it exists
+        mediaItemsList = mMusicItemsCache.get(parentKey);
 
         //Return existing list if we have it cached
-        if (mMusicItemsMap.containsKey(doubleKey))
-        {
-            mediaItemsList = mMusicItemsMap.get(doubleKey);
+        if (mediaItemsList != null)
+            return mediaItemsList;
 
-            if (mediaItemsList != null)
-                return mediaItemsList;
-        }
 
         //Retrieve appropriate cursorBundle for cursor
         if (parameter == null)
@@ -198,7 +119,6 @@ public class MusicProvider {
                         .putString  ( MediaMetadataCompat.METADATA_KEY_ARTIST,      cursor.getString( cursor.getColumnIndex( MediaStore.Audio.Media.ARTIST ) ) )
                         .putLong    ( MediaMetadataCompat.METADATA_KEY_DURATION,    cursor.getLong( cursor.getColumnIndex( MediaStore.Audio.Media.DURATION ) ) )
                         .putString  ( MediaMetadataCompat.METADATA_KEY_MEDIA_URI,   mediaUriStr );
-                        /*.putBitmap  ( MediaMetadataCompat.METADATA_KEY_ART,         Utils.getArt( mediaUri ) );*/
 
                 mediaMetadata = metadataBuilder.build();
 
@@ -232,7 +152,7 @@ public class MusicProvider {
         cursor.close();
 
         //Cache this list for later retrieval
-        mMusicItemsMap.put(doubleKey, mediaItemsList);
+        mMusicItemsCache.put(parentKey, mediaItemsList);
 
         return mediaItemsList;
 
@@ -265,18 +185,20 @@ public class MusicProvider {
     //Discard all cached lists so that we load fresh data when media service calls
     public void invalidateAllData()
     {
-        mMusicItemsMap = new HashMap<>();
+        mMusicItemsCache = new LRUCache<>(CACHED_ITEMS_CAPACITY);
     }
 
     //Discard only one list and notify media service to make a call to load list again
     public void invalidateDataAndNotify(String source, String parameter)
     {
-        Bundle bundle = new Bundle();
-        bundle.putString( Const.PARAMETER_KEY,parameter);
+        String parentString;
 
-        mMusicItemsMap.remove(new DoubleKey(source, parameter));
+
+        parentString = Utils.createParentString( source, parameter );
+
+        mMusicItemsCache.remove(parentString);
         if (mListener != null)
-            mListener.notifyChildrenChanged(source, bundle);
+            mListener.notifyChildrenChanged(parentString);
     }
 
     public void registerDataListener(MediaBrowserServiceCompat service)
@@ -289,11 +211,5 @@ public class MusicProvider {
         mListener = null;
     }
 
-    /*public Set<SlimMetadata> getMusicMetadata() {
 
-        if (mState != State.READY)
-            return null;
-
-        return mMusicMetadataList;
-    }*/
 }

@@ -10,13 +10,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.AudioManager;
-import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -31,12 +28,8 @@ import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.NotificationCompat;
 import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
-import android.widget.RemoteViews;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.animation.GlideAnimation;
-import com.bumptech.glide.request.target.NotificationTarget;
-import com.bumptech.glide.request.target.SimpleTarget;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -260,14 +253,28 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
         String source;
         String parameter;
+        String [] split;
         List<MediaBrowserCompat.MediaItem> mediaItems;
 
-        //Obtain parameter from bundle if it exist
-        if (options == null || !parentId.equals( MEDIA_ROOT_ID ))
-            return;
 
-        source =    options.getString( Const.SOURCE_KEY );
-        parameter = options.getString( Const.PARAMETER_KEY);
+        split = parentId.split( "\\:" );
+
+        if (split.length < 1 || split.length > 2 )
+            return;
+        else if (split.length == 1)
+        {
+            source = split[0];
+            parameter = null;
+        }
+        else
+        {
+            source = split[0];
+            parameter = split[1];
+        }
+
+
+        /*source =    options.getString( Const.SOURCE_KEY );
+        parameter = options.getString( Const.PARAMETER_KEY);*/
 
 
 

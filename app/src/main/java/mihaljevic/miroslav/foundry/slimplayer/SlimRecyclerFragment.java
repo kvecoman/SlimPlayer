@@ -70,11 +70,11 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         {
             super.onConnected();
 
-            String rootId; //If we get correct root id from getRoot it means we are allowed to get data
+            String parentString;
 
-            rootId = mMediaBrowser.getRoot();
+            parentString = Utils.createParentString( mSource, mParameter );
 
-            mMediaBrowser.subscribe( rootId, mSubscriptionBundle, mSubscriptionCallbacks);
+            mMediaBrowser.subscribe( parentString, mSubscriptionCallbacks );
 
             try
             {
@@ -326,7 +326,10 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
 
     protected void refreshData()
     {
-        MusicProvider.getInstance().invalidateDataAndNotify( mSource, mParameter );
+        if (mMediaBrowser != null && mMediaBrowser.isConnected())
+        {
+            MusicProvider.getInstance().invalidateDataAndNotify( mSource, mParameter );
+        }
     }
 
     protected void deleteItemsAsync(final Uri uri,final String idField)

@@ -391,6 +391,17 @@ public final class Utils {
         return mediaItem;
     }
 
+    public static String createParentString( String source, String parameter )
+    {
+        if (source == null || source.length() == 0)
+            return null;
+
+        if (parameter == null)
+            return source;
+
+        return source + ":" + parameter;
+    }
+
     /*public static int determineMediaFlag(String source, String parameter)
     {
         int flag;

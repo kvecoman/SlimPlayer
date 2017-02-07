@@ -122,7 +122,11 @@ public abstract class SelectSongsActivity extends BackHandledFragmentActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2 && data != null && data.getBooleanExtra(SelectSongsActivity.SELECTING_FINISHED_KEY, false))
+        //If we canceled playlist selecting just finish the whole thing
+        if (requestCode == PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2
+                && data != null
+                && data.getBooleanExtra(SelectSongsActivity.SELECTING_FINISHED_KEY, false)
+                && !data.hasExtra(PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY))
             finish();
 
         //REQUEST CODE 2 case - we are still selecting but we just take IDs that were selected in forResult activity

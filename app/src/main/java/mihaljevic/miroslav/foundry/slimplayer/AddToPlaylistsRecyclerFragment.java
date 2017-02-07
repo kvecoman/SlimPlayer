@@ -48,7 +48,7 @@ public class AddToPlaylistsRecyclerFragment extends PlaylistsRecyclerFragment {
             protected void onPostExecute(Integer result)
             {
                 Utils.toastShort(result + " " + getString(R.string.playlist_add_succes));
-                MusicProvider.getInstance().invalidateDataAndNotify( mSource,mediaItems.get(position).getMediaId());
+                refreshData();
             }
         }.execute();
 

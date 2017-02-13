@@ -83,7 +83,7 @@
     <!--Toast texts-->
     <string name="toast_playlist_exists">Playlist with that name already exists</string>
     <string name="toast_exit_confirm">Press back again to exit</string>
-    <string name="toast_items_deleted"> items deleted</string>
+    <string name="toast_items_deleted">items deleted</string>
 
     <!-- Used as display name in home screen-->
     <string name="all_songs_screen_title">All songs</string>

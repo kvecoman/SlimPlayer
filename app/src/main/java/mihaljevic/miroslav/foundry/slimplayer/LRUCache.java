@@ -1,5 +1,10 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
+import android.util.Log;
+
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by miroslav on 07.02.17..
  * <p>
@@ -10,11 +15,14 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 public class LRUCache<K, V>
 {
+    private final String TAG = getClass().getSimpleName();
 
     private int mCapacity;
     private int mSize = 0;
     private Node<K, V> mFirst;
     private Node<K, V> mLast;
+
+    //private List<Node<K,V>> dbgList;
 
     private class Node<T, U>
     {
@@ -45,10 +53,13 @@ public class LRUCache<K, V>
 
     public synchronized void put( K key, V value )
     {
+        Log.v(TAG, "put() - Key = " + key.toString());
+
         Node<K, V> node;
 
         node = getNode( key );
 
+        //If node exists already, then just front it
         if ( node != null )
         {
             frontNode( node );
@@ -57,23 +68,37 @@ public class LRUCache<K, V>
 
         node = new Node<>( key, value, null, null );
 
+        //If this is the first node we are adding
         if ( mFirst == null )
         {
+            Log.d(TAG,"mFirst == null");
             mFirst = node;
-            mLast = node;
             mSize++;
 
         }
+        //This happens when this is the second node we are adding
+        else if (mLast == null)
+        {
+            Log.d(TAG,"mLast == null");
+            mLast = node;
+            mLast.next = mFirst;
+            mFirst.previous = mLast;
+            mSize++;
+        }
+        //This is case when we have first two nodes bu we are not full yet
         else if ( mSize < mCapacity )
         {
+            Log.d(TAG,"mSize < mCapacity");
             node.previous = mFirst;
             mFirst.next = node;
             mFirst = node;
             mSize++;
 
         }
+        //This is the case when we are full
         else if ( mSize == mCapacity )
         {
+            Log.d(TAG,"mSize == mCapacity");
             node.previous = mFirst;
             mFirst.next = node;
             mFirst = node;
@@ -81,11 +106,17 @@ public class LRUCache<K, V>
             mLast = mLast.next;
             mLast.previous = null;
         }
+
+        //DEBUG PURPOSES - put()
+        /*listAllNodes();
+        mFirst = mFirst;*/
     }
 
 
     public synchronized V get( K key )
     {
+        Log.v(TAG, "get() - Key = " + key.toString());
+
         Node<K, V> node;
 
         node = getNode( key );
@@ -95,7 +126,9 @@ public class LRUCache<K, V>
 
         frontNode( node );
 
-        //mFirst = mFirst; //DEBUG PURPOSES
+        //DEBUG PURPOSES - get()
+        /*listAllNodes();
+        mFirst = mFirst;*/
 
         return mFirst.value;
 
@@ -103,17 +136,22 @@ public class LRUCache<K, V>
 
     private synchronized void frontNode( Node<K, V> node )
     {
+        Log.v(TAG, "front() - Key = " + node.key.toString());
 
         if ( node == mLast )
         {
+            Log.d(TAG,"node == mLast");
             mFirst.next = mLast;
+            mLast.previous = mFirst;
             mFirst = mLast;
             mLast = mLast.next;
+
             mLast.previous = null;
             mFirst.next = null;
         }
         else if ( node != mFirst )
         {
+            Log.d(TAG,"node != mFirst");
             //Case when node isn't first nor last
 
             //Cut out node out of middle
@@ -146,6 +184,8 @@ public class LRUCache<K, V>
 
     public synchronized void remove( K key )
     {
+        Log.v(TAG, "remove() - Key = " + key.toString());
+
         Node<K, V> node;
 
         node = getNode( key );
@@ -155,26 +195,42 @@ public class LRUCache<K, V>
 
         if ( node == mFirst )
         {
+            Log.d(TAG, "node == mFirst");
             mFirst = node.previous;
             mFirst.next = null;
         }
         else if ( node == mLast )
         {
-            mLast.next.previous = null;
-            mLast = null;
+            Log.d(TAG, "node == mLast");
+            mLast = mLast.next;
+            mLast.previous = null;
         }
         else
         {
+            Log.d(TAG, "else");
             node.previous.next = node.next;
             node.next.previous = node.previous;
         }
+
+        //DEBUG PURPOSES - remove()
+        /*listAllNodes();
+        mFirst = mFirst;*/
 
         mSize--;
 
     }
 
+    public synchronized void removeAll()
+    {
+        Log.v(TAG, "removeAll()");
+
+        mFirst = null;
+        mLast = null;
+        mSize = 0;
+    }
+
     //DEBUG METHOD - only used to verify correct behaviour of cache
-    /*private List<Node<K,V>> listAllNodes()
+   /* private List<Node<K,V>> listAllNodes()
     {
         List<Node<K,V>> list;
         Node<K,V> node;
@@ -189,6 +245,9 @@ public class LRUCache<K, V>
 
             node = node.previous;
         }
+
+        //Set and return list also
+        dbgList = list;
 
         return  list;
     }*/

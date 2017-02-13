@@ -61,6 +61,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                     //If there are none selected directories, then scan whole system
                     //TODO - scan removable SD (one day)
                     getContext().sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(Environment.getExternalStorageDirectory())));
+                    MusicProvider.getInstance().invalidateAllData();
                     Toast.makeText(getContext(),"Started scanning system for new songs...",Toast.LENGTH_SHORT).show();
                 }
 

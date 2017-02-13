@@ -37,7 +37,6 @@ import java.util.List;
 public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment implements View.OnClickListener, View.OnLongClickListener {
     protected final String TAG = getClass().getSimpleName();
 
-    //protected Context mContext;
 
     protected RecyclerView mRecyclerView;
     protected MediaAdapter mAdapter;
@@ -81,7 +80,8 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
                 mMediaController = new MediaControllerCompat( getContext(), mMediaBrowser.getSessionToken() );
                 mMediaController.registerCallback( mControllerCallbacks );
             }
-            catch (RemoteException e){
+            catch (RemoteException e)
+            {
                 e.printStackTrace();
             }
 
@@ -133,6 +133,24 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
 
     protected void onDataLoaded(@NonNull String parentId, List<MediaBrowserCompat.MediaItem> children, @NonNull Bundle options)
     {
+        View emptyTextView;
+        View recyclerView;
+
+        emptyTextView = getView().findViewById( R.id.empty );
+        recyclerView = getView().findViewById( R.id.recycler );
+
+        //Check if we need toshow empty message
+        if (children == null || children.size() == 0)
+        {
+            emptyTextView.  setVisibility( View.VISIBLE );
+            recyclerView.   setVisibility( View.GONE );
+        }
+        else
+        {
+            emptyTextView.  setVisibility( View.GONE );
+            recyclerView.   setVisibility( View.VISIBLE );
+        }
+
         mAdapter.setMediaItemsList(children);
         mAdapter.notifyDataSetChanged();
     }
@@ -180,7 +198,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         mAdapter = new MediaAdapter(getContext(), null, R.layout.recycler_item, this, mSelectedItems);
 
         //Set up recycler view
-        mRecyclerView = (RecyclerView) getView().findViewById(R.id.recycler_view);
+        mRecyclerView = (RecyclerView) getView().findViewById(R.id.recycler);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         mRecyclerView.setAdapter(mAdapter);
@@ -351,7 +369,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
             @Override
             protected void onPostExecute(Integer result) {
 
-                Utils.toastShort(result + getString( R.string.toast_items_deleted ));
+                Utils.toastShort(result + " " + getString( R.string.toast_items_deleted ));
                 deselect();
                 refreshData();
             }

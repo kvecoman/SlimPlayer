@@ -26,7 +26,7 @@ import java.util.List;
 public class MusicProvider {
     private final String TAG = getClass().getSimpleName();
 
-    private static int CACHED_ITEMS_CAPACITY = 7;
+    private static final int CACHED_ITEMS_CAPACITY = 7;
 
 
     private LRUCache<String, List<MediaBrowserCompat.MediaItem>> mMusicItemsCache;
@@ -178,12 +178,11 @@ public class MusicProvider {
         return mediaItem;
     }
 
-    //Discard all cached lists so that we load fresh data when media service calls
-    //NOTE - if this becomes used, then all usages of cache should be synchronized on "this" object
-    /*public void invalidateAllData()
+
+    public void invalidateAllData()
     {
-        mMusicItemsCache = new LRUCache<>(CACHED_ITEMS_CAPACITY);
-    }*/
+        mMusicItemsCache.removeAll();
+    }
 
     //Discard only one list and notify media service to make a call to load list again
     public void invalidateDataAndNotify(String source, String parameter)

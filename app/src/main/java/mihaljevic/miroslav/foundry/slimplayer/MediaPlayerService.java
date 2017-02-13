@@ -349,19 +349,21 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
             String source;
             String parameter;
+            String displayName;
             int position;
             int i;
 
             source = extras.getString( Const.SOURCE_KEY, null );
             parameter = extras.getString( Const.PARAMETER_KEY, null );
             position = extras.getInt( Const.POSITION_KEY, -1 );
+            displayName = extras.getString( Const.DISPLAY_NAME, "" );
 
             if ( source == null )
                 return;
 
 
             //If none of the cases above worked then do full list loading
-            setQueue( source, parameter );
+            setQueue( source, parameter, displayName );
 
             //Check if bundle provided correct play position
             if ( !( position >= 0 && position < mQueue.size() && ( mediaId.equals( Const.UNKNOWN ) || mQueue.get( position ).getDescription().getMediaId().equals( mediaId ) ) ) )
@@ -417,10 +419,11 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         {
             super.onSeekTo( pos );
 
-            //Seek to position in ms if we have song loaded
+            //Seek to position in ms if we have song loaded and update statewith new position
             if ( mState == PlaybackStateCompat.STATE_PLAYING || mState == PlaybackStateCompat.STATE_PAUSED )
             {
                 mPlayer.seekTo( ( int ) pos );
+                updateState( mState );
             }
         }
     }
@@ -428,7 +431,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
 
     //Returns whether the source is different than one before
-    public boolean setQueue( @Nullable final String source, @Nullable final String parameter)
+    public boolean setQueue( @Nullable final String source, @Nullable final String parameter, @Nullable final String queueTitle)
     {
         Log.v(TAG,"setQueue()");
 
@@ -441,7 +444,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         String oldSource;
         String oldParameter;
         Bundle sessionExtras;
-        final String queueTitle;
 
         //We use old* variables to determine if change is actually made to queue
         oldSource = mQueueSource;
@@ -502,7 +504,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         //State stopped means that nothing is playing but we have media loaded
         updateState( PlaybackStateCompat.STATE_STOPPED );
 
-        queueTitle = Utils.getDisplayName( source, parameter );
 
         mMediaSession.setExtras( sessionExtras );
         mMediaSession.setQueue( mQueue );
@@ -522,7 +523,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                 @Override
                 protected Void doInBackground(Void... params)
                 {
-                    StatsDbHelper statsDbHelper = StatsDbHelper.getInstance(MediaPlayerService.this);
+                    StatsDbHelper statsDbHelper = StatsDbHelper.getInstance();
                     statsDbHelper.updateStats(source,parameter, queueTitle);
                     return null;
                 }
@@ -632,8 +633,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             {
                 case NOTIFICATION_ACTION_CLOSE:
                     stop();
-                    NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-                    notificationManager.cancel(NOTIFICATION_PLAYER_ID);
                     break;
                 case NOTIFICATION_ACTION_PREVIOUS:
                     playPrevious();
@@ -702,7 +701,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         if (source != null)
         {
             //List<MediaBrowserCompat.MediaItem> mediaItems = MusicProvider.getInstance().loadMedia(source, parameter);
-            setQueue( source, parameter );
+            //TODO - save queue title in play function
+            setQueue( source, parameter, "" );
             return position;
         }
         return -1;
@@ -846,8 +846,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         //Set service as started
         startService( intent );
 
-        //TODO - uncomment both these lines and the metadata one above
-        //mMediaSession.setQueueTitle( Utils.getDisplayName( mQueueSource, mQueueParameter ) );
+
+        mMediaSession.setQueueTitle( Utils.getDisplayName( mQueueSource, mQueueParameter ) );
         mMediaSession.setMetadata( metadata );
 
         //Update playback state
@@ -953,6 +953,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
             //Allow this service to be destroyed (only if it becomes non-bound from all activities)
             stopSelf();
+            stopForeground( true );
 
             mPosition = -1;
 
@@ -983,7 +984,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             @Override
             protected Void doInBackground(Void... params)
             {
-                StatsDbHelper statsDbHelper = StatsDbHelper.getInstance(MediaPlayerService.this);
+                StatsDbHelper statsDbHelper = StatsDbHelper.getInstance();
                 statsDbHelper.updateLastPosition( mQueueSource, mQueueParameter,mPosition);
                 return null;
             }
@@ -1130,7 +1131,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             {
                 super.onPostExecute( notification );
 
-                notificationManager.notify(NOTIFICATION_PLAYER_ID, notification);
+                startForeground( NOTIFICATION_PLAYER_ID, notification );
+
+                //notificationManager.notify( NOTIFICATION_PLAYER_ID, notification );
             }
         }.execute();
 

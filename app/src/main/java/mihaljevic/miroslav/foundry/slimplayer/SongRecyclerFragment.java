@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseBooleanArray;
@@ -28,6 +29,8 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
 
     //Indicate whether this list/queue is loaded in MediaPlayerService
     protected boolean mQueueLoaded = false;
+
+    protected String mDisplayName;
 
 
     protected class ConnectionCallbacks extends SlimRecyclerFragment.ConnectionCallbacks
@@ -82,6 +85,8 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
         super.onActivityCreated(savedInstanceState);
 
         mControllerCallbacks = new ControllerCallbacks();
+
+        mDisplayName = getArguments().getString( Const.DISPLAY_NAME, "" );
 
     }
 
@@ -212,14 +217,19 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
         {
             Bundle bundle;
             Intent intent;
+            PlaybackStateCompat playbackState;
 
 
             //Check if this queue is already loaded, no need to load it again
             if (mQueueLoaded)
             {
-                //Play song only if it is not already playing
-                if (mMediaController.getPlaybackState().getActiveQueueItemId() != position)
+                playbackState = mMediaController.getPlaybackState();
+
+                //Play song only if it is not already playing, or resume it if it is paused
+                if ( playbackState.getActiveQueueItemId() != position )
                     mMediaController.getTransportControls().skipToQueueItem( position );
+                else if ( playbackState.getState() == PlaybackStateCompat.STATE_PAUSED )
+                    mMediaController.getTransportControls().play();
             }
             else
             {
@@ -228,6 +238,7 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
                 bundle = new Bundle();
                 bundle.putString( Const.SOURCE_KEY, mSource );
                 bundle.putString( Const.PARAMETER_KEY, mParameter );
+                bundle.putString( Const.DISPLAY_NAME, mDisplayName );
                 bundle.putInt( Const.POSITION_KEY, position );
 
                 mMediaController.getTransportControls().playFromMediaId( mediaItems.get( position ).getMediaId(), bundle );

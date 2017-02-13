@@ -19,6 +19,8 @@ public final class Const {
 
     public static final String POSITION_KEY = "position";
 
+    public static final String DISPLAY_NAME = "display_name";
+
     private Const(){}
 
     public static final String HOME_SCREEN = "home_screen";

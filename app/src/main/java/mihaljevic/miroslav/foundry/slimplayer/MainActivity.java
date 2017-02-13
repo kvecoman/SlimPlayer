@@ -30,20 +30,15 @@ import junit.framework.Test;
 //TODO - ability for some code parts/methods to fail without throwing exception (or with catching exception)
 //TODO - add optimizations for screen rotations (already done for NowPlayingFragment)
 //TODO - mp3 playback might need its own thread not just AsyncTask
-//TODO - support for headphone controls (and to disable them when headphones aren't plugged in)
-//TODO - it might be good for keys to have package names in it (to avoid potential conflicts)
 //TODO - sometimes it can happen that Stats.db database is not open at startup, definitively need to check that, it happens at getItemCount()
-//TODO - media scan action should invalidate whole LRU cache
-//TODO - maybe service should be started using startForeground and not just startService
-//TODO - if song is paused, but pressed in menu it should continue playing
 //TODO - implement new runtime permission model
-//TODO - empty message for recycler lists
-//TODO - LRU cache frontNode() bug?????
-//TODO - seekBar seekTo doesnt work, it seems it is in conflict with timer task
+//TODO - null pointer with getView() in SlimRecyclerFragment, onDataLoaded()
+//TODO - find better way to know display names of different lists
 
 
-//TODO - keep rolling
-public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener{
+//TODO - keep rolling - set up play() function to rember queue title
+public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener
+{
 
     public static final String SCREEN_POSITION_KEY = "screen_position";
 

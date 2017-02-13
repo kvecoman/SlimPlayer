@@ -4,6 +4,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.RemoteException;
@@ -34,7 +35,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
 
     private HomeAdapter mAdapter;
 
-    //Number of items shownin home screen
+    //Number of items shown in home screen
     private int mNumberOfItems;
 
     //Here we store update task so we can check its status
@@ -187,19 +188,43 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
         mUpdateDatasetTask = new AsyncTask<Void,Void,Void>()
         {
             @Override
-            protected Void doInBackground(Void... params) {
+            protected Void doInBackground(Void... params)
+            {
+                Cursor cursor;
+                SQLiteDatabase database;
+                String [] projection;
+                String sortOrder;
+                String limit;
 
-                Cursor cursor = ( StatsDbHelper.getInstance(getContext())).getReadableDatabase().query(StatsContract.SourceStats.TABLE_NAME,
-                        new String[] {StatsContract.SourceStats.COLUMN_NAME_SOURCE,StatsContract.SourceStats.COLUMN_NAME_PARAMETER,StatsContract.SourceStats.COLUMN_NAME_DISPLAY_NAME, StatsContract.SourceStats.COLUMN_NAME_LAST_POSITION},
-                        null,null,null,null, StatsContract.SourceStats.COLUMN_NAME_RECENT_FREQUENCY + " DESC",String.valueOf(mNumberOfItems));
+                database = ( StatsDbHelper.getInstance()).getReadableDatabase();
+
+                projection = new String[] { StatsContract.SourceStats.COLUMN_NAME_SOURCE,
+                                            StatsContract.SourceStats.COLUMN_NAME_PARAMETER,
+                                            StatsContract.SourceStats.COLUMN_NAME_DISPLAY_NAME,
+                                            StatsContract.SourceStats.COLUMN_NAME_LAST_POSITION };
+
+                sortOrder = StatsContract.SourceStats.COLUMN_NAME_RECENT_FREQUENCY + " DESC";
+
+                limit = String.valueOf(mNumberOfItems);
+
+                cursor = database.query(
+                            StatsContract.SourceStats.TABLE_NAME,
+                            projection,
+                            null,
+                            null,
+                            null,
+                            null,
+                            sortOrder,
+                            limit);
+
                 mAdapter.setCursor(cursor);
-
 
                 return null;
             }
 
             @Override
-            protected void onPostExecute(Void aVoid) {
+            protected void onPostExecute(Void aVoid)
+            {
                 mAdapter.notifyDataSetChanged();
             }
         };

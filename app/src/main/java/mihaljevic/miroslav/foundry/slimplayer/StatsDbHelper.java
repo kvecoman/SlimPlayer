@@ -26,7 +26,7 @@ public class StatsDbHelper extends SQLiteOpenHelper {
 
     private static StatsDbHelper sInstance;
 
-    public static StatsDbHelper getInstance(Context context)
+    public static StatsDbHelper getInstance()
     {
 
         if (sInstance == null)

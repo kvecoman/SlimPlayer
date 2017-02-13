@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
+import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.View;
@@ -155,7 +156,7 @@ public final class Utils {
 
     public static int deleteFromList(List<MediaBrowserCompat.MediaItem> mediaItems, Uri uri, SparseBooleanArray checkedPositions, String id_field)
     {
-        int position = -1;
+        int position;
         String id;
         int deletedCount = 0;
 
@@ -235,104 +236,108 @@ public final class Utils {
 
 
     //Checks if two strings are equal even if they are null
-    public static boolean equalsIncludingNull(String str1, String str2)
+    //NOTE - Alternative is provided in TextUtils
+    /*public static boolean equalsIncludingNull(String str1, String str2)
     {
-        if (str1 == null && str2 == null)
-            return true;
 
-        if (str1 == null && str2 != null)
-            return false;
-
-        if (str1 != null && str2 == null)
-            return false;
-
-        return str1.equals(str2);
-    }
+        return (str1 == null && str2 == null)  //If both strings are null then they are same
+                || (str1!= null && str2!=null && str1.equals(str2)); //If it comes to here then both strings must not be null and they must match with equals() to return that they are same
+    }*/
 
 
     //Gets display name either for playlist or genre or artist etc.
     public static String getDisplayName( String source, String parameter)
     {
 
-        String displayName = null;
+        String displayName;
         Cursor cursor;
-        ContentResolver resolver = sAppContext.getContentResolver();
+        ContentResolver resolver;
+        Uri uri;
+        String [] projection;
+        String selection;
+
+        displayName = null;
+        cursor = null;
+        resolver = sAppContext.getContentResolver();
 
         if (source == null)
             return null;
 
-        if (source.equals(Const.ALL_SCREEN))
+        switch (source)
         {
-            displayName = sAppContext.getString(R.string.all_songs_screen_title);
-        }
-        else if(source.equals(Const.PLAYLISTS_SCREEN))
-        {
-            cursor = resolver.query(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,new String[]{MediaStore.Audio.Playlists.NAME}, MediaStore.Audio.Playlists._ID + "=" + parameter,null,null);
-            if (cursor.getCount() == 0)
-                return null;
+            case Const.ALL_SCREEN:
 
-            cursor.moveToFirst();
-            displayName = cursor.getString(0);
-        }
-        else if (source.equals(Const.ALBUMS_SCREEN))
-        {
-            cursor = resolver.query(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,new String[]{MediaStore.Audio.Albums.ALBUM}, MediaStore.Audio.Albums._ID + "=" + parameter,null,null);
-            if (cursor.getCount() == 0)
-                return null;
+                displayName = sAppContext.getString(R.string.all_songs_screen_title);
+                break;
+            case Const.PLAYLISTS_SCREEN:
 
-            cursor.moveToFirst();
-            displayName = cursor.getString(0);
-        }
-        else if (source.equals(Const.ARTISTS_SCREEN))
-        {
-            cursor = resolver.query(MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI,new String[]{MediaStore.Audio.Artists.ARTIST}, MediaStore.Audio.Artists._ID + "=" + parameter,null,null);
-            if (cursor.getCount() == 0)
-                return null;
+                uri =           MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI;
+                projection =    new String[]{MediaStore.Audio.Playlists.NAME};
+                selection =     MediaStore.Audio.Playlists._ID + "=" + parameter;
 
-            cursor.moveToFirst();
-            displayName = cursor.getString(0);
-        }
-        else if (source.equals(Const.GENRES_SCREEN))
-        {
-            cursor = resolver.query(MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI,new String[]{MediaStore.Audio.Genres.NAME}, MediaStore.Audio.Genres._ID + "=" + parameter,null,null);
-            if (cursor.getCount() == 0)
-                return null;
+                cursor = resolver.query( uri, projection, selection, null, null );
 
-            cursor.moveToFirst();
-            displayName = cursor.getString(0);
+                if (cursor == null || cursor.getCount() == 0)
+                    return null;
+
+                cursor.moveToFirst();
+                displayName = cursor.getString(0);
+                break;
+            case Const.ALBUMS_SCREEN:
+
+                uri =           MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI;
+                projection =    new String[]{MediaStore.Audio.Albums.ALBUM};
+                selection =     MediaStore.Audio.Albums._ID + "=" + parameter;
+
+                cursor = resolver.query( uri, projection, selection, null, null );
+
+                if (cursor == null || cursor.getCount() == 0)
+                    return null;
+
+                cursor.moveToFirst();
+                displayName = cursor.getString(0);
+                break;
+            case Const.ARTISTS_SCREEN:
+
+                uri =           MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI;
+                projection =    new String[]{MediaStore.Audio.Artists.ARTIST};
+                selection =     MediaStore.Audio.Artists._ID + "=" + parameter;
+
+                cursor = resolver.query( uri, projection, selection, null, null );
+
+                if (cursor == null || cursor.getCount() == 0)
+                    return null;
+
+                cursor.moveToFirst();
+                displayName = cursor.getString(0);
+                break;
+            case Const.GENRES_SCREEN:
+
+                uri =           MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI;
+                projection =    new String[]{MediaStore.Audio.Genres.NAME};
+                selection =     MediaStore.Audio.Genres._ID + "=" + parameter;
+
+                cursor = resolver.query( uri, projection, selection, null, null );
+
+                if (cursor == null || cursor.getCount() == 0)
+                    return null;
+
+                cursor.moveToFirst();
+                displayName = cursor.getString(0);
+                break;
+            case Const.FILE_URI_KEY:
+                displayName = sAppContext.getString(R.string.music_title);
+                break;
         }
+
+        if (cursor != null && !cursor.isClosed())
+            cursor.close();
+
 
         return displayName;
     }
 
-    /*public static Bitmap cropBitmapToRatio(Bitmap bitmap, float ratio)
-    {
-        if (bitmap == null || ratio <= 0)
-            return null;
 
-        Bitmap resultBitmap = null;
-
-        int bitmapWidth = bitmap.getWidth();
-        int bitmapHeight = bitmap.getHeight();
-        float bitmapRatio = (float)bitmapWidth / (float)bitmapHeight;
-
-        if (ratio < bitmapRatio)
-        {
-            //Here we cut sides of bitmap
-            int targetWidth = (int)(ratio * bitmapHeight);
-            int dif = bitmapWidth - targetWidth;
-            resultBitmap = Bitmap.createBitmap(bitmap,dif / 2,0,targetWidth,bitmapHeight);
-        }
-        else
-        {
-            //Here we cut top and bottom of bitmap
-            int targetHeight = (int)(bitmapWidth / ratio);
-            int dif = bitmapHeight - targetHeight;
-            resultBitmap = Bitmap.createBitmap(bitmap,0,dif/2,bitmapWidth,targetHeight);
-        }
-
-        return resultBitmap;
-    }*/
 
     public static void toastShort(String text)
     {
@@ -349,8 +354,8 @@ public final class Utils {
         boolean different;
 
         //Here we check if the source and parameters are same, but if both sources are null then we take them as they are different
-        different = !(  Utils.equalsIncludingNull( source1, source2 ) &&
-                        Utils.equalsIncludingNull( parameter1, parameter2 )
+        different = !(  TextUtils.equals( source1, source2 ) &&
+                        TextUtils.equals( parameter1, parameter2 )
                         && source1 != null );                               //This actually checks if both sources are null(because first line would fail if they are not same)
                                                                             // ...and if they are, "different" will be true
 
@@ -402,45 +407,5 @@ public final class Utils {
         return source + ":" + parameter;
     }
 
-    /*public static int determineMediaFlag(String source, String parameter)
-    {
-        int flag;
 
-        //If we don't have parameter, then it must be category (browsable)
-        flag = parameter == null ? MediaBrowserCompat.MediaItem.FLAG_BROWSABLE : MediaBrowserCompat.MediaItem.FLAG_PLAYABLE;
-
-        //Only exception for flag rule above is if screen is all songs screen
-        if (source == Const.ALL_SCREEN)
-            flag = MediaBrowserCompat.MediaItem.FLAG_PLAYABLE;
-
-        return flag;
-    }*/
-
-    /*public static Bitmap getArt( Uri fileUri )
-    {
-        Bitmap bitmap;
-        MediaMetadataRetriever retriever;
-        byte[] data;
-
-        bitmap = null;
-        retriever = new MediaMetadataRetriever();
-
-        try
-        {
-            retriever.setDataSource( fileUri.getPath() );
-
-            data = retriever.getEmbeddedPicture();
-
-            if (data != null)
-                bitmap = BitmapFactory.decodeByteArray( data, 0, data.length );
-        }
-        catch (IllegalArgumentException e)
-        {
-            e.printStackTrace();
-        }
-
-        retriever.release();
-        return bitmap;
-
-    }*/
 }

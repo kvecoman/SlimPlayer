@@ -97,5 +97,8 @@
     <string name="title_play">Play</string>
     <string name="title_pause">Pause</string>
 
+    <!--Titles -->
+    <string name="music_title">Music</string>
+
 
 </resources>

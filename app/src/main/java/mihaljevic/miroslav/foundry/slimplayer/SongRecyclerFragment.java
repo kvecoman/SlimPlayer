@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.MediaSessionCompat;
+import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.Menu;
@@ -37,7 +38,7 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
             super.onConnected();
 
             //Run first time check of whether our list is loaded in media service
-            mControllerCallbacks.onQueueChanged( mMediaController.getQueue() );
+            determineThisQueueLoaded();
         }
     }
 
@@ -51,27 +52,12 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
             super.onQueueChanged( queue );
 
             //We use this callback to check if our queue is loaded in media service
+            determineThisQueueLoaded();
 
-            Bundle extras;
-            String source;
-            String parameter;
-
-            extras = mMediaController.getExtras();
-
-            if (extras == null)
-            {
-                mQueueLoaded = false;
-                return;
-            }
-
-            source = extras.getString( Const.SOURCE_KEY, null );
-            parameter = extras.getString( Const.PARAMETER_KEY, null );
-
-
-            //Determine if this queue is actually loaded in media service
-            mQueueLoaded = Utils.equalsIncludingNull( mSource,source) && Utils.equalsIncludingNull( mParameter,parameter);
         }
     }
+
+
 
 
     public SongRecyclerFragment() {
@@ -175,6 +161,36 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    //Detect whether is this queue loaded in MediaPlayerService
+    private void determineThisQueueLoaded()
+    {
+        Bundle extras;
+        String source;
+        String parameter;
+
+        //If something is wrong assume queue is not loaded and return
+        if (mMediaBrowser == null || !mMediaBrowser.isConnected() || mMediaController == null)
+        {
+            mQueueLoaded = false;
+            return;
+        }
+
+        extras = mMediaController.getExtras();
+
+        if (extras == null)
+        {
+            mQueueLoaded = false;
+            return;
+        }
+
+        source = extras.getString( Const.SOURCE_KEY, null );
+        parameter = extras.getString( Const.PARAMETER_KEY, null );
+
+
+        //Determine if this queue is actually loaded in media service
+        mQueueLoaded = !Utils.isSourceDifferent( mSource, mParameter, source, parameter );
     }
 
 

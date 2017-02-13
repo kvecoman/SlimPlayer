@@ -2,6 +2,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 
@@ -51,7 +52,7 @@ public class SongListActivity extends SelectSongsActivity {
             mSource = fragmentBundle.getString( Const.SOURCE_KEY);
 
             //If we are opening playlist then load PlaylistSongsFragment
-            if (Utils.equalsIncludingNull(mSource,getString(R.string.pref_key_playlists_screen)))
+            if ( TextUtils.equals(mSource,getString(R.string.pref_key_playlists_screen)))
                 fragment = new PlaylistSongsRecyclerFragment();
             else
                 fragment = new SongRecyclerFragment();
@@ -68,7 +69,7 @@ public class SongListActivity extends SelectSongsActivity {
     public boolean onCreateOptionsMenu(Menu menu)
     {
         //If we are in normal mode and this is playlist songs screen then inflate playlist songs menu
-        if (!mSelectSongsForResult && Utils.equalsIncludingNull(mSource,getString(R.string.pref_key_playlists_screen)))
+        if (!mSelectSongsForResult && TextUtils.equals(mSource,getString(R.string.pref_key_playlists_screen)))
             getMenuInflater().inflate(R.menu.playlist_songs_menu,menu);
 
 

@@ -51,7 +51,6 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     private int mPosition;
 
     private View    mContentView;
-    private SeekBar mSeekBar;
 
     private MediaMetadataCompat mMetadata;
 
@@ -91,7 +90,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         {
             super.onPlaybackStateChanged( state );
 
-            if (state.getState() == PlaybackStateCompat.STATE_PLAYING || state.getState() == PlaybackStateCompat.STATE_PAUSED)
+            /*if (state.getState() == PlaybackStateCompat.STATE_PLAYING || state.getState() == PlaybackStateCompat.STATE_PAUSED)
             {
                 //Update this seek bar
                 if (state.getActiveQueueItemId() == mPosition)
@@ -103,7 +102,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
                     //If this is not active fragment, then set seek bar to 0
                     mSeekBar.setProgress( 0 );
                 }
-            }
+            }*/
         }
     };
 
@@ -145,9 +144,6 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
         mContext = getContext();
 
-        mSeekBar = (SeekBar) mContentView.findViewById(R.id.seek_bar);
-        mSeekBar.setProgress(0);
-        mSeekBar.setOnSeekBarChangeListener(this);
 
 
         //Handle taps on screen
@@ -258,8 +254,6 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         mPosition = args.getInt(Const.POSITION_KEY, -1);
 
 
-        mSeekBar.setMax((int)mMetadata.getLong( MediaMetadataCompat.METADATA_KEY_DURATION ));
-
         //Update text views with new info
         ((TextView) mContentView.findViewById(R.id.song_title)).setText(mMetadata.getString( MediaMetadataCompat.METADATA_KEY_TITLE ));
         ((TextView) mContentView.findViewById(R.id.song_artist)).setText(mMetadata.getString( MediaMetadataCompat.METADATA_KEY_ARTIST ));
@@ -312,25 +306,10 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
 
     @Override
-    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser)
+    {
 
-        if ( mMediaBrowser == null || !mMediaBrowser.isConnected())
-            return;
 
-        long actions = mMediaController.getPlaybackState().getActions();
-
-        if (fromUser)
-        {
-            fromUser = true;
-        }
-
-        //Only if touch is coming from user then seek song (and that action is available)
-        if (fromUser && (actions & PlaybackStateCompat.ACTION_SEEK_TO) == PlaybackStateCompat.ACTION_SEEK_TO)
-        {
-            Log.v(TAG,"onProgressChanged() - user changed progress");
-
-            mMediaController.getTransportControls().seekTo( progress );
-        }
     }
 
     @Override

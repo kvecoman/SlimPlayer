@@ -9,6 +9,7 @@ import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.preference.PreferenceManager;
 import android.text.InputType;
+import android.text.TextUtils;
 import android.util.SparseBooleanArray;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -102,7 +103,7 @@ public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
                                             //Create playlist
                                             long playlistId = Utils.createPlaylist(playlistName);
 
-                                            if (playlistId > 0 && Utils.equalsIncludingNull(mDefaultPlaylistName,playlistName))
+                                            if (playlistId > 0 && TextUtils.equals(mDefaultPlaylistName,playlistName))
                                             {
                                                 //Increase the auto number for default playlist name
                                                 mPlaylistNumber++;

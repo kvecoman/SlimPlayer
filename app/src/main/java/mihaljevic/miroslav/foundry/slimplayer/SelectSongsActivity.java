@@ -3,6 +3,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -35,7 +36,7 @@ public abstract class SelectSongsActivity extends BackHandledFragmentActivity {
         super.onCreate(savedInstanceState);
 
         //Check if we have started this activity only to select songs
-        if ( Utils.equalsIncludingNull(getIntent().getAction(),PlaylistSongsRecyclerFragment.ACTION_SELECT_SONGS))
+        if ( TextUtils.equals(getIntent().getAction(),PlaylistSongsRecyclerFragment.ACTION_SELECT_SONGS))
         {
             mSelectSongsForResult = true;
             mSelectedSongIdsList = new HashSet<>();

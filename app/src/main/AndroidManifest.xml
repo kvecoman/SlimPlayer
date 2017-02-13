@@ -64,6 +64,14 @@
         <meta-data android:name="mihaljevic.miroslav.foundry.slimplayer.EmbeddedArtModule"
                    android:value="GlideModule"/>
 
+        <receiver android:name="android.support.v4.media.session.MediaButtonReceiver" >
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
+
+
+
 
     </application>
 

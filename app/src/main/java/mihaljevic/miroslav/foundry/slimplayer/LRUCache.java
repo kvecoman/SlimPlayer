@@ -2,7 +2,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 /**
  * Created by miroslav on 07.02.17..
- *
+ * <p>
  * Lean and fast LRU cache, thread safe
  *
  * @author Miroslav Mihaljević
@@ -13,17 +13,17 @@ public class LRUCache<K, V>
 
     private int mCapacity;
     private int mSize = 0;
-    private Node<K,V> mFirst;
-    private Node<K,V> mLast;
+    private Node<K, V> mFirst;
+    private Node<K, V> mLast;
 
     private class Node<T, U>
     {
-        Node<T,U> previous;
-        Node<T,U> next;
+        Node<T, U> previous;
+        Node<T, U> next;
         T key;
         U value;
 
-        public Node(T key, U value, Node<T, U> previous, Node<T, U> next  )
+        public Node( T key, U value, Node<T, U> previous, Node<T, U> next )
         {
             this.previous = previous;
             this.next = next;
@@ -38,18 +38,18 @@ public class LRUCache<K, V>
         }
     }
 
-    public LRUCache(int capacity)
+    public LRUCache( int capacity )
     {
         mCapacity = capacity;
     }
 
-    public synchronized void put(K key, V value)
+    public synchronized void put( K key, V value )
     {
-        Node<K,V> node;
+        Node<K, V> node;
 
         node = getNode( key );
 
-        if (node != null)
+        if ( node != null )
         {
             frontNode( node );
             return;
@@ -57,14 +57,14 @@ public class LRUCache<K, V>
 
         node = new Node<>( key, value, null, null );
 
-        if (mFirst == null)
+        if ( mFirst == null )
         {
             mFirst = node;
             mLast = node;
             mSize++;
 
         }
-        else if (mSize < mCapacity)
+        else if ( mSize < mCapacity )
         {
             node.previous = mFirst;
             mFirst.next = node;
@@ -72,7 +72,7 @@ public class LRUCache<K, V>
             mSize++;
 
         }
-        else if (mSize == mCapacity)
+        else if ( mSize == mCapacity )
         {
             node.previous = mFirst;
             mFirst.next = node;
@@ -84,13 +84,13 @@ public class LRUCache<K, V>
     }
 
 
-    public synchronized V get(K key)
+    public synchronized V get( K key )
     {
-        Node<K,V> node;
+        Node<K, V> node;
 
         node = getNode( key );
 
-        if (node == null)
+        if ( node == null )
             return null;
 
         frontNode( node );
@@ -101,10 +101,10 @@ public class LRUCache<K, V>
 
     }
 
-    private synchronized void frontNode(Node<K,V> node)
+    private synchronized void frontNode( Node<K, V> node )
     {
 
-        if (node == mLast)
+        if ( node == mLast )
         {
             mFirst.next = mLast;
             mFirst = mLast;
@@ -112,7 +112,7 @@ public class LRUCache<K, V>
             mLast.previous = null;
             mFirst.next = null;
         }
-        else if (node != mFirst)
+        else if ( node != mFirst )
         {
             //Case when node isn't first nor last
 
@@ -127,15 +127,15 @@ public class LRUCache<K, V>
         }
     }
 
-    private synchronized Node<K,V> getNode(K key)
+    private synchronized Node<K, V> getNode( K key )
     {
-        Node<K,V> node;
+        Node<K, V> node;
 
         node = mFirst;
 
-        while (node != null)
+        while ( node != null )
         {
-            if (node.key.equals( key ))
+            if ( node.key.equals( key ) )
                 return node;
 
             node = node.previous;
@@ -144,21 +144,21 @@ public class LRUCache<K, V>
         return null;
     }
 
-    public synchronized void remove(K key)
+    public synchronized void remove( K key )
     {
-        Node<K,V> node;
+        Node<K, V> node;
 
         node = getNode( key );
 
-        if (node == null)
+        if ( node == null )
             return;
 
-        if (node == mFirst)
+        if ( node == mFirst )
         {
             mFirst = node.previous;
             mFirst.next = null;
         }
-        else if (node == mLast)
+        else if ( node == mLast )
         {
             mLast.next.previous = null;
             mLast = null;

@@ -6,8 +6,8 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.RemoteException;
-import android.support.annotation.NonNull;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -17,11 +17,14 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.SeekBar;
 
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
-public class NowPlayingActivity extends BackHandledFragmentActivity implements  ViewPager.OnPageChangeListener, View.OnClickListener
+public class NowPlayingActivity extends BackHandledFragmentActivity implements  ViewPager.OnPageChangeListener, View.OnClickListener, SeekBar.OnSeekBarChangeListener
 {
 
     //TODO - save loaded queue using some kind of fragment and saving instance of it (not so necessary after implementing LRU cache)
@@ -29,6 +32,10 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
     private ViewPager mPager;
     private NowPlayingPagerAdapter mPagerAdapter;
+
+    private SeekBar             mSeekBar;
+    private Timer               mSeekBarTimer;
+    private SeekBarTimerTask    mSeekBarTimerTask;
 
     private String mQueueSource;
     private String mQueueParameter;
@@ -53,6 +60,8 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
                 //First time data init
                 initPagerAdapter( mMediaController.getQueue() );
+
+                mSeekBarTimer.schedule( mSeekBarTimerTask, 0, 1000 );
 
 
             }
@@ -92,6 +101,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         }
     };*/
 
+
     private MediaControllerCompat.Callback mMediaControllerCallbacks = new MediaControllerCompat.Callback()
     {
         @Override
@@ -128,14 +138,52 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
     };
 
+    private class SeekBarTimerTask extends TimerTask
+    {
 
-    protected void onCreate(Bundle savedInstanceState) {
+        @Override
+        public boolean cancel()
+        {
+            return super.cancel();
+        }
+
+        @Override
+        public void run()
+        {
+            PlaybackStateCompat state;
+
+            if (mMediaBrowser.isConnected() && mMediaController != null)
+            {
+                state = mMediaController.getPlaybackState();
+
+                if (state.getState() == PlaybackStateCompat.STATE_PLAYING || state.getState() == PlaybackStateCompat.STATE_PAUSED)
+                {
+                    if ( state.getActiveQueueItemId() == mPager.getCurrentItem() )
+                    {
+                        mSeekBar.setProgress( (int)state.getPosition() );
+                    }
+                    else
+                    {
+                        //If something is wrong
+                        mSeekBar.setProgress( 0 );
+                    }
+                }
+            }
+        }
+    }
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_pager);
+
 
         Intent intent;
 
         intent = getIntent();
+
+        setContentView(R.layout.activity_now_playing);
 
         if (intent != null && intent.hasExtra( Const.SOURCE_KEY ))
         {
@@ -145,6 +193,13 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
         mPager = (ViewPager)findViewById(R.id.pager);
         mPager.addOnPageChangeListener(this);
+
+        mSeekBar = ( SeekBar ) findViewById( R.id.seek_bar );
+        mSeekBar.setProgress( 0 );
+        mSeekBar.setOnSeekBarChangeListener( this );
+
+        mSeekBarTimer = new Timer( true );
+        mSeekBarTimerTask = new SeekBarTimerTask();
 
         mMediaBrowser = new MediaBrowserCompat( this, new ComponentName( this, MediaPlayerService.class ), mConnectionCallbacks, null );
     }
@@ -196,18 +251,29 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     }
 
     @Override
-    protected void onStop() {
+    protected void onStop()
+    {
         super.onStop();
 
 
-        mMediaController.unregisterCallback( mMediaControllerCallbacks );
-        mMediaBrowser.disconnect();
+        if (mMediaController != null)
+            mMediaController.unregisterCallback( mMediaControllerCallbacks );
+
+        if (mMediaBrowser.isConnected())
+            mMediaBrowser.disconnect();
     }
 
     @Override
     protected void onDestroy()
     {
         Log.v(TAG, "onDestroy()");
+
+        if (mSeekBarTimer != null)
+        {
+            mSeekBarTimer.purge();
+            mSeekBarTimer.cancel();
+        }
+
         super.onDestroy();
     }
 
@@ -269,7 +335,30 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         if (position != PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN && position >= 0 && position < mPagerAdapter.getCount())
         {
             mPager.setCurrentItem( position );
+
+            updateSeekBarMax( position );
+
         }
+    }
+
+    public void updateSeekBarMax(int position)
+    {
+        MediaMetadataCompat metadata;
+        Bundle extras;
+
+        extras = mPagerAdapter.getData().get( position ).getDescription().getExtras();
+
+        mSeekBar.setProgress( 0 );
+
+        if (extras == null)
+            return;
+
+
+        metadata = extras.getParcelable( Const.METADATA_KEY );
+
+        if (metadata != null)
+            mSeekBar.setMax((int)metadata.getLong( MediaMetadataCompat.METADATA_KEY_DURATION ));
+
     }
 
     public void updateRepeatIcon(Menu menu)
@@ -334,6 +423,26 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
     }
 
+    @Override
+    public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser )
+    {
+        if ( mMediaBrowser == null || !mMediaBrowser.isConnected())
+            return;
+
+        long actions = mMediaController.getPlaybackState().getActions();
+
+
+        //Only if touch is coming from user then seek song (and that action is available)
+        if (fromUser && (actions & PlaybackStateCompat.ACTION_SEEK_TO) == PlaybackStateCompat.ACTION_SEEK_TO)
+            mMediaController.getTransportControls().seekTo( progress );
+
+    }
+
+    @Override
+    public void onStartTrackingTouch( SeekBar seekBar ) {}
+
+    @Override
+    public void onStopTrackingTouch( SeekBar seekBar ) {}
 
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
@@ -346,6 +455,10 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
         //Play this position when user selects it
         mMediaController.getTransportControls().skipToQueueItem( mPager.getCurrentItem() );
+
+        //If we changed song then we will immediately set seek bar to 0
+        mSeekBar.setProgress( 0 );
+        updateSeekBarMax( position );
     }
 
     @Override

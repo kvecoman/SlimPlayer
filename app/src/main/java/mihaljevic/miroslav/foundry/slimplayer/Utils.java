@@ -362,39 +362,7 @@ public final class Utils {
         return different;
     }
 
-    public static MediaBrowserCompat.MediaItem mediaFromFile(String fileUriString)
-    {
-        MediaMetadataCompat metadata;
-        MediaMetadataCompat.Builder metadataBuilder;
-        MediaMetadataRetriever retriever;
-        Uri fileUri;
-        MediaBrowserCompat.MediaItem mediaItem;
 
-        metadataBuilder = new MediaMetadataCompat.Builder(  );
-        retriever = new MediaMetadataRetriever();
-        fileUri = Uri.parse( fileUriString );
-
-
-        if (fileUri == null)
-            return null;
-
-        retriever.setDataSource( fileUri.getPath() );
-
-        metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, "0")
-                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, retriever.extractMetadata( MediaMetadataRetriever.METADATA_KEY_TITLE ))
-                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, retriever.extractMetadata( MediaMetadataRetriever.METADATA_KEY_ALBUM ))
-                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, retriever.extractMetadata( MediaMetadataRetriever.METADATA_KEY_ARTIST ))
-                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, Long.parseLong(retriever.extractMetadata( MediaMetadataRetriever.METADATA_KEY_DURATION )))
-                .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI, fileUriString);
-
-
-        metadata = metadataBuilder.build();
-
-        //Get media item with metadata bundled in its media description object
-        mediaItem = MusicProvider.getInstance().bundleMetadata( metadata );
-
-        return mediaItem;
-    }
 
     public static String createParentString( String source, String parameter )
     {

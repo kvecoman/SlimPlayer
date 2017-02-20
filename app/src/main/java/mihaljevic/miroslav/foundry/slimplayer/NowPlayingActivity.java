@@ -74,12 +74,16 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         public void onConnectionSuspended()
         {
             super.onConnectionSuspended();
+
+            Log.i(TAG, "Connection is suspended");
         }
 
         @Override
         public void onConnectionFailed()
         {
             super.onConnectionFailed();
+
+            Log.e(TAG, "Connection has failed");
         }
     };
 
@@ -344,17 +348,13 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     public void updateSeekBarMax(int position)
     {
         MediaMetadataCompat metadata;
-        Bundle extras;
+        MediaSessionCompat.QueueItem queueItem;
 
-        extras = mPagerAdapter.getData().get( position ).getDescription().getExtras();
+        queueItem = mPagerAdapter.getData().get( position );
 
         mSeekBar.setProgress( 0 );
 
-        if (extras == null)
-            return;
-
-
-        metadata = extras.getParcelable( Const.METADATA_KEY );
+        metadata = MusicProvider.getInstance().getMetadata( queueItem.getDescription() );
 
         if (metadata != null)
             mSeekBar.setMax((int)metadata.getLong( MediaMetadataCompat.METADATA_KEY_DURATION ));

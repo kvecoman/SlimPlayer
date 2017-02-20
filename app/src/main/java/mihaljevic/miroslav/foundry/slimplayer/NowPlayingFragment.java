@@ -68,6 +68,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
             {
                 mMediaController = new MediaControllerCompat( getContext(), mMediaBrowser.getSessionToken() );
                 mMediaController.registerCallback( mControllerCallbacks );
+
             }
             catch (RemoteException e){
                 e.printStackTrace();
@@ -76,11 +77,19 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
         @Override
         public void onConnectionSuspended()
-        {}
+        {
+            super.onConnectionSuspended();
+
+            Log.i(TAG, "Connection is suspended");
+        }
 
         @Override
         public void onConnectionFailed()
-        {}
+        {
+            super.onConnectionFailed();
+
+            Log.e(TAG, "Connection has failed");
+        }
     };
 
     private MediaControllerCompat.Callback mControllerCallbacks = new MediaControllerCompat.Callback()
@@ -125,8 +134,8 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+    {
         Log.v(TAG,"onCreateView()");
 
         // Inflate the layout for this fragment
@@ -136,7 +145,8 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
     //Here is usually place for most of the init
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+    public void onActivityCreated(@Nullable Bundle savedInstanceState)
+    {
         super.onActivityCreated(savedInstanceState);
         Log.v(TAG,"onActivityCreated()");
 
@@ -152,7 +162,6 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
 
         loadSongInfo();
-
 
         //Little hack so we know that UI is already set up when we need to use it
         mContentView.getViewTreeObserver().addOnGlobalLayoutListener(this);
@@ -240,18 +249,19 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         Log.v(TAG,"loadSongInfo()");
 
         Bundle args;
+        String mediaId;
 
         args = getArguments();
 
         if (args == null)
             return;
 
+        mPosition = args.getInt(Const.POSITION_KEY, -1);
+
         mMetadata = args.getParcelable( Const.METADATA_KEY );
 
         if (mMetadata == null)
             return;
-
-        mPosition = args.getInt(Const.POSITION_KEY, -1);
 
 
         //Update text views with new info

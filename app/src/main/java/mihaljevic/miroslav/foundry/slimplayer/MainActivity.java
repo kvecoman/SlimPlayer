@@ -29,14 +29,12 @@ import junit.framework.Test;
 //TODO - make visualization
 //TODO - ability for some code parts/methods to fail without throwing exception (or with catching exception)
 //TODO - add optimizations for screen rotations (already done for NowPlayingFragment)
-//TODO - mp3 playback might need its own thread not just AsyncTask
+//TODO - music playback might need its own thread not just AsyncTask
 //TODO - sometimes it can happen that Stats.db database is not open at startup, definitively need to check that, it happens at getItemCount()
 //TODO - implement new runtime permission model
-//TODO - null pointer with getView() in SlimRecyclerFragment, onDataLoaded()
-//TODO - find better way to know display names of different lists
 
 
-//TODO - keep rolling - set up play() function to rember queue title
+//TODO - keep rolling - hmmm, it seems that LRUCache nodes are not being cleared again for some reason, maybe because mediaMetadata is referencing it in some way (loop reference)
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener
 {
 
@@ -87,7 +85,8 @@ public class MainActivity extends SelectSongsActivity implements TextView.OnClic
     public void onPlayerServiceBound(MediaPlayerService playerService) {}*/
 
     @Override
-    protected void onStop() {
+    protected void onStop()
+    {
         super.onStop();
 
         //SlimPlayerApplication.getInstance().unregisterPlayerServiceListener(this);

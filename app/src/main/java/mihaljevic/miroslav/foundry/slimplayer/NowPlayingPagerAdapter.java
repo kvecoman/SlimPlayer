@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 
 import java.util.List;
@@ -36,12 +37,20 @@ public class NowPlayingPagerAdapter extends FragmentStatePagerAdapter {
 
     @Override
     public Fragment getItem(int position) {
-        Fragment fragment = new NowPlayingFragment();
+        Fragment fragment;
+        Bundle args;
+        MediaMetadataCompat metadata;
 
-        Bundle args = mQueue.get( position ).getDescription().getExtras();
+
+        fragment = new NowPlayingFragment();
+        args = new Bundle(  );
+
+        metadata = MusicProvider.getInstance().getMetadata( mQueue.get( position ).getDescription() );
+
+        args.putParcelable( Const.METADATA_KEY, metadata );
         args.putInt( Const.POSITION_KEY, position );
-        fragment.setArguments(args);
 
+        fragment.setArguments(args);
 
         return fragment;
     }

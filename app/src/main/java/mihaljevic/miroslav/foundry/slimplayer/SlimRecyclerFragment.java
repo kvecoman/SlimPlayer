@@ -15,6 +15,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -40,6 +41,8 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
 
     protected RecyclerView mRecyclerView;
     protected MediaAdapter mAdapter;
+
+    protected View mEmptyView;
 
     //Current source for this fragment (all songs, songs by genre, songs by artist etc...)
     protected String mSource;
@@ -88,13 +91,19 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         }
 
         @Override
-        public void onConnectionSuspended() {
+        public void onConnectionSuspended()
+        {
             super.onConnectionSuspended();
+
+            Log.i(TAG, "Connection is suspended");
         }
 
         @Override
-        public void onConnectionFailed() {
+        public void onConnectionFailed()
+        {
             super.onConnectionFailed();
+
+            Log.e(TAG, "Connection has failed");
         }
     }
 
@@ -131,29 +140,18 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
     protected class ControllerCallbacks extends MediaControllerCompat.Callback {}
 
 
-    protected void onDataLoaded(@NonNull String parentId, List<MediaBrowserCompat.MediaItem> children, @NonNull Bundle options)
+    protected void onDataLoaded(@NonNull String parentId, List<MediaBrowserCompat.MediaItem> children, Bundle options)
     {
-        View emptyTextView;
-        View recyclerView;
 
-        emptyTextView = getView().findViewById( R.id.empty );
-        recyclerView = getView().findViewById( R.id.recycler );
-
-        //Check if we need toshow empty message
-        if (children == null || children.size() == 0)
-        {
-            emptyTextView.  setVisibility( View.VISIBLE );
-            recyclerView.   setVisibility( View.GONE );
-        }
-        else
-        {
-            emptyTextView.  setVisibility( View.GONE );
-            recyclerView.   setVisibility( View.VISIBLE );
-        }
-
+        //Check if we need to show empty message
         mAdapter.setMediaItemsList(children);
         mAdapter.notifyDataSetChanged();
+
+        updateContentDisplay();
+
     }
+
+
 
 
     public SlimRecyclerFragment() {
@@ -176,7 +174,14 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_slim_recycler, container, false);
+        View contentView;
+
+        contentView = inflater.inflate(R.layout.fragment_slim_recycler, container, false);
+
+        mRecyclerView = ( RecyclerView ) contentView.findViewById( R.id.recycler );
+        mEmptyView = contentView.findViewById( R.id.empty );
+
+        return contentView;
     }
 
 
@@ -198,7 +203,6 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         mAdapter = new MediaAdapter(getContext(), null, R.layout.recycler_item, this, mSelectedItems);
 
         //Set up recycler view
-        mRecyclerView = (RecyclerView) getView().findViewById(R.id.recycler);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         mRecyclerView.setAdapter(mAdapter);
@@ -285,6 +289,31 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         }
 
         return backConsumed;
+    }
+
+    //It decides whether to show empty message or to display content
+    protected void updateContentDisplay()
+    {
+        if (mEmptyView == null || mRecyclerView == null)
+        {
+            Log.w(TAG, "Could not find views to update display");
+            return;
+        }
+
+        List<MediaBrowserCompat.MediaItem> data;
+
+        data = mAdapter.getMediaItemsList();
+
+        if (data == null || data.size() == 0)
+        {
+            mEmptyView.     setVisibility( View.VISIBLE );
+            mRecyclerView.  setVisibility( View.GONE );
+        }
+        else
+        {
+            mEmptyView.     setVisibility( View.GONE );
+            mRecyclerView.  setVisibility( View.VISIBLE );
+        }
     }
 
     public void activateSelectMode()

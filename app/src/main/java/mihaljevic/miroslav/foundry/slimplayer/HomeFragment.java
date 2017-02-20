@@ -14,6 +14,7 @@ import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -28,10 +29,9 @@ import android.widget.TextView;
  * @author Miroslav Mihaljević
  */
 public class HomeFragment extends Fragment implements View.OnClickListener /*, SlimPlayerApplication.PlayerServiceListener */{
+    protected final String TAG = getClass().getSimpleName();
 
     private RecyclerView mRecyclerView;
-
-    private RecyclerView.LayoutManager mLayoutManager;
 
     private HomeAdapter mAdapter;
 
@@ -75,7 +75,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
             }
             catch (RemoteException e)
             {
-                e.printStackTrace();;
+                e.printStackTrace();
             }
         }
 
@@ -83,12 +83,16 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
         public void onConnectionSuspended()
         {
             super.onConnectionSuspended();
+
+            Log.i(TAG, "Connection is suspended");
         }
 
         @Override
         public void onConnectionFailed()
         {
             super.onConnectionFailed();
+
+            Log.e(TAG, "Connection has failed");
         }
     }
 
@@ -109,7 +113,9 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        mLayoutManager = new GridLayoutManager(getContext(),2);
+        RecyclerView.LayoutManager layoutManager;
+
+        layoutManager = new GridLayoutManager(getContext(),2);
 
         //For now we just init adapter and set it to recycler view, data loading starts later
         mAdapter = new HomeAdapter(getContext(),null,this);
@@ -117,7 +123,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
         //Find recycler view
         mRecyclerView = (RecyclerView) getView().findViewById(R.id.home_recycler_view);
         mRecyclerView.setHasFixedSize(true);
-        mRecyclerView.setLayoutManager(mLayoutManager);
+        mRecyclerView.setLayoutManager(layoutManager);
         mRecyclerView.setAdapter(mAdapter);
 
         mNumberOfItems = getContext().getResources().getInteger(R.integer.num_homescreen_items);
@@ -244,6 +250,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
         Bundle  extras;
         String  sessionSource;
         String  sessionParameter;
+        String  displayName;
 
         position =  mRecyclerView.getChildLayoutPosition( v );
         cursor =    mAdapter.getCursor();
@@ -255,6 +262,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
 
         source =        cursor.getString( cursor.getColumnIndex( StatsContract.SourceStats.COLUMN_NAME_SOURCE ) );
         parameter =     cursor.getString( cursor.getColumnIndex( StatsContract.SourceStats.COLUMN_NAME_PARAMETER ) );
+        displayName =   cursor.getString( cursor.getColumnIndex( StatsContract.SourceStats.COLUMN_NAME_DISPLAY_NAME ) );
         playPosition =  cursor.getInt( cursor.getColumnIndex( StatsContract.SourceStats.COLUMN_NAME_LAST_POSITION ) );
 
 
@@ -262,6 +270,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
 
         intent.putExtra( Const.SOURCE_KEY,      source );
         intent.putExtra( Const.PARAMETER_KEY,   parameter );
+        intent.putExtra( Const.DISPLAY_NAME,    displayName );
         intent.putExtra( Const.POSITION_KEY,    playPosition );
 
 

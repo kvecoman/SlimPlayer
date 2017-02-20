@@ -2,8 +2,13 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.util.Log;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by miroslav on 07.02.17..
@@ -22,7 +27,7 @@ public class LRUCache<K, V>
     private Node<K, V> mFirst;
     private Node<K, V> mLast;
 
-    //private List<Node<K,V>> dbgList;
+    //private Set<WeakReference<Node<K,V>>> dbgList;
 
     private class Node<T, U>
     {
@@ -48,7 +53,9 @@ public class LRUCache<K, V>
 
     public LRUCache( int capacity )
     {
+
         mCapacity = capacity;
+        //dbgList = new HashSet<>(  );
     }
 
     public synchronized void put( K key, V value )
@@ -104,8 +111,15 @@ public class LRUCache<K, V>
             mFirst = node;
             mLast.previous = null;
             mLast = mLast.next;
+
+            //Clean up removed node to prevent memory leaks
+            mLast.previous.previous = null;
+            mLast.previous.next = null;
             mLast.previous = null;
         }
+
+
+        //dbgList.add( new WeakReference<>( node ) );
 
         //DEBUG PURPOSES - put()
         /*listAllNodes();
@@ -212,6 +226,10 @@ public class LRUCache<K, V>
             node.next.previous = node.previous;
         }
 
+        //Node might still live on and cause leaks so we solve that here
+        node.previous = null;
+        node.next = null;
+
         //DEBUG PURPOSES - remove()
         /*listAllNodes();
         mFirst = mFirst;*/
@@ -230,7 +248,7 @@ public class LRUCache<K, V>
     }
 
     //DEBUG METHOD - only used to verify correct behaviour of cache
-   /* private List<Node<K,V>> listAllNodes()
+   /*private List<Node<K,V>> listAllNodes()
     {
         List<Node<K,V>> list;
         Node<K,V> node;
@@ -247,9 +265,46 @@ public class LRUCache<K, V>
         }
 
         //Set and return list also
-        dbgList = list;
+        //dbgList = list;
 
         return  list;
+    }*/
+
+    private String[] listNodesStr()
+    {
+        String[] list;
+        int i;
+        Node<K,V> node;
+
+        list = new String[mSize];
+        i = 0;
+        node = mFirst;
+
+        while (i < mSize && node != null)
+        {
+            list[i] = new String( node.key.toString() );
+
+            node = node.next;
+            i++;
+        }
+
+
+        return list;
+    }
+
+    /*public int countNulls()
+    {
+        int count;
+
+        count = 0;
+
+        for (WeakReference<Node<K,V>> ref : dbgList)
+        {
+            if (ref.get() == null)
+                count++;
+        }
+
+        return count;
     }*/
 
 }

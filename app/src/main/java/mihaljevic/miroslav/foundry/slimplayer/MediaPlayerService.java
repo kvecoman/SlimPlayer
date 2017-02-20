@@ -47,6 +47,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     public static final String LAST_SOURCE_KEY =    "mihaljevic.miroslav.foundry.slimplayer.last_source";
     public static final String LAST_PARAMETER_KEY = "mihaljevic.miroslav.foundry.slimplayer.last_parameter";
     public static final String LAST_POSITION_KEY =  "mihaljevic.miroslav.foundry.slimplayer.last_position";
+    public static final String LAST_TITLE_KEY =     "mihaljevic.miroslav.foundry.slimplayer.last_title";
 
     //Notification ID
     public static final int NOTIFICATION_PLAYER_ID = 111;
@@ -365,6 +366,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             //If none of the cases above worked then do full list loading
             setQueue( source, parameter, displayName );
 
+            Utils.toastShort( "Queue is " + displayName );
+
             //Check if bundle provided correct play position
             if ( !( position >= 0 && position < mQueue.size() && ( mediaId.equals( Const.UNKNOWN ) || mQueue.get( position ).getDescription().getMediaId().equals( mediaId ) ) ) )
                 position = -1;
@@ -464,7 +467,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
             mediaItems = new ArrayList<>(1);
 
-            mediaItem = Utils.mediaFromFile( parameter );
+            mediaItem = MusicProvider.getInstance().mediaFromFile( parameter );
 
             if (mediaItem == null)
                 return true;
@@ -536,8 +539,13 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
         //Save song list source in preferences so we remember this list for auto-start playback
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(MediaPlayerService.this);
-        preferences.edit().putString( LAST_SOURCE_KEY, source)
-                .putString( LAST_PARAMETER_KEY, parameter).apply();
+        preferences.edit()
+                    .putString( LAST_SOURCE_KEY, source)
+                    .putString( LAST_PARAMETER_KEY, parameter)
+                    .putString( LAST_TITLE_KEY, queueTitle )
+                    .apply();
+
+
 
 
         return isSourceChanged;
@@ -690,19 +698,19 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         SharedPreferences prefs;
         String source;
         String parameter;
+        String queueTitle;
         int position;
 
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
-        source =    prefs.getString ( LAST_SOURCE_KEY, null );
-        parameter = prefs.getString ( LAST_PARAMETER_KEY, null );
-        position =  prefs.getInt    ( LAST_POSITION_KEY, 0 );
+        source =        prefs.getString ( LAST_SOURCE_KEY, null );
+        parameter =     prefs.getString ( LAST_PARAMETER_KEY, null );
+        position =      prefs.getInt    ( LAST_POSITION_KEY, 0 );
+        queueTitle =    prefs.getString ( LAST_TITLE_KEY, "" );
 
         if (source != null)
         {
-            //List<MediaBrowserCompat.MediaItem> mediaItems = MusicProvider.getInstance().loadMedia(source, parameter);
-            //TODO - save queue title in play function
-            setQueue( source, parameter, "" );
+            setQueue( source, parameter, queueTitle );
             return position;
         }
         return -1;
@@ -835,7 +843,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         extras = mQueue.get( mPosition ).getDescription().getExtras();
 
         //Try to acquire media metadata if it is bundled with media description
-        metadata = ( MediaMetadataCompat ) (extras == null ? null : extras.getParcelable( Const.METADATA_KEY ));
+        metadata = mMusicProvider.getMetadata( mQueue.get( mPosition ).getDescription() );
 
         intent = new Intent( getApplicationContext(), MediaPlayerService.class );
 
@@ -846,8 +854,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         //Set service as started
         startService( intent );
 
-
-        mMediaSession.setQueueTitle( Utils.getDisplayName( mQueueSource, mQueueParameter ) );
         mMediaSession.setMetadata( metadata );
 
         //Update playback state
@@ -1027,7 +1033,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
                 currentQueueItem = mQueue.get( mPosition );
 
-                mediaMetadata = currentQueueItem.getDescription().getExtras().getParcelable( Const.METADATA_KEY );
+                mediaMetadata = mMusicProvider.getMetadata( currentQueueItem.getDescription() );
 
                 filePath = Uri.parse( mediaMetadata.getString( MediaMetadataCompat.METADATA_KEY_MEDIA_URI ) ).toString();
                 artist = mediaMetadata.getString( MediaMetadataCompat.METADATA_KEY_ARTIST );

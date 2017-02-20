@@ -6,12 +6,14 @@ import android.util.SparseIntArray;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * Created by miroslav on 17.02.17..
  */
 
-//TODO - set upper limitation
+//TODO - make thread safe
 //TODO - use some other hash algorithm
 public class WeakMap<K,V>
 {
@@ -36,7 +38,9 @@ public class WeakMap<K,V>
 
     private ReferenceQueue<V> mQueue;
 
+
     //private SparseIntArray mValueIndexMap;
+    private HashMap<K, Integer> deleteHistory = new HashMap<>(  );
 
     public WeakMap ()
     {
@@ -53,6 +57,9 @@ public class WeakMap<K,V>
         if (capacity <= 0)
             capacity = DEFAULT_CAPACITY;
 
+        if (capacity > MAXIMUM_CAPACITY)
+            capacity = MAXIMUM_CAPACITY;
+
         if (loadFactor <= 0)
             loadFactor = DEFAULT_LOAD_FACTOR;
 
@@ -68,12 +75,16 @@ public class WeakMap<K,V>
 
         mQueue = new ReferenceQueue<>();
 
+
         //mValueIndexMap = new SparseIntArray( mCapacity );
     }
 
 
     private WeakEntry<K,V>[] newTable( int capacity)
     {
+        if (capacity > MAXIMUM_CAPACITY)
+            return (WeakEntry<K,V>[]) (new WeakEntry[MAXIMUM_CAPACITY]);
+
         return (WeakEntry<K,V>[]) (new WeakEntry[capacity]);
     }
 
@@ -82,35 +93,16 @@ public class WeakMap<K,V>
         if (newTable.length < oldTable.length)
             throw new IllegalArgumentException( "New table is smaller than the old table" );
 
-        int oldIndex;
-        int newIndex;
+        //int oldIndex;
+        //int newIndex;
         int newLength;
         WeakEntry<K,V> entry;
         WeakEntry<K,V> nextEntry;
-        WeakEntry<K,V> newEntry;
+        //WeakEntry<K,V> newEntry;
 
-
-
-        //We iterate only through used indexes
-        /*for (int i = 0;i < mValueIndexMap.size();i++)
-        {
-            //Acquire entry from old table using old index
-            oldIndex = mValueIndexMap.valueAt( i );
-            entry = oldTable[oldIndex];
-            //TODO - continue here- somehow oldIndex now became bigger than array (because we are modifying valueIndex map while iterating it)
-
-            //Recalculate index using new size
-            newIndex = indexFor( entry.hash, newTable.length );
-
-            mValueIndexMap.put( entry.hashCode(), newIndex );
-
-            //Use new index to put entry in new table
-            newTable[newIndex] = entry;
-        }*/
 
         newLength = newTable.length;
-        //mValueIndexMap.clear();
-        //TODO - optimize
+
         for (int i = 0; i < oldTable.length;i++)
         {
             entry = oldTable[i];
@@ -120,8 +112,10 @@ public class WeakMap<K,V>
             {
                 nextEntry = entry.next;
 
-                newEntry = recalculateEntry( entry, newLength );
-                putInTable( newTable,  newEntry);
+                //newEntry = recalculateEntry( entry, newLength );
+                entry.next = null;
+                entry.index = indexFor(entry.hash, newLength);
+                putInTable( newTable,  entry);
 
                 entry = nextEntry;
 
@@ -132,7 +126,7 @@ public class WeakMap<K,V>
 
     }
 
-    WeakEntry<K,V> recalculateEntry(WeakEntry<K,V> oldEntry, int tableLength)
+    /*WeakEntry<K,V> recalculateEntry(WeakEntry<K,V> oldEntry, int tableLength)
     {
         //IndexReference<V> indexReference;
         WeakEntry<K,V> entry;
@@ -156,12 +150,14 @@ public class WeakMap<K,V>
         entry = new WeakEntry<>( key, hash, value, mQueue, index );
 
         return entry;
-    }
+    }*/
 
-    private void putInTable(WeakEntry<K,V>[] table, WeakEntry<K,V> newEntry)
+    //Returns whether we have added a new entry
+    private boolean putInTable(WeakEntry<K,V>[] table, WeakEntry<K,V> newEntry)
     {
+
         if (newEntry == null)
-            return;
+            return false;
 
         int hash;
         int index;
@@ -171,7 +167,7 @@ public class WeakMap<K,V>
 
         key = newEntry.key;
         hash = newEntry.hash;
-        index = indexFor( hash, table.length );
+        index = newEntry.index;
 
         newEntry.next = null;
 
@@ -204,10 +200,11 @@ public class WeakMap<K,V>
             {
                 //Case where we are replacing value because we have matching keys
                 newEntry.next = nextEntry.next;
+                return false;
             }
         }
 
-
+        return true;
     }
 
     private void resize(int capacity)
@@ -218,18 +215,25 @@ public class WeakMap<K,V>
         //Clear stale entries
         clearStaleEntries();
 
+        if (capacity > MAXIMUM_CAPACITY)
+        {
+            mCapacity = MAXIMUM_CAPACITY;
+            mTreshold = Integer.MAX_VALUE;
+        }
+        else
+        {
+            mCapacity = capacity;
+            mTreshold = (int) (mLoadFactor * mCapacity);
+        }
+
         oldTable = mTable;
-        newTable = newTable( capacity );
+        newTable = newTable( mCapacity );
 
         //Transfer entries and recalculate indexes into new table
         transfer( oldTable, newTable );
 
         //Set new table as our active table
         mTable = newTable;
-
-        mCapacity = mTable.length;
-
-        mTreshold = (int) (mLoadFactor * mCapacity);
 
     }
 
@@ -248,44 +252,17 @@ public class WeakMap<K,V>
 
         newEntry = new WeakEntry<>( key, hash, value, mQueue, index );
 
-        /*oldEntry = mTable[index];
 
-        if (oldEntry == null)
-        {
-            //If the place in table is free then we just put entry and we are done with it
-            mTable[index] = newEntry;
-        }
-        else
-        {
-            //Case where we have collision, we need to put our entry at end of linked list
+        //If the entry is not replaced then increase mSize, otherwise not
+        mSize += putInTable( mTable, newEntry ) ? 1 : 0;
 
-            //Stop either when we are at end of chain or when we have matching keys
-            while ( oldEntry.next != null && !oldEntry.next.key.equals( key ))
-            {
-                oldEntry = oldEntry.next;
-            }
+        int count = count();
+        if (mSize != count)
+            Log.e(TAG,"After put(), mSize:" + mSize + ", count():" + count + " ,diff:" + (mSize - count));
 
-            nextEntry = oldEntry.next;
-
-            //We have stopped for some reason and we just add entry at the end of chain
-            oldEntry.next = newEntry;
-
-
-            if (nextEntry != null && nextEntry.key.equals( key ))
-            {
-                //Case where we are replacing value because we have matching keys
-                newEntry.next = nextEntry.next;
-            }
-        }*/
-
-        putInTable( mTable, newEntry );
-
-        //Save at which position is our value (we use that when clearing GC-ed values)
-       // mValueIndexMap.put( value.hashCode(), index );
-        mSize++;
 
         //If we have reached threshold we need to resize the table
-        if (mSize >= mTreshold)
+        if (mSize >= mTreshold && mTreshold != Integer.MAX_VALUE)
             resize( mCapacity * 2 );
 
     }
@@ -330,10 +307,9 @@ public class WeakMap<K,V>
 
     private void clearStaleEntries()
     {
-        V value;
+        //V value;
         int index;
-        WeakEntry<K,V> entry;
-        //IndexReference<V> indexReference;
+        WeakEntry<K,V> tableEntry;
         WeakReference<V> weakReference;
         WeakEntry<K,V> weakEntry;
         int deletedCount;
@@ -343,46 +319,61 @@ public class WeakMap<K,V>
         {
             deletedCount = 0;
 
-            //Find index of our entry using ValueIndex map (actually SparseIntArray)
-            index = weakEntry.index;
-            value = (V)weakEntry.get();
-
-            entry = mTable[index];
-
-            if (entry == null)
+            if(deleteHistory.get( weakEntry.key ) == null)
             {
-                Log.w(TAG, "Entry retrieved from value in ValueIndex map is null");
+                deleteHistory.put( weakEntry.key, 1 );
+            }
+            else
+            {
+                deleteHistory.put( weakEntry.key, deleteHistory.get( weakEntry.key ) + 1 );
+                Log.d( TAG, "Multiple deletion detected KEY: " + weakEntry.key + ", INDEX:" + weakEntry.index );
+            }
+
+            index = weakEntry.index;
+            //value = (V)weakEntry.get();
+
+            tableEntry = mTable[index];
+
+            if (tableEntry == null)
+            {
+                Log.d(TAG, "Table entry retrieved from queue's index is null, KEY: " + weakEntry.key +
+                        ", INDEX:" + weakEntry.index +
+                        ", indexFor():" + indexFor( weakEntry.index, mCapacity ) +
+                        (deleteHistory.get( weakEntry.key ) != null ? ", key was deleted before" : ""));
+                if (weakEntry.index != indexFor(weakEntry.hash, mCapacity))
+                    Log.e(TAG, "Indexes don't match");
                 continue;
             }
 
             //Try to find entry that has value in its reference
-            while (entry.next != null && value == null)
+            while (tableEntry.next != null && tableEntry.get() == null)
             {
-                entry = entry.next;
+                tableEntry = tableEntry.next;
                 deletedCount++;
             }
 
-            if (value == null)
+            if (tableEntry.get() == null)
             {
                 //If we didn't find entry that has value, just set it to null and we are done
                 mTable[index] = null;
+                deletedCount++;
             }
             else
             {
                 //Since we have entry that has value, set it as first in our linked sub-list
-                mTable[index] = entry;
+                mTable[index] = tableEntry;
 
                 //Iterate through other linked nodes trying to find entries without values
-                while (entry != null && entry.next != null)
+                while (tableEntry != null && tableEntry.next != null)
                 {
-                    if (entry.next.get() == null)
+                    if (tableEntry.next.get() == null)
                     {
                         //We found empty entry, now bridge over to the one after it (if it exist, if not it is null, and end of this)
-                        entry.next = entry.next.next;
+                        tableEntry.next = tableEntry.next.next;
                         deletedCount++;
                     }
 
-                    entry = entry.next;
+                    tableEntry = tableEntry.next;
                 }
             }
 
@@ -394,8 +385,10 @@ public class WeakMap<K,V>
 
             mSize -= deletedCount;
 
-            if (mSize < 0)
-                Log.e(TAG,"After clearing stale entries, mSize became less than 0");
+            int count = count();
+
+            if (mSize != count)
+                Log.e(TAG,"After clearing stale entries, mSize:" + mSize + ", count():" + count + " ,diff:" + (mSize - count));
 
         }
     }
@@ -490,4 +483,26 @@ public class WeakMap<K,V>
             this.value = value;
         }
     }*/
+
+    private int count()
+    {
+        int count;
+        WeakEntry<K,V> entry;
+
+        count = 0;
+
+        for (int i = 0;i < mTable.length;i++)
+        {
+
+            entry = mTable[i];
+
+            while (entry != null)
+            {
+                count++;
+                entry = entry.next;
+            }
+        }
+
+        return count;
+    }
 }

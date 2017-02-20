@@ -35,7 +35,7 @@ public class MusicProvider {
     private static final int CACHED_ITEMS_CAPACITY = 7;
 
 
-    private LRUCache<String, List<MediaHolder>> mMusicItemsCache;
+    private LRUCache<String, List<MediaMetadataCompat>> mMusicItemsCache;
 
     //Its not really a cache, but if list from music items cache is deleted then metadatas can also be garbage collected
     //private Map<String, WeakReference<MediaMetadataCompat>> mMetadataCache;
@@ -73,30 +73,80 @@ public class MusicProvider {
 
     public List<MediaBrowserCompat.MediaItem> loadMedia(String source, String parameter)
     {
-        Bundle                              cursorBundle;
+
+        MediaBrowserCompat.MediaItem        mediaItem;
+        List<MediaBrowserCompat.MediaItem>  mediaItemsList;
+        String                              parentKey;
+        List<MediaMetadataCompat>           metadataList;
+
+
+        parentKey = Utils.createParentString( source, parameter );
+
+        //Try to retrieve cached list if it exists
+        metadataList = mMusicItemsCache.get(parentKey);
+
+        //If we don't have anything cached then load metadata from database
+        if (metadataList == null)
+        {
+            metadataList = loadMetadata( source, parameter );
+        }
+
+        //Something wrong went with loading metadata, return null
+        if (metadataList == null)
+            return null;
+
+
+        mediaItemsList = new ArrayList<>( metadataList.size() );
+
+        //Check whether we load songs or categories and build metadata for it from cursor
+        if (source.equals(Const.ALL_SCREEN) || parameter != null)
+        {
+            //If we are loading songs
+            for (MediaMetadataCompat metadata : metadataList)
+            {
+
+                //Get media item with description that has bundled media metadata object in it
+                mediaItem = new MediaBrowserCompat.MediaItem( metadata.getDescription(), MediaBrowserCompat.MediaItem.FLAG_PLAYABLE ) /*bundleMetadata( mediaMetadata )*/;
+
+                mMetadataCache3.put( mediaItem.getMediaId(), metadata);
+
+                mediaItemsList.add(mediaItem);
+            }
+        }
+        else
+        {
+            //We are loading categories
+            for (MediaMetadataCompat metadata : metadataList)
+            {
+
+                mediaItem = new MediaBrowserCompat.MediaItem(metadata.getDescription(), MediaBrowserCompat.MediaItem.FLAG_BROWSABLE);
+
+                mMetadataCache3.put( mediaItem.getMediaId(), metadata );
+
+                mediaItemsList.add(mediaItem);
+
+            }
+        }
+
+
+
+
+        //Cache this list for later retrieval
+        mMusicItemsCache.put(parentKey, metadataList);
+
+        return mediaItemsList;
+
+    }
+
+    private List<MediaMetadataCompat> loadMetadata(String source, String parameter)
+    {
+        Bundle cursorBundle;
+        Cursor cursor;
+        List<MediaMetadataCompat> metadataList;
         MediaMetadataCompat                 mediaMetadata;
         MediaMetadataCompat.Builder         metadataBuilder;
         Uri                                 mediaUri;
         String                              mediaUriStr;
-        MediaBrowserCompat.MediaItem        mediaItem;
-        List<MediaBrowserCompat.MediaItem>  mediaItemsList;
-        String                              parentKey;
-        MediaHolder                         mediaHolder;
-        List<MediaHolder>                   mediaHolderList;
-
-        //doubleKey = new DoubleKey(source, parameter);
-        parentKey = Utils.createParentString( source, parameter );
-
-        //Try to retrieve cached list if it exists
-        mediaItemsList = itemsFromHolders( mMusicItemsCache.get(parentKey) );
-
-        //Return existing list if we have it cached
-        if (mediaItemsList != null)
-        {
-            int x = 1;
-            return mediaItemsList;
-        }
-
 
         //Retrieve appropriate cursorBundle for cursor
         if (parameter == null)
@@ -107,60 +157,42 @@ public class MusicProvider {
         if (cursorBundle == null)
             return null;
 
-        //Load cursor using parameters from cursorBundle
-        Cursor cursor = Utils.queryMedia(cursorBundle);
+        cursor = Utils.queryMedia(cursorBundle);
 
         if (cursor == null)
-        {
-            Log.w(TAG,"Cursor is null");
             return null;
-        }
 
-        mediaItemsList = new ArrayList<>( cursor.getCount() );
-        mediaHolderList = new ArrayList<>( cursor.getCount() );
+        metadataList = new ArrayList<>( cursor.getCount() );
 
-        //Check whether we load songs or categories and build metadata for it from cursor
         if (source.equals(Const.ALL_SCREEN) || parameter != null)
         {
+
             //If we are loading songs
             while (cursor.moveToNext())
             {
+
                 metadataBuilder = new MediaMetadataCompat.Builder();
 
 
-                mediaUri = Uri.parse(cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA)));
+                mediaUri = Uri.parse( cursor.getString( cursor.getColumnIndex( MediaStore.Audio.Media.DATA ) ) );
                 mediaUriStr = mediaUri.toString();
 
                 metadataBuilder
-                        .putString  ( MediaMetadataCompat.METADATA_KEY_MEDIA_ID,    cursor.getString( 0 ) )
-                        .putString  ( MediaMetadataCompat.METADATA_KEY_TITLE,       cursor.getString( 1 ) )
-                        .putString  ( MediaMetadataCompat.METADATA_KEY_ALBUM,       cursor.getString( cursor.getColumnIndex( MediaStore.Audio.Media.ALBUM ) ) )
-                        .putString  ( MediaMetadataCompat.METADATA_KEY_ARTIST,      cursor.getString( cursor.getColumnIndex( MediaStore.Audio.Media.ARTIST ) ) )
-                        .putLong    ( MediaMetadataCompat.METADATA_KEY_DURATION,    cursor.getLong( cursor.getColumnIndex( MediaStore.Audio.Media.DURATION ) ) )
-                        .putString  ( MediaMetadataCompat.METADATA_KEY_MEDIA_URI,   mediaUriStr );
+                        .putString( MediaMetadataCompat.METADATA_KEY_MEDIA_ID, cursor.getString( 0 ) )
+                        .putString( MediaMetadataCompat.METADATA_KEY_TITLE, cursor.getString( 1 ) )
+                        .putString( MediaMetadataCompat.METADATA_KEY_ALBUM, cursor.getString( cursor.getColumnIndex( MediaStore.Audio.Media.ALBUM ) ) )
+                        .putString( MediaMetadataCompat.METADATA_KEY_ARTIST, cursor.getString( cursor.getColumnIndex( MediaStore.Audio.Media.ARTIST ) ) )
+                        .putLong( MediaMetadataCompat.METADATA_KEY_DURATION, cursor.getLong( cursor.getColumnIndex( MediaStore.Audio.Media.DURATION ) ) )
+                        .putString( MediaMetadataCompat.METADATA_KEY_MEDIA_URI, mediaUriStr );
 
                 mediaMetadata = metadataBuilder.build();
 
-
-
-                //Get media item with description that has bundled media metadata object in it
-                mediaItem = new MediaBrowserCompat.MediaItem( mediaMetadata.getDescription(), MediaBrowserCompat.MediaItem.FLAG_PLAYABLE ) /*bundleMetadata( mediaMetadata )*/;
-
-                mediaHolder = new MediaHolder( mediaItem, mediaMetadata );
-
-                //mMetadataCache.put( mediaItem.getMediaId(), new WeakReference<>( mediaMetadata ) );
-                //mMetadataCache2.put( mediaItem.getDescription(), mediaMetadata );
-                mMetadataCache3.put( mediaItem.getMediaId(), mediaMetadata );
-                //TODO - continue here - what can you put as key here that isn't referenced by metadata (or create your own collection with weak values)
-
-                mediaHolderList.add( mediaHolder );
-
-                mediaItemsList.add(mediaItem);
+                metadataList.add( mediaMetadata );
             }
+
         }
         else
         {
-            //We are loading categories
             while (cursor.moveToNext())
             {
                 metadataBuilder = new MediaMetadataCompat.Builder();
@@ -170,30 +202,14 @@ public class MusicProvider {
 
                 mediaMetadata = metadataBuilder.build();
 
-                mediaItem = new MediaBrowserCompat.MediaItem(mediaMetadata.getDescription(), MediaBrowserCompat.MediaItem.FLAG_BROWSABLE);
-
-                mediaHolder = new MediaHolder( mediaItem, mediaMetadata );
-
-                //mMetadataCache.put( mediaItem.getMediaId(), new WeakReference<>( mediaMetadata ) );
-                //mMetadataCache2.put( mediaItem.getDescription(), mediaMetadata );
-                mMetadataCache3.put( mediaItem.getMediaId(), mediaMetadata );
-
-                mediaHolderList.add( mediaHolder );
-
-                mediaItemsList.add(mediaItem);
-
+                metadataList.add( mediaMetadata );
             }
-        }
 
+        }
 
         cursor.close();
 
-        //mediaItemsList = itemsFromHolders( mediaHolderList );
-
-        //Cache this list for later retrieval
-        mMusicItemsCache.put(parentKey, mediaHolderList);
-
-        return mediaItemsList;
+        return metadataList;
 
     }
 
@@ -229,13 +245,14 @@ public class MusicProvider {
         MediaMetadataRetriever retriever;
         Uri fileUri;
         MediaBrowserCompat.MediaItem mediaItem;
-        List<MediaHolder> mediaHolderList;
-        MediaHolder mediaHolder;
+        List<MediaBrowserCompat.MediaItem> mediaItemList;
+        List<MediaMetadataCompat> mediaMetadataList;
 
         metadataBuilder = new MediaMetadataCompat.Builder(  );
         retriever = new MediaMetadataRetriever();
         fileUri = Uri.parse( fileUriString );
-        mediaHolderList = new ArrayList<>( 1 );
+        mediaItemList = new ArrayList<>( 1 );
+        mediaMetadataList = new ArrayList<>( 1 );
 
 
         if (fileUri == null)
@@ -253,19 +270,13 @@ public class MusicProvider {
 
         metadata = metadataBuilder.build();
 
-        //Get media item with metadata bundled in its media description object
-        //mediaItem = MusicProvider.getInstance().bundleMetadata( metadata );
+        mediaMetadataList.add( metadata );
 
         mediaItem = new MediaBrowserCompat.MediaItem(metadata.getDescription(), MediaBrowserCompat.MediaItem.FLAG_PLAYABLE);
 
-        mediaHolder = new MediaHolder( mediaItem, metadata );
 
-        mediaHolderList.add( mediaHolder );
+        mMusicItemsCache.put( mediaItem.getMediaId(), mediaMetadataList );
 
-        mMusicItemsCache.put( mediaItem.getMediaId(), mediaHolderList );
-
-        //mMetadataCache.put( mediaItem.getMediaId(), new WeakReference<>( metadata ) );
-        //mMetadataCache2.put( mediaItem.getDescription(), metadata );
         mMetadataCache3.put( mediaItem.getMediaId(), metadata );
 
 
@@ -275,42 +286,11 @@ public class MusicProvider {
     //TODO - change parameter back to mediaID
     public MediaMetadataCompat getMetadata(MediaDescriptionCompat description)
     {
-        MediaMetadataCompat metadata;
-        WeakReference<MediaMetadataCompat> weakReference;
 
-        /*weakReference = mMetadataCache.get( mediaId );
-
-        if (weakReference == null)
-            return null;
-
-        metadata = weakReference.get();
-
-        if (metadata == null)
-            mMetadataCache.remove( mediaId );*/
-
-        //metadata = mMetadataCache2.get( description );
-
-        metadata = mMetadataCache3.get( description.getMediaId() );
-
-        return metadata;
+        return mMetadataCache3.get( description.getMediaId() );
     }
 
-    private List<MediaBrowserCompat.MediaItem> itemsFromHolders(List<MediaHolder> mediaHolderList)
-    {
-        if (mediaHolderList == null || mediaHolderList.size() == 0)
-            return null;
 
-        List<MediaBrowserCompat.MediaItem> itemsList;
-
-        itemsList = new ArrayList<>( mediaHolderList.size() );
-
-        for (MediaHolder holder : mediaHolderList)
-        {
-            itemsList.add( holder.mediaItem );
-        }
-
-        return itemsList;
-    }
 
 
     public synchronized void invalidateAllData()
@@ -348,7 +328,7 @@ public class MusicProvider {
         mListener = null;
     }
 
-    private class MediaHolder
+    /*private class MediaHolder
     {
         MediaBrowserCompat.MediaItem mediaItem;
 
@@ -359,7 +339,7 @@ public class MusicProvider {
             this.mediaItem = mediaItem;
             this.metadata = metadata;
         }
-    }
+    }*/
 
 
     //DEBUG function - it counts number of weak references with null value

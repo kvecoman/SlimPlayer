@@ -270,22 +270,19 @@ public class LRUCache<K, V>
         return  list;
     }*/
 
-    private String[] listNodesStr()
+    private ArrayList<String> listNodesStr()
     {
-        String[] list;
-        int i;
+        ArrayList<String> list;
         Node<K,V> node;
 
-        list = new String[mSize];
-        i = 0;
+        list = new ArrayList<>( mSize );
         node = mFirst;
 
-        while (i < mSize && node != null)
+        while (node != null)
         {
-            list[i] = new String( node.key.toString() );
+            list.add( new String( node.key.toString() ));
 
             node = node.next;
-            i++;
         }
 
 

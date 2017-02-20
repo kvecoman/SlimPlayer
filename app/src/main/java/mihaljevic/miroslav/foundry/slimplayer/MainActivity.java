@@ -34,7 +34,7 @@ import junit.framework.Test;
 //TODO - implement new runtime permission model
 
 
-//TODO - keep rolling - hmmm, it seems that LRUCache nodes are not being cleared again for some reason, maybe because mediaMetadata is referencing it in some way (loop reference)
+//TODO - keep rolling - maybe try to have 1 metadata for all lists
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener
 {
 

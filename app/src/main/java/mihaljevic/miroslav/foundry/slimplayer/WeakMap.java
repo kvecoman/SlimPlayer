@@ -13,8 +13,9 @@ import java.util.HashSet;
  * Created by miroslav on 17.02.17..
  */
 
-//TODO - make thread safe
+
 //TODO - use some other hash algorithm
+//TODO - remove crazy logs
 public class WeakMap<K,V>
 {
     private final String TAG = getClass().getSimpleName();
@@ -41,6 +42,7 @@ public class WeakMap<K,V>
 
     //private SparseIntArray mValueIndexMap;
     private HashMap<K, Integer> deleteHistory = new HashMap<>(  );
+    private HashMap<K, Integer> putHistory = new HashMap<>();
 
     public WeakMap ()
     {
@@ -164,21 +166,32 @@ public class WeakMap<K,V>
         K key;
         WeakEntry<K,V> oldEntry;
         WeakEntry<K,V> nextEntry;
+        WeakEntry<K,V> previousEntry;
 
         key = newEntry.key;
         hash = newEntry.hash;
         index = newEntry.index;
 
         newEntry.next = null;
+        previousEntry = null;
 
 
 
         oldEntry = table[index];
 
-        if (oldEntry == null)
+        if (oldEntry == null )
         {
-            //If the place in table is free then we just put entry and we are done with it
+            //If the place in table is freejust put it here and be done
             table[index] = newEntry;
+        }
+        else if (oldEntry.key.equals( newEntry.key ))
+        {
+            //Case if we have matching key right here in first place
+            table[index] = newEntry;
+
+            newEntry.next = oldEntry.next;
+
+            return false;
         }
         else
         {
@@ -195,19 +208,20 @@ public class WeakMap<K,V>
             //We have stopped for some reason and we just add entry at the end of chain
             oldEntry.next = newEntry;
 
-
             if (nextEntry != null && nextEntry.key.equals( key ))
             {
                 //Case where we are replacing value because we have matching keys
                 newEntry.next = nextEntry.next;
                 return false;
             }
+
+
         }
 
         return true;
     }
 
-    private void resize(int capacity)
+    private synchronized void resize(int capacity)
     {
         WeakEntry<K,V>[] oldTable;
         WeakEntry<K,V>[] newTable;
@@ -237,13 +251,16 @@ public class WeakMap<K,V>
 
     }
 
-    public void put(K key, V value)
+    public synchronized void put(K key, V value)
     {
         int hash;
         int index;
+        boolean added;
         WeakEntry<K,V> newEntry;
         WeakEntry<K,V> oldEntry;
         WeakEntry<K,V> nextEntry;
+
+
 
         clearStaleEntries();
 
@@ -252,9 +269,23 @@ public class WeakMap<K,V>
 
         newEntry = new WeakEntry<>( key, hash, value, mQueue, index );
 
+        added = putInTable( mTable, newEntry );
 
         //If the entry is not replaced then increase mSize, otherwise not
-        mSize += putInTable( mTable, newEntry ) ? 1 : 0;
+        mSize += added ? 1 : 0;
+
+        //DEBUG PURPOSES
+        Integer history = putHistory.get( key );
+        if (history == null && added)
+        {
+            putHistory.put( key, 1 );
+        }
+        else if (added)
+        {
+            history++;
+            Log.w(TAG,"This is " + history + ". time item with this key has been put, KEY:" + key);
+            putHistory.put( key, history );
+        }
 
         int count = count();
         if (mSize != count)
@@ -267,7 +298,7 @@ public class WeakMap<K,V>
 
     }
 
-    public V get(K key)
+    public synchronized V get(K key)
     {
         int hash;
         int index;
@@ -305,7 +336,7 @@ public class WeakMap<K,V>
         return null;
     }
 
-    private void clearStaleEntries()
+    private synchronized void clearStaleEntries()
     {
         //V value;
         int index;
@@ -314,10 +345,12 @@ public class WeakMap<K,V>
         WeakEntry<K,V> weakEntry;
         int deletedCount;
 
+        deletedCount = 0;
+
         //Iterate through all recently cleared references
         while ( ( weakEntry = (( WeakEntry<K,V> ) ( mQueue.poll() )) ) != null )
         {
-            deletedCount = 0;
+
 
             if(deleteHistory.get( weakEntry.key ) == null)
             {
@@ -326,7 +359,7 @@ public class WeakMap<K,V>
             else
             {
                 deleteHistory.put( weakEntry.key, deleteHistory.get( weakEntry.key ) + 1 );
-                Log.d( TAG, "Multiple deletion detected KEY: " + weakEntry.key + ", INDEX:" + weakEntry.index );
+                //Log.d( TAG, "Multiple deletion detected KEY: " + weakEntry.key + ", INDEX:" + weakEntry.index );
             }
 
             index = weakEntry.index;
@@ -377,20 +410,21 @@ public class WeakMap<K,V>
                 }
             }
 
-            //Remove this index from ValueIndexMap since we are done with it
-            if (deletedCount > 0)
-            {
-                Log.d( TAG, "Deleted " + deletedCount + " on index " + index );
-            }
-
-            mSize -= deletedCount;
-
-            int count = count();
-
-            if (mSize != count)
-                Log.e(TAG,"After clearing stale entries, mSize:" + mSize + ", count():" + count + " ,diff:" + (mSize - count));
 
         }
+
+        //Remove this index from ValueIndexMap since we are done with it
+        if (deletedCount > 0)
+        {
+            Log.d( TAG, "Deleted " + deletedCount + " stale entries ");
+        }
+
+        mSize -= deletedCount;
+
+        int count = count();
+
+        if (mSize != count)
+            Log.e(TAG,"After clearing stale entries, mSize:" + mSize + ", count():" + count + " ,diff:" + (mSize - count));
     }
 
     public int size()
@@ -484,7 +518,7 @@ public class WeakMap<K,V>
         }
     }*/
 
-    private int count()
+    private synchronized int count()
     {
         int count;
         WeakEntry<K,V> entry;

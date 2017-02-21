@@ -9,15 +9,9 @@ import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaBrowserServiceCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
-import android.util.Log;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
 
 /**
  * Created by Miroslav on 16.1.2017..
@@ -33,16 +27,15 @@ public class MusicProvider {
     private final String TAG = getClass().getSimpleName();
 
     private static final int CACHED_ITEMS_CAPACITY = 7;
+    private static final int CACHE_CLEAR_INTERVAL = 1; //Cache clear interval in minutes
 
 
-    private LRUCache<String, List<MediaMetadataCompat>> mMusicItemsCache;
+    private IntervalLRUCache<String, List<MediaMetadataCompat>> mMediaListsCache;
 
     //Its not really a cache, but if list from music items cache is deleted then metadatas can also be garbage collected
-    //private Map<String, WeakReference<MediaMetadataCompat>> mMetadataCache;
+    private WeakMap<String, MediaMetadataCompat> mMusicMetadataCache;
 
-    //private WeakHashMap<MediaDescriptionCompat, MediaMetadataCompat> mMetadataCache2;
 
-    private WeakMap<String, MediaMetadataCompat> mMetadataCache3;
 
 
     private MediaBrowserServiceCompat mListener;
@@ -63,10 +56,9 @@ public class MusicProvider {
 
     private MusicProvider()
     {
-        mMusicItemsCache = new LRUCache<>(CACHED_ITEMS_CAPACITY);
-        //mMetadataCache = new HashMap<>(  );
-        //mMetadataCache2 = new WeakHashMap<>(  );
-        mMetadataCache3 = new WeakMap<>(  );
+        mMediaListsCache = new IntervalLRUCache<>(CACHED_ITEMS_CAPACITY, CACHE_CLEAR_INTERVAL);
+        mMusicMetadataCache = new WeakMap<>(  );
+
     }
 
 
@@ -83,7 +75,7 @@ public class MusicProvider {
         parentKey = Utils.createParentString( source, parameter );
 
         //Try to retrieve cached list if it exists
-        metadataList = mMusicItemsCache.get(parentKey);
+        metadataList = mMediaListsCache.get(parentKey);
 
         //If we don't have anything cached then load metadata from database
         if (metadataList == null)
@@ -105,10 +97,11 @@ public class MusicProvider {
             for (MediaMetadataCompat metadata : metadataList)
             {
 
-                //Get media item with description that has bundled media metadata object in it
-                mediaItem = new MediaBrowserCompat.MediaItem( metadata.getDescription(), MediaBrowserCompat.MediaItem.FLAG_PLAYABLE ) /*bundleMetadata( mediaMetadata )*/;
+                //Get media item
+                mediaItem = new MediaBrowserCompat.MediaItem( metadata.getDescription(), MediaBrowserCompat.MediaItem.FLAG_PLAYABLE );
 
-                mMetadataCache3.put( mediaItem.getMediaId(), metadata);
+                //Cache metadata
+                mMusicMetadataCache.put( mediaItem.getMediaId(), metadata);
 
                 mediaItemsList.add(mediaItem);
             }
@@ -121,7 +114,6 @@ public class MusicProvider {
 
                 mediaItem = new MediaBrowserCompat.MediaItem(metadata.getDescription(), MediaBrowserCompat.MediaItem.FLAG_BROWSABLE);
 
-                mMetadataCache3.put( mediaItem.getMediaId(), metadata );
 
                 mediaItemsList.add(mediaItem);
 
@@ -132,7 +124,7 @@ public class MusicProvider {
 
 
         //Cache this list for later retrieval
-        mMusicItemsCache.put(parentKey, metadataList);
+        mMediaListsCache.put(parentKey, metadataList);
 
         return mediaItemsList;
 
@@ -142,11 +134,13 @@ public class MusicProvider {
     {
         Bundle cursorBundle;
         Cursor cursor;
-        List<MediaMetadataCompat> metadataList;
+        List<MediaMetadataCompat>           metadataList;
         MediaMetadataCompat                 mediaMetadata;
         MediaMetadataCompat.Builder         metadataBuilder;
         Uri                                 mediaUri;
         String                              mediaUriStr;
+        String                              mediaID;
+        boolean                             tryCache;
 
         //Retrieve appropriate cursorBundle for cursor
         if (parameter == null)
@@ -164,13 +158,35 @@ public class MusicProvider {
 
         metadataList = new ArrayList<>( cursor.getCount() );
 
+        //Here we try to predict is there even apoint in looking at cache for metadata
+        if (cursor.getCount() > mMusicMetadataCache.size())
+            tryCache = false;
+        else
+            tryCache = true;
+
         if (source.equals(Const.ALL_SCREEN) || parameter != null)
         {
 
             //If we are loading songs
             while (cursor.moveToNext())
             {
+                mediaID = cursor.getString( 0 );
 
+                //Here we try to check if we have metadata cached
+                if (tryCache)
+                {
+                    mediaMetadata = mMusicMetadataCache.get( mediaID );
+
+                    if (mediaMetadata != null)
+                    {
+                        //We have a hit, no need to read cursor, so we just continue
+                        metadataList.add( mediaMetadata );
+                        continue;
+                    }
+                }
+
+
+                //We don't have hit from cache, so we have to load metadata from cursor
                 metadataBuilder = new MediaMetadataCompat.Builder();
 
 
@@ -178,7 +194,7 @@ public class MusicProvider {
                 mediaUriStr = mediaUri.toString();
 
                 metadataBuilder
-                        .putString( MediaMetadataCompat.METADATA_KEY_MEDIA_ID, cursor.getString( 0 ) )
+                        .putString( MediaMetadataCompat.METADATA_KEY_MEDIA_ID, mediaID )
                         .putString( MediaMetadataCompat.METADATA_KEY_TITLE, cursor.getString( 1 ) )
                         .putString( MediaMetadataCompat.METADATA_KEY_ALBUM, cursor.getString( cursor.getColumnIndex( MediaStore.Audio.Media.ALBUM ) ) )
                         .putString( MediaMetadataCompat.METADATA_KEY_ARTIST, cursor.getString( cursor.getColumnIndex( MediaStore.Audio.Media.ARTIST ) ) )
@@ -195,10 +211,13 @@ public class MusicProvider {
         {
             while (cursor.moveToNext())
             {
+                mediaID = cursor.getString( 0 );
+
+
                 metadataBuilder = new MediaMetadataCompat.Builder();
 
-                metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID,cursor.getString(0))
-                        .putString(MediaMetadataCompat.METADATA_KEY_TITLE,cursor.getString(1));
+                metadataBuilder.putString   (MediaMetadataCompat.METADATA_KEY_MEDIA_ID, mediaID)
+                        .putString          (MediaMetadataCompat.METADATA_KEY_TITLE, cursor.getString(1));
 
                 mediaMetadata = metadataBuilder.build();
 
@@ -275,9 +294,9 @@ public class MusicProvider {
         mediaItem = new MediaBrowserCompat.MediaItem(metadata.getDescription(), MediaBrowserCompat.MediaItem.FLAG_PLAYABLE);
 
 
-        mMusicItemsCache.put( mediaItem.getMediaId(), mediaMetadataList );
+        mMediaListsCache.put( mediaItem.getMediaId(), mediaMetadataList );
 
-        mMetadataCache3.put( mediaItem.getMediaId(), metadata );
+        mMusicMetadataCache.put( mediaItem.getMediaId(), metadata );
 
 
         return mediaItem;
@@ -287,7 +306,7 @@ public class MusicProvider {
     public MediaMetadataCompat getMetadata(MediaDescriptionCompat description)
     {
 
-        return mMetadataCache3.get( description.getMediaId() );
+        return mMusicMetadataCache.get( description.getMediaId() );
     }
 
 
@@ -295,10 +314,10 @@ public class MusicProvider {
 
     public synchronized void invalidateAllData()
     {
-        mMusicItemsCache.removeAll();
+        mMediaListsCache.removeAll();
         //mMetadataCache.clear();
         //mMetadataCache2.clear();
-        mMetadataCache3.clear();
+        mMusicMetadataCache.clear();
     }
 
     //Discard only one list and notify media service to make a call to load list again
@@ -309,7 +328,7 @@ public class MusicProvider {
 
         parentString = Utils.createParentString( source, parameter );
 
-        mMusicItemsCache.remove(parentString);
+        mMediaListsCache.remove(parentString);
 
         synchronized ( this )
         {
@@ -349,7 +368,7 @@ public class MusicProvider {
 
         count = 0;
 
-        for (WeakReference<MediaMetadataCompat> ref : mMetadataCache3.values())
+        for (WeakReference<MediaMetadataCompat> ref : mMusicMetadataCache.values())
         {
             if (ref.get() == null)
                 count++;

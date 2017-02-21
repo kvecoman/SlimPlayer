@@ -2,17 +2,11 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.util.Log;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by miroslav on 07.02.17..
- * <p>
+ *
  * Lean and fast LRU cache, thread safe
  *
  * @author Miroslav Mihaljević
@@ -22,8 +16,8 @@ public class LRUCache<K, V>
 {
     private final String TAG = getClass().getSimpleName();
 
-    private int mCapacity;
-    private int mSize = 0;
+    protected int mCapacity;
+    protected int mSize = 0;
     private Node<K, V> mFirst;
     private Node<K, V> mLast;
 
@@ -238,13 +232,71 @@ public class LRUCache<K, V>
 
     }
 
+    public synchronized void removeLastNode()
+    {
+        Log.v(TAG, "removeLast()");
+
+        Node<K,V> nextNode;
+
+        if (mFirst == null)
+        {
+            return;
+        }
+        else if (mLast == null)
+        {
+            //We have just the first node
+            mFirst.previous = null;
+            mFirst.next = null;
+            mFirst = null;
+        }
+        else if (mFirst.previous == mLast)
+        {
+            //This means we have just 2 nodes
+            mLast.previous = null;
+            mLast.next = null;
+            mLast = null;
+
+            mFirst.previous = null;
+        }
+        else
+        {
+            //We have 3 or more nodes
+            nextNode = mLast.next;
+            nextNode.previous = null;
+
+            mLast.previous = null;
+            mLast.next = null;
+
+            mLast = nextNode;
+        }
+
+        mSize--;
+    }
+
     public synchronized void removeAll()
     {
         Log.v(TAG, "removeAll()");
 
+        mSize = 0;
+
+        Node<K,V> node;
+        Node<K,V> previousNode;
+
+        node = mFirst;
+
+        while (node != null)
+        {
+            previousNode = node.previous;
+
+            node.next = null;
+            node.previous = null;
+
+            node = previousNode;
+        }
+
         mFirst = null;
         mLast = null;
-        mSize = 0;
+
     }
 
     //DEBUG METHOD - only used to verify correct behaviour of cache
@@ -282,7 +334,7 @@ public class LRUCache<K, V>
         {
             list.add( new String( node.key.toString() ));
 
-            node = node.next;
+            node = node.previous;
         }
 
 

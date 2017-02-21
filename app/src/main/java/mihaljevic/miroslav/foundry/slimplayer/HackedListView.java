@@ -18,27 +18,35 @@ import android.widget.ListView;
  *
  * @author Miroslav Mihaljević
  */
-public class MyListView extends ListView {
+public class HackedListView extends ListView {
 
     //This variable is really bad idea UPDATE: really, it is a monstrosity
     //We use to not deselect everything when OnLayoutChildren is called in DirectorySelectPreference
-    public boolean mIsItemClicked = false;
+    private boolean mIsItemClicked = false;
 
     private OnLayoutChildrenListener mOnLayoutChildrenListener;
 
-    public MyListView(Context context) {
+    public HackedListView( Context context) {
         super(context);
     }
 
-    public MyListView(Context context, AttributeSet attrs) {
+    public HackedListView( Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
-    public MyListView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public HackedListView( Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
 
+    public boolean isItemClicked()
+    {
+        return mIsItemClicked;
+    }
 
+    public void setIsItemClicked( boolean mIsItemClicked )
+    {
+        this.mIsItemClicked = mIsItemClicked;
+    }
 
     @Override
     protected void layoutChildren()
@@ -46,7 +54,7 @@ public class MyListView extends ListView {
         super.layoutChildren();
         if (mOnLayoutChildrenListener != null)
         {
-            mOnLayoutChildrenListener.onLayoutChildren();
+            mOnLayoutChildrenListener.onLayoutChildren(mIsItemClicked);
         }
     }
 
@@ -63,7 +71,7 @@ public class MyListView extends ListView {
 
     public interface OnLayoutChildrenListener
     {
-        void onLayoutChildren();
+        void onLayoutChildren(boolean isItemClicked);
     }
 
     public void setOnLayoutChildrenListener(OnLayoutChildrenListener listener)

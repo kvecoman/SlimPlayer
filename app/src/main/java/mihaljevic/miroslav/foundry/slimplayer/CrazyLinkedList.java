@@ -152,7 +152,7 @@ public class CrazyLinkedList<V>
 
         node = mFirst;
 
-        //TODO - continue here, see about clearing garbage collected entries (maybe change this whole thing to use logic from hash tables??)
+
 
         mQueue.poll();
     }

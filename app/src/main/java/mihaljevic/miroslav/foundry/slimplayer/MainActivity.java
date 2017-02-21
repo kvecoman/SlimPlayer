@@ -23,6 +23,7 @@ import junit.framework.Test;
 //TODO - make the app
 //TODO - $$_PROFIT_$$
 
+//TODO - make trial version of this app
 //TODO - indicate that tap paused or resumed the song
 //TODO - first time opening the app and home screen is empty, at least add indicators that there are more tabs
 //TODO - make visual style for project
@@ -34,7 +35,7 @@ import junit.framework.Test;
 //TODO - implement new runtime permission model
 
 
-//TODO - keep rolling - maybe try to have 1 metadata for all lists
+//TODO - keep implementing new runtime permission model,and making sure app works without it, for now you added checks in MusicProvider and DirectoryDialogPrefrence
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener
 {
 

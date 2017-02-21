@@ -85,6 +85,8 @@
           <option name="SPACE_WITHIN_CAST_PARENTHESES" value="true" />
           <option name="SPACE_WITHIN_BRACKETS" value="true" />
           <option name="SPACE_WITHIN_ARRAY_INITIALIZER_BRACES" value="true" />
+          <option name="SPACE_BEFORE_ARRAY_INITIALIZER_LBRACE" value="true" />
+          <option name="SPACE_BEFORE_ANNOTATION_ARRAY_INITIALIZER_LBRACE" value="true" />
           <option name="SPACE_WITHIN_ANNOTATION_PARENTHESES" value="true" />
         </codeStyleSettings>
         <codeStyleSettings language="XML">

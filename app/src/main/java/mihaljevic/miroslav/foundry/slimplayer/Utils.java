@@ -2,6 +2,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -9,6 +10,7 @@ import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.text.TextUtils;
@@ -373,6 +375,12 @@ public final class Utils {
             return source;
 
         return source + ":" + parameter;
+    }
+
+    //Checks permissionfor whole app
+    public static boolean checkPermission(String permission)
+    {
+        return ContextCompat.checkSelfPermission( SlimPlayerApplication.getInstance(), permission ) == PackageManager.PERMISSION_GRANTED ? true : false;
     }
 
 

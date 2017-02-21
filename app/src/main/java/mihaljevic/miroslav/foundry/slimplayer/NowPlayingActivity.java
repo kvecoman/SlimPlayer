@@ -27,8 +27,6 @@ import java.util.TimerTask;
 public class NowPlayingActivity extends BackHandledFragmentActivity implements  ViewPager.OnPageChangeListener, View.OnClickListener, SeekBar.OnSeekBarChangeListener
 {
 
-    //TODO - save loaded queue using some kind of fragment and saving instance of it (not so necessary after implementing LRU cache)
-
 
     private ViewPager mPager;
     private NowPlayingPagerAdapter mPagerAdapter;
@@ -354,7 +352,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
         mSeekBar.setProgress( 0 );
 
-        metadata = MusicProvider.getInstance().getMetadata( queueItem.getDescription() );
+        metadata = MusicProvider.getInstance().getMetadata( queueItem.getDescription().getMediaId() );
 
         if (metadata != null)
             mSeekBar.setMax((int)metadata.getLong( MediaMetadataCompat.METADATA_KEY_DURATION ));

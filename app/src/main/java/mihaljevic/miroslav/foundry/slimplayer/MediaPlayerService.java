@@ -838,12 +838,12 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
         Intent intent;
         MediaMetadataCompat metadata;
-        Bundle extras;
+        //Bundle extras;
 
-        extras = mQueue.get( mPosition ).getDescription().getExtras();
+        //extras = mQueue.get( mPosition ).getDescription().getExtras();
 
         //Try to acquire media metadata if it is bundled with media description
-        metadata = mMusicProvider.getMetadata( mQueue.get( mPosition ).getDescription() );
+        metadata = mMusicProvider.getMetadata( mQueue.get( mPosition ).getDescription().getMediaId() );
 
         intent = new Intent( getApplicationContext(), MediaPlayerService.class );
 
@@ -1033,7 +1033,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
                 currentQueueItem = mQueue.get( mPosition );
 
-                mediaMetadata = mMusicProvider.getMetadata( currentQueueItem.getDescription() );
+                mediaMetadata = mMusicProvider.getMetadata( currentQueueItem.getDescription().getMediaId() );
 
                 filePath = Uri.parse( mediaMetadata.getString( MediaMetadataCompat.METADATA_KEY_MEDIA_URI ) ).toString();
                 artist = mediaMetadata.getString( MediaMetadataCompat.METADATA_KEY_ARTIST );

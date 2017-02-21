@@ -1,10 +1,12 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaBrowserServiceCompat;
 import android.support.v4.media.MediaDescriptionCompat;
@@ -12,6 +14,7 @@ import android.support.v4.media.MediaMetadataCompat;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.jar.Manifest;
 
 /**
  * Created by Miroslav on 16.1.2017..
@@ -70,6 +73,9 @@ public class MusicProvider {
         List<MediaBrowserCompat.MediaItem>  mediaItemsList;
         String                              parentKey;
         List<MediaMetadataCompat>           metadataList;
+
+        if ( !Utils.checkPermission( android.Manifest.permission.READ_EXTERNAL_STORAGE ) )
+            return null;
 
 
         parentKey = Utils.createParentString( source, parameter );
@@ -302,11 +308,10 @@ public class MusicProvider {
         return mediaItem;
     }
 
-    //TODO - change parameter back to mediaID
-    public MediaMetadataCompat getMetadata(MediaDescriptionCompat description)
-    {
 
-        return mMusicMetadataCache.get( description.getMediaId() );
+    public MediaMetadataCompat getMetadata(String mediaID)
+    {
+        return mMusicMetadataCache.get( mediaID );
     }
 
 
@@ -315,8 +320,6 @@ public class MusicProvider {
     public synchronized void invalidateAllData()
     {
         mMediaListsCache.removeAll();
-        //mMetadataCache.clear();
-        //mMetadataCache2.clear();
         mMusicMetadataCache.clear();
     }
 

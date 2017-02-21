@@ -72,7 +72,6 @@ public class LRUCache<K, V>
         //If this is the first node we are adding
         if ( mFirst == null )
         {
-            Log.d(TAG,"mFirst == null");
             mFirst = node;
             mSize++;
 
@@ -80,7 +79,6 @@ public class LRUCache<K, V>
         //This happens when this is the second node we are adding
         else if (mLast == null)
         {
-            Log.d(TAG,"mLast == null");
             mLast = node;
             mLast.next = mFirst;
             mFirst.previous = mLast;
@@ -89,7 +87,6 @@ public class LRUCache<K, V>
         //This is case when we have first two nodes bu we are not full yet
         else if ( mSize < mCapacity )
         {
-            Log.d(TAG,"mSize < mCapacity");
             node.previous = mFirst;
             mFirst.next = node;
             mFirst = node;
@@ -99,7 +96,6 @@ public class LRUCache<K, V>
         //This is the case when we are full
         else if ( mSize == mCapacity )
         {
-            Log.d(TAG,"mSize == mCapacity");
             node.previous = mFirst;
             mFirst.next = node;
             mFirst = node;
@@ -148,7 +144,6 @@ public class LRUCache<K, V>
 
         if ( node == mLast )
         {
-            Log.d(TAG,"node == mLast");
             mFirst.next = mLast;
             mLast.previous = mFirst;
             mFirst = mLast;
@@ -159,7 +154,6 @@ public class LRUCache<K, V>
         }
         else if ( node != mFirst )
         {
-            Log.d(TAG,"node != mFirst");
             //Case when node isn't first nor last
 
             //Cut out node out of middle
@@ -203,19 +197,16 @@ public class LRUCache<K, V>
 
         if ( node == mFirst )
         {
-            Log.d(TAG, "node == mFirst");
             mFirst = node.previous;
             mFirst.next = null;
         }
         else if ( node == mLast )
         {
-            Log.d(TAG, "node == mLast");
             mLast = mLast.next;
             mLast.previous = null;
         }
         else
         {
-            Log.d(TAG, "else");
             node.previous.next = node.next;
             node.next.previous = node.previous;
         }

@@ -45,7 +45,7 @@ public class NowPlayingPagerAdapter extends FragmentStatePagerAdapter {
         fragment = new NowPlayingFragment();
         args = new Bundle(  );
 
-        metadata = MusicProvider.getInstance().getMetadata( mQueue.get( position ).getDescription() );
+        metadata = MusicProvider.getInstance().getMetadata( mQueue.get( position ).getDescription().getMediaId() );
 
         args.putParcelable( Const.METADATA_KEY, metadata );
         args.putInt( Const.POSITION_KEY, position );

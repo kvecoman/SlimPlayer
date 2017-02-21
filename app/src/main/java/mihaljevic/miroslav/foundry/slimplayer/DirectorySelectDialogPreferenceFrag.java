@@ -5,6 +5,7 @@ import android.os.Environment;
 import android.support.v7.preference.DialogPreference;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceDialogFragmentCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
@@ -27,6 +28,7 @@ import java.util.List;
 
 
 public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmentCompat implements DialogPreference.TargetFragment {
+    private final String TAG = getClass().getSimpleName();
 
 
     //Controls from layout
@@ -151,6 +153,13 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
 
         }
 
+        if (!mCurrentDir.canRead())
+        {
+            Log.w(TAG, "Can't read current directory, READ_EXTERNAL_STORAGE permission???");
+            return;
+        }
+
+        //TODO - WTF are this multiple hashMaps, maybe one single hashMap???
         //Put all directories in hashmaps and then in list of those hashmaps
         for (File dir : mCurrentDir.listFiles(mDirectoryFilter))
         {

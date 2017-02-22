@@ -5,11 +5,11 @@ import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import java.util.HashMap;
-import java.util.List;
+import java.io.File;
+import java.util.TreeMap;
 
 /**
  * Created by Miroslav on 28.11.2016..
@@ -20,37 +20,77 @@ import java.util.List;
  *
  * @author Miroslav Mihalljević
  */
-public class DirectoryListAdapter extends ArrayAdapter<HashMap<String,Object>> {
+public class DirectoryListAdapter extends BaseAdapter
+{
 
-    public static final String NAME_KEY = "name";
-    public static final String DIR_KEY = "dir";
+    private Context mContext;
 
-    private List<HashMap<String,Object>> mHashMapList;
+    private TreeMap<String, File> mMap;
 
-    public DirectoryListAdapter(Context context, int resource, List<HashMap<String, Object>> objects) {
-        super(context, resource, objects);
+    public DirectoryListAdapter(Context context, TreeMap<String, File> objects)
+    {
+        super();
 
-        mHashMapList = objects;
+        mContext = context;
+        mMap = objects;
     }
 
     @Override
-    @NonNull public View getView(int position, View convertView,@NonNull ViewGroup parent) {
+    @NonNull public View getView(int position, View convertView,@NonNull ViewGroup parent)
+    {
 
-        View view = convertView;
+        View view;
+        LayoutInflater inflater;
+        String name;
+
+        view = convertView;
+        name = (String)( mMap.keySet().toArray()[position]);
 
         //If there is no view provided then just inflate android default
         if (view == null)
         {
-            LayoutInflater i = LayoutInflater.from(getContext());
-            view = i.inflate(android.R.layout.simple_list_item_1,null);
+            inflater = LayoutInflater.from(mContext);
+            view = inflater.inflate( android.R.layout.simple_list_item_1, null );
         }
 
-        HashMap<String,Object> item = getItem(position);
+
         if (view instanceof TextView)
-        {
-            ((TextView) view).setText((String)item.get(NAME_KEY));
-        }
+            ((TextView) view).setText( name );
+
 
         return view;
+    }
+
+    public void swap(TreeMap<String, File> data)
+    {
+        mMap = data;
+        notifyDataSetChanged();
+    }
+
+    @Override
+    public int getCount()
+    {
+        if ( mMap == null)
+            return 0;
+
+        return mMap.size();
+    }
+
+    @Override
+    public Object getItem( int position )
+    {
+        if ( mMap == null)
+            return null;
+
+        return Utils.getByIndex( mMap, position );
+    }
+
+    @Override
+    public long getItemId( int position )
+    {
+        if ( mMap == null)
+            return -1;
+
+        return Utils.getByIndex( mMap, position ).hashCode();
     }
 }

@@ -164,7 +164,8 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
         updateDirectoriesPref();
 
         //Update adapter for our list view and update list height
-        mAdapter.add(path);
+        mAdapter.clear();
+        mAdapter.addAll( mDirectoriesSet );
         mAdapter.notifyDataSetChanged();
         updateListHeight();
     }

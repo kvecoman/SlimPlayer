@@ -22,7 +22,10 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.TreeMap;
 
 /**
  * Created by Miroslav on 23.11.2016..
@@ -377,10 +380,25 @@ public final class Utils {
         return source + ":" + parameter;
     }
 
-    //Checks permissionfor whole app
+    //Checks permission for whole app
     public static boolean checkPermission(String permission)
     {
         return ContextCompat.checkSelfPermission( SlimPlayerApplication.getInstance(), permission ) == PackageManager.PERMISSION_GRANTED ? true : false;
+    }
+
+
+    public static Object getByIndex( TreeMap map, int index)
+    {
+        return map.get( (map.keySet().toArray())[index] );
+    }
+
+    public static class alphabetSort implements Comparator<String>
+    {
+        @Override
+        public int compare( String o1, String o2 )
+        {
+            return o1.toLowerCase().compareTo( o2.toLowerCase() );
+        }
     }
 
 

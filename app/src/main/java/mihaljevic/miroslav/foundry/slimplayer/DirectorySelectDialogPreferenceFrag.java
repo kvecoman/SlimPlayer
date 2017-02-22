@@ -16,7 +16,9 @@ import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.TreeMap;
 
 /**
  * Created by Miroslav on 29.9.2016..
@@ -27,7 +29,7 @@ import java.util.List;
  */
 
 
-public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmentCompat implements DialogPreference.TargetFragment {
+public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmentCompat implements DialogPreference.TargetFragment, AdapterView.OnItemClickListener {
     private final String TAG = getClass().getSimpleName();
 
 
@@ -36,7 +38,7 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
 
     //Current directory and listing of all directories in it
     private File mCurrentDir;
-    private List<HashMap<String,Object>> mDirectoriesList;
+    private TreeMap<String, File> mDirectoriesList2;
 
     //Adapter responsible for mListView
     private DirectoryListAdapter mAdapter;
@@ -63,52 +65,25 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
     {
         //Bind views to member variables
         mListView = (ListView)v.findViewById(R.id.directory_select_list);
+        mListView.setOnItemClickListener(this);
 
         Button selectButton = (Button)v.findViewById(R.id.directory_select_button);
         Button cancelButton = (Button)v.findViewById(R.id.directory_cancel_button);
 
+        selectButton.setOnClickListener( new SelectButtonListener() );
+        cancelButton.setOnClickListener( new CancelButtonListener() );
+
         //Set starting directory and load its contents
         mCurrentDir = Environment.getExternalStorageDirectory();
         updateDirectories();
+    }
 
-        //ListView item click listener
-        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-                mCurrentDir = (File)mDirectoriesList.get(position).get(DirectoryListAdapter.DIR_KEY);
-                updateDirectories();
-
-            }
-        });
-
-        //Cancel button listener
-        cancelButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                DirectorySelectDialogPreferenceFrag.this.getDialog().dismiss();
-            }
-        });
-
-        //Select button listener
-        selectButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //NOTE - proper way to do all of this is using "persist*" methods of Preference,
-                //       but it doesn't have persistStringSet, and we are using string set
-
-                //Here we update the set of selected directories
-                DirectorySelectPreference pref = (DirectorySelectPreference)getPreference();
-
-                //Add selected directory to preference
-                pref.addDirectoryPath(mCurrentDir.getAbsolutePath());
-
-
-                getDialog().dismiss();
-
-            }
-        });
-
+    //Click listener for list items
+    @Override
+    public void onItemClick( AdapterView<?> parent, View view, int position, long id )
+    {
+        mCurrentDir = (File)Utils.getByIndex( mDirectoriesList2, position );
+        updateDirectories();
     }
 
     @Override
@@ -135,7 +110,7 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
     //Function that updates directory listing based on current selected directory
     private void updateDirectoryListing()
     {
-        mDirectoriesList = new ArrayList<>();
+        mDirectoriesList2 = new TreeMap<>( new Utils.alphabetSort() );
 
         HashMap<String,Object> mapItem;
 
@@ -145,10 +120,7 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
             if ( mCurrentDir.getParentFile().canRead() && (mCurrentDir.getParent().length() > 0))
             {
                 File backDir = mCurrentDir.getParentFile();
-                mapItem = new HashMap<>();
-                mapItem.put(DirectoryListAdapter.DIR_KEY, backDir);
-                mapItem.put(DirectoryListAdapter.NAME_KEY,"/..");
-                mDirectoriesList.add(mapItem);
+                mDirectoriesList2.put( "/..", backDir );
             }
 
         }
@@ -159,14 +131,10 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
             return;
         }
 
-        //TODO - WTF are this multiple hashMaps, maybe one single hashMap???
-        //Put all directories in hashmaps and then in list of those hashmaps
+        //Go through all directories and add them to hash map
         for (File dir : mCurrentDir.listFiles(mDirectoryFilter))
         {
-            mapItem = new HashMap<>();
-            mapItem.put(DirectoryListAdapter.DIR_KEY,dir);
-            mapItem.put(DirectoryListAdapter.NAME_KEY,dir.getName());
-            mDirectoriesList.add(mapItem);
+            mDirectoriesList2.put( dir.getName(), dir );
         }
     }
 
@@ -177,16 +145,45 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
         if (mAdapter == null)
         {
             //Create new adapter if it doesn't exist
-            mAdapter = new DirectoryListAdapter(getContext(),android.R.layout.simple_list_item_1,mDirectoriesList);
+            mAdapter = new DirectoryListAdapter(getContext(), mDirectoriesList2);
             mListView.setAdapter(mAdapter);
         }
         else
         {
             //If it exist just reflect the changes in data
-            mAdapter.clear();
-            mAdapter.addAll(mDirectoriesList);
+            mAdapter.swap(mDirectoriesList2);
         }
 
 
+    }
+
+
+    private class SelectButtonListener implements Button.OnClickListener
+    {
+        @Override
+        public void onClick( View v )
+        {
+            //NOTE - proper way to do all of this is using "persist*" methods of Preference,
+            //       but it doesn't have persistStringSet, and we are using string set
+
+            //Here we update the set of selected directories
+            DirectorySelectPreference pref = (DirectorySelectPreference)getPreference();
+
+            //Add selected directory to preference
+            pref.addDirectoryPath(mCurrentDir.getAbsolutePath());
+
+
+
+            getDialog().dismiss();
+        }
+    }
+
+    private class CancelButtonListener implements Button.OnClickListener
+    {
+        @Override
+        public void onClick( View v )
+        {
+            getDialog().dismiss();
+        }
     }
 }

@@ -35,7 +35,7 @@ import junit.framework.Test;
 //TODO - implement new runtime permission model
 
 
-//TODO - keep implementing new runtime permission model,and making sure app works without it, for now you added checks in MusicProvider and DirectoryDialogPrefrence
+//TODO - keep implementing new runtime permission model, and making sure app works without it, for now you added checks in MusicProvider and DirectoryDialogPrefrence
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener
 {
 

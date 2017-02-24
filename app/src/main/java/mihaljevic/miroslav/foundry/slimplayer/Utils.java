@@ -1,18 +1,21 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.media.MediaMetadataRetriever;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaBrowserCompat;
-import android.support.v4.media.MediaMetadataCompat;
+import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseBooleanArray;
@@ -23,7 +26,6 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -86,41 +88,69 @@ public final class Utils {
 
     public static boolean checkIfPlaylistExist(String playlistName)
     {
+        if ( Build.VERSION.SDK_INT >= 16 && !checkPermission( sAppContext, Manifest.permission.READ_EXTERNAL_STORAGE ))
+            return false;
+
         //Check if playlist with that name already exists
-        Cursor playlistsCursor = sAppContext.getContentResolver().query(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,
-                                                        new String [] {MediaStore.Audio.Playlists._ID,MediaStore.Audio.Playlists.NAME},null,null,null);
-        for (int i = 0;i < playlistsCursor.getCount();i++)
+        Cursor playlistsCursor;
+
+        playlistsCursor = sAppContext.getContentResolver().query(   MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,
+                                                                    new String [] {MediaStore.Audio.Playlists._ID,MediaStore.Audio.Playlists.NAME},
+                                                                    null,null,null);
+        if (playlistsCursor == null)
+            return false;
+
+        while (playlistsCursor.moveToNext())
         {
-            playlistsCursor.moveToPosition(i);
             if (playlistName.equals(playlistsCursor.getString(playlistsCursor.getColumnIndex(MediaStore.Audio.Playlists.NAME))))
             {
                 playlistsCursor.close();
                 return true;
             }
         }
+
+
         playlistsCursor.close();
+
         return false;
     }
 
     //Creates playlist and returns id
     public static long createPlaylist( String playlistName)
     {
+        if ( Build.VERSION.SDK_INT >= 16 && !checkPermission( sAppContext,Manifest.permission.WRITE_EXTERNAL_STORAGE ))
+            return -1;
+
+        ContentValues inserts;
+        Uri insertedPlaylistUri;
+        Cursor cursor;
+        long playlistID;
+
         //Create content values with new playlist info
-        ContentValues inserts = new ContentValues();
+        inserts = new ContentValues();
         inserts.put(MediaStore.Audio.Playlists.NAME, playlistName);
         inserts.put(MediaStore.Audio.Playlists.DATE_ADDED, System.currentTimeMillis());
         inserts.put(MediaStore.Audio.Playlists.DATE_MODIFIED, System.currentTimeMillis());
 
         //Insert new playlist values
-        Uri uri = sAppContext.getContentResolver().insert(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,inserts);
+        insertedPlaylistUri = sAppContext.getContentResolver().insert(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,inserts);
+
+        if (insertedPlaylistUri == null)
+            return -1;
 
         //Get ID of newly created playlist
-        Cursor c = sAppContext.getContentResolver().query(uri, new String[]{MediaStore.Audio.Playlists._ID},null,null,null);
-        c.moveToFirst();
-        long pId = c.getLong(0);
-        c.close();
+        cursor = sAppContext.getContentResolver().query( insertedPlaylistUri, new String[]{MediaStore.Audio.Playlists._ID},null,null,null);
 
-        return pId;
+        if (cursor == null)
+            return -1;
+
+        cursor.moveToFirst();
+        playlistID = cursor.getLong(0);
+
+
+        cursor.close();
+
+        return playlistID;
     }
 
     //Returns number of inserted items
@@ -207,30 +237,47 @@ public final class Utils {
     //Method that detects empty genres and stores that list into preferences
     public static int deleteEmptyGenres()
     {
-        ContentResolver resolver = sAppContext.getContentResolver();
-        int count = 0;
-        Cursor genresCursor = resolver.query( MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI,
-                new String[]{ MediaStore.Audio.Genres._ID }, null, null, null );
+        if ( Build.VERSION.SDK_INT >= 16 && !checkPermission( sAppContext, Manifest.permission.READ_EXTERNAL_STORAGE ))
+        {
+            Log.i(TAG, "No READ_EXTERNAL_STORAGE permission to delete genres");
+            return 0;
+        }
+
+        ContentResolver resolver;
+        int count;
+        Cursor genresCursor;
+        int id;
+        Cursor cursor;
+
+        resolver = sAppContext.getContentResolver();
+        count = 0;
+        genresCursor = resolver.query(  MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI,
+                                        new String[]{ MediaStore.Audio.Genres._ID },
+                                        null, null, null );
 
         if ( genresCursor == null )
             return 0;
 
-        int id;
-        Cursor cursor;
-        genresCursor.moveToFirst();
-        do
+
+        while (genresCursor.moveToNext())
         {
             id = genresCursor.getInt( 0 );
-            cursor = resolver.query( MediaStore.Audio.Genres.Members.getContentUri( "external", id ),
-                    new String[]{ MediaStore.Audio.Genres.Members._ID }, null, null, null );
-            if ( cursor.getCount() == 0 )
+            cursor = resolver.query(    MediaStore.Audio.Genres.Members.getContentUri( "external", id ),
+                                        new String[]{ MediaStore.Audio.Genres.Members._ID },
+                                        null, null, null );
+            if (cursor == null)
+                continue;
+
+            if (cursor.getCount() == 0 )
             {
                 //Here we delete if genre is empty
                 resolver.delete( MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI, MediaStore.Audio.Genres._ID + "=" + id, null );
                 count++;
             }
+
             cursor.close();
-        } while ( genresCursor.moveToNext() );
+
+        }
 
         genresCursor.close();
 
@@ -380,11 +427,7 @@ public final class Utils {
         return source + ":" + parameter;
     }
 
-    //Checks permission for whole app
-    public static boolean checkPermission(String permission)
-    {
-        return ContextCompat.checkSelfPermission( SlimPlayerApplication.getInstance(), permission ) == PackageManager.PERMISSION_GRANTED ? true : false;
-    }
+
 
 
     public static Object getByIndex( TreeMap map, int index)
@@ -399,6 +442,58 @@ public final class Utils {
         {
             return o1.toLowerCase().compareTo( o2.toLowerCase() );
         }
+    }
+
+    //Checks permission for whole app
+    public static boolean checkPermission( Context context, String permission)
+    {
+        return ContextCompat.checkSelfPermission( SlimPlayerApplication.getInstance(), permission ) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    public static void askPermission ( final Activity activity, final String permission, String explanation,final int requestCode )
+    {
+        askPermission( activity, permission, explanation, requestCode, null );
+    }
+
+
+    public static void askPermission( final Activity activity, final String permission, String explanation,final int requestCode, DialogInterface.OnClickListener cancelListener )
+    {
+        if ( Build.VERSION.SDK_INT >= 16 &&  !checkPermission( activity, permission ) )
+        {
+            if ( ActivityCompat.shouldShowRequestPermissionRationale( activity, permission ) )
+            {
+                showMessageOKCancel(activity, explanation, new DialogInterface.OnClickListener()
+                {
+                    @Override
+                    public void onClick( DialogInterface dialog, int which )
+                    {
+                        ActivityCompat.requestPermissions( activity, new String[]{permission}, requestCode );
+                    }
+                },
+                cancelListener);
+            }
+            else
+            {
+                ActivityCompat.requestPermissions( activity, new String[]{permission}, requestCode );
+            }
+
+        }
+    }
+
+    public static void showMessageOKCancel(Activity activity, String message, DialogInterface.OnClickListener okListener)
+    {
+        showMessageOKCancel( activity, message, okListener, null );
+    }
+
+
+    public static void showMessageOKCancel(Activity activity, String message, DialogInterface.OnClickListener okListener, DialogInterface.OnClickListener cancelListener)
+    {
+        new AlertDialog.Builder( activity )
+                        .setMessage( message )
+                        .setPositiveButton( activity.getString( R.string.OK ), okListener )
+                        .setNegativeButton( activity.getString( R.string.Cancel ), cancelListener )
+                        .create()
+                        .show();
     }
 
 

@@ -4,6 +4,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.content.ContextCompat;
@@ -30,7 +31,7 @@ public class MusicProvider {
     private final String TAG = getClass().getSimpleName();
 
     private static final int CACHED_ITEMS_CAPACITY = 7;
-    private static final int CACHE_CLEAR_INTERVAL = 1; //Cache clear interval in minutes
+    private static final int CACHE_CLEAR_INTERVAL = 2; //Cache clear interval in minutes
 
 
     private IntervalLRUCache<String, List<MediaMetadataCompat>> mMediaListsCache;
@@ -74,7 +75,7 @@ public class MusicProvider {
         String                              parentKey;
         List<MediaMetadataCompat>           metadataList;
 
-        if ( !Utils.checkPermission( android.Manifest.permission.READ_EXTERNAL_STORAGE ) )
+        if ( Build.VERSION.SDK_INT >= 16 &&  !Utils.checkPermission( SlimPlayerApplication.getInstance(), android.Manifest.permission.READ_EXTERNAL_STORAGE ) )
             return null;
 
 
@@ -135,6 +136,7 @@ public class MusicProvider {
         return mediaItemsList;
 
     }
+
 
     private List<MediaMetadataCompat> loadMetadata(String source, String parameter)
     {
@@ -270,13 +272,14 @@ public class MusicProvider {
         MediaMetadataRetriever retriever;
         Uri fileUri;
         MediaBrowserCompat.MediaItem mediaItem;
-        List<MediaBrowserCompat.MediaItem> mediaItemList;
         List<MediaMetadataCompat> mediaMetadataList;
+
+        if ( Build.VERSION.SDK_INT >= 16 && !Utils.checkPermission( SlimPlayerApplication.getInstance(), android.Manifest.permission.READ_EXTERNAL_STORAGE ))
+            return null;
 
         metadataBuilder = new MediaMetadataCompat.Builder(  );
         retriever = new MediaMetadataRetriever();
         fileUri = Uri.parse( fileUriString );
-        mediaItemList = new ArrayList<>( 1 );
         mediaMetadataList = new ArrayList<>( 1 );
 
 

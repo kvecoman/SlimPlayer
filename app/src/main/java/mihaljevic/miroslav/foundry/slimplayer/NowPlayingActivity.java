@@ -1,11 +1,17 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
+import android.Manifest;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.RemoteException;
+import android.support.annotation.NonNull;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
@@ -20,8 +26,6 @@ import android.view.View;
 import android.widget.SeekBar;
 
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 
 public class NowPlayingActivity extends BackHandledFragmentActivity implements  ViewPager.OnPageChangeListener, View.OnClickListener, SeekBar.OnSeekBarChangeListener
@@ -32,8 +36,11 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     private NowPlayingPagerAdapter mPagerAdapter;
 
     private SeekBar             mSeekBar;
-    private Timer               mSeekBarTimer;
-    private SeekBarTimerTask    mSeekBarTimerTask;
+    /*private Timer               mSeekBarTimer;
+    private SeekBarTimerTask    mSeekBarTimerTask;*/
+
+    private Handler mSeekBarHandler;
+    private Runnable mSeekBarRunnable;
 
     private String mQueueSource;
     private String mQueueParameter;
@@ -49,6 +56,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
 
 
+
             try
             {
                 mMediaController = new MediaControllerCompat( NowPlayingActivity.this, mMediaBrowser.getSessionToken() );
@@ -56,14 +64,13 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
                 startFilePlayingIfNeeded();
 
-                //First time data init
-                initPagerAdapter( mMediaController.getQueue() );
+                initQueue();
 
-                mSeekBarTimer.schedule( mSeekBarTimerTask, 0, 1000 );
-
+                mSeekBarHandler.post( mSeekBarRunnable );
 
             }
-            catch (RemoteException e){
+            catch (RemoteException e)
+            {
                 e.printStackTrace();
             }
         }
@@ -84,6 +91,17 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
             Log.e(TAG, "Connection has failed");
         }
     };
+
+    private void initQueue()
+    {
+
+        if ( !isThisQueueLoaded() )
+            return;
+
+        //If this queue is loaded then
+        initPagerAdapter( mMediaController.getQueue() );
+
+    }
 
     /*private MediaBrowserCompat.SubscriptionCallback mSubscriptionCallbacks = new MediaBrowserCompat.SubscriptionCallback()
     {
@@ -111,11 +129,9 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         {
             super.onQueueChanged( queue );
 
-            //Only if pager adapter is empty then we want to load queue
-            if (mPagerAdapter.getData() == null)
-            {
-                initPagerAdapter( queue );
-            }
+            //This will update queue if needed or appropriate
+            initQueue();
+
 
         }
 
@@ -124,8 +140,19 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         {
             super.onPlaybackStateChanged( state );
 
+
+
             int activeQueueId;
             int stateInt;
+            List<MediaSessionCompat.QueueItem> queue;
+
+            queue = mMediaController.getQueue();
+
+            /*if ( queue == null || queue.size() == 0 )
+            {
+                Log.i(TAG, "Exiting NowPlayingActivity because there is no queue or size is 0");
+                onBackPressed();
+            }*/
 
             activeQueueId = (int)state.getActiveQueueItemId();
             stateInt = state.getState();
@@ -138,16 +165,18 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
             }
         }
 
+        @Override
+        public void onMetadataChanged( MediaMetadataCompat metadata )
+        {
+            super.onMetadataChanged( metadata );
+
+            if (isThisQueueLoaded())
+                updatePagerWithCurrentSong();
+        }
     };
 
-    private class SeekBarTimerTask extends TimerTask
+    private class SeekBarRunnable implements Runnable
     {
-
-        @Override
-        public boolean cancel()
-        {
-            return super.cancel();
-        }
 
         @Override
         public void run()
@@ -171,6 +200,8 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
                     }
                 }
             }
+
+            mSeekBarHandler.postDelayed( this, 1000 );
         }
     }
 
@@ -200,15 +231,37 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         mSeekBar.setProgress( 0 );
         mSeekBar.setOnSeekBarChangeListener( this );
 
-        mSeekBarTimer = new Timer( true );
-        mSeekBarTimerTask = new SeekBarTimerTask();
+        /*mSeekBarTimer = new Timer( true );
+        mSeekBarTimerTask = new SeekBarTimerTask();*/
+
+        mSeekBarHandler = new Handler(  );
+        mSeekBarRunnable = new SeekBarRunnable();
 
         mMediaBrowser = new MediaBrowserCompat( this, new ComponentName( this, MediaPlayerService.class ), mConnectionCallbacks, null );
     }
 
+
     @Override
     protected void onStart() {
         super.onStart();
+
+        //Ask for permissions if needed
+        if ( Build.VERSION.SDK_INT >= 16 )
+        {
+            Utils.askPermission( this,
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    getString( R.string.permission_storage_explanation ),
+                    Const.STORAGE_PERMISSIONS_REQUEST,
+                    new DialogInterface.OnClickListener()
+                    {
+                        @Override
+                        public void onClick( DialogInterface dialog, int which )
+                        {
+                            //Go back if we don't have permission
+                            onBackPressed();
+                        }
+                    } );
+        }
 
 
         mMediaBrowser.connect();
@@ -244,7 +297,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         {
             //If we came from notification and this activity is task root then we want back button to return (open) Main activity
             Intent intent = new Intent(this,MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            intent.setFlags( Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
             startActivity(intent);
             return;
         }
@@ -263,6 +316,9 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
         if (mMediaBrowser.isConnected())
             mMediaBrowser.disconnect();
+
+        if (mSeekBarHandler != null && mSeekBarRunnable != null)
+            mSeekBarHandler.removeCallbacks( mSeekBarRunnable );
     }
 
     @Override
@@ -270,13 +326,57 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     {
         Log.v(TAG, "onDestroy()");
 
-        if (mSeekBarTimer != null)
+        /*if (mSeekBarTimer != null)
         {
             mSeekBarTimer.purge();
             mSeekBarTimer.cancel();
-        }
+        }*/
 
         super.onDestroy();
+    }
+
+    @Override
+    public void onRequestPermissionsResult( int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults )
+    {
+        switch (requestCode)
+        {
+            case Const.STORAGE_PERMISSIONS_REQUEST:
+
+                if (permissions.length != 0 && permissions[0].equals( Manifest.permission.READ_EXTERNAL_STORAGE ))
+                {
+                    if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                    {
+                        Intent intent;
+
+                        intent = getIntent();
+
+                        if (intent != null && intent.getAction() != null && intent.getAction().equals(Intent.ACTION_VIEW))
+                        {
+                            //If this activity was started from opening file then restart it
+                            /*intent.setFlags( Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                            startActivity(intent);*/
+                            startFilePlayingIfNeeded();
+                        }
+                        else
+                        {
+                            //Go back
+                            onBackPressed();
+                        }
+                    }
+                    else
+                    {
+                        //If we don't get permission
+                        onBackPressed();
+                    }
+
+
+                }
+
+
+                break;
+        }
+
+        super.onRequestPermissionsResult( requestCode, permissions, grantResults );
     }
 
     //Check if we need to start playing a file
@@ -298,12 +398,15 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
             if (fileUri.getScheme().contains("file"))
             {
+                mQueueSource = Const.FILE_URI_KEY;
+                mQueueParameter = fileUri.toString();
+
                 extras.putString( Const.SOURCE_KEY,     Const.FILE_URI_KEY );
                 extras.putString( Const.PARAMETER_KEY,  fileUri.toString() );
                 extras.putInt   ( Const.POSITION_KEY,   0 );
 
                 //We use position as mediaID
-                mMediaController.getTransportControls().playFromMediaId( "0", extras );
+                mMediaController.getTransportControls().playFromMediaId( fileUri.toString(), extras );
             }
 
 
@@ -372,6 +475,28 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
             else
                 repeatItem.setIcon(R.drawable.ic_repeat_gray_24dp);
         }
+    }
+
+    private boolean isThisQueueLoaded()
+    {
+        Bundle sessionExtras;
+        String sessionSource;
+        String sessionParameter;
+
+        if (mMediaBrowser == null || !mMediaBrowser.isConnected() || mMediaController == null)
+            return false;
+
+        sessionExtras = mMediaController.getExtras();
+
+        if (sessionExtras == null)
+            return false;
+
+
+        sessionSource = sessionExtras.getString( Const.SOURCE_KEY );
+        sessionParameter = sessionExtras.getString( Const.PARAMETER_KEY );
+
+
+        return !Utils.isSourceDifferent( mQueueSource, mQueueParameter, sessionSource, sessionParameter );
     }
 
 

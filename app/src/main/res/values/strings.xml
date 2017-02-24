@@ -82,6 +82,7 @@
 
     <!--Toast texts-->
     <string name="toast_playlist_exists">Playlist with that name already exists</string>
+    <string name="toast_playlist_create_failed">Could not create playlists</string>
     <string name="toast_exit_confirm">Press back again to exit</string>
     <string name="toast_items_deleted">items deleted</string>
 
@@ -99,6 +100,22 @@
 
     <!--Titles -->
     <string name="music_title">Music</string>
+
+    <!-- Add playlist dialog -->
+    <string name="add_playlist_title">Create new playlist</string>
+    <string name="add_playlist_message">Please enter playlist name</string>
+
+    <!--Buttons-->
+    <string name="OK">OK</string>
+    <string name="Cancel">Cancel</string>
+
+    <!--Permission explanations-->
+    <string name="permission_storage_explanation">Access to storage is needed for the ability to play music</string>
+
+    <!--Missing permission message-->
+    <string name="permission_storage_none">Please allow storage permissions in your phone settings
+        (Settings -> Apps -> SlimPlayer -> Permissions)
+    </string>
 
 
 </resources>

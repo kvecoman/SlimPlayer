@@ -1,6 +1,7 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.Context;
+import android.os.Build;
 import android.support.v7.preference.DialogPreference;
 import android.support.v7.preference.PreferenceViewHolder;
 import android.util.AttributeSet;
@@ -114,7 +115,7 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
         if (mSelectedItem < 0)
         {
             //If we don't have permission then just return
-            if (!Utils.checkPermission( android.Manifest.permission.READ_EXTERNAL_STORAGE ))
+            if ( Build.VERSION.SDK_INT >= 16 && !Utils.checkPermission( SlimPlayerApplication.getInstance(), android.Manifest.permission.READ_EXTERNAL_STORAGE ))
                 return;
 
             //Show dialog for selecting preferences

@@ -1,6 +1,7 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -86,8 +87,9 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
         //Delete empty genres
         deletedGenres = Utils.deleteEmptyGenres();
-
         Log.i(TAG,  deletedGenres + " genres deleted");
+
+
 
         if (directoriesSet != null && !directoriesSet.isEmpty())
         {

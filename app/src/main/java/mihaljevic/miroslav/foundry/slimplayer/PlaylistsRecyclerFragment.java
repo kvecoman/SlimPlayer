@@ -3,6 +3,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -10,13 +11,11 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.preference.PreferenceManager;
 import android.text.InputType;
 import android.text.TextUtils;
-import android.util.SparseBooleanArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.Toast;
 
 /**
  * Fragment that displays list of playlists + options to create new one or delete one
@@ -29,8 +28,8 @@ public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
     private EditText mCreatePlaylistEditText;
 
     //We use this to check if default name with auto number has been used or not
-    private String mDefaultPlaylistName;
-    private int mPlaylistNumber;
+    private String mPlaylistAutoName;
+    private int mPlaylistAutoNumber;
 
     public PlaylistsRecyclerFragment() {
         // Required empty public constructor
@@ -58,101 +57,14 @@ public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
 
         //Build alert dialog that will take name of new playlist
         mCreatePlaylistDialog = new AlertDialog.Builder(context)
-                .setTitle("Create new playlist")
-                .setMessage("Enter playlist name!")
-                .setView(mCreatePlaylistEditText)
-                .setPositiveButton("OK", new DialogInterface.OnClickListener(){
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
+                                .setTitle(getString( R.string.add_playlist_title ))
+                                .setMessage(getString( R.string.add_playlist_message ))
+                                .setView(mCreatePlaylistEditText)
+                                .setPositiveButton(getString( R.string.OK ),        new PositiveButtonListener())
+                                .setNegativeButton(getString( R.string.Cancel ),    new NegativeButtonListener())
+                                .create();
 
-                        //Here we create new playlist
-                        String playlistName;
-
-                        playlistName = mCreatePlaylistEditText.getText().toString();
-
-                        //Async task in async task, in first one we check if playlist with that name already exist,
-                        // and in second one we actually create playlist
-                        new AsyncTask<String,Void,Boolean>()
-                        {
-                            private String mPlaylistName;
-
-                            @Override
-                            protected Boolean doInBackground(String... params) {
-                                mPlaylistName = params[0];
-
-                                return Utils.checkIfPlaylistExist(mPlaylistName);
-                            }
-
-                            @Override
-                            protected void onPostExecute(Boolean result) {
-                                //If playlist already exist
-                                if (result)
-                                {
-                                    Utils.toastShort(getString(R.string.toast_playlist_exists));
-                                    mCreatePlaylistEditText.selectAll();
-                                }
-                                else
-                                {
-                                    //If not then we can create new playlist
-                                    new AsyncTask<String,Void,Long>()
-                                    {
-                                        @Override
-                                        protected Long doInBackground(String... params) {
-                                            String playlistName = params[0];
-
-                                            //Create playlist
-                                            long playlistId = Utils.createPlaylist(playlistName);
-
-                                            if (playlistId > 0 && TextUtils.equals(mDefaultPlaylistName,playlistName))
-                                            {
-                                                //Increase the auto number for default playlist name
-                                                mPlaylistNumber++;
-                                                PreferenceManager
-                                                        .getDefaultSharedPreferences(getContext())
-                                                        .edit()
-                                                        .putInt(getString(R.string.pref_key_playlist_number),mPlaylistNumber)
-                                                        .apply();
-                                            }
-
-                                            return playlistId;
-                                        }
-
-                                        @Override
-                                        protected void onPostExecute(Long result) {
-                                            //Refresh data
-                                            refreshData();
-
-                                        }
-                                    }.execute(mPlaylistName);
-                                }
-                            }
-                        }.execute(playlistName);
-
-                    }
-                })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener(){
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                    }
-                }).create();
-
-        mCreatePlaylistDialog.setOnShowListener(new DialogInterface.OnShowListener() {
-            @Override
-            public void onShow(DialogInterface dialog) {
-                //Construct default playlist name
-                mPlaylistNumber = PreferenceManager.getDefaultSharedPreferences(getContext()).getInt(getString(R.string.pref_key_playlist_number),1);
-                mDefaultPlaylistName = getString(R.string.playlist_default_name) + " " + mPlaylistNumber;
-
-                //Set-up playlist name edit text
-                mCreatePlaylistEditText.setText(mDefaultPlaylistName);
-                mCreatePlaylistEditText.selectAll();
-
-                //Code to automatically show soft keyboard when dialog is shown
-                InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT,0);
-            }
-        });
+        mCreatePlaylistDialog.setOnShowListener(new ShowDialogListener());
 
 
     }
@@ -187,16 +99,22 @@ public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
-        if (item.getItemId() == R.id.delete_item)
-        {
-            deleteItemsAsync(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, MediaStore.Audio.Playlists._ID);
-        }
-        else if (item.getItemId() == R.id.playlist_create)
-        {
+        int itemID;
 
-            //Show dialog to create playlist
-            mCreatePlaylistDialog.show();
+        itemID = item.getItemId();
+
+        switch (itemID)
+        {
+            case R.id.delete_item:
+                //Delete selected playlists
+                deleteItemsAsync(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, MediaStore.Audio.Playlists._ID);
+                break;
+            case R.id.playlist_create:
+                //Show dialog to create playlist
+                mCreatePlaylistDialog.show();
+                break;
         }
+
 
         return super.onOptionsItemSelected(item);
     }
@@ -226,5 +144,99 @@ public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
             setItemSelected(mRecyclerView.getChildLayoutPosition(v),true,v);
         }
         return true;
+    }
+
+    private class ShowDialogListener implements DialogInterface.OnShowListener
+    {
+        @Override
+        public void onShow( DialogInterface dialog )
+        {
+            SharedPreferences prefs;
+            InputMethodManager inputMethodManager;
+
+            prefs = PreferenceManager.getDefaultSharedPreferences( getContext() );
+
+            //Construct default playlist name
+            mPlaylistAutoNumber = prefs.getInt( Const.PLAYLIST_NUMBER_PREF_KEY, 1 );
+            mPlaylistAutoName = getString( R.string.playlist_default_name ) + " " + mPlaylistAutoNumber;
+
+            //Set-up playlist name edit text
+            mCreatePlaylistEditText.setText( mPlaylistAutoName );
+            mCreatePlaylistEditText.selectAll();
+
+            //Code to automatically show soft keyboard when dialog is shown
+            inputMethodManager = ( InputMethodManager ) getContext().getSystemService( Context.INPUT_METHOD_SERVICE );
+            inputMethodManager.toggleSoftInput( InputMethodManager.SHOW_IMPLICIT, 0 );
+        }
+    }
+
+
+    private class PositiveButtonListener implements DialogInterface.OnClickListener
+    {
+        @Override
+        public void onClick( DialogInterface dialog, int which )
+        {
+            //Here we create new playlist
+            final String playlistName;
+
+            playlistName = mCreatePlaylistEditText.getText().toString();
+
+            //Async task to create playlist
+            new AsyncTask<Void,Void,Boolean>()
+            {
+
+                @Override
+                protected Boolean doInBackground(Void... params)
+                {
+                    long playlistID;
+
+
+                    playlistID = -1;
+
+                    if ( !Utils.checkIfPlaylistExist(playlistName) )
+                    {
+                        playlistID = Utils.createPlaylist(playlistName);
+
+
+                        if (playlistID > 0 && TextUtils.equals( mPlaylistAutoName,playlistName))
+                        {
+                            //Increase the auto number for default playlist name
+                            mPlaylistAutoNumber++;
+                            PreferenceManager
+                                    .getDefaultSharedPreferences(getContext())
+                                    .edit()
+                                    .putInt(Const.PLAYLIST_NUMBER_PREF_KEY, mPlaylistAutoNumber )
+                                    .apply();
+
+                        }
+                    }
+
+                    //Returns whether the playlist have been created
+                    return playlistID > 0;
+                }
+
+                @Override
+                protected void onPostExecute(Boolean playlistCreated)
+                {
+                    if (playlistCreated)
+                        refreshData();
+                    else
+                    {
+                        Utils.toastShort(getString(R.string.toast_playlist_create_failed));
+                        mCreatePlaylistEditText.selectAll();
+                    }
+                }
+            }.execute();
+        }
+    }
+
+
+    private class NegativeButtonListener implements DialogInterface.OnClickListener
+    {
+        @Override
+        public void onClick( DialogInterface dialog, int which )
+        {
+            //Nothing to do...
+        }
     }
 }

@@ -36,5 +36,10 @@ public final class Const {
 
     public static final String UNKNOWN = "-1";
 
-    public static final int STATS_RECORDS_SCANNED = 10; //Number of records we scan in stats database to determine items fro home screen
+    public static final int STATS_RECORDS_SCANNED = 10; //Number of records we scan in stats database to determine items from home screen
+
+    //Preference keys
+    public static final String PLAYLIST_NUMBER_PREF_KEY = "pref_key_playlist_number";
+
+    public static final int STORAGE_PERMISSIONS_REQUEST = 36; //Random number
 }

@@ -1,5 +1,6 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -46,7 +47,7 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
         this(fragmentManager,context,pagerID,true);
     }*/
 
-    public MainScreenPagerAdapter(FragmentManager fragmentManager, Context context, int pagerID,boolean showHomeScreen)
+    public MainScreenPagerAdapter( Context context, FragmentManager fragmentManager, int pagerID, boolean showHomeScreen)
     {
         super(fragmentManager);
 
@@ -73,6 +74,12 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
         {
             mNumScreens = 1;
             mShowEmpty = true;
+        }
+
+        //If we don't have permissions, show just one screen with message
+        if (!Utils.checkPermission( mContext, Manifest.permission.READ_EXTERNAL_STORAGE ))
+        {
+            mNumScreens = 1;
         }
     }
 
@@ -121,6 +128,13 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
         Fragment fragment = new EmptyMessageFragment();
         Bundle args = new Bundle();
 
+        //If we don't have permissions, show appropriate message
+        if (!Utils.checkPermission( mContext, Manifest.permission.READ_EXTERNAL_STORAGE ))
+        {
+            args.putString(EmptyMessageFragment.MESSAGE_KEY,mContext.getString(R.string.permission_storage_none));
+            fragment.setArguments(args);
+            return fragment;
+        }
 
 
         //Init appropriate fragment

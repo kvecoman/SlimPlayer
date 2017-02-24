@@ -366,6 +366,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             //If none of the cases above worked then do full list loading
             setQueue( source, parameter, displayName );
 
+            if (mQueue == null)
+                return;
+
             Utils.toastShort( "Queue is " + displayName );
 
             //Check if bundle provided correct play position
@@ -443,10 +446,10 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         MediaSessionCompat.QueueItem        queueItem;
         MediaBrowserCompat.MediaItem        mediaItem;
         boolean isSourceChanged;
-        int     count;
         String oldSource;
         String oldParameter;
         Bundle sessionExtras;
+        long id;
 
         //We use old* variables to determine if change is actually made to queue
         oldSource = mQueueSource;
@@ -467,7 +470,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
             mediaItems = new ArrayList<>(1);
 
-            mediaItem = MusicProvider.getInstance().mediaFromFile( parameter );
+            mediaItem = mMusicProvider.mediaFromFile( parameter );
 
             if (mediaItem == null)
                 return true;
@@ -481,19 +484,20 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             mediaItems = mMusicProvider.loadMedia( source, parameter );
         }
 
-        count = mediaItems.size();
 
-        if (count <= 0)
+        if (mediaItems == null || mediaItems.size() <= 0)
             return true;
 
-        mQueue = new ArrayList<>( count );
 
 
+        mQueue = new ArrayList<>( mediaItems.size() );
+
+        id = 0;
         //Convert all media items to queue items
         for ( MediaBrowserCompat.MediaItem item : mediaItems)
         {
             //Set queue item id to be same as position index
-            queueItem = new MediaSessionCompat.QueueItem( item.getDescription(), count++ );
+            queueItem = new MediaSessionCompat.QueueItem( item.getDescription(), id++ );
             mQueue.add( queueItem );
         }
 

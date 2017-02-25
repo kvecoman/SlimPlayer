@@ -54,7 +54,7 @@ public class LRUCache<K, V>
 
     public synchronized void put( K key, V value )
     {
-        Log.v(TAG, "put() - Key = " + key.toString());
+        //Log.v(TAG, "put() - Key = " + key.toString());
 
         Node<K, V> node;
 
@@ -119,7 +119,7 @@ public class LRUCache<K, V>
 
     public synchronized V get( K key )
     {
-        Log.v(TAG, "get() - Key = " + key.toString());
+       // Log.v(TAG, "get() - Key = " + key.toString());
 
         Node<K, V> node;
 
@@ -140,7 +140,7 @@ public class LRUCache<K, V>
 
     private synchronized void frontNode( Node<K, V> node )
     {
-        Log.v(TAG, "front() - Key = " + node.key.toString());
+        //Log.v(TAG, "front() - Key = " + node.key.toString());
 
         if ( node == mLast )
         {
@@ -186,7 +186,7 @@ public class LRUCache<K, V>
 
     public synchronized void remove( K key )
     {
-        Log.v(TAG, "remove() - Key = " + key.toString());
+        //Log.v(TAG, "remove() - Key = " + key.toString());
 
         Node<K, V> node;
 
@@ -225,7 +225,7 @@ public class LRUCache<K, V>
 
     public synchronized void removeLastNode()
     {
-        Log.v(TAG, "removeLast()");
+        //Log.v(TAG, "removeLast()");
 
         Node<K,V> nextNode;
 
@@ -266,7 +266,7 @@ public class LRUCache<K, V>
 
     public synchronized void removeAll()
     {
-        Log.v(TAG, "removeAll()");
+        //Log.v(TAG, "removeAll()");
 
         mSize = 0;
 

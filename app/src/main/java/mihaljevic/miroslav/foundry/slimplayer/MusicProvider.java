@@ -47,7 +47,7 @@ public class MusicProvider {
 
     private static MusicProvider sInstance;
 
-    public static MusicProvider getInstance()
+    public synchronized static MusicProvider getInstance()
     {
         if (sInstance == null)
         {

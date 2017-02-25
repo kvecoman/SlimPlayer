@@ -15,7 +15,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -57,58 +56,50 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     public static final String  NOTIFICATION_ACTION_PLAY_PAUSE =    "mihaljevic.miroslav.foundry.slimplayer.action.play_pause";
     public static final String  NOTIFICATION_ACTION_NEXT =          "mihaljevic.miroslav.foundry.slimplayer.action.next";
 
-    /*public static final String  NOTIFICATION_ACTION_SWIPE =         "mihaljevic.miroslav.foundry.slimplayer.action.swipe";*/
-
+    //Constant that allows media subscribers to have access to media content
     private static final String MEDIA_ROOT_ID = "slim_player_root";
 
 
-
+    //Machinery that actually plays our music
     private MediaPlayer mPlayer;
 
-
-
+    //AudioManager notifies us whenever phone is receiving call or when headset is plugged out
     private AudioManager mAudioManager;
+
+    //Whether we have audio focus, if we don't have it, then we should'n play anything
     private boolean mAudioFocus = false;
 
-    /*private AsyncTask<Void, Void, Void> mCurrentPlayTask;*/
-
-
+    //List of songs as queue items that hold info necessary to start playing them
     private List<MediaSessionCompat.QueueItem> mQueue;
+
+    //Current playing position in queue
     private int mPosition = -1;
+
+    //Number of songs in queue
     private int mCount = 0;
+
+    //Current state of our queue/media session
     private int mState = PlaybackStateCompat.STATE_NONE;
 
-    //Source and parameter of currently used song list
+    //Source determines from what kind of list are we loading/playing songs (like from genres list, or albums list etc.)
     private String mQueueSource;
+
+    //Parameter (usually ID of some kind) determines (in conjuction with source) from which EXACTLY list are we loading/playing songs (genre with ID of 5, or album with id of 8)
     private String mQueueParameter;
 
+    //Media session object, used for communication with system and subscribing apps about media
     private MediaSessionCompat mMediaSession;
 
+    //Builder to help us update current state of queue/media session
     private PlaybackStateCompat.Builder mStateBuilder;
 
+    //Helper object that performs loading metadata info about our songs/media items and caching them
     private MusicProvider mMusicProvider;
 
+    //Whitelist validator that decides whether we allow app to see and browse media content or not
     private PackageValidator mPackageValidator;
 
 
-
-    private Handler mHandler;
-    private Runnable mSeekBarRunnable = new Runnable()
-    {
-        @Override
-        public void run()
-        {
-            if (mState == PlaybackStateCompat.STATE_PLAYING || mState == PlaybackStateCompat.STATE_PAUSED)
-            {
-                //Here we just update the playback position of the existing state
-                mStateBuilder = new PlaybackStateCompat.Builder( mMediaSession.getController().getPlaybackState() );
-                mStateBuilder.setState( mState, mPlayer.getCurrentPosition(), 1.0f );
-                mMediaSession.setPlaybackState( mStateBuilder.build() );
-
-                mHandler.postDelayed( mSeekBarRunnable, 1000 );
-            }
-        }
-    };
 
 
     //Used to detect if headphones get plugged out
@@ -151,28 +142,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
         }
     };
-
-    /*private BroadcastReceiver mMediaButtonReceiver = new BroadcastReceiver()
-    {
-        @Override
-        public void onReceive( Context context, Intent intent )
-        {
-            String action;
-
-            if (intent == null)
-                return;
-
-            action = intent.getAction();
-
-            if (action.equals( Intent.ACTION_MEDIA_BUTTON ))
-            {
-                MediaButtonReceiver.handleIntent( mMediaSession, intent );
-            }
-        }
-    };*/
-
-
-
 
 
 
@@ -226,7 +195,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
-        mHandler = new Handler();
 
         mPackageValidator = PackageValidator.getInstance();
 
@@ -237,6 +205,68 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         //Recreate last remembered state
         playLastStateAsync();
 
+    }
+
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.v(TAG,"onStartCommand()");
+
+        //Handle action from media button
+        MediaButtonReceiver.handleIntent( mMediaSession, intent );
+
+        //Get action from intent while checking for null
+        String action = intent == null ? null : intent.getAction();
+
+        if (action != null)
+        {
+            switch (action)
+            {
+                case NOTIFICATION_ACTION_CLOSE:
+                    stop();
+                    break;
+                case NOTIFICATION_ACTION_PREVIOUS:
+                    playPrevious();
+                    break;
+                case NOTIFICATION_ACTION_PLAY_PAUSE:
+                    if (mState == PlaybackStateCompat.STATE_PLAYING)
+                        pause();
+                    else
+                        resume();
+                    break;
+                case NOTIFICATION_ACTION_NEXT:
+                    playNext();
+                    break;
+            }
+        }
+
+        return START_NOT_STICKY;
+    }
+
+
+
+    @Override
+    public void onDestroy()
+    {
+        Log.v(TAG,"onDestroy()");
+
+        giveUpAudioFocus();
+        unregisterReceiver(mHeadsetChangeReceiver);
+        unregisterReceiver( mNoisyReceiver );
+        mMusicProvider.unregisterDataListener();
+        mMediaSession.release();
+
+        if (mPlayer != null)
+        {
+            mPlayer.stop();
+            mPlayer.release();
+            mPlayer = null;
+        }
+
+
+        StatsDbHelper.closeInstance();
+
+
+
+        super.onDestroy();
     }
 
 
@@ -259,37 +289,12 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     }
 
     @Override
-    public void onLoadChildren( @NonNull String parentId, @NonNull Result<List<MediaBrowserCompat.MediaItem>> result, @Nullable Bundle options )
+    public void onLoadChildren( @NonNull String parentId, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result, @Nullable Bundle options )
     {
-
-        String source;
-        String parameter;
-        String[] split;
-        List<MediaBrowserCompat.MediaItem> mediaItems;
-
-
-        split = parentId.split( "\\:" );
-
-        if ( split.length < 1 || split.length > 2 )
-            return;
-        else if ( split.length == 1 )
-        {
-            source = split[ 0 ];
-            parameter = null;
-        }
-        else
-        {
-            source = split[ 0 ];
-            parameter = split[ 1 ];
-        }
-
-        //Load media from music provider
-        //TODO - this to another thread, you use detach function of result
-        mediaItems = mMusicProvider.loadMedia( source, parameter );
-
-
-        result.sendResult( mediaItems );
+        loadChildrenAsync( parentId, result, options );
     }
+
+
 
 
     private final class MediaSessionCallback extends MediaSessionCompat.Callback
@@ -327,96 +332,18 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         }
 
         @Override
-        public void onPlayFromMediaId( String mediaId, Bundle extras )
+        public void onPlayFromMediaId(final String mediaId,final Bundle extras )
         {
-            if ( extras == null && mState == PlaybackStateCompat.STATE_NONE )
-                return;
-
-            //If we have something loaded try to find it using media id
-            if ( extras == null && mQueue != null && mCount > 0 && !mediaId.equals( "-1" ) )
-            {
-                for ( MediaSessionCompat.QueueItem queueItem : mQueue )
-                {
-                    if ( TextUtils.equals( queueItem.getDescription().getMediaId(), mediaId ) )
-                    {
-                        play( mQueue.indexOf( queueItem ) );
-                        return;
-                    }
-                }
-            }
-
-            if ( extras == null )
-                return;
-
-            String source;
-            String parameter;
-            String displayName;
-            int position;
-            int i;
-
-            source = extras.getString( Const.SOURCE_KEY, null );
-            parameter = extras.getString( Const.PARAMETER_KEY, null );
-            position = extras.getInt( Const.POSITION_KEY, -1 );
-            displayName = extras.getString( Const.DISPLAY_NAME, "" );
-
-            if ( source == null )
-                return;
-
-
-            //If none of the cases above worked then do full list loading
-            setQueue( source, parameter, displayName );
-
-            if (mQueue == null)
-                return;
-
-            Utils.toastShort( "Queue is " + displayName );
-
-            //Check if bundle provided correct play position
-            if ( !( position >= 0 && position < mQueue.size() && ( mediaId.equals( Const.UNKNOWN ) || mQueue.get( position ).getDescription().getMediaId().equals( mediaId ) ) ) )
-                position = -1;
-
-            //If position from bundle wasn't correct, try to find it here
-            if ( position == -1 && !mediaId.equals( Const.UNKNOWN ) )
-            {
-                for ( i = 0; i < mQueue.size(); i++ )
-                {
-                    if ( mQueue.get( i ).getDescription().getMediaId().equals( mediaId ) )
-                    {
-                        position = i;
-                        break;
-                    }
-                }
-            }
-
-
-            if ( position >= 0 )
-                play( position );
-
+            playFromMediaIDAsync( mediaId, extras );
         }
+
 
         @Override
         public void onSkipToQueueItem( long id )
         {
             super.onSkipToQueueItem( id );
 
-            int count;
-            int position;
-
-            //Abort if something is wrong
-            if ( mState == PlaybackStateCompat.STATE_NONE || mQueue == null || mQueue.isEmpty() )
-                return;
-
-            //ID is also used as the index(position) in queue
-            position = ( int ) id;
-            count = mQueue.size();
-
-            //Abort if position is wrong
-            if ( position < 0 || position >= count )
-                return;
-
-            updateState( PlaybackStateCompat.STATE_SKIPPING_TO_QUEUE_ITEM );
-
-            play( position );
+            skipToQueueItemAsync( id );
 
         }
 
@@ -425,19 +352,15 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         {
             super.onSeekTo( pos );
 
-            //Seek to position in ms if we have song loaded and update statewith new position
-            if ( mState == PlaybackStateCompat.STATE_PLAYING || mState == PlaybackStateCompat.STATE_PAUSED )
-            {
-                mPlayer.seekTo( ( int ) pos );
-                updateState( mState );
-            }
+            seekToAsync( pos );
         }
     }
 
 
 
+
     //Returns whether the source is different than one before
-    public boolean setQueue( @Nullable final String source, @Nullable final String parameter, @Nullable final String queueTitle)
+    public synchronized boolean setQueue( @Nullable final String source, @Nullable final String parameter, @Nullable final String queueTitle)
     {
         Log.v(TAG,"setQueue()");
 
@@ -561,7 +484,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
 
     //Updates media session PlaybackState
-    public void updateState(@PlaybackStateCompat.State int state)
+    public synchronized void updateState(@PlaybackStateCompat.State int state)
     {
         mState = state;
         mStateBuilder = new PlaybackStateCompat.Builder(  );
@@ -629,69 +552,239 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
 
 
+    private void loadChildrenAsync ( final @NonNull String parentId, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result, final @Nullable Bundle options )
+    {
+        Log.v(TAG, "loadChildrenAsync()");
 
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.v(TAG,"onStartCommand()");
-
-        //Handle action from media button
-        MediaButtonReceiver.handleIntent( mMediaSession, intent );
-
-        //Get action from intent while checking for null
-        String action = intent == null ? null : intent.getAction();
-
-        if (action != null)
+        new AsyncTask<Void, Void, Void>()
         {
-            switch (action)
+
+            @Override
+            protected void onPreExecute()
             {
-                case NOTIFICATION_ACTION_CLOSE:
-                    stop();
-                    break;
-                case NOTIFICATION_ACTION_PREVIOUS:
-                    playPrevious();
-                    break;
-                case NOTIFICATION_ACTION_PLAY_PAUSE:
-                    if (mState == PlaybackStateCompat.STATE_PLAYING)
-                        pause();
-                    else
-                        resume();
-                    break;
-                case NOTIFICATION_ACTION_NEXT:
-                    playNext();
-                    break;
-                /*case NOTIFICATION_ACTION_SWIPE:
-                    stopAndClearList();
-                    break;*/
+                result.detach();
+            }
+
+            @Override
+            protected Void doInBackground( Void... params )
+            {
+                loadChildren( parentId, result, options );
+
+                return null;
+            }
+        }.execute();
+    }
+
+    private synchronized void loadChildren( @NonNull String parentId, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result, @Nullable Bundle options )
+    {
+        final String source;
+        final String parameter;
+        String[] split;
+        List<MediaBrowserCompat.MediaItem> mediaItems;
+
+
+        split = Utils.splitParentString( parentId );
+
+
+        source = split[ 0 ];
+        parameter = split[ 1 ];
+
+        if (source == null)
+            return;
+
+
+        //Load media from music provider
+        mediaItems = mMusicProvider.loadMedia( source, parameter );
+
+        result.sendResult( mediaItems );
+    }
+
+    private void seekToAsync( final long pos )
+    {
+        Log.v(TAG, "seekToAsync()");
+
+        new AsyncTask<Void,Void,Void>()
+        {
+            @Override
+            protected Void doInBackground( Void... params )
+            {
+                seekTo( pos );
+
+                return null;
+            }
+        }.execute(  );
+    }
+
+    private synchronized void seekTo ( long pos )
+    {
+        //Seek to position in ms if we have song loaded and update state with new position
+        if ( mState == PlaybackStateCompat.STATE_PLAYING || mState == PlaybackStateCompat.STATE_PAUSED )
+        {
+            mPlayer.seekTo( ( int ) pos );
+            updateState( mState );
+        }
+    }
+
+    private void skipToQueueItemAsync( final long id )
+    {
+        Log.v(TAG, "skipToQueueItemAsync()");
+
+        new AsyncTask<Void,Void,Void>()
+        {
+            @Override
+            protected Void doInBackground( Void... params )
+            {
+                skipToQueueItem( id );
+
+                return null;
+            }
+        }.execute(  );
+    }
+
+    private synchronized void skipToQueueItem ( long id )
+    {
+        int count;
+        int position;
+
+        //Abort if something is wrong
+        if ( mState == PlaybackStateCompat.STATE_NONE || mQueue == null || mQueue.isEmpty() )
+            return;
+
+        //ID is also used as the index(position) in queue
+        position = ( int ) id;
+        count = mQueue.size();
+
+        //Abort if position is wrong
+        if ( position < 0 || position >= count )
+            return;
+
+        updateState( PlaybackStateCompat.STATE_SKIPPING_TO_QUEUE_ITEM );
+
+        play( position );
+    }
+
+    private void playFromMediaIDAsync(final String mediaID, final Bundle extras)
+    {
+        Log.v(TAG, "playFromMediaIDAsync()");
+
+        new AsyncTask<Void,Void,Void>()
+        {
+            @Override
+            protected Void doInBackground( Void... params )
+            {
+                playFromMediaID( mediaID, extras );
+
+                return null;
+            }
+
+        }.execute();
+    }
+
+    private synchronized void playFromMediaID(String mediaID, Bundle extras)
+    {
+        String source;
+        String parameter;
+        String displayName;
+        int position;
+
+        if ( extras == null )
+        {
+
+            //If something is loaded, try to play it using mediaID
+            tryPlayMediaID( mediaID );
+
+            return;
+        }
+
+
+        source = extras.getString( Const.SOURCE_KEY, null );
+        parameter = extras.getString( Const.PARAMETER_KEY, null );
+        position = extras.getInt( Const.POSITION_KEY, -1 );
+        displayName = extras.getString( Const.DISPLAY_NAME, "" );
+
+        if ( source == null )
+            return;
+
+        //If none of the cases above worked then do full list loading
+        setQueue( source, parameter, displayName );
+
+        if (mQueue == null)
+            return;
+
+
+        //Check if bundle provided correct play position, if not set it to -1
+        if ( !isPositionOK( mQueue, position, mediaID ) )
+            position = -1;
+
+        //If position from bundle wasn't correct, try to find it here
+        if (position == -1)
+            position = findPosition( mQueue, mediaID );
+
+
+        if ( position >= 0 )
+            play( position );
+    }
+
+    private synchronized boolean tryPlayMediaID(String mediaID)
+    {
+
+        int position;
+
+        if (mState == PlaybackStateCompat.STATE_NONE || mediaID == null)
+            return false;
+
+        position = findPosition( mQueue, mediaID );
+
+        if (position >= 0)
+        {
+            //We found something to play
+            play( position );
+            return true;
+        }
+
+
+        //We can't play anything
+        return false;
+    }
+
+    //Checks if position in queue matches with target media ID
+    private boolean isPositionOK( List<MediaSessionCompat.QueueItem> queue, int targetPosition, String targetID )
+    {
+        String mediaID;
+
+        if (queue == null || targetPosition < 0 || targetPosition > queue.size() || targetID == null || targetID.equals( Const.UNKNOWN ))
+            return false;
+
+        mediaID = queue.get( targetPosition ).getDescription().getMediaId();
+
+        if (mediaID == null)
+            return false;
+
+        //Return true if the ID's match, it means the position is ok
+        return mediaID.equals( targetID );
+    }
+
+    private int findPosition( List<MediaSessionCompat.QueueItem> queue, String targetID )
+    {
+        if (queue == null || targetID == null || targetID.equals( Const.UNKNOWN ))
+            return -1;
+
+        String mediaID;
+
+        for ( int i = 0; i < queue.size(); i++ )
+        {
+            mediaID = queue.get( i ).getDescription().getMediaId();
+
+            if ( TextUtils.equals( mediaID, targetID ) )
+            {
+                //We found position, return it
+                return i;
             }
         }
 
-        return START_NOT_STICKY;
-    }
+        //We didn't find position
+        return -1;
 
-
-
-    @Override
-    public void onDestroy() {
-        Log.v(TAG,"onDestroy()");
-
-        giveUpAudioFocus();
-        unregisterReceiver(mHeadsetChangeReceiver);
-        unregisterReceiver( mNoisyReceiver );
-        mMusicProvider.unregisterDataListener();
-        mMediaSession.release();
-
-        if (mPlayer != null)
-        {
-            mPlayer.stop();
-            mPlayer.release();
-            mPlayer = null;
-        }
-
-
-        StatsDbHelper.closeInstance();
-
-
-
-        super.onDestroy();
     }
 
 
@@ -714,6 +807,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
         if (source != null)
         {
+            //This method is called async so no need to wrap it in async task
             setQueue( source, parameter, queueTitle );
             return position;
         }
@@ -723,6 +817,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     //Try to get last playback state (if there is none, nothing will happen)
     public void playLastStateAsync()
     {
+        Log.v(TAG, "playLastStateAsync()");
+
         new AsyncTask<Void, Void, Integer>()
         {
             @Override
@@ -741,7 +837,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         }.execute();
     }
 
-    private void tryToGetAudioFocus()
+    private synchronized void tryToGetAudioFocus()
     {
         if (!mAudioFocus)
         {
@@ -752,7 +848,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         }
     }
 
-    private void giveUpAudioFocus()
+    private synchronized void giveUpAudioFocus()
     {
         if (mAudioFocus)
         {
@@ -764,7 +860,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     }
 
     @Override
-    public void onAudioFocusChange(int focusChange)
+    public synchronized void onAudioFocusChange(int focusChange)
     {
         if (focusChange <= 0 && mState == PlaybackStateCompat.STATE_PLAYING)
         {
@@ -772,7 +868,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         }
     }
 
-    public void play(int position)
+    public synchronized void play(int position)
     {
         Log.v( TAG, "play() position: " + position );
 
@@ -815,7 +911,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
 
 
-        Utils.toastShort(mediaFileUri.toString());
+        //Utils.toastShort(mediaFileUri.toString());
 
         try
         {
@@ -835,8 +931,22 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     }
 
+    public void playAsync(final int position)
+    {
+        new AsyncTask<Void,Void,Void>()
+        {
+            @Override
+            protected Void doInBackground( Void... params )
+            {
+                play(position);
+
+                return null;
+            }
+        }.execute();
+    }
+
     @Override
-    public void onPrepared( MediaPlayer mp )
+    public synchronized void onPrepared( MediaPlayer mp )
     {
         Log.v(TAG,"onPrepared()");
 
@@ -870,7 +980,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     //This is called when song is finished playing
     @Override
-    public void onCompletion(MediaPlayer mp) {
+    public synchronized void onCompletion(MediaPlayer mp) {
         Log.v(TAG,"onCompletion()");
 
         //Continue to next song only if we are set to be playing
@@ -880,7 +990,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         }
     }
 
-    public void pause()
+    public synchronized void pause()
     {
         if (mPlayer != null && ( mState == PlaybackStateCompat.STATE_PLAYING))
         {
@@ -891,7 +1001,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         }
     }
 
-    public void resume()
+    public synchronized void resume()
     {
         if (mPlayer != null && (mPosition != -1 || mState == PlaybackStateCompat.STATE_PAUSED))
         {
@@ -909,7 +1019,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
 
 
-    public void playNext()
+    public synchronized void playNext()
     {
         //If the player is not even started then just dont do anything
         if (mPosition == -1 ||  mState == PlaybackStateCompat.STATE_NONE || mState == PlaybackStateCompat.STATE_STOPPED)
@@ -924,7 +1034,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             if (shouldRepeatPlaylist())
             {
                 //If we are repeating playlist then start from the begining
-                play(0);
+                playAsync(0);
             }
             else
             {
@@ -934,11 +1044,11 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         else
         {
             //Play next song
-            play(mPosition + 1);
+            playAsync(mPosition + 1);
         }
     }
 
-    public void playPrevious()
+    public synchronized void playPrevious()
     {
         //If the player is not even started then just don't do anything
         if (mPosition == -1 || mPosition == 0 || mState == PlaybackStateCompat.STATE_NONE || mState == PlaybackStateCompat.STATE_STOPPED)
@@ -948,11 +1058,11 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         //updateState( PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS);
 
         //Play previous song
-        play(mPosition - 1);
+        playAsync(mPosition - 1);
 
     }
 
-    public void stop()
+    public synchronized void stop()
     {
 
         if (mPlayer != null)
@@ -975,7 +1085,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     }
 
     //Stop playing and clear list
-    public void stopAndClearList()
+    public synchronized void stopAndClearList()
     {
         stop();
         mCount = 0;
@@ -986,7 +1096,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     }
 
-    public void updateQueueLastPositionAsync()
+    public synchronized void updateQueueLastPositionAsync()
     {
         //Start new task to update last play position for this source
         new AsyncTask<Void,Void,Void>()
@@ -1008,7 +1118,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     }
 
 
-    public void showNotification( final boolean playIcon, final boolean ticker)
+    public synchronized void showNotification( final boolean playIcon, final boolean ticker)
     {
         final NotificationManager       notificationManager;
         final MediaSessionCompat.Token  sessionToken;           //For purposes of keeping all media session calls on same thread

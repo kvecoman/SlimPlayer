@@ -94,6 +94,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
     private void initQueue()
     {
+        //TODO - sometimes calling this on screen rotation can crash the app
 
         if ( !isThisQueueLoaded() )
             return;
@@ -103,23 +104,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
     }
 
-    /*private MediaBrowserCompat.SubscriptionCallback mSubscriptionCallbacks = new MediaBrowserCompat.SubscriptionCallback()
-    {
-        @Override
-        public void onChildrenLoaded( @NonNull String parentId, List<MediaBrowserCompat.MediaItem> children )
-        {
-            super.onChildrenLoaded( parentId, children );
-            onChildrenLoaded( parentId, children, null );
-        }
 
-        @Override
-        public void onChildrenLoaded( @NonNull String parentId, List<MediaBrowserCompat.MediaItem> children, @NonNull Bundle options )
-        {
-            super.onChildrenLoaded( parentId, children, options );
-
-            //We get this callback only if we are playing from file
-        }
-    };*/
 
 
     private MediaControllerCompat.Callback mMediaControllerCallbacks = new MediaControllerCompat.Callback()

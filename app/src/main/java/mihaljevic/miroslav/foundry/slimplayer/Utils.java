@@ -393,6 +393,7 @@ public final class Utils {
 
     public static void toastShort(String text)
     {
+
         Toast.makeText(SlimPlayerApplication.getInstance(),text,Toast.LENGTH_SHORT).show();
     }
 
@@ -415,7 +416,7 @@ public final class Utils {
     }
 
 
-
+    //Creates joined string with source and parameter
     public static String createParentString( String source, String parameter )
     {
         if (source == null || source.length() == 0)
@@ -425,6 +426,35 @@ public final class Utils {
             return source;
 
         return source + ":" + parameter;
+    }
+
+    //Splits parent string into source and parameter
+    public static String[] splitParentString(String parentString)
+    {
+        String [] result = new String[2];
+        String [] split;
+        String source;
+        String parameter;
+
+        split = parentString.split( "\\:" );
+
+        if ( split.length < 1 || split.length > 2 )
+            return result;
+        else if ( split.length == 1 )
+        {
+            source = split[ 0 ];
+            parameter = null;
+        }
+        else
+        {
+            source = split[ 0 ];
+            parameter = split[ 1 ];
+        }
+
+        result[0] = source;
+        result[1] = parameter;
+
+        return result;
     }
 
 

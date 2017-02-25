@@ -17,6 +17,8 @@ import java.util.Map;
  * Created by miroslav on 05.02.17..
  *
  * Inspired by package validator from MediaBrowserService sample
+ *
+ * This class is thread-safe
  */
 
 
@@ -29,7 +31,7 @@ public class PackageValidator
 
     private static PackageValidator sInstance;
 
-    public static PackageValidator getInstance()
+    public synchronized static PackageValidator getInstance()
     {
         if (sInstance == null)
             sInstance = new PackageValidator();
@@ -46,7 +48,7 @@ public class PackageValidator
     }
 
 
-    private void readCertificates()
+    private synchronized void readCertificates()
     {
         XmlResourceParser xmlParser;
         SlimPlayerApplication app;
@@ -91,7 +93,7 @@ public class PackageValidator
 
 
 
-    public boolean validate(String callingPackage, int callingUID)
+    public synchronized boolean validate(String callingPackage, int callingUID)
     {
 
         PackageId storedPackageId;
@@ -146,7 +148,7 @@ public class PackageValidator
 
 
 
-    class PackageId
+    private class PackageId
     {
         String name;
         String packageName;

@@ -38,8 +38,9 @@ import junit.framework.Test;
 //TODO - music playback might need its own thread not just AsyncTask
 //TODO - sometimes it can happen that Stats.db database is not open at startup, definitively need to check that, it happens at getItemCount()
 //TODO - load all songs from folder in queue when playing from file???
+//TODO - if playing last song fails, don't do it next time (some sort of pair in preferences that must be completed)
 
-
+//TODO - continue - MediaPlayerService is synchronized and using AsyncTask but see if it can do more of parallel tasks and whether the syncs are killing performance, also Async other parts of app
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener
 {
 
@@ -103,7 +104,7 @@ public class MainActivity extends SelectSongsActivity implements TextView.OnClic
     {
         super.onSaveInstanceState(outState);
 
-        outState.putInt(SCREEN_POSITION_KEY,mPager.getCurrentItem());
+        outState.putInt(SCREEN_POSITION_KEY, mPager.getCurrentItem());
     }
 
     @Override

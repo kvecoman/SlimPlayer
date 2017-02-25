@@ -40,7 +40,7 @@ import junit.framework.Test;
 //TODO - load all songs from folder in queue when playing from file???
 //TODO - if playing last song fails, don't do it next time (some sort of pair in preferences that must be completed)
 
-//TODO - continue - MediaPlayerService is synchronized and using AsyncTask but see if it can do more of parallel tasks and whether the syncs are killing performance, also Async other parts of app
+//TODO - continue - MediaPlayerService is now almost completely on background thread with all runables and stuff, continue with asyncing the app
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener
 {
 

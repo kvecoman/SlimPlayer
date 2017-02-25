@@ -35,7 +35,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 
 public class MediaPlayerService extends MediaBrowserServiceCompat implements MediaPlayer.OnCompletionListener, MediaPlayer.OnPreparedListener, AudioManager.OnAudioFocusChangeListener {
@@ -99,6 +101,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     //Whitelist validator that decides whether we allow app to see and browse media content or not
     private PackageValidator mPackageValidator;
 
+    private ExecutorService mExecutorService;
+
 
 
 
@@ -119,7 +123,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             {
                 if (mState == PlaybackStateCompat.STATE_PLAYING)
                 {
-                    pause();
+                    pauseRunnable();
                 }
             }
         }
@@ -136,7 +140,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             {
                 if (mState == PlaybackStateCompat.STATE_PLAYING)
                 {
-                    pause();
+                    pauseRunnable();
                 }
             }
 
@@ -198,6 +202,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
         mPackageValidator = PackageValidator.getInstance();
 
+        mExecutorService = Executors.newSingleThreadExecutor();
+
+
         //Register to detect headphones in/out
         registerReceiver( mHeadsetChangeReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG ) );
         registerReceiver( mNoisyReceiver, new IntentFilter( AudioManager.ACTION_AUDIO_BECOMING_NOISY ) );
@@ -221,19 +228,19 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             switch (action)
             {
                 case NOTIFICATION_ACTION_CLOSE:
-                    stop();
+                    stopRunnable();
                     break;
                 case NOTIFICATION_ACTION_PREVIOUS:
-                    playPrevious();
+                    playPreviousRunnable();
                     break;
                 case NOTIFICATION_ACTION_PLAY_PAUSE:
                     if (mState == PlaybackStateCompat.STATE_PLAYING)
-                        pause();
+                        pauseRunnable();
                     else
-                        resume();
+                        resumeRunnable();
                     break;
                 case NOTIFICATION_ACTION_NEXT:
-                    playNext();
+                    playNextRunnable();
                     break;
             }
         }
@@ -275,12 +282,14 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     @Override
     public BrowserRoot onGetRoot( @NonNull String clientPackageName, int clientUid, @Nullable Bundle rootHints )
     {
+        //This method doesn't have runnable version because it is fast, and also complicated to make it to runnable, so no need
 
         if ( mPackageValidator.validate( clientPackageName, clientUid ) )
             return new BrowserRoot( MEDIA_ROOT_ID, rootHints );
 
         return null;
     }
+
 
     @Override
     public void onLoadChildren( @NonNull String parentId, @NonNull Result<List<MediaBrowserCompat.MediaItem>> result )
@@ -291,7 +300,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     @Override
     public void onLoadChildren( @NonNull String parentId, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result, @Nullable Bundle options )
     {
-        loadChildrenAsync( parentId, result, options );
+        loadChildrenRunnable( parentId, result, options );
     }
 
 
@@ -304,7 +313,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         {
             super.onPlay();
 
-            resume();
+            resumeRunnable();
         }
 
         @Override
@@ -312,7 +321,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         {
             super.onPause();
 
-            pause();
+            pauseRunnable();
         }
 
         @Override
@@ -320,7 +329,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         {
             super.onSkipToNext();
 
-            playNext();
+            playNextRunnable();
         }
 
         @Override
@@ -328,13 +337,13 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         {
             super.onSkipToPrevious();
 
-            playPrevious();
+            playPreviousRunnable();
         }
 
         @Override
         public void onPlayFromMediaId(final String mediaId,final Bundle extras )
         {
-            playFromMediaIDAsync( mediaId, extras );
+            playFromMediaIDRunnable( mediaId, extras );
         }
 
 
@@ -343,7 +352,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         {
             super.onSkipToQueueItem( id );
 
-            skipToQueueItemAsync( id );
+            skipToQueueItemRunnable( id );
 
         }
 
@@ -352,7 +361,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         {
             super.onSeekTo( pos );
 
-            seekToAsync( pos );
+            seekToRunnable( pos );
         }
     }
 
@@ -551,8 +560,21 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     }
 
 
+    private void loadChildrenRunnable( final @NonNull String parentId, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result, final @Nullable Bundle options )
+    {
+        result.detach();
 
-    private void loadChildrenAsync ( final @NonNull String parentId, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result, final @Nullable Bundle options )
+        mExecutorService.submit( new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                loadChildren( parentId, result, options );
+            }
+        } );
+    }
+
+    /*private void loadChildrenAsync ( final @NonNull String parentId, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result, final @Nullable Bundle options )
     {
         Log.v(TAG, "loadChildrenAsync()");
 
@@ -573,7 +595,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                 return null;
             }
         }.execute();
-    }
+    }*/
 
     private synchronized void loadChildren( @NonNull String parentId, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result, @Nullable Bundle options )
     {
@@ -599,7 +621,19 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         result.sendResult( mediaItems );
     }
 
-    private void seekToAsync( final long pos )
+    private void seekToRunnable( final long pos )
+    {
+        mExecutorService.submit( new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                seekTo( pos );
+            }
+        } );
+    }
+
+   /* private void seekToAsync( final long pos )
     {
         Log.v(TAG, "seekToAsync()");
 
@@ -613,7 +647,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                 return null;
             }
         }.execute(  );
-    }
+    }*/
 
     private synchronized void seekTo ( long pos )
     {
@@ -625,7 +659,19 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         }
     }
 
-    private void skipToQueueItemAsync( final long id )
+    private void skipToQueueItemRunnable( final long id )
+    {
+        mExecutorService.submit( new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                skipToQueueItem( id );
+            }
+        } );
+    }
+
+    /*private void skipToQueueItemAsync( final long id )
     {
         Log.v(TAG, "skipToQueueItemAsync()");
 
@@ -639,7 +685,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                 return null;
             }
         }.execute(  );
-    }
+    }*/
 
     private synchronized void skipToQueueItem ( long id )
     {
@@ -663,7 +709,19 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         play( position );
     }
 
-    private void playFromMediaIDAsync(final String mediaID, final Bundle extras)
+    private void playFromMediaIDRunnable(final String mediaID, final Bundle extras)
+    {
+        mExecutorService.submit( new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                playFromMediaID( mediaID, extras );
+            }
+        } );
+    }
+
+    /*private void playFromMediaIDAsync(final String mediaID, final Bundle extras)
     {
         Log.v(TAG, "playFromMediaIDAsync()");
 
@@ -678,7 +736,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             }
 
         }.execute();
-    }
+    }*/
 
     private synchronized void playFromMediaID(String mediaID, Bundle extras)
     {
@@ -864,7 +922,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     {
         if (focusChange <= 0 && mState == PlaybackStateCompat.STATE_PLAYING)
         {
-            pause();
+            pauseRunnable();
         }
     }
 
@@ -931,7 +989,20 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     }
 
-    public void playAsync(final int position)
+    public void playRunnable(final int position)
+    {
+        mExecutorService.submit( new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                play( position );
+            }
+        } );
+    }
+
+
+    /*public void playAsync(final int position)
     {
         new AsyncTask<Void,Void,Void>()
         {
@@ -943,7 +1014,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                 return null;
             }
         }.execute();
-    }
+    }*/
 
     @Override
     public synchronized void onPrepared( MediaPlayer mp )
@@ -986,8 +1057,20 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         //Continue to next song only if we are set to be playing
         if (mState == PlaybackStateCompat.STATE_PLAYING)
         {
-            MediaPlayerService.this.playNext();
+            MediaPlayerService.this.playNextRunnable();
         }
+    }
+
+    private void pauseRunnable()
+    {
+        mExecutorService.submit( new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                pause();
+            }
+        } );
     }
 
     public synchronized void pause()
@@ -999,6 +1082,18 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             updateState( PlaybackStateCompat.STATE_PAUSED );
             showNotification(true,false);
         }
+    }
+
+    private void resumeRunnable()
+    {
+        mExecutorService.submit( new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                resume();
+            }
+        } );
     }
 
     public synchronized void resume()
@@ -1018,6 +1113,17 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     }
 
 
+    private void playNextRunnable()
+    {
+        mExecutorService.submit( new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                playNext();
+            }
+        } );
+    }
 
     public synchronized void playNext()
     {
@@ -1034,7 +1140,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             if (shouldRepeatPlaylist())
             {
                 //If we are repeating playlist then start from the begining
-                playAsync(0);
+                playRunnable(0);
             }
             else
             {
@@ -1044,8 +1150,20 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         else
         {
             //Play next song
-            playAsync(mPosition + 1);
+            playRunnable(mPosition + 1);
         }
+    }
+
+    private void playPreviousRunnable()
+    {
+        mExecutorService.submit( new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                playPrevious();
+            }
+        } );
     }
 
     public synchronized void playPrevious()
@@ -1058,8 +1176,20 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         //updateState( PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS);
 
         //Play previous song
-        playAsync(mPosition - 1);
+        playRunnable(mPosition - 1);
 
+    }
+
+    private void stopRunnable()
+    {
+        mExecutorService.submit( new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                stop();
+            }
+        } );
     }
 
     public synchronized void stop()
@@ -1082,6 +1212,18 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
             mPlayer.reset();
         }
+    }
+
+    private void stopAndClearListRunnable()
+    {
+        mExecutorService.submit( new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                stopAndClearList();
+            }
+        } );
     }
 
     //Stop playing and clear list

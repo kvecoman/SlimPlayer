@@ -24,26 +24,26 @@ public class NowPlayingPagerAdapter extends FragmentStatePagerAdapter {
     private List<MediaSessionCompat.QueueItem> mQueue;
 
 
-    public NowPlayingPagerAdapter(FragmentManager fragmentManager, List<MediaSessionCompat.QueueItem> queue)
+    public NowPlayingPagerAdapter( FragmentManager fragmentManager, List<MediaSessionCompat.QueueItem> queue )
     {
-        super(fragmentManager);
+        super( fragmentManager );
 
         mQueue = queue;
 
-        if (mQueue != null)
+        if ( mQueue != null )
             mCount = mQueue.size();
 
     }
 
     @Override
     public Fragment getItem(int position) {
-        Fragment fragment;
-        Bundle args;
+        Fragment            fragment;
+        Bundle              args;
         MediaMetadataCompat metadata;
 
 
         fragment = new NowPlayingFragment();
-        args = new Bundle(  );
+        args    = new Bundle(  );
 
         metadata = MusicProvider.getInstance().getMetadata( mQueue.get( position ).getDescription().getMediaId() );
 

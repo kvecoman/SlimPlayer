@@ -25,6 +25,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.TreeMap;
@@ -154,38 +155,69 @@ public final class Utils {
     }
 
     //Returns number of inserted items
-    public static int insertIntoPlaylist( List<String> IDs, long playlistId)
+    public static int insertIntoPlaylist( List<String> songIDs, long playlistId)
     {
-        //long [] IDs = data.getLongArrayExtra(PlaylistSongsFragment.SELECTED_SONGS_KEY);
-        //long playlistId = ;
-        Uri playlistUri = MediaStore.Audio.Playlists.Members.getContentUri("external",playlistId);
-        List<ContentValues> valuesList = new ArrayList<>();
 
-        Cursor playlistCursor = sAppContext.getContentResolver().query(playlistUri,new String[]{MediaStore.Audio.Playlists.Members._ID, MediaStore.Audio.Playlists.Members.AUDIO_ID},null,null,null);
-        int songCount = playlistCursor.getCount();
+        Uri             playlistUri;
+        String []       playlistCursorProjection;
+        Cursor          playlistCursor;
+        int             existingSongsCount;
+        long            songID;
+        ContentResolver resolver;
+        ContentValues   singleValues;
+        int             valuesCount;
+        ContentValues[] valuesArray;
+        ContentValues[] trimmedValuesArray;
+        int             addedSongsCount;
 
-        ContentValues values;
 
-        long id;
-        for(String audio_id : IDs)
+        if (songIDs == null || songIDs.size() == 0 || playlistId < 0)
+            return 0;
+
+
+        resolver = sAppContext.getContentResolver();
+        playlistUri = MediaStore.Audio.Playlists.Members.getContentUri("external",playlistId);
+        playlistCursorProjection = new String[] {   MediaStore.Audio.Playlists.Members._ID,
+                                                    MediaStore.Audio.Playlists.Members.AUDIO_ID };
+        playlistCursor = resolver.query(playlistUri,
+                                        playlistCursorProjection,
+                                        null,
+                                        null,
+                                        null);
+
+        if ( playlistCursor == null )
+            return 0;
+
+        existingSongsCount = playlistCursor.getCount();
+
+        valuesArray = new ContentValues[songIDs.size()];
+        valuesCount = 0;
+
+        for(String songIDStr : songIDs)
         {
-            id = Long.parseLong(audio_id);
-            if (!Utils.playlistCheckForDuplicate(playlistCursor,id)) {
+            songID = Long.parseLong(songIDStr);
 
-                values = new ContentValues();
-                values.put(MediaStore.Audio.Playlists.Members.AUDIO_ID, id);
-                values.put(MediaStore.Audio.Playlists.Members.PLAY_ORDER, valuesList.size() + songCount);
-                valuesList.add(values);
+            if ( !Utils.playlistCheckForDuplicate( playlistCursor, songID ) )
+            {
+                //If we don't have this ID in playlist then prepare it to be added
+
+                singleValues = new ContentValues();
+                singleValues.put(MediaStore.Audio.Playlists.Members.AUDIO_ID, songID);
+                singleValues.put(MediaStore.Audio.Playlists.Members.PLAY_ORDER, valuesCount + existingSongsCount);
+
+                valuesArray[valuesCount] = singleValues;
+                valuesCount++;
             }
         }
 
-        ContentResolver resolver = sAppContext.getContentResolver();
-        ContentValues[] valuesArray = new ContentValues[valuesList.size()];
-        valuesList.toArray(valuesArray);
-        int result = resolver.bulkInsert(playlistUri, valuesArray);
+
+        trimmedValuesArray = Arrays.copyOf( valuesArray, valuesCount );
+
+        addedSongsCount = resolver.bulkInsert(playlistUri, trimmedValuesArray);
+
         resolver.notifyChange(playlistUri,null);
 
-        return result;
+        return addedSongsCount;
 
     }
 
@@ -524,6 +556,20 @@ public final class Utils {
                         .setNegativeButton( activity.getString( R.string.Cancel ), cancelListener )
                         .create()
                         .show();
+    }
+
+    public static <T> boolean existsInArray(T[] array, T target)
+    {
+        if (array == null || array.length == 0 || target == null)
+            return false;
+
+        for (T object : array)
+        {
+            if ( object.equals( target ) )
+                return true;
+        }
+
+        return false;
     }
 
 

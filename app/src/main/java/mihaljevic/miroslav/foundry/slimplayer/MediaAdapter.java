@@ -36,28 +36,34 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.ViewHolder> 
 
     public MediaAdapter(Context context, List<MediaBrowserCompat.MediaItem> mediaItemList, int layoutId, @Nullable View.OnClickListener listener, @Nullable SparseBooleanArray selectedItemsArray)
     {
-        mContext = context;
-        mMediaItemsList = mediaItemList;
-        mLayoutId = layoutId;
-        mOnClickListener = listener;
-        mSelectedItems = selectedItemsArray;
+        mContext            = context;
+        mMediaItemsList     = mediaItemList;
+        mLayoutId           = layoutId;
+        mOnClickListener    = listener;
+        mSelectedItems      = selectedItemsArray;
     }
 
     @Override
     public MediaAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         //Inflate and return row view
-        View v = LayoutInflater.from(mContext).inflate(mLayoutId,parent,false);
-        return new MediaAdapter.ViewHolder(v, mOnClickListener);
+        View            view;
+        LayoutInflater  inflater;
+
+        inflater    = LayoutInflater.from(mContext);
+        view        = inflater.inflate( mLayoutId, parent, false );
+
+        return new MediaAdapter.ViewHolder( view, mOnClickListener );
     }
 
     @Override
     public void onBindViewHolder(MediaAdapter.ViewHolder holder, int position) {
-        String text;
-        TextView textView;
+        String          text;
+        TextView        textView;
+        CharSequence    mediaTitle;
 
-
-        text = mMediaItemsList.get(position).getDescription().getTitle().toString();
-        textView = (TextView)holder.findViewById(R.id.title);
+        mediaTitle  = mMediaItemsList.get(position).getDescription().getTitle();
+        text        = mediaTitle == null ? "" : mediaTitle.toString();
+        textView    = ( TextView )holder.findViewById( R.id.title );
 
         textView.setText( text );
 
@@ -76,7 +82,8 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.ViewHolder> 
     }
 
     @Override
-    public int getItemCount() {
+    public int getItemCount()
+    {
         if (mMediaItemsList == null)
             return 0;
 

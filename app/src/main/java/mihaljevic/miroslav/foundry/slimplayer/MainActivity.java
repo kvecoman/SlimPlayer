@@ -39,8 +39,9 @@ import junit.framework.Test;
 //TODO - sometimes it can happen that Stats.db database is not open at startup, definitively need to check that, it happens at getItemCount()
 //TODO - load all songs from folder in queue when playing from file???
 //TODO - if playing last song fails, don't do it next time (some sort of pair in preferences that must be completed)
+//TODO - test all subscribing connection for case when connection fails or it suspends
 
-//TODO - continue - MediaPlayerService is now almost completely on background thread with all runables and stuff, continue with asyncing the app
+//TODO - continue refactoring and asyncing from SettingsActivity and forward
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener
 {
 

@@ -28,100 +28,94 @@ public abstract class SelectSongsActivity extends BackHandledFragmentActivity {
     public static final String SELECTING_FINISHED_KEY = "selecting_finished";
 
     //Are we selecting songs for playlists
-    protected boolean mSelectSongsForResult;
-    protected Set<String> mSelectedSongIdsList;
+    protected boolean       mSelectSongsForResult;
+    protected Set<String>   mSelectedSongIdsList;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
 
         //Check if we have started this activity only to select songs
         if ( TextUtils.equals(getIntent().getAction(),PlaylistSongsRecyclerFragment.ACTION_SELECT_SONGS))
         {
-            mSelectSongsForResult = true;
-            mSelectedSongIdsList = new HashSet<>();
+            mSelectSongsForResult   = true;
+            mSelectedSongIdsList    = new HashSet<>();
         }
     }
 
     @Override
-    protected void onStart() {
+    protected void onStart()
+    {
         super.onStart();
-
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+    public boolean onCreateOptionsMenu( Menu menu )
+    {
 
-        if (mSelectSongsForResult)
+        if ( mSelectSongsForResult )
         {
             //If we are selecting songs then add special options for it
-            getMenuInflater().inflate(R.menu.select_songs_menu,menu);
+            getMenuInflater().inflate( R.menu.select_songs_menu, menu );
         }
 
-        return super.onCreateOptionsMenu(menu);
+        return super.onCreateOptionsMenu( menu );
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected( MenuItem item ) {
 
-        int id;
-        Intent intent;
-        int request_code;
+        int     id;
+        Intent  intent;
+        int     requestCode;
 
-        id = item.getItemId();
-        intent = new Intent();
-        request_code = getIntent().getIntExtra(SlimActivity.REQUEST_CODE_KEY, SELECT_SONGS_REQUEST_2);
+        id              = item.getItemId();
+        intent          = new Intent();
+        requestCode     = getIntent().getIntExtra( SlimActivity.REQUEST_CODE_KEY, SELECT_SONGS_REQUEST_2 );
 
-        switch (id)
+        switch ( id )
         {
             //If the user user is finished with selecting songs
             case R.id.accept_selected_songs:
 
 
-                intent.putStringArrayListExtra(SELECTED_SONGS_KEY,new ArrayList<>(mSelectedSongIdsList));
-                intent.putExtra(SelectSongsActivity.SELECTING_FINISHED_KEY,true);
+                intent.putStringArrayListExtra  ( SELECTED_SONGS_KEY, new ArrayList<>( mSelectedSongIdsList ) );
+                intent.putExtra                 ( SelectSongsActivity.SELECTING_FINISHED_KEY, true);
 
-                setResult(request_code,intent);
+                setResult( requestCode, intent );
                 finish();
 
                 break;
             case R.id.cancel_selected_songs:
 
                 //We send signal that we want to finish whole proccess of selecting songs
-                intent.putExtra(SelectSongsActivity.SELECTING_FINISHED_KEY,true);
-                setResult(request_code, intent);
+                intent.putExtra ( SelectSongsActivity.SELECTING_FINISHED_KEY, true );
+                setResult       ( requestCode, intent);
                 finish();
                 break;
         }
 
-        return super.onOptionsItemSelected(item);
+        return super.onOptionsItemSelected( item );
     }
 
     @Override
     public void onBackPressed()
     {
 
-        //Code to get song id's even if
-        /*if (mSelectSongsForResult)
-        {
-            //If user pressed back but has songs selected then we will set that as result
-            if (mSelectedSongIdsList.size() > 0)
-            {
-                Intent intent =     new Intent();
-                int result_code =   getIntent().getIntExtra( SlimActivity.REQUEST_CODE_KEY, SELECT_SONGS_REQUEST_2 );
-
-                intent.putStringArrayListExtra( SELECTED_SONGS_KEY, new ArrayList<>( mSelectedSongIdsList ) );
-
-                setResult( result_code, intent );
-            }
-        }*/
 
         super.onBackPressed();
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        super.onActivityResult( requestCode, resultCode, data );
+
+        Intent          intent;
+        int             currentRequestCode;
+        List<String>    songIDs;
+
 
         //If we canceled playlist selecting just finish the whole thing
         if (requestCode == PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2
@@ -131,26 +125,27 @@ public abstract class SelectSongsActivity extends BackHandledFragmentActivity {
             finish();
 
         //REQUEST CODE 2 case - we are still selecting but we just take IDs that were selected in forResult activity
-        if (data != null && requestCode == PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2 && data.hasExtra(PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY))
+        if ( data != null && requestCode == PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2 && data.hasExtra( PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY ) )
         {
 
             //Add all selected IDs to existing song ID collection
-            List<String> IDs = data.getStringArrayListExtra(PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY);
-            for (String id : IDs)
+            songIDs = data.getStringArrayListExtra(PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY);
+
+            for (String songID : songIDs)
             {
-                mSelectedSongIdsList.add(id);
+                mSelectedSongIdsList.add( songID );
             }
 
             //Check if we need to close this activity right now (this is if user confirmed his selection)
             if (data.hasExtra(SelectSongsActivity.SELECTING_FINISHED_KEY))
             {
-                int request_code = getIntent().getIntExtra(SlimActivity.REQUEST_CODE_KEY, SELECT_SONGS_REQUEST);
+                currentRequestCode = getIntent().getIntExtra(SlimActivity.REQUEST_CODE_KEY, SELECT_SONGS_REQUEST);
 
-                Intent intent = new Intent();
-                intent.putStringArrayListExtra(SELECTED_SONGS_KEY,new ArrayList<>(mSelectedSongIdsList));
-                intent.putExtra(SelectSongsActivity.SELECTING_FINISHED_KEY,true);
+                intent = new Intent();
+                intent.putStringArrayListExtra  ( SELECTED_SONGS_KEY, new ArrayList<>( mSelectedSongIdsList ) );
+                intent.putExtra                 ( SelectSongsActivity.SELECTING_FINISHED_KEY,true );
 
-                setResult(request_code,intent);
+                setResult( currentRequestCode, intent );
                 finish();
             }
         }

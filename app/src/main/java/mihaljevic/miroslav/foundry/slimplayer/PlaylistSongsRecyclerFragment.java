@@ -2,6 +2,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
@@ -38,46 +39,54 @@ public class PlaylistSongsRecyclerFragment extends SongRecyclerFragment {
 
         if (!mSelectSongsForResult)
         {
-            MenuItem addToThisPlaylistItem = menu.findItem(R.id.playlist_add_to_this);
-            MenuItem deleteItem = menu.findItem(R.id.delete_item);
+            MenuItem addToThisPlaylistItem;
+            MenuItem deleteItem;
 
-            if (mSelectMode && mSelectedItems.size() > 0)
+            addToThisPlaylistItem   = menu.findItem(R.id.playlist_add_to_this);
+            deleteItem              = menu.findItem(R.id.delete_item);
+
+            if ( mSelectMode && mSelectedItems.size() > 0 )
             {
-                deleteItem.setVisible(true);
-                addToThisPlaylistItem.setVisible(false);
+                deleteItem.setVisible           ( true );
+                addToThisPlaylistItem.setVisible( false );
             }
             else
             {
-                deleteItem.setVisible(false);
-                addToThisPlaylistItem.setVisible(true);
+                deleteItem.setVisible           ( false );
+                addToThisPlaylistItem.setVisible( true );
             }
         }
 
-        super.onPrepareOptionsMenu(menu);
+        super.onPrepareOptionsMenu( menu );
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected( MenuItem item )
+    {
+        Intent intent;
+
         if (!mSelectMode)
         {
             if (item.getItemId() == R.id.playlist_add_to_this)
             {
                 //If we have not selected anything, then we run MainActivity for result
-                Toast.makeText(getContext(), "Starting MainActivity for result", Toast.LENGTH_SHORT).show();
+                Utils.toastShort( "Starting MainActivity for result" );
 
-
-                Intent intent = new Intent(ACTION_SELECT_SONGS, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,getContext(),MainActivity.class);
-                intent.putExtra(SlimActivity.REQUEST_CODE_KEY,SELECT_SONGS_REQUEST);
+                intent = new Intent( ACTION_SELECT_SONGS, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, getContext(), MainActivity.class );
+                intent.putExtra( SlimActivity.REQUEST_CODE_KEY, SELECT_SONGS_REQUEST );
 
                 startActivityForResult(intent,SELECT_SONGS_REQUEST);
-
             }
         }
         else
         {
             if (item.getItemId() == R.id.delete_item)
             {
-                deleteItemsAsync(MediaStore.Audio.Playlists.Members.getContentUri("external",Long.valueOf( mParameter )),MediaStore.Audio.Playlists.Members.AUDIO_ID);
+                Uri playlistUri;
+
+                playlistUri = MediaStore.Audio.Playlists.Members.getContentUri( "external", Long.valueOf( mParameter ) );
+
+                deleteItemsAsync( playlistUri, MediaStore.Audio.Playlists.Members.AUDIO_ID );
             }
             else
             {
@@ -94,24 +103,32 @@ public class PlaylistSongsRecyclerFragment extends SongRecyclerFragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        if (data != null && requestCode == SELECT_SONGS_REQUEST && data.hasExtra(PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY))
+        if ( data != null && requestCode == SELECT_SONGS_REQUEST && data.hasExtra( PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY ) )
         {
-            final List<String> ids = data.getStringArrayListExtra(PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY);
+            final List<String> songIDs;
+
+            songIDs = data.getStringArrayListExtra( PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY );
 
             //Insert songs in playlist and then refresh data
-            new AsyncTask<Void,Void,Integer>(){
+            new AsyncTask<Void,Void,Integer>()
+            {
 
                 @Override
                 protected Integer doInBackground(Void... params)
                 {
-                    if (ids == null)
+                    long playlistID;
+
+                    if (songIDs == null)
                         return null;
 
-                    return Utils.insertIntoPlaylist(ids,Long.valueOf(getArguments().getString( Const.PARAMETER_KEY)));
+                    playlistID = Long.valueOf(getArguments().getString( Const.PARAMETER_KEY) );
+
+                    return Utils.insertIntoPlaylist( songIDs, playlistID );
                 }
 
                 @Override
-                protected void onPostExecute(Integer result) {
+                protected void onPostExecute(Integer result)
+                {
 
                     Utils.toastShort(result + " " + getString(R.string.playlist_add_succes));
 

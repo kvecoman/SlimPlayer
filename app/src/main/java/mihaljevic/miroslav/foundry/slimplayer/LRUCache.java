@@ -16,26 +16,26 @@ public class LRUCache<K, V>
 {
     private final String TAG = getClass().getSimpleName();
 
-    protected int mCapacity;
-    protected int mSize = 0;
-    private Node<K, V> mFirst;
-    private Node<K, V> mLast;
+    protected int       mCapacity;
+    protected int       mSize;
+    private Node<K, V>  mFirst;
+    private Node<K, V>  mLast;
 
     //private Set<WeakReference<Node<K,V>>> dbgList;
 
     private class Node<T, U>
     {
-        Node<T, U> previous;
-        Node<T, U> next;
-        T key;
-        U value;
+        Node<T, U>  previous;
+        Node<T, U>  next;
+        T           key;
+        U           value;
 
         public Node( T key, U value, Node<T, U> previous, Node<T, U> next )
         {
-            this.previous = previous;
-            this.next = next;
-            this.key = key;
-            this.value = value;
+            this.previous   = previous;
+            this.next       = next;
+            this.key        = key;
+            this.value      = value;
         }
 
         @Override
@@ -47,7 +47,7 @@ public class LRUCache<K, V>
 
     public LRUCache( int capacity )
     {
-
+        mSize = 0;
         mCapacity = capacity;
         //dbgList = new HashSet<>(  );
     }
@@ -79,33 +79,35 @@ public class LRUCache<K, V>
         //This happens when this is the second node we are adding
         else if (mLast == null)
         {
-            mLast = node;
-            mLast.next = mFirst;
+            mLast           = node;
+            mLast.next      = mFirst;
             mFirst.previous = mLast;
+
             mSize++;
         }
         //This is case when we have first two nodes bu we are not full yet
         else if ( mSize < mCapacity )
         {
-            node.previous = mFirst;
-            mFirst.next = node;
-            mFirst = node;
+            node.previous   = mFirst;
+            mFirst.next     = node;
+            mFirst          = node;
+
             mSize++;
 
         }
         //This is the case when we are full
         else if ( mSize == mCapacity )
         {
-            node.previous = mFirst;
-            mFirst.next = node;
-            mFirst = node;
-            mLast.previous = null;
-            mLast = mLast.next;
+            node.previous   = mFirst;
+            mFirst.next     = node;
+            mFirst          = node;
+            mLast.previous  = null;
+            mLast           = mLast.next;
 
             //Clean up removed node to prevent memory leaks
             mLast.previous.previous = null;
-            mLast.previous.next = null;
-            mLast.previous = null;
+            mLast.previous.next     = null;
+            mLast.previous          = null;
         }
 
 
@@ -144,13 +146,13 @@ public class LRUCache<K, V>
 
         if ( node == mLast )
         {
-            mFirst.next = mLast;
-            mLast.previous = mFirst;
-            mFirst = mLast;
-            mLast = mLast.next;
+            mFirst.next     = mLast;
+            mLast.previous  = mFirst;
+            mFirst          = mLast;
+            mLast           = mLast.next;
 
-            mLast.previous = null;
-            mFirst.next = null;
+            mLast.previous  = null;
+            mFirst.next     = null;
         }
         else if ( node != mFirst )
         {
@@ -160,10 +162,10 @@ public class LRUCache<K, V>
             node.previous.next = node.next;
             node.next.previous = node.previous;
 
-            mFirst.next = node;
-            node.previous = mFirst;
-            mFirst = node;
-            mFirst.next = null;
+            mFirst.next     = node;
+            node.previous   = mFirst;
+            mFirst          = node;
+            mFirst.next     = null;
         }
     }
 
@@ -197,13 +199,13 @@ public class LRUCache<K, V>
 
         if ( node == mFirst )
         {
-            mFirst = node.previous;
+            mFirst      = node.previous;
             mFirst.next = null;
         }
         else if ( node == mLast )
         {
-            mLast = mLast.next;
-            mLast.previous = null;
+            mLast           = mLast.next;
+            mLast.previous  = null;
         }
         else
         {
@@ -212,8 +214,8 @@ public class LRUCache<K, V>
         }
 
         //Node might still live on and cause leaks so we solve that here
-        node.previous = null;
-        node.next = null;
+        node.previous   = null;
+        node.next       = null;
 
         //DEBUG PURPOSES - remove()
         /*listAllNodes();
@@ -237,26 +239,26 @@ public class LRUCache<K, V>
         {
             //We have just the first node
             mFirst.previous = null;
-            mFirst.next = null;
-            mFirst = null;
+            mFirst.next     = null;
+            mFirst          = null;
         }
         else if (mFirst.previous == mLast)
         {
             //This means we have just 2 nodes
-            mLast.previous = null;
-            mLast.next = null;
-            mLast = null;
+            mLast.previous  = null;
+            mLast.next      = null;
+            mLast           = null;
 
             mFirst.previous = null;
         }
         else
         {
             //We have 3 or more nodes
-            nextNode = mLast.next;
-            nextNode.previous = null;
+            nextNode            = mLast.next;
+            nextNode.previous   = null;
 
-            mLast.previous = null;
-            mLast.next = null;
+            mLast.previous  = null;
+            mLast.next      = null;
 
             mLast = nextNode;
         }
@@ -279,14 +281,14 @@ public class LRUCache<K, V>
         {
             previousNode = node.previous;
 
-            node.next = null;
-            node.previous = null;
+            node.next       = null;
+            node.previous   = null;
 
             node = previousNode;
         }
 
-        mFirst = null;
-        mLast = null;
+        mFirst  = null;
+        mLast   = null;
 
     }
 

@@ -16,20 +16,34 @@ public class AddToPlaylistActivity extends SlimActivity {
     public static final String ID_LIST_KEY = "id_list";
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fragment_holder);
 
+        createAddToPlaylistFragment();
+
+    }
+
+    //Creates and displays AddToPlaylist fragment
+    private void createAddToPlaylistFragment()
+    {
+        AddToPlaylistsRecyclerFragment fragment;
+        Bundle fragmentBundle;
+
         //Acquire bundle to query all playlists
-        Bundle fragmentBundle = ScreenBundles.getPlaylistsBundle();
+        fragment = new AddToPlaylistsRecyclerFragment();
+        fragmentBundle = ScreenBundles.getPlaylistsBundle();
 
-        if (fragmentBundle != null)
-        {
-            //Create add to playlist fragment
-            AddToPlaylistsRecyclerFragment fragment = new AddToPlaylistsRecyclerFragment();
-            fragment.setArguments(fragmentBundle);
+        if (fragmentBundle == null)
+            return;
 
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,fragment).commit();
-        }
+        fragment.setArguments(fragmentBundle);
+
+        getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container,fragment)
+                    .commit();
+
     }
 }

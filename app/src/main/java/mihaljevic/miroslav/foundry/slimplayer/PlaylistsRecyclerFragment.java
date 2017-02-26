@@ -25,11 +25,11 @@ import android.widget.EditText;
 public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
 
     private AlertDialog mCreatePlaylistDialog;
-    private EditText mCreatePlaylistEditText;
+    private EditText    mCreatePlaylistEditText;
 
     //We use this to check if default name with auto number has been used or not
-    private String mPlaylistAutoName;
-    private int mPlaylistAutoNumber;
+    private String  mPlaylistAutoName;
+    private int     mPlaylistAutoNumber;
 
     public PlaylistsRecyclerFragment() {
         // Required empty public constructor
@@ -57,11 +57,11 @@ public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
 
         //Build alert dialog that will take name of new playlist
         mCreatePlaylistDialog = new AlertDialog.Builder(context)
-                                .setTitle(getString( R.string.add_playlist_title ))
-                                .setMessage(getString( R.string.add_playlist_message ))
-                                .setView(mCreatePlaylistEditText)
-                                .setPositiveButton(getString( R.string.OK ),        new PositiveButtonListener())
-                                .setNegativeButton(getString( R.string.Cancel ),    new NegativeButtonListener())
+                                .setTitle           (getString( R.string.add_playlist_title ))
+                                .setMessage         (getString( R.string.add_playlist_message ))
+                                .setView            (mCreatePlaylistEditText)
+                                .setPositiveButton  (getString( R.string.OK ),        new PositiveButtonListener())
+                                .setNegativeButton  (getString( R.string.Cancel ),    new NegativeButtonListener())
                                 .create();
 
         mCreatePlaylistDialog.setOnShowListener(new ShowDialogListener());
@@ -74,19 +74,24 @@ public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
         //Show options only if we are in normal mode (and not select for result mode)
         if (!mSelectSongsForResult)
         {
-            MenuItem deleteItem = menu.findItem(R.id.delete_item);
-            MenuItem createPlaylistItem = menu.findItem(R.id.playlist_create);
+            MenuItem deleteItem;
+            MenuItem createPlaylistItem;
+
+            deleteItem          = menu.findItem(R.id.delete_item);
+            createPlaylistItem  = menu.findItem(R.id.playlist_create);
 
             //Decide whether to show option for deleting playlists
-            if (mSelectMode && mSelectedItems.size() > 0)
+            if ( mSelectMode && mSelectedItems.size() > 0 )
             {
                 //If we are selecting items then we want option to delete them
-                deleteItem.setVisible(true);
-                createPlaylistItem.setVisible(false);
-            } else {
+                deleteItem.setVisible           (true);
+                createPlaylistItem.setVisible   (false);
+            }
+            else
+            {
                 //Hide option to add to playlist
-                deleteItem.setVisible(false);
-                createPlaylistItem.setVisible(true);
+                deleteItem.setVisible           (false);
+                createPlaylistItem.setVisible   (true);
             }
 
 
@@ -97,7 +102,8 @@ public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected( MenuItem item )
+    {
 
         int itemID;
 
@@ -122,26 +128,30 @@ public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
 
 
     @Override
-    public void onClick(View v) {
+    public void onClick(View v)
+    {
 
-        int position = mRecyclerView.getChildLayoutPosition(v);
+        int position;
+
+        position = mRecyclerView.getChildLayoutPosition( v );
 
         //Open playlist only if we are not in select mode
-        if (!mSelectMode)
+        if ( !mSelectMode )
             super.onClick(v);
         else
         {
             //If we are in select mode, then select playlist
-            setItemSelected(position,!isItemSelected(position),v);
+            setItemSelected( position, !isItemSelected(position), v );
         }
     }
 
     @Override
-    public boolean onLongClick(View v) {
-        if (!mSelectMode)
+    public boolean onLongClick(View v)
+    {
+        if ( !mSelectMode )
         {
             activateSelectMode();
-            setItemSelected(mRecyclerView.getChildLayoutPosition(v),true,v);
+            setItemSelected( mRecyclerView.getChildLayoutPosition(v), true, v);
         }
         return true;
     }

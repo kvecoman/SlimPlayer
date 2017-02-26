@@ -50,16 +50,16 @@ public class PackageValidator
 
     private synchronized void readCertificates()
     {
-        XmlResourceParser xmlParser;
-        SlimPlayerApplication app;
-        int state;
-        String name;
-        String packageName;
-        String certificate;
-        PackageId packageId;
+        XmlResourceParser       xmlParser;
+        SlimPlayerApplication   app;
+        int                     state;
+        String                  name;
+        String                  packageName;
+        String                  certificate;
+        PackageId               packageId;
 
-        app = SlimPlayerApplication.getInstance();
-        xmlParser = app.getResources().getXml( R.xml.allowed_media_browser_callers );
+        app         = SlimPlayerApplication.getInstance();
+        xmlParser   = app.getResources().getXml( R.xml.allowed_media_browser_callers );
 
         try
         {
@@ -69,9 +69,9 @@ public class PackageValidator
             {
                 if (state == XmlResourceParser.START_TAG  && xmlParser.getName().equals( "signing_certificate" ))
                 {
-                    name =          xmlParser.getAttributeValue(null, "name");
-                    packageName =   xmlParser.getAttributeValue( null, "package" );
-                    certificate =   xmlParser.nextText().replaceAll("\\s|\\n", "");
+                    name        = xmlParser.getAttributeValue(null, "name");
+                    packageName = xmlParser.getAttributeValue( null, "package" );
+                    certificate = xmlParser.nextText().replaceAll("\\s|\\n", "");
 
                     packageId = new PackageId( name, packageName );
 
@@ -96,35 +96,35 @@ public class PackageValidator
     public synchronized boolean validate(String callingPackage, int callingUID)
     {
 
-        PackageId storedPackageId;
-        SlimPlayerApplication app;
-        PackageManager packageManager;
-        PackageInfo packageInfo;
-        String callerCertificate;
+        PackageId               storedPackageId;
+        SlimPlayerApplication   app;
+        PackageManager          packageManager;
+        PackageInfo             packageInfo;
+        String                  callerCertificate;
 
 
-        app = SlimPlayerApplication.getInstance();
-        packageManager = app.getPackageManager();
-        packageInfo = null;
+        app             = SlimPlayerApplication.getInstance();
+        packageManager  = app.getPackageManager();
+        packageInfo     = null;
 
-        if ( Process.SYSTEM_UID == callingUID || Process.myUid() == callingUID)
+        if ( Process.SYSTEM_UID == callingUID || Process.myUid() == callingUID )
             return true;
 
         try
         {
             packageInfo = packageManager.getPackageInfo( callingPackage, PackageManager.GET_SIGNATURES );
         }
-        catch (PackageManager.NameNotFoundException e)
+        catch ( PackageManager.NameNotFoundException e )
         {
             Log.e( TAG, "Package manager could not get package info for calling package" );
             e.printStackTrace();
         }
 
 
-        if (packageInfo == null)
+        if ( packageInfo == null )
             return false;
 
-        if (packageInfo.signatures.length != 1)
+        if ( packageInfo.signatures.length != 1 )
         {
             Log.w( TAG, "Caller package has incorrect number of signatures" );
             return false;
@@ -135,10 +135,10 @@ public class PackageValidator
 
         storedPackageId = mCertificates.get( callerCertificate );
 
-        if (storedPackageId == null)
+        if ( storedPackageId == null )
             return false;
 
-        if (storedPackageId.packageName.equals( callingPackage ))
+        if ( storedPackageId.packageName.equals( callingPackage ) )
             return true;
 
         return false;
@@ -155,8 +155,8 @@ public class PackageValidator
 
         public PackageId( String name, String packageName )
         {
-            this.name = name;
-            this.packageName = packageName;
+            this.name           = name;
+            this.packageName    = packageName;
         }
 
 

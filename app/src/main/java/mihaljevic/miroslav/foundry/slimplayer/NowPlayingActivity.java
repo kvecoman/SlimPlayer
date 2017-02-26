@@ -32,30 +32,25 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 {
 
 
-    private ViewPager mPager;
-    private NowPlayingPagerAdapter mPagerAdapter;
+    private ViewPager               mPager;
+    private NowPlayingPagerAdapter  mPagerAdapter;
 
-    private SeekBar             mSeekBar;
-    /*private Timer               mSeekBarTimer;
-    private SeekBarTimerTask    mSeekBarTimerTask;*/
-
-    private Handler mSeekBarHandler;
-    private Runnable mSeekBarRunnable;
+    private SeekBar     mSeekBar;
+    private Handler     mSeekBarHandler;
+    private Runnable    mSeekBarRunnable;
 
     private String mQueueSource;
     private String mQueueParameter;
 
-    protected MediaBrowserCompat mMediaBrowser;
+    protected MediaBrowserCompat    mMediaBrowser;
     protected MediaControllerCompat mMediaController;
 
-    private MediaBrowserCompat.ConnectionCallback mConnectionCallbacks = new MediaBrowserCompat.ConnectionCallback(){
+    private MediaBrowserCompat.ConnectionCallback mConnectionCallbacks = new MediaBrowserCompat.ConnectionCallback()
+    {
         @Override
         public void onConnected()
         {
             super.onConnected();
-
-
-
 
             try
             {
@@ -80,7 +75,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         {
             super.onConnectionSuspended();
 
-            Log.i(TAG, "Connection is suspended");
+            Log.i( TAG, "Connection is suspended" );
         }
 
         @Override
@@ -88,7 +83,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         {
             super.onConnectionFailed();
 
-            Log.e(TAG, "Connection has failed");
+            Log.e( TAG, "Connection has failed" );
         }
     };
 
@@ -125,27 +120,16 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         {
             super.onPlaybackStateChanged( state );
 
-
-
             int activeQueueId;
             int stateInt;
-            List<MediaSessionCompat.QueueItem> queue;
 
-            queue = mMediaController.getQueue();
+            activeQueueId   = (int)state.getActiveQueueItemId();
+            stateInt        = state.getState();
 
-            /*if ( queue == null || queue.size() == 0 )
-            {
-                Log.i(TAG, "Exiting NowPlayingActivity because there is no queue or size is 0");
-                onBackPressed();
-            }*/
-
-            activeQueueId = (int)state.getActiveQueueItemId();
-            stateInt = state.getState();
-
-            if (stateInt == PlaybackStateCompat.STATE_PLAYING)
+            if ( stateInt == PlaybackStateCompat.STATE_PLAYING )
             {
                 //Check if we need to switch to current page
-                if (activeQueueId != mPager.getCurrentItem())
+                if ( activeQueueId != mPager.getCurrentItem() )
                     updatePagerWithCurrentSong();
             }
         }
@@ -155,7 +139,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         {
             super.onMetadataChanged( metadata );
 
-            if (isThisQueueLoaded())
+            if ( isThisQueueLoaded() )
                 updatePagerWithCurrentSong();
         }
     };
@@ -168,15 +152,15 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         {
             PlaybackStateCompat state;
 
-            if (mMediaBrowser.isConnected() && mMediaController != null)
+            if ( mMediaBrowser.isConnected() && mMediaController != null )
             {
                 state = mMediaController.getPlaybackState();
 
-                if (state.getState() == PlaybackStateCompat.STATE_PLAYING || state.getState() == PlaybackStateCompat.STATE_PAUSED)
+                if ( state.getState() == PlaybackStateCompat.STATE_PLAYING || state.getState() == PlaybackStateCompat.STATE_PAUSED )
                 {
                     if ( state.getActiveQueueItemId() == mPager.getCurrentItem() )
                     {
-                        mSeekBar.setProgress( (int)state.getPosition() );
+                        mSeekBar.setProgress( ( int )state.getPosition() );
                     }
                     else
                     {
@@ -196,7 +180,6 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     {
         super.onCreate(savedInstanceState);
 
-
         Intent intent;
 
         intent = getIntent();
@@ -205,22 +188,19 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
         if (intent != null && intent.hasExtra( Const.SOURCE_KEY ))
         {
-            mQueueSource = intent.getStringExtra( Const.SOURCE_KEY );
+            mQueueSource    = intent.getStringExtra( Const.SOURCE_KEY );
             mQueueParameter = intent.getStringExtra( Const.PARAMETER_KEY );
         }
 
-        mPager = (ViewPager)findViewById(R.id.pager);
-        mPager.addOnPageChangeListener(this);
+        mPager = ( ViewPager )findViewById( R.id.pager );
+        mPager.addOnPageChangeListener( this );
 
         mSeekBar = ( SeekBar ) findViewById( R.id.seek_bar );
         mSeekBar.setProgress( 0 );
         mSeekBar.setOnSeekBarChangeListener( this );
 
-        /*mSeekBarTimer = new Timer( true );
-        mSeekBarTimerTask = new SeekBarTimerTask();*/
-
-        mSeekBarHandler = new Handler(  );
-        mSeekBarRunnable = new SeekBarRunnable();
+        mSeekBarHandler     = new Handler(  );
+        mSeekBarRunnable    = new SeekBarRunnable();
 
         mMediaBrowser = new MediaBrowserCompat( this, new ComponentName( this, MediaPlayerService.class ), mConnectionCallbacks, null );
     }
@@ -233,19 +213,19 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         //Ask for permissions if needed
         if ( Build.VERSION.SDK_INT >= 16 )
         {
-            Utils.askPermission( this,
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    getString( R.string.permission_storage_explanation ),
-                    Const.STORAGE_PERMISSIONS_REQUEST,
-                    new DialogInterface.OnClickListener()
-                    {
-                        @Override
-                        public void onClick( DialogInterface dialog, int which )
-                        {
-                            //Go back if we don't have permission
-                            onBackPressed();
-                        }
-                    } );
+            Utils.askPermission(    this,
+                                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                                    getString( R.string.permission_storage_explanation ),
+                                    Const.STORAGE_PERMISSIONS_REQUEST,
+                                    new DialogInterface.OnClickListener()
+                                    {
+                                        @Override
+                                        public void onClick( DialogInterface dialog, int which )
+                                        {
+                                            //Go back if we don't have permission
+                                            onBackPressed();
+                                        }
+                                    } );
         }
 
 
@@ -263,25 +243,27 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu)
+    public boolean onCreateOptionsMenu( Menu menu )
     {
-        super.onCreateOptionsMenu(menu);
-        getMenuInflater().inflate(R.menu.now_playing_menu,menu);
+        super.onCreateOptionsMenu( menu );
+        getMenuInflater().inflate( R.menu.now_playing_menu, menu );
 
 
-        updateRepeatIcon(menu);
+        updateRepeatIcon( menu );
 
         return true;
     }
 
 
     @Override
-    public void onBackPressed() {
+    public void onBackPressed()
+    {
+        Intent intent;
 
-        if (isTaskRoot())
+        if ( isTaskRoot() )
         {
             //If we came from notification and this activity is task root then we want back button to return (open) Main activity
-            Intent intent = new Intent(this,MainActivity.class);
+            intent = new Intent(this,MainActivity.class);
             intent.setFlags( Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
             startActivity(intent);
             return;
@@ -311,11 +293,6 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     {
         Log.v(TAG, "onDestroy()");
 
-        /*if (mSeekBarTimer != null)
-        {
-            mSeekBarTimer.purge();
-            mSeekBarTimer.cancel();
-        }*/
 
         super.onDestroy();
     }
@@ -323,6 +300,8 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     @Override
     public void onRequestPermissionsResult( int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults )
     {
+        Intent intent;
+
         switch (requestCode)
         {
             case Const.STORAGE_PERMISSIONS_REQUEST:
@@ -331,15 +310,11 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
                 {
                     if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
                     {
-                        Intent intent;
 
                         intent = getIntent();
 
-                        if (intent != null && intent.getAction() != null && intent.getAction().equals(Intent.ACTION_VIEW))
+                        if ( intent != null && intent.getAction() != null && intent.getAction().equals( Intent.ACTION_VIEW ) )
                         {
-                            //If this activity was started from opening file then restart it
-                            /*intent.setFlags( Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                            startActivity(intent);*/
                             startFilePlayingIfNeeded();
                         }
                         else
@@ -353,8 +328,6 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
                         //If we don't get permission
                         onBackPressed();
                     }
-
-
                 }
 
 
@@ -367,21 +340,21 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     //Check if we need to start playing a file
     private void startFilePlayingIfNeeded()
     {
-        Intent intent;
-        Uri fileUri;
-        Bundle extras;
+        Intent  intent;
+        Uri     fileUri;
+        Bundle  extras;
 
         intent = getIntent();
 
         //Here we handle if playback is started from file
-        if (intent != null && intent.getAction() != null && intent.getAction().equals(Intent.ACTION_VIEW) && mMediaBrowser.isConnected())
+        if ( intent != null && intent.getAction() != null && intent.getAction().equals( Intent.ACTION_VIEW ) && mMediaBrowser.isConnected() )
         {
             //This activity is called from outside, when playing audio files
             fileUri = intent.getData();
-            extras = new Bundle(  );
+            extras  = new Bundle(  );
 
 
-            if (fileUri.getScheme().contains("file"))
+            if ( fileUri.getScheme().contains("file") )
             {
                 mQueueSource = Const.FILE_URI_KEY;
                 mQueueParameter = fileUri.toString();
@@ -401,40 +374,39 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     private void initPagerAdapter( List<MediaSessionCompat.QueueItem> queue )
     {
 
-        mPagerAdapter = new NowPlayingPagerAdapter(getSupportFragmentManager(), queue);
-        mPager.setAdapter(mPagerAdapter);
+        mPagerAdapter = new NowPlayingPagerAdapter( getSupportFragmentManager(), queue );
+        mPager.setAdapter( mPagerAdapter );
 
         updatePagerWithCurrentSong();
     }
 
     public void updatePagerWithCurrentSong()
     {
-        int position;
+        int                 position;
         PlaybackStateCompat playbackState;
 
-        if (!mMediaBrowser.isConnected())
+        if ( !mMediaBrowser.isConnected() )
             return;
 
         playbackState = mMediaController.getPlaybackState();
 
-        if (playbackState == null)
+        if ( playbackState == null )
             return;
 
-        position = (int)playbackState.getActiveQueueItemId();
+        position = ( int )playbackState.getActiveQueueItemId();
 
-        if (position != PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN && position >= 0 && position < mPagerAdapter.getCount())
+        if ( position != PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN && position >= 0 && position < mPagerAdapter.getCount() )
         {
-            mPager.setCurrentItem( position );
-
-            updateSeekBarMax( position );
+            mPager.setCurrentItem   ( position );
+            updateSeekBarMax        ( position );
 
         }
     }
 
-    public void updateSeekBarMax(int position)
+    public void updateSeekBarMax( int position )
     {
-        MediaMetadataCompat metadata;
-        MediaSessionCompat.QueueItem queueItem;
+        MediaMetadataCompat             metadata;
+        MediaSessionCompat.QueueItem    queueItem;
 
         queueItem = mPagerAdapter.getData().get( position );
 
@@ -443,22 +415,25 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         metadata = MusicProvider.getInstance().getMetadata( queueItem.getDescription().getMediaId() );
 
         if (metadata != null)
-            mSeekBar.setMax((int)metadata.getLong( MediaMetadataCompat.METADATA_KEY_DURATION ));
+            mSeekBar.setMax(( int )metadata.getLong( MediaMetadataCompat.METADATA_KEY_DURATION ));
 
     }
 
-    public void updateRepeatIcon(Menu menu)
+    public void updateRepeatIcon( Menu menu )
     {
         //Set correct icon for toggle repeat action
-        MenuItem repeatItem = menu.findItem(R.id.toggle_repeat);
+        MenuItem repeatItem;
+
+        repeatItem = menu.findItem( R.id.toggle_repeat );
+
         if (repeatItem != null)
         {
-            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences( this );
 
-            if (preferences.getBoolean(getString(R.string.pref_key_repeat),true))
-                repeatItem.setIcon(R.drawable.ic_repeat_white_24dp);
+            if (preferences.getBoolean( getString( R.string.pref_key_repeat ), true ) )
+                repeatItem.setIcon( R.drawable.ic_repeat_white_24dp );
             else
-                repeatItem.setIcon(R.drawable.ic_repeat_gray_24dp);
+                repeatItem.setIcon( R.drawable.ic_repeat_gray_24dp );
         }
     }
 
@@ -468,17 +443,17 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         String sessionSource;
         String sessionParameter;
 
-        if (mMediaBrowser == null || !mMediaBrowser.isConnected() || mMediaController == null)
+        if ( mMediaBrowser == null || !mMediaBrowser.isConnected() || mMediaController == null )
             return false;
 
         sessionExtras = mMediaController.getExtras();
 
-        if (sessionExtras == null)
+        if ( sessionExtras == null )
             return false;
 
 
-        sessionSource = sessionExtras.getString( Const.SOURCE_KEY );
-        sessionParameter = sessionExtras.getString( Const.PARAMETER_KEY );
+        sessionSource       = sessionExtras.getString( Const.SOURCE_KEY );
+        sessionParameter    = sessionExtras.getString( Const.PARAMETER_KEY );
 
 
         return !Utils.isSourceDifferent( mQueueSource, mQueueParameter, sessionSource, sessionParameter );
@@ -487,14 +462,14 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
     //Handle onscreen taps, change between play/pause
     @Override
-    public void onClick(View v)
+    public void onClick( View v )
     {
 
         PlaybackStateCompat playbackState;
-        int state;
+        int                 state;
 
-        playbackState = mMediaController.getPlaybackState();
-        state = playbackState.getState();
+        playbackState   = mMediaController.getPlaybackState();
+        state           = playbackState.getState();
 
 
         switch(state)
@@ -511,9 +486,9 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
                 mMediaController.getTransportControls().skipToQueueItem( mPager.getCurrentItem() );
                 break;
             case PlaybackStateCompat.STATE_NONE:
-                Bundle bundle;
-                int position;
-                String mediaId;
+                Bundle  bundle;
+                int     position;
+                String  mediaId;
 
                 position = mPager.getCurrentItem();
 
@@ -522,9 +497,9 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
                 bundle = new Bundle();
                 bundle.putString( Const.SOURCE_KEY, mQueueSource );
                 bundle.putString( Const.PARAMETER_KEY, mQueueParameter );
-                bundle.putInt( Const.POSITION_KEY,  position);
+                bundle.putInt   ( Const.POSITION_KEY,  position);
 
-                mMediaController.getTransportControls().playFromMediaId(mediaId, bundle );
+                mMediaController.getTransportControls().playFromMediaId( mediaId, bundle );
                 break;
         }
 
@@ -534,14 +509,15 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     @Override
     public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser )
     {
-        if ( mMediaBrowser == null || !mMediaBrowser.isConnected())
+        if ( mMediaBrowser == null || !mMediaBrowser.isConnected() )
             return;
 
-        long actions = mMediaController.getPlaybackState().getActions();
+        long actions;
 
+        actions = mMediaController.getPlaybackState().getActions();
 
         //Only if touch is coming from user then seek song (and that action is available)
-        if (fromUser && (actions & PlaybackStateCompat.ACTION_SEEK_TO) == PlaybackStateCompat.ACTION_SEEK_TO)
+        if ( fromUser && ( actions & PlaybackStateCompat.ACTION_SEEK_TO ) == PlaybackStateCompat.ACTION_SEEK_TO )
             mMediaController.getTransportControls().seekTo( progress );
 
     }
@@ -553,12 +529,12 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     public void onStopTrackingTouch( SeekBar seekBar ) {}
 
     @Override
-    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
+    public void onPageScrolled( int position, float positionOffset, int positionOffsetPixels ) {}
 
     @Override
-    public void onPageSelected(int position)
+    public void onPageSelected( int position )
     {
-        if (!mMediaBrowser.isConnected() || mMediaController == null || mMediaController.getPlaybackState().getActiveQueueItemId() == position)
+        if ( !mMediaBrowser.isConnected() || mMediaController == null || mMediaController.getPlaybackState().getActiveQueueItemId() == position )
             return;
 
         //Play this position when user selects it

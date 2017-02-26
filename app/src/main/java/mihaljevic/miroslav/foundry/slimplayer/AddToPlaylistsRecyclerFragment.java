@@ -22,14 +22,18 @@ public class AddToPlaylistsRecyclerFragment extends PlaylistsRecyclerFragment {
 
 
     @Override
-    public void onClick(View v) {
+    public void onClick(View v)
+    {
 
+        final int position;
+        final List<MediaBrowserCompat.MediaItem> mediaItems;
+        final List<String> songIDs;
+        final long playlistId;
 
-        final int position = mRecyclerView.getChildLayoutPosition(v);
-
-        final List<MediaBrowserCompat.MediaItem> mediaItems = mAdapter.getMediaItemsList();
-        final List<String> ids  = getActivity().getIntent().getStringArrayListExtra(AddToPlaylistActivity.ID_LIST_KEY);
-        final long playlistId = Long.parseLong(mediaItems.get(position).getMediaId());
+        position = mRecyclerView.getChildLayoutPosition(v);
+        mediaItems = mAdapter.getMediaItemsList();
+        songIDs = getActivity().getIntent().getStringArrayListExtra(AddToPlaylistActivity.ID_LIST_KEY);
+        playlistId = Long.parseLong(mediaItems.get(position).getMediaId());
 
         //Insert songs in playlist
         new AsyncTask<Void,Void,Integer>()
@@ -37,11 +41,7 @@ public class AddToPlaylistsRecyclerFragment extends PlaylistsRecyclerFragment {
             @Override
             protected Integer doInBackground(Void... params)
             {
-
-                if (ids == null)
-                    return null;
-
-                return Utils.insertIntoPlaylist(ids,playlistId);
+                return Utils.insertIntoPlaylist( songIDs, playlistId );
             }
 
             @Override

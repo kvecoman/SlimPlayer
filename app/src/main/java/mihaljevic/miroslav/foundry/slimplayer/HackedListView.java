@@ -18,7 +18,8 @@ import android.widget.ListView;
  *
  * @author Miroslav Mihaljević
  */
-public class HackedListView extends ListView {
+public class HackedListView extends ListView
+{
 
     //This variable is really bad idea UPDATE: really, it is a monstrosity
     //We use to not deselect everything when OnLayoutChildren is called in DirectorySelectPreference
@@ -26,16 +27,19 @@ public class HackedListView extends ListView {
 
     private OnLayoutChildrenListener mOnLayoutChildrenListener;
 
-    public HackedListView( Context context) {
-        super(context);
+    public HackedListView( Context context )
+    {
+        super( context );
     }
 
-    public HackedListView( Context context, AttributeSet attrs) {
-        super(context, attrs);
+    public HackedListView( Context context, AttributeSet attrs )
+    {
+        super( context, attrs );
     }
 
-    public HackedListView( Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
+    public HackedListView( Context context, AttributeSet attrs, int defStyleAttr )
+    {
+        super( context, attrs, defStyleAttr );
     }
 
     public boolean isItemClicked()
@@ -52,29 +56,31 @@ public class HackedListView extends ListView {
     protected void layoutChildren()
     {
         super.layoutChildren();
-        if (mOnLayoutChildrenListener != null)
+        if ( mOnLayoutChildrenListener != null )
         {
-            mOnLayoutChildrenListener.onLayoutChildren(mIsItemClicked);
+            mOnLayoutChildrenListener.onLayoutChildren( mIsItemClicked );
         }
     }
 
     //We are overriding this so we know when layoutChildren is called
     // because of click (important for deselection in DirectorySelectPreference)
     @Override
-    public boolean onTouchEvent(MotionEvent ev)
+    public boolean onTouchEvent( MotionEvent ev )
     {
         boolean result;
-        mIsItemClicked = true;
-        result = super.onTouchEvent(ev);
+
+        mIsItemClicked  = true;
+        result          = super.onTouchEvent( ev );
+
         return result;
     }
 
     public interface OnLayoutChildrenListener
     {
-        void onLayoutChildren(boolean isItemClicked);
+        void onLayoutChildren( boolean isItemClicked );
     }
 
-    public void setOnLayoutChildrenListener(OnLayoutChildrenListener listener)
+    public void setOnLayoutChildrenListener( OnLayoutChildrenListener listener )
     {
         mOnLayoutChildrenListener = listener;
     }

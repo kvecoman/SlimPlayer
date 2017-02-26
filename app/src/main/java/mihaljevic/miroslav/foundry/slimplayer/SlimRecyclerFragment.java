@@ -381,49 +381,29 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
 
     protected void deleteItemsAsync(final Uri uri,final String idField)
     {
-        new AsyncTask<SparseBooleanArray,Void,Integer>()
+        new AsyncTask<Void,Void,Integer>()
         {
             @Override
-            protected Integer doInBackground(SparseBooleanArray... params) {
+            protected Integer doInBackground(Void... params) {
 
-                SparseBooleanArray selectedPositions = params[0];
 
                 return Utils.deleteFromList(
                                         mAdapter.getMediaItemsList(),
                                         uri,
-                                        selectedPositions,
+                                        mSelectedItems,
                                         idField);
             }
 
             @Override
-            protected void onPostExecute(Integer result) {
+            protected void onPostExecute(Integer result)
+            {
 
                 Utils.toastShort(result + " " + getString( R.string.toast_items_deleted ));
                 deselect();
                 refreshData();
             }
-        }.execute(mSelectedItems);
-    }
-
-    /*protected void loadDataAsync()
-    {
-        Log.v(TAG,"loadDataAsync()");
-        //Load cursor and connect it to cursor adapter
-        new AsyncTask<Void,Void,Cursor>()
-        {
-            @Override
-            protected Cursor doInBackground(Void... params) {
-                return Utils.queryMedia(getArguments());
-            }
-
-            @Override
-            protected void onPostExecute(Cursor cursor) {
-                onDataLoaded(cursor);
-            }
         }.execute();
-
-
-    }*/
+    }
 
 
 }

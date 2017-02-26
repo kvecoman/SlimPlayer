@@ -21,17 +21,20 @@ public abstract class BackHandledFragmentActivity extends SlimActivity implement
 
     //Setter for BackHandled fragment
     @Override
-    public void setBackHandledFragment(BackHandledRecyclerFragment backHandledFragment) {
+    public void setBackHandledFragment(BackHandledRecyclerFragment backHandledFragment)
+    {
         backHandledRecyclerFragment = backHandledFragment;
     }
 
     @Override
-    public void onBackPressed() {
+    public void onBackPressed()
+    {
+        Handler handler;
 
         //Allow fragment to handle back button press
         if (backHandledRecyclerFragment == null || !backHandledRecyclerFragment.onBackPressed())
         {
-            //Back press was not consumed, so we let system to do what it wants
+            //Back press on FRAGMENT was not consumed, so we handle ACTIVITY back press
 
             //If this activity is first in stack tree, confirm that user really wants to exit
             if (isTaskRoot())
@@ -44,14 +47,16 @@ public abstract class BackHandledFragmentActivity extends SlimActivity implement
                 else
                 {
                     mBackPressedOnce = true;
-                    Toast.makeText(this,getString(R.string.toast_exit_confirm),Toast.LENGTH_SHORT).show();
+                    Utils.toastShort( getString(R.string.toast_exit_confirm) );
                 }
 
+                handler = SlimPlayerApplication.getInstance().getHandler();
 
-                new Handler().postDelayed(new Runnable() {
-
+                handler.postDelayed(new Runnable()
+                {
                     @Override
-                    public void run() {
+                    public void run()
+                    {
                         //Reset back press state after 2 seconds
                         mBackPressedOnce = false;
                     }

@@ -41,7 +41,7 @@ import java.util.List;
  *
  * @author Miroslav Mihaljević
  */
-public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarChangeListener, ViewTreeObserver.OnGlobalLayoutListener{
+public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnGlobalLayoutListener{
 
     private final String TAG = getClass().getSimpleName();
 
@@ -50,7 +50,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
     private int mPosition;
 
-    private View    mContentView;
+    private View mContentView;
 
     private MediaMetadataCompat mMetadata;
 
@@ -67,7 +67,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
             try
             {
                 mMediaController = new MediaControllerCompat( getContext(), mMediaBrowser.getSessionToken() );
-                mMediaController.registerCallback( mControllerCallbacks );
+                mMediaController.registerCallback           ( mControllerCallbacks );
 
             }
             catch (RemoteException e){
@@ -93,27 +93,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     };
 
     private MediaControllerCompat.Callback mControllerCallbacks = new MediaControllerCompat.Callback()
-    {
-        @Override
-        public void onPlaybackStateChanged( PlaybackStateCompat state )
-        {
-            super.onPlaybackStateChanged( state );
-
-            /*if (state.getState() == PlaybackStateCompat.STATE_PLAYING || state.getState() == PlaybackStateCompat.STATE_PAUSED)
-            {
-                //Update this seek bar
-                if (state.getActiveQueueItemId() == mPosition)
-                {
-                    mSeekBar.setProgress( (int)state.getPosition() );
-                }
-                else
-                {
-                    //If this is not active fragment, then set seek bar to 0
-                    mSeekBar.setProgress( 0 );
-                }
-            }*/
-        }
-    };
+    {};
 
 
 
@@ -130,16 +110,16 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         setHasOptionsMenu(true);
 
         //Keep alive this fragment after configuration changes (so we can re-use data)
-        //setRetainInstance(true);
+        //setRetainInstance( true );
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+    public View onCreateView( LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState )
     {
         Log.v(TAG,"onCreateView()");
 
         // Inflate the layout for this fragment
-        mContentView = inflater.inflate(R.layout.fragment_now_playing, container, false);
+        mContentView = inflater.inflate( R.layout.fragment_now_playing, container, false );
         return mContentView;
     }
 
@@ -150,10 +130,11 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         super.onActivityCreated(savedInstanceState);
         Log.v(TAG,"onActivityCreated()");
 
-        String mediaPath;
+        ComponentName playerServiceComponent;
+
+        playerServiceComponent = new ComponentName( getContext(), MediaPlayerService.class );
 
         mContext = getContext();
-
 
 
         //Handle taps on screen
@@ -166,7 +147,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         //Little hack so we know that UI is already set up when we need to use it
         mContentView.getViewTreeObserver().addOnGlobalLayoutListener(this);
 
-        mMediaBrowser = new MediaBrowserCompat( getContext(), new ComponentName( getContext(), MediaPlayerService.class ), mConnectionCallbacks, null );
+        mMediaBrowser = new MediaBrowserCompat( getContext(), playerServiceComponent, mConnectionCallbacks, null );
 
 
     }
@@ -191,7 +172,7 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     public void onGlobalLayout()
     {
         //We keep this listener for as long as we need until we get valid width and height values
-        if (mContentView == null || mContentView.getWidth() <= 0 || mContentView.getHeight() <= 0)
+        if ( mContentView == null || mContentView.getWidth() <= 0 || mContentView.getHeight() <= 0 )
             return;
 
         //Now that we have valid width and height values, display album art
@@ -203,8 +184,6 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
             mContentView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
         else
             mContentView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-
-
 
     }
 
@@ -227,7 +206,8 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
     //Here we do cleanup of things expecting hosting activity will be recreated, so we don't want to leak anything
     @Override
-    public void onDetach() {
+    public void onDetach()
+    {
         super.onDetach();
 
         mContext = null;
@@ -235,7 +215,8 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
     }
 
     @Override
-    public void onDestroy() {
+    public void onDestroy()
+    {
         super.onDestroy();
         Log.v(TAG,"onDestroy()");
 
@@ -257,17 +238,14 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
             return;
 
         mPosition = args.getInt(Const.POSITION_KEY, -1);
-
         mMetadata = args.getParcelable( Const.METADATA_KEY );
 
         if (mMetadata == null)
             return;
 
-
         //Update text views with new info
         ((TextView) mContentView.findViewById(R.id.song_title)).setText(mMetadata.getString( MediaMetadataCompat.METADATA_KEY_TITLE ));
         ((TextView) mContentView.findViewById(R.id.song_artist)).setText(mMetadata.getString( MediaMetadataCompat.METADATA_KEY_ARTIST ));
-
     }
 
 
@@ -279,25 +257,25 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
         if ( mContentView.getWidth() <= 0 || mContentView.getHeight() <= 0 )
             return;
 
-        String mediaPath;
-        int width;
-        int height;
+        String  mediaPath;
+        int     width;
+        int     height;
 
-        mediaPath = Uri.parse(mMetadata.getString( MediaMetadataCompat.METADATA_KEY_MEDIA_URI ) ).toString();
-        width = mContentView.getWidth();
-        height = mContentView.getHeight();
+        mediaPath   = Uri.parse(mMetadata.getString( MediaMetadataCompat.METADATA_KEY_MEDIA_URI ) ).toString();
+        width       = mContentView.getWidth();
+        height      = mContentView.getHeight();
 
-        Glide   .with(this)
-                .load( new EmbeddedArtGlide( mediaPath ) )
+        Glide   .with       ( this)
+                .load       ( new EmbeddedArtGlide( mediaPath ) )
                 .asBitmap()
-                .override( width, height )
+                .override   ( width, height )
                 .centerCrop()
                 .into( new SimpleTarget<Bitmap>()
                 {
                     @Override
                     public void onResourceReady( Bitmap bitmap, GlideAnimation<? super Bitmap> glideAnimation )
                     {
-                        if (bitmap == null)
+                        if ( bitmap == null )
                             return;
 
                         if ( Build.VERSION.SDK_INT >= 16 )
@@ -313,18 +291,4 @@ public class NowPlayingFragment extends Fragment implements SeekBar.OnSeekBarCha
 
     }
 
-
-
-    @Override
-    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser)
-    {
-
-
-    }
-
-    @Override
-    public void onStartTrackingTouch(SeekBar seekBar) {}
-
-    @Override
-    public void onStopTrackingTouch(SeekBar seekBar) {}
 }

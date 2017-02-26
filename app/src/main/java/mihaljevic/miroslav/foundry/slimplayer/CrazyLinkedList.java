@@ -6,7 +6,7 @@ import java.lang.ref.WeakReference;
 /**
  * Created by miroslav on 16.02.17..
  *
- * This is actually some sort of linked list
+ * This is actually some sort of linked list, UNFINISHED
  *
  * @author Miroslav Mihaljević
  */

@@ -4,6 +4,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 import android.content.Context;
 import android.content.Intent;
 import android.provider.MediaStore;
+import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
@@ -30,14 +31,21 @@ public class CategoryRecyclerFragment extends SlimRecyclerFragment {
         String displayName;
         int position;
         Context context;
+        CharSequence title;
+        MediaDescriptionCompat mediaDescription;
 
         context = getContext();
         position = mRecyclerView.getChildLayoutPosition(v);
-        parameter = mAdapter.getMediaItemsList().get(position).getMediaId();
-        displayName = mAdapter.getMediaItemsList().get(position).getDescription().getTitle().toString();
+        mediaDescription = mAdapter.getMediaItemsList().get(position).getDescription();
+        parameter = mediaDescription.getMediaId();
+        title = mediaDescription.getTitle();
+
+        displayName = title == null ? "" : title.toString();
 
         if (mSelectSongsForResult)
         {
+            //We are selecting songs for playlist
+
             intent = new Intent(PlaylistSongsRecyclerFragment.ACTION_SELECT_SONGS, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,getContext(),SongListActivity.class);
 
             //Choose bundle and send it to songList fragment
@@ -52,9 +60,11 @@ public class CategoryRecyclerFragment extends SlimRecyclerFragment {
         }
         else
         {
-            //If we are in normal mode just start activity
-            intent = new Intent(context,SongListActivity.class);
+            //We are in normal mode, just start activity
 
+
+
+            intent = new Intent(context,SongListActivity.class);
 
             //Choose bundle and send it to songList fragment
             intent.putExtra( Const.SOURCE_KEY, mSource );

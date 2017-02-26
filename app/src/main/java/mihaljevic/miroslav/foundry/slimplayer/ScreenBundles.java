@@ -77,26 +77,7 @@ public final class ScreenBundles {
                 break;
         }
 
-        /*if(currentScreen.equals(sAppContext.getString(R.string.pref_key_playlists_screen)))
-        {
-            parameter = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
-            bundle = ScreenBundles.getSongsByPlaylistBundle(sAppContext, parameter);
-        }
-        else if (currentScreen.equals(sAppContext.getString(R.string.pref_key_albums_screen)))
-        {
-            parameter = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID));
-            bundle = ScreenBundles.getSongsByAlbumBundle(sAppContext,parameter);
-        }
-        else if (currentScreen.equals(sAppContext.getString(R.string.pref_key_artists_screen)))
-        {
-            parameter = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST_ID));
-            bundle = ScreenBundles.getSongsByArtistsBundle(sAppContext,parameter);
-        }
-        else if (currentScreen.equals(sAppContext.getString(R.string.pref_key_genres_screen)))
-        {
-            parameter = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Genres._ID));
-            bundle = ScreenBundles.getSongsByGenreBundle(sAppContext,parameter);
-        }*/
+
 
 
         return bundle;
@@ -126,26 +107,6 @@ public final class ScreenBundles {
                 break;
         }
 
-        /*if (currentScreen.equals(sAppContext.getString(R.string.pref_key_all_screen)))
-        {
-            bundle = ScreenBundles.getAllSongsBundle(sAppContext);
-        }
-        else if(currentScreen.equals(sAppContext.getString(R.string.pref_key_playlists_screen)))
-        {
-            bundle = ScreenBundles.getSongsByPlaylistBundle(sAppContext, parameter);
-        }
-        else if (currentScreen.equals(sAppContext.getString(R.string.pref_key_albums_screen)))
-        {
-            bundle = ScreenBundles.getSongsByAlbumBundle(sAppContext,parameter);
-        }
-        else if (currentScreen.equals(sAppContext.getString(R.string.pref_key_artists_screen)))
-        {
-            bundle = ScreenBundles.getSongsByArtistsBundle(sAppContext,parameter);
-        }
-        else if (currentScreen.equals(sAppContext.getString(R.string.pref_key_genres_screen)))
-        {
-            bundle = ScreenBundles.getSongsByGenreBundle(sAppContext,parameter);
-        }*/
 
         return bundle;
     }
@@ -171,10 +132,6 @@ public final class ScreenBundles {
         String [] selectionArgs = null;
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
 
-        /*if (BuildConfig.DEBUG)
-        {
-            sortOrder = MediaStore.Audio.Media.DURATION + " ASC";
-        }*/
 
 
         bundle.putString( Const.PARAMETER_KEY,""); //Empty string just so we don't mess up database
@@ -236,15 +193,6 @@ public final class ScreenBundles {
         String [] selectionArgs = null;
         String sortOrder = MediaStore.Audio.Media.ALBUM + " ASC";
 
-        //NOTE - this code can't filter by directory
-        /*String uri = MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI.toString();
-        String [] projection = {
-                MediaStore.Audio.Albums._ID,
-                MediaStore.Audio.Albums.ALBUM,
-        };
-        String selection = null;
-        String [] selectionArgs = null;
-        String sortOrder = MediaStore.Audio.Albums.ALBUM + " ASC";*/
 
         bundle.putString( Const.SOURCE_KEY,cursorScreen);
         bundle.putString( Const.URI_KEY,uri);
@@ -279,15 +227,7 @@ public final class ScreenBundles {
         String [] selectionArgs = null;
         String sortOrder = MediaStore.Audio.Media.ARTIST + " ASC";
 
-        //NOTE - this code can't filter by directory
-        /*String uri = MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI.toString();
-        String [] projection = {
-                MediaStore.Audio.Artists._ID,
-                MediaStore.Audio.Artists.ARTIST,
-        };
-        String selection = null;
-        String [] selectionArgs = null;
-        String sortOrder = MediaStore.Audio.Artists.ARTIST + " ASC";*/
+
 
         bundle.putString( Const.SOURCE_KEY,cursorScreen);
         bundle.putString( Const.URI_KEY,uri);
@@ -485,46 +425,30 @@ public final class ScreenBundles {
     //... in preferences
     public static String addDirectoryCheckSQL()
     {
-        String result = "";
-        String dataField = MediaStore.Audio.Media.DATA;
+        String      result;
+        String      dataField;
+        Set<String> directories;
 
-        Set<String> directories = PreferenceManager.getDefaultSharedPreferences(sAppContext).getStringSet(sAppContext.getString(R.string.pref_key_directories_set),null);
+        result      = "";
+        dataField   = MediaStore.Audio.Media.DATA;
+        directories = PreferenceManager.getDefaultSharedPreferences(sAppContext).getStringSet(sAppContext.getString(R.string.pref_key_directories_set),null);
 
         //If directories are null then just load everything
-        if (directories == null || directories.isEmpty())
+        if ( directories == null || directories.isEmpty() )
         {
             return "1=1";
         }
 
         //Loop every directory and create condition for it
-        for (String dir : directories)
+        for ( String dir : directories )
         {
             result += " " + dataField + " LIKE \"" + dir + "%\" OR";
         }
         //Remove the excess OR from the string
-        result = result.substring(0,result.length() - 2);
+        result = result.substring( 0, result.length() - 2 );
 
         return result;
     }
 
-    /*public static  String excludeEmptyGenresSQL()
-    {
-        String result = "";
-        String genreField = MediaStore.Audio.Genres._ID;
-        Set<String> idSet = PreferenceManager.getDefaultSharedPreferences(sAppContext).getStringSet(sAppContext.getString(R.string.pref_key_empty_genres),null);
 
-        if (idSet == null ||idSet.isEmpty())
-        {
-            return "1=1";
-        }
-
-        for (String id : idSet)
-        {
-            result += " " + genreField + " <> " + id + " AND";
-        }
-        //Remove the excess AND from the string
-        result = result.substring(0,result.length() - 3);
-
-        return result;
-    }*/
 }

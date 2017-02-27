@@ -75,7 +75,7 @@ public class MusicProvider {
         String                              parentKey;
         List<MediaMetadataCompat>           metadataList;
 
-        if ( Build.VERSION.SDK_INT >= 16 &&  !Utils.checkPermission( SlimPlayerApplication.getInstance(), android.Manifest.permission.READ_EXTERNAL_STORAGE ) )
+        if ( Build.VERSION.SDK_INT >= 16 &&  !Utils.checkPermission(  android.Manifest.permission.READ_EXTERNAL_STORAGE ) )
             return null;
 
 
@@ -246,7 +246,7 @@ public class MusicProvider {
         MediaBrowserCompat.MediaItem    mediaItem;
         List<MediaMetadataCompat>       mediaMetadataList;
 
-        if ( Build.VERSION.SDK_INT >= 16 && !Utils.checkPermission( SlimPlayerApplication.getInstance(), android.Manifest.permission.READ_EXTERNAL_STORAGE ))
+        if ( Build.VERSION.SDK_INT >= 16 && !Utils.checkPermission( android.Manifest.permission.READ_EXTERNAL_STORAGE ))
             return null;
 
         metadataBuilder     = new MediaMetadataCompat.Builder(  );

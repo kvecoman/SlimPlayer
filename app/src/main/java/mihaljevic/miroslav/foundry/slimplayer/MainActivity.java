@@ -40,6 +40,7 @@ import junit.framework.Test;
 //TODO - load all songs from folder in queue when playing from file???
 //TODO - if playing last song fails, don't do it next time (some sort of pair in preferences that must be completed)
 //TODO - test all subscribing connection for case when connection fails or it suspends
+//TODO - there is no cancel button on lockscreen and notification player >LOLLIPOP
 
 //TODO - continue refactoring and asyncing from SettingsActivity and forward
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener
@@ -48,31 +49,32 @@ public class MainActivity extends SelectSongsActivity implements TextView.OnClic
     public static final String SCREEN_POSITION_KEY = "screen_position";
 
     //Pager that hold different screens (All music, Playlists etc)
-    private ViewPager mPager;
-    private PagerAdapter mPagerAdapter;
+    private ViewPager       mPager;
+    private PagerAdapter    mPagerAdapter;
 
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
+    protected void onCreate( Bundle savedInstanceState )
     {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_pager);
-
-
+        super.onCreate( savedInstanceState );
+        setContentView( R.layout.activity_pager );
 
 
         //Init pager and show screens
         initPager();
 
         //Check if there is savedInstanceState and try to restore last page position in pager
-        if (savedInstanceState != null && savedInstanceState.containsKey(SCREEN_POSITION_KEY))
+        if ( savedInstanceState != null && savedInstanceState.containsKey( SCREEN_POSITION_KEY ) )
         {
 
             //Restore last position in pager
-            int position = savedInstanceState.getInt(SCREEN_POSITION_KEY);
-            if ( position >= 0 && position < mPagerAdapter.getCount() )
+            int lastPagerScreen;
+
+            lastPagerScreen = savedInstanceState.getInt( SCREEN_POSITION_KEY );
+
+            if ( lastPagerScreen >= 0 && lastPagerScreen < mPagerAdapter.getCount() )
             {
-                mPager.setCurrentItem(position);
+                mPager.setCurrentItem( lastPagerScreen );
             }
 
         }
@@ -88,33 +90,31 @@ public class MainActivity extends SelectSongsActivity implements TextView.OnClic
         //Ask for permissions if needed
         if ( Build.VERSION.SDK_INT >= 16 )
         {
-            Utils.askPermission( this,
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    getString(R.string.permission_storage_explanation),
-                    Const.STORAGE_PERMISSIONS_REQUEST );
+            Utils.askPermission(    this,
+                                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                                    getString( R.string.permission_storage_explanation ),
+                                    Const.STORAGE_PERMISSIONS_REQUEST );
         }
 
         updateAfterPreferenceChange();
     }
 
 
-
-
     @Override
-    protected void onSaveInstanceState(Bundle outState)
+    protected void onSaveInstanceState( Bundle outState )
     {
-        super.onSaveInstanceState(outState);
+        super.onSaveInstanceState( outState );
 
-        outState.putInt(SCREEN_POSITION_KEY, mPager.getCurrentItem());
+        outState.putInt( SCREEN_POSITION_KEY, mPager.getCurrentItem() );
     }
 
     @Override
     public void onRequestPermissionsResult( int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults )
     {
-        switch (requestCode)
+        switch ( requestCode )
         {
             case Const.STORAGE_PERMISSIONS_REQUEST:
-                if (permissions.length != 0 && permissions[0].equals( Manifest.permission.READ_EXTERNAL_STORAGE ))
+                if ( permissions.length != 0 && permissions[ 0 ].equals( Manifest.permission.READ_EXTERNAL_STORAGE ) )
                 {
                     if ( grantResults.length != 0 && grantResults[ 0 ] == PackageManager.PERMISSION_GRANTED )
                     {
@@ -133,29 +133,30 @@ public class MainActivity extends SelectSongsActivity implements TextView.OnClic
     private void initPager()
     {
         //Set up pager and adapter to show list screens
-        mPager = (ViewPager)findViewById(R.id.pager);
-        mPagerAdapter = new MainScreenPagerAdapter(this,getSupportFragmentManager(),R.id.pager,!mSelectSongsForResult);
-        mPager.setAdapter(mPagerAdapter);
+        mPager          = ( ViewPager ) findViewById( R.id.pager );
+        mPagerAdapter   = new MainScreenPagerAdapter( this, getSupportFragmentManager(), R.id.pager, !mSelectSongsForResult );
+        mPager.setAdapter( mPagerAdapter );
 
         mPagerAdapter.notifyDataSetChanged();
-        mPager.setCurrentItem(0);
+        mPager.setCurrentItem( 0 );
     }
 
 
     private void updateAfterPreferenceChange()
     {
         //If preferences have changed respond accordingly
-        if (((SlimPlayerApplication) getApplicationContext()).isPreferencesChanged())
+        if ( ( ( SlimPlayerApplication ) getApplicationContext() ).isPreferencesChanged() )
         {
             initPager();
-            ((SlimPlayerApplication) getApplicationContext()).consumePreferenceChange();
+            ( ( SlimPlayerApplication ) getApplicationContext() ).consumePreferenceChange();
         }
     }
 
     //Empty page click handler, opens preferences so user can select screens to be shown
     @Override
-    public void onClick(View v) {
-        startActivity(new Intent(this, SettingsActivity.class));
+    public void onClick( View v )
+    {
+        startActivity( new Intent( this, SettingsActivity.class ) );
     }
 
 

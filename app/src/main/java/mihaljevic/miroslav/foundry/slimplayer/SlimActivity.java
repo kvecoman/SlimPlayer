@@ -15,60 +15,73 @@ import android.view.MenuItem;
  *
  */
 
-public abstract class SlimActivity extends AppCompatActivity {
+public abstract class SlimActivity extends AppCompatActivity
+{
     protected final String TAG = getClass().getSimpleName();
 
     public static String REQUEST_CODE_KEY = "request_code";
 
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu)
+    public boolean onCreateOptionsMenu( Menu menu )
     {
         Log.v(TAG,"onCreateOptionsMenu()");
 
         //Inflate options menu
-        getMenuInflater().inflate(R.menu.options_menu,menu);
+        getMenuInflater().inflate( R.menu.options_menu, menu );
         return true;
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item)
+    public boolean onOptionsItemSelected( MenuItem item )
     {
-        int id = item.getItemId();
+        int id;
+
+        id = item.getItemId();
 
         //Activate corresponding action that was selected in menu
         switch (id)
         {
             case R.id.toggle_repeat:
                 //Toggle repeat action - whether to repeat playlist or not at the end
-                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-                boolean repeat = preferences.getBoolean(getString(R.string.pref_key_repeat),true);
+                SharedPreferences   preferences;
+                boolean             repeatState;
+                boolean             newRepeatState;
+                int                 icon;
 
-                repeat = !repeat;
+                preferences     = PreferenceManager.getDefaultSharedPreferences( this );
+                repeatState     = preferences.getBoolean( getString(R.string.pref_key_repeat),true );
 
-                if (repeat)
-                    item.setIcon(R.drawable.ic_repeat_white_24dp);
-                else
-                    item.setIcon(R.drawable.ic_repeat_gray_24dp);
+                newRepeatState = !repeatState;
 
-                preferences.edit().putBoolean(getString(R.string.pref_key_repeat),repeat).apply();
+                //Determine which icon to use
+                icon = newRepeatState ? R.drawable.ic_repeat_white_24dp : R.drawable.ic_repeat_gray_24dp;
 
-                //This will only refresh repeat if MediaServicePlayer is bound
-                /*if (SlimPlayerApplication.getInstance().isMediaPlayerServiceBound())
-                    SlimPlayerApplication.getInstance().getMediaPlayerServiceIfBound().refreshRepeat();*/
+                item.setIcon( icon );
+
+                preferences .edit()
+                            .putBoolean( Const.REPEAT_PREF_KEY, newRepeatState )
+                            .apply();
+
+
                 break;
             case R.id.settings:
                 //Start settings screen
-                startActivity(new Intent(this, SettingsActivity.class));
+                Intent settingsIntent;
+
+                settingsIntent = new Intent( this, SettingsActivity.class );
+
+                startActivity( settingsIntent );
                 break;
             case R.id.exit:
                 //Exit the app
-                android.os.Process.killProcess(android.os.Process.myPid());
-                System.exit(1);
+                //TODO - maybe remove this kill process directive
+                android.os.Process.killProcess( android.os.Process.myPid() );
+                System.exit( 1 );
                 break;
         }
 
 
-        return super.onOptionsItemSelected(item);
+        return super.onOptionsItemSelected( item );
     }
 }

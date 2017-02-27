@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -43,20 +44,22 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     protected final String TAG = getClass().getSimpleName();
 
+    public static final ComponentName COMPONENT_NAME = new ComponentName( SlimPlayerApplication.getInstance(), MediaPlayerService.class );
+
     //Preference keys to restore last played list
-    public static final String LAST_SOURCE_KEY =    "mihaljevic.miroslav.foundry.slimplayer.last_source";
-    public static final String LAST_PARAMETER_KEY = "mihaljevic.miroslav.foundry.slimplayer.last_parameter";
-    public static final String LAST_POSITION_KEY =  "mihaljevic.miroslav.foundry.slimplayer.last_position";
-    public static final String LAST_TITLE_KEY =     "mihaljevic.miroslav.foundry.slimplayer.last_title";
-    public static final String LAST_STATE_PLAYED =  "mihaljevic.miroslav.foundry.slimplayer.last_state_played";
+    public static final String LAST_SOURCE_KEY      = "mihaljevic.miroslav.foundry.slimplayer.last_source";
+    public static final String LAST_PARAMETER_KEY   = "mihaljevic.miroslav.foundry.slimplayer.last_parameter";
+    public static final String LAST_POSITION_KEY    = "mihaljevic.miroslav.foundry.slimplayer.last_position";
+    public static final String LAST_TITLE_KEY       = "mihaljevic.miroslav.foundry.slimplayer.last_title";
+    public static final String LAST_STATE_PLAYED    = "mihaljevic.miroslav.foundry.slimplayer.last_state_played";
 
     //Notification ID
     public static final int NOTIFICATION_PLAYER_ID = 111;
 
-    public static final String  NOTIFICATION_ACTION_CLOSE =         "mihaljevic.miroslav.foundry.slimplayer.action.close";
-    public static final String  NOTIFICATION_ACTION_PREVIOUS =      "mihaljevic.miroslav.foundry.slimplayer.action.previous";
-    public static final String  NOTIFICATION_ACTION_PLAY_PAUSE =    "mihaljevic.miroslav.foundry.slimplayer.action.play_pause";
-    public static final String  NOTIFICATION_ACTION_NEXT =          "mihaljevic.miroslav.foundry.slimplayer.action.next";
+    public static final String  NOTIFICATION_ACTION_CLOSE       = "mihaljevic.miroslav.foundry.slimplayer.action.close";
+    public static final String  NOTIFICATION_ACTION_PREVIOUS    = "mihaljevic.miroslav.foundry.slimplayer.action.previous";
+    public static final String  NOTIFICATION_ACTION_PLAY_PAUSE  = "mihaljevic.miroslav.foundry.slimplayer.action.play_pause";
+    public static final String  NOTIFICATION_ACTION_NEXT        = "mihaljevic.miroslav.foundry.slimplayer.action.next";
 
     //Constant that allows media subscribers to have access to media content
     private static final String MEDIA_ROOT_ID = "slim_player_root";

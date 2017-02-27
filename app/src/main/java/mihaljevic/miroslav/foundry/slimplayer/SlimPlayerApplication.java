@@ -58,13 +58,13 @@ public class SlimPlayerApplication extends Application {
 
 
     //We indicate to any interested component that preferences have changed
-    public void notifyPreferencesChanged() {mPreferencesChanged = true;}
+    public void notifyPreferencesChanged() { mPreferencesChanged = true; }
 
     //Components get status on whether the preferences changed
-    public boolean isPreferencesChanged() {return mPreferencesChanged;}
+    public boolean isPreferencesChanged() { return mPreferencesChanged; }
 
     //Components notify that the have responded to changes
-    public void consumePreferenceChange() {mPreferencesChanged = false;}
+    public void consumePreferenceChange() { mPreferencesChanged = false; }
 
 
 }

@@ -77,7 +77,7 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
         }
 
         //If we don't have permissions, show just one screen with message
-        if ( !Utils.checkPermission( mContext, Manifest.permission.READ_EXTERNAL_STORAGE ) )
+        if ( !Utils.checkPermission( Manifest.permission.READ_EXTERNAL_STORAGE ) )
         {
             mNumScreens = 1;
         }
@@ -87,7 +87,7 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
     private void clearCachedFragments(FragmentManager fragmentManager, int pagerID)
     {
         //If there are any fragments before in fragment manager, clear them
-        List<Fragment> fragments;
+        List<Fragment>      fragments;
         FragmentTransaction transaction;
 
         fragments = fragmentManager.getFragments();
@@ -147,7 +147,7 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
         currentScreen   = mScreensList.get(position);
 
         //If we don't have permissions, show appropriate message
-        if ( !Utils.checkPermission( mContext, Manifest.permission.READ_EXTERNAL_STORAGE ) )
+        if ( !Utils.checkPermission( Manifest.permission.READ_EXTERNAL_STORAGE ) )
         {
             args.putString( EmptyMessageFragment.MESSAGE_KEY, mContext.getString(R.string.permission_storage_none ) );
             fragment.setArguments(args);

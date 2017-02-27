@@ -37,8 +37,8 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
     private ListView mListView;
 
     //Current directory and listing of all directories in it
-    private File mCurrentDir;
-    private TreeMap<String, File> mDirectoriesList2;
+    private File                    mCurrentDir;
+    private TreeMap<String, File>   mDirectoriesList2;
 
     //Adapter responsible for mListView
     private DirectoryListAdapter mAdapter;
@@ -55,13 +55,17 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
     @Override
     protected View onCreateDialogView(Context context)
     {
-        LayoutInflater inflater = LayoutInflater.from(context);
-        return inflater.inflate(R.layout.directory_select_dialog,null);
+        LayoutInflater inflater;
+
+        inflater = LayoutInflater.from(context);
+
+
+        return inflater.inflate( R.layout.directory_select_dialog, null );
     }
 
     //Most of the init is done in here, also the adapter is set up here
     @Override
-    protected void onBindDialogView(View v)
+    protected void onBindDialogView( View v )
     {
         //Bind views to member variables
         mListView = (ListView)v.findViewById(R.id.directory_select_list);
@@ -82,12 +86,12 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
     @Override
     public void onItemClick( AdapterView<?> parent, View view, int position, long id )
     {
-        mCurrentDir = (File)Utils.getByIndex( mDirectoriesList2, position );
+        mCurrentDir = ( File )Utils.getByIndex( mDirectoriesList2, position );
         updateDirectories();
     }
 
     @Override
-    public void onDialogClosed(boolean positiveResult)
+    public void onDialogClosed( boolean positiveResult )
     {
         //I have no idea how to use this properly, but adding directory in set should be done here
         //Problem is I don't know how to close custom dialog with positive result, only how to dismiss it
@@ -95,7 +99,7 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
 
     //I am not sure what this is for
     @Override
-    public Preference findPreference(CharSequence charSequence)
+    public Preference findPreference( CharSequence charSequence )
     {
         return getPreference();
     }
@@ -112,12 +116,11 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
     {
         mDirectoriesList2 = new TreeMap<>( new Utils.alphabetSort() );
 
-        HashMap<String,Object> mapItem;
 
         //If there is parent directory, add it on list as "/.."
-        if (mCurrentDir.getParent() != null)
+        if ( mCurrentDir.getParent() != null )
         {
-            if ( mCurrentDir.getParentFile().canRead() && (mCurrentDir.getParent().length() > 0))
+            if ( mCurrentDir.getParentFile().canRead() && ( mCurrentDir.getParent().length() > 0 ) )
             {
                 File backDir = mCurrentDir.getParentFile();
                 mDirectoriesList2.put( "/..", backDir );
@@ -125,14 +128,14 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
 
         }
 
-        if (!mCurrentDir.canRead())
+        if ( !mCurrentDir.canRead() )
         {
             Log.w(TAG, "Can't read current directory, READ_EXTERNAL_STORAGE permission???");
             return;
         }
 
         //Go through all directories and add them to hash map
-        for (File dir : mCurrentDir.listFiles(mDirectoryFilter))
+        for ( File dir : mCurrentDir.listFiles( mDirectoryFilter ) )
         {
             mDirectoriesList2.put( dir.getName(), dir );
         }
@@ -142,16 +145,16 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
     private void updateAdapter()
     {
 
-        if (mAdapter == null)
+        if ( mAdapter == null )
         {
             //Create new adapter if it doesn't exist
-            mAdapter = new DirectoryListAdapter(getContext(), mDirectoriesList2);
-            mListView.setAdapter(mAdapter);
+            mAdapter = new DirectoryListAdapter( getContext(), mDirectoriesList2 );
+            mListView.setAdapter( mAdapter );
         }
         else
         {
             //If it exist just reflect the changes in data
-            mAdapter.swap(mDirectoriesList2);
+            mAdapter.swap( mDirectoriesList2 );
         }
 
 
@@ -167,11 +170,12 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
             //       but it doesn't have persistStringSet, and we are using string set
 
             //Here we update the set of selected directories
-            DirectorySelectPreference pref = (DirectorySelectPreference)getPreference();
+            DirectorySelectPreference pref;
+
+            pref = (DirectorySelectPreference)getPreference();
 
             //Add selected directory to preference
             pref.addDirectoryPath(mCurrentDir.getAbsolutePath());
-
 
 
             getDialog().dismiss();

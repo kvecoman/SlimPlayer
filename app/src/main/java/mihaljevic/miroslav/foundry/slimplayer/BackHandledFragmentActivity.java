@@ -32,12 +32,12 @@ public abstract class BackHandledFragmentActivity extends SlimActivity implement
         Handler handler;
 
         //Allow fragment to handle back button press
-        if (backHandledRecyclerFragment == null || !backHandledRecyclerFragment.onBackPressed())
+        if ( backHandledRecyclerFragment == null || !backHandledRecyclerFragment.onBackPressed() )
         {
             //Back press on FRAGMENT was not consumed, so we handle ACTIVITY back press
 
             //If this activity is first in stack tree, confirm that user really wants to exit
-            if (isTaskRoot())
+            if ( isTaskRoot() )
             {
                 if (mBackPressedOnce)
                 {

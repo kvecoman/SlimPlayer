@@ -147,7 +147,7 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
         //Little hack so we know that UI is already set up when we need to use it
         mContentView.getViewTreeObserver().addOnGlobalLayoutListener(this);
 
-        mMediaBrowser = new MediaBrowserCompat( getContext(), playerServiceComponent, mConnectionCallbacks, null );
+        mMediaBrowser = new MediaBrowserCompat( getContext(), MediaPlayerService.COMPONENT_NAME, mConnectionCallbacks, null );
 
 
     }

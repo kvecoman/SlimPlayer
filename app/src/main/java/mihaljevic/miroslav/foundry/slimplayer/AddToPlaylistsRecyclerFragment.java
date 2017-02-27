@@ -22,30 +22,32 @@ public class AddToPlaylistsRecyclerFragment extends PlaylistsRecyclerFragment {
 
 
     @Override
-    public void onClick(View v)
+    public void onClick( View v )
     {
 
-        final int position;
-        final List<MediaBrowserCompat.MediaItem> mediaItems;
-        final List<String> songIDs;
-        final long playlistId;
+        final int                                   position;
+        final List<MediaBrowserCompat.MediaItem>    mediaItems;
+        final List<String>                          songIDs;
+        final long                                  playlistId;
+        String                                      mediaID;
 
-        position = mRecyclerView.getChildLayoutPosition(v);
-        mediaItems = mAdapter.getMediaItemsList();
-        songIDs = getActivity().getIntent().getStringArrayListExtra(AddToPlaylistActivity.ID_LIST_KEY);
-        playlistId = Long.parseLong(mediaItems.get(position).getMediaId());
+        position    = mRecyclerView.getChildLayoutPosition( v );
+        mediaItems  = mAdapter.getMediaItemsList();
+        mediaID     = mediaItems.get(position).getMediaId();
+        songIDs     = getActivity().getIntent().getStringArrayListExtra( AddToPlaylistActivity.SELECTED_IDS_KEY );
+        playlistId  = Long.parseLong( mediaID );
 
         //Insert songs in playlist
         new AsyncTask<Void,Void,Integer>()
         {
             @Override
-            protected Integer doInBackground(Void... params)
+            protected Integer doInBackground( Void... params )
             {
                 return Utils.insertIntoPlaylist( songIDs, playlistId );
             }
 
             @Override
-            protected void onPostExecute(Integer result)
+            protected void onPostExecute( Integer result )
             {
                 Utils.toastShort(result + " " + getString(R.string.playlist_add_succes));
                 refreshData();

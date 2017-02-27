@@ -5,19 +5,22 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.preference.PreferenceManager;
 
-public class SettingsActivity extends AppCompatActivity  implements SharedPreferences.OnSharedPreferenceChangeListener {
+public class SettingsActivity extends AppCompatActivity  implements SharedPreferences.OnSharedPreferenceChangeListener
+{
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate( Bundle savedInstanceState )
+    {
         super.onCreate(savedInstanceState);
 
         getSupportFragmentManager().beginTransaction()
-                                    .replace(android.R.id.content, new SettingsFragment())
+                                    .replace( android.R.id.content, new SettingsFragment() )
                                     .commit();
     }
 
     @Override
-    protected void onResume() {
+    protected void onResume()
+    {
         super.onResume();
 
         //Register this activity as listener for changed preferences
@@ -25,7 +28,8 @@ public class SettingsActivity extends AppCompatActivity  implements SharedPrefer
     }
 
     @Override
-    protected void onPause() {
+    protected void onPause()
+    {
         super.onPause();
 
         //Unregister preference change listener when exiting activity
@@ -36,7 +40,7 @@ public class SettingsActivity extends AppCompatActivity  implements SharedPrefer
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
     {
         //Notify app that we have changed preferences
-        ((SlimPlayerApplication) getApplicationContext()).notifyPreferencesChanged();
+        SlimPlayerApplication.getInstance().notifyPreferencesChanged();
 
     }
 }

@@ -27,7 +27,7 @@ public class DirectoryListAdapter extends BaseAdapter
 
     private TreeMap<String, File> mMap;
 
-    public DirectoryListAdapter(Context context, TreeMap<String, File> objects)
+    public DirectoryListAdapter( Context context, TreeMap<String, File> objects )
     {
         super();
 
@@ -36,25 +36,25 @@ public class DirectoryListAdapter extends BaseAdapter
     }
 
     @Override
-    @NonNull public View getView(int position, View convertView,@NonNull ViewGroup parent)
+    @NonNull public View getView( int position, View convertView, @NonNull ViewGroup parent )
     {
 
-        View view;
-        LayoutInflater inflater;
-        String name;
+        View            view;
+        LayoutInflater  inflater;
+        String          name;
 
         view = convertView;
         name = (String)( mMap.keySet().toArray()[position]);
 
         //If there is no view provided then just inflate android default
-        if (view == null)
+        if ( view == null )
         {
-            inflater = LayoutInflater.from(mContext);
+            inflater = LayoutInflater.from( mContext );
             view = inflater.inflate( android.R.layout.simple_list_item_1, null );
         }
 
 
-        if (view instanceof TextView)
+        if ( view instanceof TextView )
             ((TextView) view).setText( name );
 
 
@@ -70,7 +70,7 @@ public class DirectoryListAdapter extends BaseAdapter
     @Override
     public int getCount()
     {
-        if ( mMap == null)
+        if ( mMap == null )
             return 0;
 
         return mMap.size();
@@ -79,7 +79,7 @@ public class DirectoryListAdapter extends BaseAdapter
     @Override
     public Object getItem( int position )
     {
-        if ( mMap == null)
+        if ( mMap == null )
             return null;
 
         return Utils.getByIndex( mMap, position );

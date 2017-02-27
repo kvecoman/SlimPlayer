@@ -57,7 +57,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
 
     protected SparseBooleanArray mSelectedItems;
 
-    protected MediaBrowserCompat mMediaBrowser;
+    protected MediaBrowserCompat    mMediaBrowser;
     protected MediaControllerCompat mMediaController;
 
     protected MediaBrowserCompat.ConnectionCallback     mConnectionCallbacks;
@@ -110,27 +110,31 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
     protected class SubscriptionCallbacks extends MediaBrowserCompat.SubscriptionCallback
     {
         @Override
-        public void onChildrenLoaded(@NonNull String parentId, List<MediaBrowserCompat.MediaItem> children) {
+        public void onChildrenLoaded(@NonNull String parentId, List<MediaBrowserCompat.MediaItem> children)
+        {
             super.onChildrenLoaded( parentId, children );
 
             onDataLoaded(parentId, children, null);
         }
 
         @Override
-        public void onChildrenLoaded(@NonNull String parentId, List<MediaBrowserCompat.MediaItem> children, @NonNull Bundle options) {
+        public void onChildrenLoaded(@NonNull String parentId, List<MediaBrowserCompat.MediaItem> children, @NonNull Bundle options)
+        {
             super.onChildrenLoaded( parentId, children, options );
 
             onDataLoaded(parentId, children, options);
         }
 
         @Override
-        public void onError(@NonNull String parentId) {
+        public void onError(@NonNull String parentId)
+        {
             super.onError( parentId );
 
         }
 
         @Override
-        public void onError(@NonNull String parentId, @NonNull Bundle options) {
+        public void onError(@NonNull String parentId, @NonNull Bundle options)
+        {
             super.onError( parentId, options );
 
         }
@@ -164,9 +168,9 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         super.onCreate( savedInstanceState );
 
         //Set all media callback objects to this fragment's implementation of them
-        mConnectionCallbacks =      new ConnectionCallbacks();
-        mSubscriptionCallbacks =    new SubscriptionCallbacks();
-        mControllerCallbacks =      new ControllerCallbacks();
+        mConnectionCallbacks    = new ConnectionCallbacks();
+        mSubscriptionCallbacks  = new SubscriptionCallbacks();
+        mControllerCallbacks    = new ControllerCallbacks();
     }
 
 
@@ -178,8 +182,8 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
 
         contentView = inflater.inflate(R.layout.fragment_slim_recycler, container, false);
 
-        mRecyclerView = ( RecyclerView ) contentView.findViewById( R.id.recycler );
-        mEmptyView = contentView.findViewById( R.id.empty );
+        mRecyclerView   = ( RecyclerView ) contentView.findViewById( R.id.recycler );
+        mEmptyView      = contentView.findViewById( R.id.empty );
 
         return contentView;
     }
@@ -194,7 +198,11 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
 
         setHasOptionsMenu(true);
 
-        //mContext = getContext();
+        LinearLayoutManager     layoutManager;
+        DividerItemDecoration   dividerDecoration;
+
+        layoutManager       = new LinearLayoutManager( getContext() );
+        dividerDecoration   = new DividerItemDecoration( getContext(), layoutManager.getOrientation() );
 
         //Set up selection
         mSelectedItems = new SparseBooleanArray();
@@ -203,17 +211,17 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         mAdapter = new MediaAdapter(getContext(), null, R.layout.recycler_item, this, mSelectedItems);
 
         //Set up recycler view
-        mRecyclerView.setHasFixedSize(true);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        mRecyclerView.setAdapter(mAdapter);
-        mRecyclerView.addItemDecoration(new DividerItemDecoration(mRecyclerView.getContext(), ((LinearLayoutManager) mRecyclerView.getLayoutManager()).getOrientation()));
+        mRecyclerView.setHasFixedSize   ( true );
+        mRecyclerView.setLayoutManager  ( layoutManager );
+        mRecyclerView.setAdapter        ( mAdapter );
+        mRecyclerView.addItemDecoration ( dividerDecoration );
 
 
 
 
         //Get current source and parameter
-        mSource = getArguments().getString( Const.SOURCE_KEY);
-        mParameter = getArguments().getString( Const.PARAMETER_KEY);
+        mSource     = getArguments().getString( Const.SOURCE_KEY );
+        mParameter  = getArguments().getString( Const.PARAMETER_KEY );
 
         mSubscriptionBundle = new Bundle();
         mSubscriptionBundle.putString( Const.SOURCE_KEY, mSource );
@@ -230,16 +238,15 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         }
 
         //Init media browser
-        mMediaBrowser = new MediaBrowserCompat(getContext(), new ComponentName(getContext(),MediaPlayerService.class), mConnectionCallbacks, null);
+        mMediaBrowser = new MediaBrowserCompat( getContext(), MediaPlayerService.COMPONENT_NAME, mConnectionCallbacks, null );
 
     }
 
     @Override
-    public void onStart() {
+    public void onStart()
+    {
         super.onStart();
 
-        //With every showing of this fragment, load data
-        //loadDataAsync();
 
         mMediaBrowser.connect();
     }
@@ -247,7 +254,8 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
 
 
     @Override
-    public void onStop() {
+    public void onStop()
+    {
         super.onStop();
 
         if (mMediaController != null)
@@ -258,30 +266,26 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
     }
 
 
-
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-
-
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
+    {
 
         //In this callback we know that fragment is really visible/selected in pager, so notify hosting activity
-        if (getContext() instanceof BackHandledRecyclerFragment.BackHandlerInterface)
-            ((BackHandledRecyclerFragment.BackHandlerInterface)getContext()).setBackHandledFragment(this);
+        if ( getContext() instanceof BackHandledRecyclerFragment.BackHandlerInterface )
+            ( ( BackHandledRecyclerFragment.BackHandlerInterface ) getContext() ).setBackHandledFragment( this );
     }
 
     @Override
-    public boolean onBackPressed() {
+    public boolean onBackPressed()
+    {
 
         //Here we store if the back button event is consumed
-        boolean backConsumed = false;
+        boolean backConsumed;
+
+        backConsumed = false;
 
         //If we are in normal mode, just deselect everything, if we are in select for result mode, no deselection
-        if (mSelectMode && !mSelectSongsForResult)
+        if ( mSelectMode && !mSelectSongsForResult )
         {
             //Deselect everything
             deselect();
@@ -294,7 +298,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
     //It decides whether to show empty message or to display content
     protected void updateContentDisplay()
     {
-        if (mEmptyView == null || mRecyclerView == null)
+        if ( mEmptyView == null || mRecyclerView == null )
         {
             Log.w(TAG, "Could not find views to update display");
             return;
@@ -306,13 +310,13 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
 
         if (data == null || data.size() == 0)
         {
-            mEmptyView.     setVisibility( View.VISIBLE );
-            mRecyclerView.  setVisibility( View.GONE );
+            mEmptyView.setVisibility    ( View.VISIBLE );
+            mRecyclerView.setVisibility ( View.GONE );
         }
         else
         {
-            mEmptyView.     setVisibility( View.GONE );
-            mRecyclerView.  setVisibility( View.VISIBLE );
+            mEmptyView.setVisibility    ( View.GONE );
+            mRecyclerView.setVisibility ( View.VISIBLE );
         }
     }
 
@@ -330,72 +334,76 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
     //Deselects selection in recycler
     public void deselect()
     {
+        View listItem;
+
         mSelectMode = false;
 
         //Remove everything from selected items
         mSelectedItems.clear();
 
         //Un-highlight everything
-        for (int i = 0;i < mRecyclerView.getChildCount();i++)
-            mRecyclerView.getChildAt(i).setSelected(false);
+        for ( int i = 0; i < mRecyclerView.getChildCount(); i++ )
+        {
+            listItem = mRecyclerView.getChildAt( i );
+            listItem.setSelected( false );
+        }
 
     }
 
     public void setItemSelected(int pos, boolean selected,View view)
     {
         //Check if positions are in range
-        if (pos < 0 || pos >= mAdapter.getItemCount())
+        if ( pos < 0 || pos >= mAdapter.getItemCount() )
             return;
 
 
-        if (selected)
+        if ( selected )
         {
             //If we are selecting item
-            mSelectedItems.put(pos,true);
+            mSelectedItems.put( pos, true );
         }
         else
         {
             //If we are deselecting just delete that key
-            mSelectedItems.delete(pos);
+            mSelectedItems.delete( pos );
         }
 
         //Higlight or not the view
-        view.setSelected(selected);
+        view.setSelected( selected );
 
 
 
     }
 
-    public boolean isItemSelected(int pos)
+    public boolean isItemSelected( int pos )
     {
-        return mSelectedItems.get(pos);
+        return mSelectedItems.get( pos );
     }
 
     protected void refreshData()
     {
-        if (mMediaBrowser != null && mMediaBrowser.isConnected())
+        if ( mMediaBrowser != null && mMediaBrowser.isConnected() )
         {
             MusicProvider.getInstance().invalidateDataAndNotify( mSource, mParameter );
         }
     }
 
-    protected void deleteItemsAsync(final Uri uri,final String idField)
+    protected void deleteItemsAsync( final Uri uri, final String idField )
     {
         new AsyncTask<Void,Void,Integer>()
         {
             @Override
-            protected Integer doInBackground(Void... params) {
+            protected Integer doInBackground(Void... params)
+            {
 
-
-                return Utils.deleteFromList(
-                                        mAdapter.getMediaItemsList(),
-                                        uri,
-                                        mSelectedItems,
-                                        idField);
+                return Utils.deleteFromList(    mAdapter.getMediaItemsList(),
+                                                uri,
+                                                mSelectedItems,
+                                                idField );
             }
 
             @Override
-            protected void onPostExecute(Integer result)
+            protected void onPostExecute( Integer result )
             {
 
                 Utils.toastShort(result + " " + getString( R.string.toast_items_deleted ));

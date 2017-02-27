@@ -45,7 +45,7 @@
 
     </PreferenceCategory>
 
-    <Preference android:key="@string/pref_key_refresh"  android:title="@string/pref_title_refresh"/>
+    <Preference android:key="@string/pref_key_rescan"  android:title="@string/pref_title_rescan"/>
 
     <!-- android:layout="@android:layout/simple_list_item_1" -->
 

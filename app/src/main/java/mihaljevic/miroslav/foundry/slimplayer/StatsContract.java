@@ -19,12 +19,12 @@ public final class StatsContract {
     {
         public static final String TABLE_NAME = "source_stats";
 
-        public static final String COLUMN_NAME_SOURCE = "source";
-        public static final String COLUMN_NAME_PARAMETER = "parameter";
-        public static final String COLUMN_NAME_DISPLAY_NAME = "display_name";
-        public static final String COLUMN_NAME_LAST_POSITION = "last_position";
+        public static final String COLUMN_NAME_SOURCE           = "source";
+        public static final String COLUMN_NAME_PARAMETER        = "parameter";
+        public static final String COLUMN_NAME_DISPLAY_NAME     = "display_name";
+        public static final String COLUMN_NAME_LAST_POSITION    = "last_position";
         public static final String COLUMN_NAME_RECENT_FREQUENCY = "recent_frequency";
-        public static final String COLUMN_NAME_LAST_PLAY = "last_play";
+        public static final String COLUMN_NAME_LAST_PLAY        = "last_play";
 
 
         public static final String SQL_CREATE = "CREATE TABLE " + TABLE_NAME +
@@ -44,10 +44,9 @@ public final class StatsContract {
     {
         public static final String TABLE_NAME = "source_records";
 
-        //public static final String COLUMN_NAME_SOURCE_STATS_ID = "source_stats_id";
-        public static final String COLUMN_NAME_SOURCE = "source";
-        public static final String COLUMN_NAME_PARAMETER = "parameter";
-        public static final String COLUMN_NAME_TIME = "time";
+        public static final String COLUMN_NAME_SOURCE       = "source";
+        public static final String COLUMN_NAME_PARAMETER    = "parameter";
+        public static final String COLUMN_NAME_TIME         = "time";
 
         public static final String SQL_CREATE = "CREATE TABLE " + TABLE_NAME +
                                                 " (" + _ID + " INTEGER PRIMARY KEY," +

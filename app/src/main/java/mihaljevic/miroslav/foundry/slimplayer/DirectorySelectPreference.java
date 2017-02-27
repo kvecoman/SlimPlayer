@@ -27,32 +27,34 @@ import java.util.Set;
 
 public class DirectorySelectPreference extends DialogPreference implements Button.OnClickListener, ListView.OnItemClickListener, HackedListView.OnLayoutChildrenListener {
 
-    private HackedListView mListView;
-    private Set<String> mDirectoriesSet;
-    private Button mActionButton;
-    private ArrayAdapter<String> mAdapter;
-    private Context mContext;
-    private int mSelectedItem = -1;
+    private HackedListView          mListView;
+    private Set<String>             mDirectoriesSet;
+    private Button                  mActionButton;
+    private ArrayAdapter<String>    mAdapter;
+    private Context                 mContext;
+    private int                     mSelectedItem = -1;
 
     public DirectorySelectPreference(Context context, AttributeSet attrs) {
         this(context, attrs,0);
     }
 
-    public DirectorySelectPreference(Context context) {
+    public DirectorySelectPreference( Context context ) {
         super(context);
     }
 
-    public DirectorySelectPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes)
+    public DirectorySelectPreference( Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes )
     {
-        super(context, attrs, defStyleAttr, defStyleRes);
+        super( context, attrs, defStyleAttr, defStyleRes );
     }
 
-    public DirectorySelectPreference(Context context, AttributeSet attrs, int defStyleAttr)
+    public DirectorySelectPreference( Context context, AttributeSet attrs, int defStyleAttr )
     {
-        super(context, attrs, defStyleAttr);
+        super( context, attrs, defStyleAttr );
+
         mContext = context;
-        setLayoutResource(R.layout.preference_folder_select);
-        setWidgetLayoutResource(R.layout.preference_folder_select_widget);
+
+        setLayoutResource       (R.layout.preference_folder_select);
+        setWidgetLayoutResource (R.layout.preference_folder_select_widget);
 
     }
 
@@ -72,14 +74,15 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
         mAdapter.addAll(mDirectoriesSet);
 
         mListView = ( HackedListView )holder.findViewById(R.id.directory_set_list);
-        mListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-        mListView.setItemsCanFocus(false);
-        mListView.setAdapter(mAdapter);
-        mListView.setOnItemClickListener(this);
-        mListView.setOnLayoutChildrenListener(this);
 
-        mActionButton = (Button)holder.findViewById(R.id.action_button);
-        mActionButton.setOnClickListener(this);
+        mListView.setChoiceMode             ( ListView.CHOICE_MODE_SINGLE );
+        mListView.setItemsCanFocus          ( false );
+        mListView.setAdapter                ( mAdapter );
+        mListView.setOnItemClickListener    ( this );
+        mListView.setOnLayoutChildrenListener( this );
+
+        mActionButton = (Button)holder.findViewById( R.id.action_button );
+        mActionButton.setOnClickListener( this );
 
 
         //Set list height based on number of rows we have
@@ -87,8 +90,8 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
 
 
         //Set preference title and summary
-        ((TextView)holder.findViewById(android.R.id.title)).setText(getTitle());
-        ((TextView)holder.findViewById(android.R.id.summary)).setText(getSummary());
+        ( ( TextView ) holder.findViewById( android.R.id.title ) ).setText( getTitle() );
+        ( ( TextView ) holder.findViewById( android.R.id.summary ) ).setText( getSummary() );
 
     }
 
@@ -96,11 +99,11 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
     //Handler for when LayoutChildren is called, and it is called on almost every kind of ListView update
     //...and that's why we use to catch moment when everything from list is unselected
     @Override
-    public void onLayoutChildren(boolean isItemClicked)
+    public void onLayoutChildren( boolean isItemClicked )
     {
         //This is pretty bad, but even if we always deselect list, OnItemClick goes after this
         //... so it will be selected again
-        if (!isItemClicked)
+        if ( !isItemClicked )
         {
             deselectList();
         }
@@ -109,13 +112,15 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
 
     //Handler for when add directory(action button) is clicked
     @Override
-    public void onClick(View v)
+    public void onClick( View v )
     {
+        String directory;
+
         //If nothing is selected then show dialog
-        if (mSelectedItem < 0)
+        if ( mSelectedItem < 0 )
         {
             //If we don't have permission then just return
-            if ( Build.VERSION.SDK_INT >= 16 && !Utils.checkPermission( SlimPlayerApplication.getInstance(), android.Manifest.permission.READ_EXTERNAL_STORAGE ))
+            if ( Build.VERSION.SDK_INT >= 16 && !Utils.checkPermission( android.Manifest.permission.READ_EXTERNAL_STORAGE ) )
                 return;
 
             //Show dialog for selecting preferences
@@ -124,14 +129,18 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
         else
         {
             //If something is selected, then delete it and update ListView, set and preference
-            String str = mAdapter.getItem(mSelectedItem);
-            mDirectoriesSet.remove(str);
-            mAdapter.remove(str);
-            mAdapter.notifyDataSetChanged();
+            directory = mAdapter.getItem( mSelectedItem );
+
+            mDirectoriesSet.remove  ( directory );
+            mAdapter.remove         ( directory );
+
             mListView.clearChoices();
+            deselectList();
+
+            mAdapter.notifyDataSetChanged();
             updateDirectoriesPref();
             updateListHeight();
-            deselectList();
+
 
         }
     }
@@ -140,16 +149,16 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
     @Override
     public void onItemClick( AdapterView<?> parent, View view, int position, long id )
     {
-        if (mSelectedItem == position)
+        if ( mSelectedItem == position )
         {
             //If user clicked on already selected item, we should deselect it
-            mListView.setItemChecked(position, false);
+            mListView.setItemChecked( position, false );
             deselectList();
         }
         else
         {
             //Select what user has clicked
-            mActionButton.setText(mContext.getString(R.string.directory_pref_button_delete));
+            mActionButton.setText( mContext.getString( R.string.directory_pref_button_delete ) );
             mSelectedItem = position;
         }
 
@@ -158,9 +167,9 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
 
     //Instead of directly accessing SharedPreferences, here we should use persist methods, but I don't know :\
     //This method is called from dialog when select button is clicked
-    public void addDirectoryPath(String path)
+    public void addDirectoryPath( String path )
     {
-        mDirectoriesSet.add(path);
+        mDirectoriesSet.add( path );
 
         updateDirectoriesPref();
 
@@ -174,10 +183,12 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
     //Updates ListView and shared preference with latest directories set
     private void updateDirectoriesPref()
     {
-        getSharedPreferences().edit().putStringSet(getKey(),mDirectoriesSet).apply();
+        getSharedPreferences().edit()
+                                .putStringSet( getKey(), mDirectoriesSet )
+                                .apply();
 
         //We have to do this right here, because with this preference the onSharedPreferenceChanged isn't called
-        ((SlimPlayerApplication) getContext().getApplicationContext()).notifyPreferencesChanged();
+        ( ( SlimPlayerApplication ) getContext().getApplicationContext() ).notifyPreferencesChanged();
     }
 
 
@@ -185,8 +196,11 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
     //Functions that updates height of member list view based on number of items
     private void updateListHeight()
     {
-        ViewGroup.LayoutParams params = mListView.getLayoutParams();
-        params.height = Utils.calculateListHeight(mListView);
+        ViewGroup.LayoutParams params;
+
+        params          = mListView.getLayoutParams();
+        params.height   = Utils.calculateListHeight(mListView);
+
         mListView.setLayoutParams(params);
         mListView.requestLayout();
     }
@@ -195,6 +209,6 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
     private void deselectList()
     {
         mSelectedItem = -1;
-        mActionButton.setText(mContext.getString(R.string.directory_pref_button_select));
+        mActionButton.setText( mContext.getString( R.string.directory_pref_button_select ) );
     }
 }

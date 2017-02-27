@@ -21,7 +21,7 @@
     <string name="pref_title_artists">Artists screen</string>
     <string name="pref_title_genres">Genres screen</string>
 
-    <string name="pref_title_refresh">Refresh</string>
+    <string name="pref_title_rescan">Rescan</string>
 
     <!--Keys used in preferences and possibly in some other cases-->
     <string name="pref_key_tabs">pref_key_tabs</string>
@@ -35,7 +35,7 @@
 
     <string name="pref_key_directories_set">pref_key_directories_set</string>
 
-    <string name="pref_key_refresh">pref_key_refresh</string>
+    <string name="pref_key_rescan">pref_key_rescan</string>
 
     <string name="pref_key_repeat">pref_key_repeat</string>
 

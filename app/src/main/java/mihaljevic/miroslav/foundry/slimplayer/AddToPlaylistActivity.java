@@ -13,7 +13,7 @@ import android.os.Bundle;
 
 public class AddToPlaylistActivity extends SlimActivity {
 
-    public static final String ID_LIST_KEY = "id_list";
+    public static final String SELECTED_IDS_KEY = "selected_IDs";
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -28,17 +28,17 @@ public class AddToPlaylistActivity extends SlimActivity {
     //Creates and displays AddToPlaylist fragment
     private void createAddToPlaylistFragment()
     {
-        AddToPlaylistsRecyclerFragment fragment;
-        Bundle fragmentBundle;
+        AddToPlaylistsRecyclerFragment  fragment;
+        Bundle                          fragmentBundle;
 
         //Acquire bundle to query all playlists
-        fragment = new AddToPlaylistsRecyclerFragment();
-        fragmentBundle = ScreenBundles.getPlaylistsBundle();
+        fragment        = new AddToPlaylistsRecyclerFragment();
+        fragmentBundle  = ScreenBundles.getPlaylistsBundle();
 
-        if (fragmentBundle == null)
+        if ( fragmentBundle == null )
             return;
 
-        fragment.setArguments(fragmentBundle);
+        fragment.setArguments( fragmentBundle );
 
         getSupportFragmentManager()
                     .beginTransaction()

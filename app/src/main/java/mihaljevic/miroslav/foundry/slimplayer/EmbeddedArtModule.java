@@ -20,17 +20,19 @@ import java.io.InputStream;
 
 /**
  * Glide related class to load embedded album art from mp3 files
- *
+ * <p>
  * Created by miroslav on 02.02.17..
  */
 
 public class EmbeddedArtModule implements GlideModule
 {
     @Override
-    public void applyOptions( Context context, GlideBuilder builder){}
+    public void applyOptions( Context context, GlideBuilder builder )
+    {
+    }
 
     @Override
-    public void registerComponents( Context context, Glide glide)
+    public void registerComponents( Context context, Glide glide )
     {
         glide.register( EmbeddedArtGlide.class, InputStream.class, new EmbeddedArtLoader.Factory() );
     }
@@ -41,7 +43,7 @@ class EmbeddedArtLoader implements StreamModelLoader<EmbeddedArtGlide>
     @Override
     public DataFetcher<InputStream> getResourceFetcher( EmbeddedArtGlide model, int width, int height )
     {
-        return new EmbeddedArtFetcher(model);
+        return new EmbeddedArtFetcher( model );
     }
 
     static class Factory implements ModelLoaderFactory<EmbeddedArtGlide, InputStream>
@@ -53,7 +55,9 @@ class EmbeddedArtLoader implements StreamModelLoader<EmbeddedArtGlide>
         }
 
         @Override
-        public void teardown() {}
+        public void teardown()
+        {
+        }
     }
 }
 
@@ -61,7 +65,7 @@ class EmbeddedArtFetcher implements DataFetcher<InputStream>
 {
     private final EmbeddedArtGlide model;
 
-    public EmbeddedArtFetcher(EmbeddedArtGlide model)
+    public EmbeddedArtFetcher( EmbeddedArtGlide model )
     {
         this.model = model;
     }
@@ -75,12 +79,16 @@ class EmbeddedArtFetcher implements DataFetcher<InputStream>
     @Override
     public InputStream loadData( Priority priority ) throws Exception
     {
-        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        MediaMetadataRetriever  retriever;
+        byte[]                  picture;
+
+        retriever = new MediaMetadataRetriever();
+
         try
         {
             retriever.setDataSource( model.mPath );
-            byte[] picture = retriever.getEmbeddedPicture();
-            if (picture != null)
+            picture = retriever.getEmbeddedPicture();
+            if ( picture != null )
             {
                 return new ByteArrayInputStream( picture );
             }
@@ -88,8 +96,7 @@ class EmbeddedArtFetcher implements DataFetcher<InputStream>
             {
                 return null;
             }
-        }
-        finally
+        } finally
         {
             retriever.release();
         }

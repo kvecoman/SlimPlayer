@@ -20,7 +20,7 @@ import java.io.InputStream;
 
 /**
  * Glide related class to load embedded album art from mp3 files
- *
+ * <p>
  * Created by Miroslav on 02.02.17..
  */
 
@@ -28,7 +28,7 @@ public class EmbeddedArtGlide
 {
     final String mPath;
 
-    public EmbeddedArtGlide( String path)
+    public EmbeddedArtGlide( String path )
     {
         mPath = path;
     }

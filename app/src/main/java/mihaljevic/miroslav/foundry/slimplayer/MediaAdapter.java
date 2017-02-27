@@ -68,15 +68,15 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.ViewHolder> 
         textView.setText( text );
 
         //Check if this item needs to be selected
-        if (mSelectedItems != null)
+        if ( mSelectedItems != null )
         {
-            if (mSelectedItems.get(position))
+            if ( mSelectedItems.get( position ) )
             {
-                holder.mParentView.setSelected(true);
+                holder.mParentView.setSelected( true );
             }
             else
             {
-                holder.mParentView.setSelected(false);
+                holder.mParentView.setSelected( false );
             }
         }
     }
@@ -84,7 +84,7 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.ViewHolder> 
     @Override
     public int getItemCount()
     {
-        if (mMediaItemsList == null)
+        if ( mMediaItemsList == null )
             return 0;
 
         return mMediaItemsList.size();
@@ -95,12 +95,12 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.ViewHolder> 
         return mMediaItemsList;
     }
 
-    public void setMediaItemsList(List<MediaBrowserCompat.MediaItem> mediaItemsList)
+    public void setMediaItemsList( List<MediaBrowserCompat.MediaItem> mediaItemsList )
     {
         this.mMediaItemsList = mediaItemsList;
     }
 
-    public void swapMediaItemsList(List<MediaBrowserCompat.MediaItem> mediaItemsList)
+    public void swapMediaItemsList( List<MediaBrowserCompat.MediaItem> mediaItemsList )
     {
         this.mMediaItemsList = mediaItemsList;
         notifyDataSetChanged();
@@ -110,30 +110,30 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.ViewHolder> 
     {
         public View mParentView;
 
-        public ViewHolder(View v)
+        public ViewHolder( View v )
         {
-            super(v);
+            super( v );
             mParentView = v;
         }
 
-        public ViewHolder(View v, View.OnClickListener listener)
+        public ViewHolder( View v, View.OnClickListener listener )
         {
-            this(v);
+            this( v );
 
-            if (listener == null)
+            if ( listener == null )
                 return;
 
 
-            v.setOnClickListener(listener);
+            v.setOnClickListener( listener );
 
             //Check if listener is also instance of long click listener
-            if (listener instanceof View.OnLongClickListener)
-                v.setOnLongClickListener(((View.OnLongClickListener) listener));
+            if ( listener instanceof View.OnLongClickListener )
+                v.setOnLongClickListener( ( ( View.OnLongClickListener ) listener ) );
         }
 
-        public View findViewById(int id)
+        public View findViewById( int id )
         {
-            return mParentView.findViewById(id);
+            return mParentView.findViewById( id );
         }
     }
 }

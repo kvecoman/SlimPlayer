@@ -47,8 +47,8 @@ public class LRUCache<K, V>
 
     public LRUCache( int capacity )
     {
-        mSize = 0;
-        mCapacity = capacity;
+        mSize       = 0;
+        mCapacity   = capacity;
         //dbgList = new HashSet<>(  );
     }
 
@@ -292,28 +292,7 @@ public class LRUCache<K, V>
 
     }
 
-    //DEBUG METHOD - only used to verify correct behaviour of cache
-   /*private List<Node<K,V>> listAllNodes()
-    {
-        List<Node<K,V>> list;
-        Node<K,V> node;
 
-        list = new ArrayList<>(  );
-
-        node = mFirst;
-
-        while (node != null)
-        {
-            list.add( node );
-
-            node = node.previous;
-        }
-
-        //Set and return list also
-        //dbgList = list;
-
-        return  list;
-    }*/
 
     private ArrayList<String> listNodesStr()
     {
@@ -334,19 +313,6 @@ public class LRUCache<K, V>
         return list;
     }
 
-    /*public int countNulls()
-    {
-        int count;
 
-        count = 0;
-
-        for (WeakReference<Node<K,V>> ref : dbgList)
-        {
-            if (ref.get() == null)
-                count++;
-        }
-
-        return count;
-    }*/
 
 }

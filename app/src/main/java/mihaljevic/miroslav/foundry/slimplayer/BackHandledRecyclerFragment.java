@@ -23,7 +23,7 @@ public abstract class BackHandledRecyclerFragment extends Fragment {
     //Interface that hosting activity needs to implement
     public interface BackHandlerInterface
     {
-        void setBackHandledFragment(BackHandledRecyclerFragment backHandledFragment);
+        void setBackHandledFragment( BackHandledRecyclerFragment backHandledFragment );
     }
 
 }

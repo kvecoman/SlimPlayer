@@ -23,22 +23,22 @@ public class CategoryRecyclerFragment extends SlimRecyclerFragment {
 
 
     @Override
-    public void onClick(View v) {
+    public void onClick( View v ) {
 
 
-        Intent intent;
-        String parameter;
-        String displayName;
-        int position;
-        Context context;
-        CharSequence title;
-        MediaDescriptionCompat mediaDescription;
+        Intent                  intent;
+        String                  parameter;
+        String                  displayName;
+        int                     position;
+        Context                 context;
+        CharSequence            title;
+        MediaDescriptionCompat  mediaDescription;
 
-        context = getContext();
-        position = mRecyclerView.getChildLayoutPosition(v);
-        mediaDescription = mAdapter.getMediaItemsList().get(position).getDescription();
-        parameter = mediaDescription.getMediaId();
-        title = mediaDescription.getTitle();
+        context             = getContext();
+        position            = mRecyclerView.getChildLayoutPosition(v);
+        mediaDescription    = mAdapter.getMediaItemsList().get(position).getDescription();
+        parameter           = mediaDescription.getMediaId();
+        title               = mediaDescription.getTitle();
 
         displayName = title == null ? "" : title.toString();
 
@@ -46,17 +46,20 @@ public class CategoryRecyclerFragment extends SlimRecyclerFragment {
         {
             //We are selecting songs for playlist
 
-            intent = new Intent(PlaylistSongsRecyclerFragment.ACTION_SELECT_SONGS, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,getContext(),SongListActivity.class);
+            intent = new Intent(    PlaylistSongsRecyclerFragment.ACTION_SELECT_SONGS,
+                                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                                    getContext(),
+                                    SongListActivity.class );
 
             //Choose bundle and send it to songList fragment
             intent.putExtra( Const.SOURCE_KEY, mSource );
             intent.putExtra( Const.PARAMETER_KEY, parameter);
             intent.putExtra( Const.DISPLAY_NAME, displayName );
-            intent.putExtra(SlimActivity.REQUEST_CODE_KEY,PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2);
+            intent.putExtra( SlimActivity.REQUEST_CODE_KEY, PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2 );
 
             //We let the hosting activity to handle results of selecting songs
             if (context instanceof AppCompatActivity)
-                ((AppCompatActivity)context).startActivityForResult(intent, PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2);
+                ( ( AppCompatActivity ) context ).startActivityForResult( intent, PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2 );
         }
         else
         {
@@ -64,7 +67,7 @@ public class CategoryRecyclerFragment extends SlimRecyclerFragment {
 
 
 
-            intent = new Intent(context,SongListActivity.class);
+            intent = new Intent( context, SongListActivity.class );
 
             //Choose bundle and send it to songList fragment
             intent.putExtra( Const.SOURCE_KEY, mSource );
@@ -72,14 +75,14 @@ public class CategoryRecyclerFragment extends SlimRecyclerFragment {
             intent.putExtra( Const.DISPLAY_NAME, displayName );
 
             //Start next screen
-            startActivity(intent);
+            startActivity( intent );
         }
 
     }
 
     //We don't use long click here, but must implement it
     @Override
-    public boolean onLongClick(View v) {
+    public boolean onLongClick( View v ) {
         return false;
     }
 

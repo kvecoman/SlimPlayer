@@ -1,7 +1,6 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 
-import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -12,7 +11,6 @@ import android.support.v4.app.DialogFragment;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceFragmentCompat;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.io.File;
 import java.util.Set;
@@ -22,7 +20,8 @@ import java.util.Set;
  *
  * @author Miroslav Mihaljević
  */
-public class SettingsFragment extends PreferenceFragmentCompat {
+public class SettingsFragment extends PreferenceFragmentCompat
+{
     private final String TAG = getClass().getSimpleName();
 
 
@@ -36,33 +35,25 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         setPreferencesFromResource(R.xml.settings, rootKey);
 
         //OnClick listener for Refresh preference
-        findPreference(getResources().getString(R.string.pref_key_refresh)).setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
-                        {
-                            @Override
-                            public boolean onPreferenceClick(Preference preference)
-                            {
-                                scanMedia();
-
-                                return false;
-                            }
-                        });
+        findPreference(Const.RESCAN_PREF_KEY).setOnPreferenceClickListener( new RescanClickListener() );
     }
 
     @Override
     public void onDisplayPreferenceDialog( Preference preference )
     {
-        DialogFragment dialogFragment;
+        DialogFragment  dialogFragment;
+        Bundle          args;
 
         //If the selected preference is Directory Select Preference we then send it
         if ( preference instanceof DirectorySelectPreference )
         {
-            dialogFragment = new DirectorySelectDialogPreferenceFrag();
-            Bundle bundle = new Bundle( 1 );
-            bundle.putString( "key", preference.getKey() );
-            dialogFragment.setArguments( bundle );
+            args = new Bundle( 1 );
+            args.putString( "key", preference.getKey() );
 
-            dialogFragment.setTargetFragment( this, 0 );
-            dialogFragment.show( this.getFragmentManager(), "android.support.v7.preference.PreferenceFragment.DIALOG" );
+            dialogFragment = new DirectorySelectDialogPreferenceFrag();
+            dialogFragment.setArguments     ( args );
+            dialogFragment.setTargetFragment( this, 0 ); //TODO - maybe set request code and try to get result in onActivityResult
+            dialogFragment.show             ( this.getFragmentManager(), "android.support.v7.preference.PreferenceFragment.DIALOG" );
         }
         else
         {
@@ -75,14 +66,14 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     private void scanMedia()
     {
         //Get selected directories and run rescan on them
-        SharedPreferences preferences;
-        Set<String> directoriesSet;
-        int deletedGenres;
-        Intent scanIntent;
-        Uri scanUri;
+        SharedPreferences   preferences;
+        Set<String>         directoriesSet;
+        int                 deletedGenres;
+        Intent              scanIntent;
+        Uri                 scanUri;
 
-        preferences  = PreferenceManager.getDefaultSharedPreferences(getContext());
-        directoriesSet = preferences.getStringSet(getString(R.string.pref_key_directories_set),null);
+        preferences     = PreferenceManager.getDefaultSharedPreferences(getContext());
+        directoriesSet  = preferences.getStringSet(getString(R.string.pref_key_directories_set),null);
 
 
         //Delete empty genres
@@ -91,15 +82,15 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
 
 
-        if (directoriesSet != null && !directoriesSet.isEmpty())
+        if ( directoriesSet != null && !directoriesSet.isEmpty() )
         {
             //Send broadcasts to scan selected directories
-            for (String directory : directoriesSet)
+            for ( String directory : directoriesSet )
             {
-                scanUri = Uri.fromFile(new File(directory));
-                scanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, scanUri);
+                scanUri     = Uri.fromFile( new File( directory ) );
+                scanIntent  = new Intent( Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, scanUri );
 
-                getContext().sendBroadcast(scanIntent);
+                getContext().sendBroadcast( scanIntent );
             }
             Log.d(TAG, "Scanning selected directories for new songs");
         }
@@ -107,14 +98,27 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         {
             //If there are none selected directories, then scan whole system
             //TODO - scan removable SD (one day)
-            scanUri = Uri.fromFile(Environment.getExternalStorageDirectory());
-            scanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, scanUri);
+            scanUri     = Uri.fromFile( Environment.getExternalStorageDirectory() );
+            scanIntent  = new Intent( Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, scanUri );
 
-            getContext().sendBroadcast(scanIntent);
+            getContext().sendBroadcast( scanIntent );
 
-            Log.d(TAG, "Scanning selected directories for new songs");
+            Log.d(TAG, "Scanning storage for new songs (main only, not SD)");
         }
 
         MusicProvider.getInstance().invalidateAllData();
     }
+
+    private class RescanClickListener implements Preference.OnPreferenceClickListener
+    {
+        @Override
+        public boolean onPreferenceClick( Preference preference )
+        {
+            scanMedia();
+
+            return true;
+        }
+    }
 }
+
+

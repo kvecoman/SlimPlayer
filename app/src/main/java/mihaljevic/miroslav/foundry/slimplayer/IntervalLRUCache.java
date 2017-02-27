@@ -5,11 +5,11 @@ import java.util.TimerTask;
 
 /**
  * Created by miroslav on 21.02.17..
- *
+ * <p>
  * Same as LRUCache but it will delete last entry after passing of every interval until cache is empty
  */
 
-public class IntervalLRUCache<K,V> extends LRUCache<K,V>
+public class IntervalLRUCache<K, V> extends LRUCache<K, V>
 {
     private Timer mTimer;
 
@@ -24,9 +24,9 @@ public class IntervalLRUCache<K,V> extends LRUCache<K,V>
         }
     };
 
-    public IntervalLRUCache(int capacity, int interval)
+    public IntervalLRUCache( int capacity, int interval )
     {
-        super(capacity);
+        super( capacity );
 
         long intervalMs;
 

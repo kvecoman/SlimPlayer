@@ -202,7 +202,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         mSeekBarHandler     = new Handler(  );
         mSeekBarRunnable    = new SeekBarRunnable();
 
-        mMediaBrowser = new MediaBrowserCompat( this, new ComponentName( this, MediaPlayerService.class ), mConnectionCallbacks, null );
+        mMediaBrowser = new MediaBrowserCompat( this, MediaPlayerService.COMPONENT_NAME, mConnectionCallbacks, null );
     }
 
 

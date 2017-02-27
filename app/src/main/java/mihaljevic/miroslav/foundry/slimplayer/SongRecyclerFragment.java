@@ -8,7 +8,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.Menu;
@@ -63,7 +62,8 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
 
 
 
-    public SongRecyclerFragment() {
+    public SongRecyclerFragment()
+    {
         // Required empty public constructor
     }
 
@@ -73,9 +73,9 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
         super.onCreate( savedInstanceState );
 
         //Set all media callback objects to this fragment's implementation of them
-        mConnectionCallbacks =      new ConnectionCallbacks();
-        mSubscriptionCallbacks =    new SubscriptionCallbacks();
-        mControllerCallbacks =      new ControllerCallbacks();
+        mConnectionCallbacks     = new ConnectionCallbacks();
+        mSubscriptionCallbacks   = new SubscriptionCallbacks();
+        mControllerCallbacks     = new ControllerCallbacks();
     }
 
     //Most of the init is done here
@@ -107,18 +107,24 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
 
 
     @Override
-    public void onPrepareOptionsMenu(Menu menu) {
+    public void onPrepareOptionsMenu(Menu menu)
+    {
         Log.v(TAG,"onPrepareOptionsMenu()");
 
         //Show add to playlist only if we are in normal mode (and not select for result mode)
-        if (!mSelectSongsForResult)
+        if ( !mSelectSongsForResult )
         {
-            MenuItem playlistAddMenuItem = menu.findItem(R.id.playlist_add);
+            MenuItem playlistAddMenuItem;
 
-            if (mSelectMode && mSelectedItems.size() > 0) {
+            playlistAddMenuItem = menu.findItem( R.id.playlist_add );
+
+            if (mSelectMode && mSelectedItems.size() > 0)
+            {
                 //If we are selecting items then we want option to add them to playlist
                 playlistAddMenuItem.setVisible(true);
-            } else {
+            }
+            else
+            {
                 //Hide option to add to playlist
                 playlistAddMenuItem.setVisible(false);
             }
@@ -131,36 +137,50 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
+        int id;
+
+        id = item.getItemId();
 
         //Allow this option only if we are in normal mode
         if (mSelectMode && !mSelectSongsForResult)
         {
-            if (item.getItemId() == R.id.playlist_add)
+            if ( id == R.id.playlist_add )
             {
 
                 //Get all checked positions
                 //NOTE - this looks a little bit messed after the migration to recycler view from list view
-                SparseBooleanArray checkedPositions = mSelectedItems;
+                SparseBooleanArray                  checkedPositions;
+                List<MediaBrowserCompat.MediaItem>  mediaItemsList;
+                ArrayList<String>                   selectedIDsList;
+                int                                 position;
+                boolean                             isPositionSelected;
+                String                              mediaID;
+                Intent                              addToPlaylistIntent;
+
+                checkedPositions = mSelectedItems;
 
 
-                List<MediaBrowserCompat.MediaItem> mediaItemsList = mAdapter.getMediaItemsList();
-                List<String> idList = new ArrayList<>();
+                mediaItemsList = mAdapter.getMediaItemsList();
+                selectedIDsList = new ArrayList<>();
 
                 //Transfer IDs from selected songs to ID list
-                for (int i = 0; i < checkedPositions.size();i++)
+                for ( int i = 0; i < checkedPositions.size(); i++ )
                 {
-                    int position = checkedPositions.keyAt(i);
+                    position            = checkedPositions.keyAt    ( i );
+                    isPositionSelected  = checkedPositions.valueAt  ( i );
 
-                    if (checkedPositions.get(position))
+                    if ( isPositionSelected )
                     {
-                        idList.add(mediaItemsList.get(position).getMediaId());
+                        mediaID = mediaItemsList.get(position).getMediaId();
+                        selectedIDsList.add( mediaID );
                     }
                 }
 
                 //Here we call add to playlists activity and pass ID list
-                Intent intent = new Intent(getContext(),AddToPlaylistActivity.class);
-                intent.putExtra(AddToPlaylistActivity.ID_LIST_KEY,(ArrayList)idList);
-                startActivity(intent);
+                addToPlaylistIntent = new Intent( getContext(), AddToPlaylistActivity.class );
+                addToPlaylistIntent.putExtra( AddToPlaylistActivity.SELECTED_IDS_KEY, selectedIDsList );
+
+                startActivity( addToPlaylistIntent );
                 deselect();
             }
         }
@@ -176,7 +196,7 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
         String parameter;
 
         //If something is wrong assume queue is not loaded and return
-        if (mMediaBrowser == null || !mMediaBrowser.isConnected() || mMediaController == null)
+        if ( mMediaBrowser == null || !mMediaBrowser.isConnected() || mMediaController == null )
         {
             mQueueLoaded = false;
             return;
@@ -184,14 +204,14 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
 
         extras = mMediaController.getExtras();
 
-        if (extras == null)
+        if ( extras == null )
         {
             mQueueLoaded = false;
             return;
         }
 
-        source = extras.getString( Const.SOURCE_KEY, null );
-        parameter = extras.getString( Const.PARAMETER_KEY, null );
+        source      = extras.getString( Const.SOURCE_KEY, null );
+        parameter   = extras.getString( Const.PARAMETER_KEY, null );
 
 
         //Determine if this queue is actually loaded in media service
@@ -201,27 +221,30 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
 
 
     @Override
-    public void onClick(View v) {
+    public void onClick(View v)
+    {
 
-        int position;
-        List<MediaBrowserCompat.MediaItem> mediaItems;
-        Context context;
+        int                                 position;
+        List<MediaBrowserCompat.MediaItem>  mediaItems;
+        Context                             context;
+        String                              mediaID;
 
-        position =      mRecyclerView.getChildLayoutPosition(v);
-        mediaItems =    mAdapter.getMediaItemsList();
-        context =       getContext();
+        position    = mRecyclerView.getChildLayoutPosition( v );
+        mediaItems  = mAdapter.getMediaItemsList();
+        context     = getContext();
+        mediaID     = mediaItems.get( position ).getMediaId();
 
 
         //If we are not selecting items, then we want to play them
-        if (!mSelectMode && !mSelectSongsForResult && mMediaBrowser.isConnected())
+        if ( !mSelectMode && !mSelectSongsForResult && mMediaBrowser.isConnected() )
         {
-            Bundle bundle;
-            Intent intent;
+            Bundle              bundle;
+            Intent              intent;
             PlaybackStateCompat playbackState;
 
 
             //Check if this queue is already loaded, no need to load it again
-            if (mQueueLoaded)
+            if ( mQueueLoaded )
             {
                 playbackState = mMediaController.getPlaybackState();
 
@@ -239,9 +262,9 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
                 bundle.putString( Const.SOURCE_KEY, mSource );
                 bundle.putString( Const.PARAMETER_KEY, mParameter );
                 bundle.putString( Const.DISPLAY_NAME, mDisplayName );
-                bundle.putInt( Const.POSITION_KEY, position );
+                bundle.putInt   ( Const.POSITION_KEY, position );
 
-                mMediaController.getTransportControls().playFromMediaId( mediaItems.get( position ).getMediaId(), bundle );
+                mMediaController.getTransportControls().playFromMediaId( mediaID, bundle );
             }
 
 
@@ -251,36 +274,46 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
             intent.putExtra( Const.PARAMETER_KEY, mParameter );
             intent.putExtra( Const.POSITION_KEY, position );
 
-            startActivity(intent);
+            startActivity( intent );
         }
 
         //If we are selecting items
-        if (mSelectMode)
+        if ( mSelectMode )
         {
-            setItemSelected(position,!isItemSelected(position),v);
+            setItemSelected( position, !isItemSelected(position), v );
         }
 
         //If we are in select for result mode
-        if (mSelectSongsForResult)
+        if ( mSelectSongsForResult && getContext() instanceof SelectSongsActivity )
         {
-            if (isItemSelected(position)) {
-                ((SelectSongsActivity) context).getSelectedSongsList().add(mediaItems.get(position).getMediaId());
+            SelectSongsActivity selectSongsActivity;
+
+            selectSongsActivity = ( SelectSongsActivity ) getContext();
+
+
+            if ( isItemSelected( position ) )
+            {
+                //Select
+                selectSongsActivity.getSelectedSongsList().add( mediaID );
             }
             else
             {
-                ((SelectSongsActivity) context).getSelectedSongsList().remove(mediaItems.get(position).getMediaId());
+                //Deselect
+                selectSongsActivity.getSelectedSongsList().remove( mediaID );
             }
         }
     }
 
     @Override
-    public boolean onLongClick(View v) {
-        if (!mSelectMode)
+    public boolean onLongClick( View v )
+    {
+
+        if ( !mSelectMode )
         {
             //Activate select mode and select pressed item
 
             activateSelectMode();
-            setItemSelected(mRecyclerView.getChildLayoutPosition(v),true,v);
+            setItemSelected( mRecyclerView.getChildLayoutPosition( v ) ,true , v );
         }
         return true;
     }

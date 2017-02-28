@@ -16,6 +16,7 @@ import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -67,6 +68,7 @@ public class SlimPlayerApplication extends Application {
                 }
 
                 setLastStateSuccess();
+
             }
             catch (RemoteException e)
             {
@@ -118,6 +120,8 @@ public class SlimPlayerApplication extends Application {
 
         if ( source == null || position == -1 )
             return;
+
+
 
         extras = new Bundle();
         extras.putString( Const.SOURCE_KEY, source );

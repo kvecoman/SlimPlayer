@@ -75,8 +75,6 @@ public abstract class SlimActivity extends AppCompatActivity
                 break;
             case R.id.exit:
                 //Exit the app
-                //TODO - maybe remove this kill process directive
-                android.os.Process.killProcess( android.os.Process.myPid() );
                 System.exit( 1 );
                 break;
         }

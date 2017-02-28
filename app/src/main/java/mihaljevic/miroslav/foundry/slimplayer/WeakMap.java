@@ -11,11 +11,12 @@ import java.util.Arrays;
  *
  * Container that has weak entries that get GC-ed
  *
+ * NOTE - unprotected against weak hash algorithms, ok with strings
+ *
  * @author Miroslav Mihaljević
  */
 
 
-//TODO - use some other hash algorithm
 public class WeakMap<K,V>
 {
     private final String TAG = getClass().getSimpleName();

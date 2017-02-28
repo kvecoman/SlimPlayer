@@ -142,7 +142,6 @@ public final class Utils {
 
         ContentValues   inserts;
         Uri             insertedPlaylistUri;
-        Cursor          cursor;
         long            playlistID;
 
         //Create content values with new playlist info
@@ -154,22 +153,12 @@ public final class Utils {
         //Insert new playlist values
         insertedPlaylistUri = sAppContext.getContentResolver().insert( MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, inserts );
 
-        //TODO - obtain ID od list just from its URI
 
         if ( insertedPlaylistUri == null )
             return -1;
 
-        //Get ID of newly created playlist
-        cursor = sAppContext.getContentResolver().query( insertedPlaylistUri, new String[]{ MediaStore.Audio.Playlists._ID }, null, null, null );
+        playlistID = Long.valueOf( insertedPlaylistUri.getLastPathSegment() );
 
-        if (cursor == null)
-            return -1;
-
-        cursor.moveToFirst();
-        playlistID = cursor.getLong(0);
-
-
-        cursor.close();
 
         return playlistID;
     }

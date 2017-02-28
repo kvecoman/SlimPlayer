@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.os.EnvironmentCompat;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceFragmentCompat;
 import android.util.Log;
@@ -54,7 +55,7 @@ public class SettingsFragment extends PreferenceFragmentCompat
 
             dialogFragment = new DirectorySelectDialogPreferenceFrag();
             dialogFragment.setArguments     ( args );
-            dialogFragment.setTargetFragment( this, 0 ); //TODO - maybe set request code and try to get result in onActivityResult
+            dialogFragment.setTargetFragment( this, 0 );
             dialogFragment.show             ( this.getFragmentManager(), "android.support.v7.preference.PreferenceFragment.DIALOG" );
         }
         else
@@ -103,13 +104,13 @@ public class SettingsFragment extends PreferenceFragmentCompat
         else
         {
             //If there are none selected directories, then scan whole system
-            //TODO - scan removable SD (one day)
-            scanUri     = Uri.fromFile( Environment.getExternalStorageDirectory() );
+            scanUri     = Uri.fromFile( Environment.getRootDirectory() );
             scanIntent  = new Intent( Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, scanUri );
+
 
             getContext().sendBroadcast( scanIntent );
 
-            Log.d(TAG, "Scanning storage for new songs (main only, not SD)");
+            Log.d(TAG, "Scanning storage for new songs");
         }
 
         MusicProvider.getInstance().invalidateAllData();

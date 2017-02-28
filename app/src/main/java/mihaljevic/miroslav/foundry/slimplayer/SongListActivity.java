@@ -27,8 +27,6 @@ public class SongListActivity extends SelectSongsActivity {
         Fragment    fragment;
         Bundle      args;
 
-        //Fragment that we will display here
-        fragment = null;
 
         //Retrieve bundle intended to be sent with SlimListFragment
         args = getIntent().getExtras();

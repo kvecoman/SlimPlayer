@@ -261,7 +261,8 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
         int     width;
         int     height;
 
-        mediaPath   = Uri.parse(mMetadata.getString( MediaMetadataCompat.METADATA_KEY_MEDIA_URI ) ).toString();
+        //TODO - null check for metadata
+        mediaPath   = Uri.parse( mMetadata.getString( MediaMetadataCompat.METADATA_KEY_MEDIA_URI ) ).toString();
         width       = mContentView.getWidth();
         height      = mContentView.getHeight();
 

@@ -5,13 +5,25 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.RemoteException;
+import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import static mihaljevic.miroslav.foundry.slimplayer.MediaPlayerService.LAST_PARAMETER_KEY;
+import static mihaljevic.miroslav.foundry.slimplayer.MediaPlayerService.LAST_POSITION_KEY;
+import static mihaljevic.miroslav.foundry.slimplayer.MediaPlayerService.LAST_SOURCE_KEY;
+import static mihaljevic.miroslav.foundry.slimplayer.MediaPlayerService.LAST_STATE_PLAYED;
+import static mihaljevic.miroslav.foundry.slimplayer.MediaPlayerService.LAST_TITLE_KEY;
 
 /**
  * Created by Miroslav on 15.11.2016..
@@ -32,6 +44,40 @@ public class SlimPlayerApplication extends Application {
 
     private Handler mHandler;
 
+    private MediaBrowserCompat mMediaBrowser;
+
+    protected class ConnectionCallbacks extends MediaBrowserCompat.ConnectionCallback
+    {
+        @Override
+        public void onConnected()
+        {
+            super.onConnected();
+
+            MediaControllerCompat mediaController;
+
+
+            try
+            {
+                mediaController = new MediaControllerCompat( SlimPlayerApplication.this, mMediaBrowser.getSessionToken() );
+
+                if ( isLastStateSuccess() )
+                {
+                    setLastStateFailed();
+                    playLastState( mediaController );
+                }
+
+                setLastStateSuccess();
+            }
+            catch (RemoteException e)
+            {
+                e.printStackTrace();
+            }
+
+
+            mMediaBrowser.disconnect();
+        }
+    }
+
 
     @Override
     public void onCreate()
@@ -43,7 +89,79 @@ public class SlimPlayerApplication extends Application {
 
 
         super.onCreate();
+
+        mMediaBrowser = new MediaBrowserCompat( this, MediaPlayerService.COMPONENT_NAME, new ConnectionCallbacks(), null );
+
+        mMediaBrowser.connect();
     }
+
+    private void playLastState( MediaControllerCompat mediaController)
+    {
+        //Recreate last playback state
+        SharedPreferences   prefs;
+        String              source;
+        String              parameter;
+        String              queueTitle;
+        int                 position;
+        Bundle              extras;
+
+        if ( mMediaBrowser == null || !mMediaBrowser.isConnected() || mediaController == null )
+            return;
+
+
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+        source      = prefs.getString ( LAST_SOURCE_KEY, null );
+        parameter   = prefs.getString ( LAST_PARAMETER_KEY, null );
+        position    = prefs.getInt    ( LAST_POSITION_KEY, -1 );
+        queueTitle  = prefs.getString ( LAST_TITLE_KEY, "" );
+
+        if ( source == null || position == -1 )
+            return;
+
+        extras = new Bundle();
+        extras.putString( Const.SOURCE_KEY, source );
+        extras.putString( Const.PARAMETER_KEY, parameter );
+        extras.putString( Const.DISPLAY_NAME, queueTitle );
+        extras.putInt   ( Const.POSITION_KEY, position );
+
+        mediaController.getTransportControls().playFromMediaId( Const.UNKNOWN, extras );
+
+
+    }
+
+    private void setLastStateFailed()
+    {
+        SharedPreferences preferences;
+
+        preferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        preferences .edit()
+                .putBoolean( LAST_STATE_PLAYED, false )
+                .apply();
+    }
+
+    private void setLastStateSuccess()
+    {
+        SharedPreferences preferences;
+
+        preferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        preferences .edit()
+                .putBoolean( LAST_STATE_PLAYED, true )
+                .apply();
+    }
+
+    private boolean isLastStateSuccess()
+    {
+        SharedPreferences preferences;
+
+        preferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        return preferences.getBoolean( LAST_STATE_PLAYED, false );
+    }
+
+
 
     public Handler getHandler()
     {

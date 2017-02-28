@@ -24,6 +24,8 @@ public class SettingsFragment extends PreferenceFragmentCompat
 {
     private final String TAG = getClass().getSimpleName();
 
+    //private final int DIRECTORY_SELECT_REQUEST_CODE = 28;
+
 
     public SettingsFragment() {
         // Required empty public constructor
@@ -61,7 +63,11 @@ public class SettingsFragment extends PreferenceFragmentCompat
         }
     }
 
-
+    @Override
+    public void onActivityResult( int requestCode, int resultCode, Intent data )
+    {
+        super.onActivityResult( requestCode, resultCode, data );
+    }
 
     private void scanMedia()
     {

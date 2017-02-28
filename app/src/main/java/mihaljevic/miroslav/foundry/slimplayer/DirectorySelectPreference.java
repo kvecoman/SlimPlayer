@@ -188,7 +188,9 @@ public class DirectorySelectPreference extends DialogPreference implements Butto
                                 .apply();
 
         //We have to do this right here, because with this preference the onSharedPreferenceChanged isn't called
-        ( ( SlimPlayerApplication ) getContext().getApplicationContext() ).notifyPreferencesChanged();
+        SlimPlayerApplication.getInstance().notifyPreferencesChanged();
+
+        MusicProvider.getInstance().invalidateAllData();
     }
 
 

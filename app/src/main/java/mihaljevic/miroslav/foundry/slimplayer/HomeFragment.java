@@ -22,6 +22,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 /**
  * Starting screen for user, shows most played and recently played lists for quick access
@@ -190,7 +193,6 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
         if ( mAdapter != null )
         {
             mAdapter.unregisterAdapterDataObserver( mDataObserver );
-            mAdapter.closeCursor();
         }
 
 
@@ -207,18 +209,21 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
             @Override
             protected Void doInBackground( Void... params )
             {
-                Cursor          cursor;
-                SQLiteDatabase  database;
-                String[]        projection;
-                String          sortOrder;
-                String          limit;
+                Cursor                          cursor;
+                SQLiteDatabase                  database;
+                String[]                        projection;
+                String                          sortOrder;
+                String                          limit;
+                ArrayList<HomeAdapter.StatRow>  adapterData;
+                HomeAdapter.StatRow             row;
+
 
                 database = ( StatsDbHelper.getInstance() ).getReadableDatabase();
 
                 projection = new String[] { StatsContract.SourceStats.COLUMN_NAME_SOURCE,
-                        StatsContract.SourceStats.COLUMN_NAME_PARAMETER,
-                        StatsContract.SourceStats.COLUMN_NAME_DISPLAY_NAME,
-                        StatsContract.SourceStats.COLUMN_NAME_LAST_POSITION };
+                                            StatsContract.SourceStats.COLUMN_NAME_PARAMETER,
+                                            StatsContract.SourceStats.COLUMN_NAME_DISPLAY_NAME,
+                                            StatsContract.SourceStats.COLUMN_NAME_LAST_POSITION };
 
                 sortOrder = StatsContract.SourceStats.COLUMN_NAME_RECENT_FREQUENCY + " DESC";
 
@@ -233,7 +238,29 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
                                             sortOrder,
                                             limit );
 
-                mAdapter.setCursor( cursor );
+                if ( cursor == null )
+                {
+                    adapterData = new ArrayList<>( 0 );
+                }
+                else
+                {
+                    adapterData = new ArrayList<>( cursor.getCount() );
+
+                    while ( cursor.moveToNext() )
+                    {
+                        row                 = new HomeAdapter.StatRow();
+                        row.source          = cursor.getString( cursor.getColumnIndex( projection[0] ) );
+                        row.parameter       = cursor.getString( cursor.getColumnIndex( projection[1] ) );
+                        row.displayName     = cursor.getString( cursor.getColumnIndex( projection[2] ) );
+                        row.lastPosition    = cursor.getInt( cursor.getColumnIndex( projection[3] ) );
+
+                        adapterData.add( row );
+                    }
+                }
+
+                mAdapter.setData( adapterData );
+
+                cursor.close();
 
                 return null;
             }
@@ -259,22 +286,25 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
         String  sessionParameter;
         String  displayName;
 
-        Cursor  cursor;
         Intent  intent;
         Bundle  extras;
 
-        itemPosition    = mRecyclerView.getChildLayoutPosition( v );
-        cursor      = mAdapter.getCursor();
+        List<HomeAdapter.StatRow>   adapterData;
+        HomeAdapter.StatRow         selectedRow;
 
-        if ( cursor == null || cursor.isClosed() )
+        itemPosition    = mRecyclerView.getChildLayoutPosition( v );
+        adapterData     = mAdapter.getData();
+
+        if ( adapterData == null || adapterData.size() == 0 )
             return;
 
-        cursor.moveToPosition( itemPosition );
 
-        source                  = cursor.getString  ( cursor.getColumnIndex( StatsContract.SourceStats.COLUMN_NAME_SOURCE ) );
-        parameter               = cursor.getString  ( cursor.getColumnIndex( StatsContract.SourceStats.COLUMN_NAME_PARAMETER ) );
-        displayName             = cursor.getString  ( cursor.getColumnIndex( StatsContract.SourceStats.COLUMN_NAME_DISPLAY_NAME ) );
-        lastPlayedPosition      = cursor.getInt     ( cursor.getColumnIndex( StatsContract.SourceStats.COLUMN_NAME_LAST_POSITION ) );
+        selectedRow = adapterData.get( itemPosition );
+
+        source                  = selectedRow.source;
+        parameter               = selectedRow.parameter;
+        displayName             = selectedRow.displayName;
+        lastPlayedPosition      = selectedRow.lastPosition;
 
 
         intent = new Intent( getContext(), SongListActivity.class );

@@ -35,14 +35,11 @@ import junit.framework.Test;
 //TODO - make visualization
 //TODO - ability for some code parts/methods to fail without throwing exception (or with catching exception) (add checks for things you connect to in onStart())
 //TODO - add optimizations for screen rotations (already done for NowPlayingFragment)
-//TODO - music playback might need its own thread not just AsyncTask
-//TODO - sometimes it can happen that Stats.db database is not open at startup, definitively need to check that, it happens at getItemCount()
+//TODO - sometimes it can happen that Stats.db database is not open at startup, definitively need to check that, it happens at getItemCount() - probably solved, as we removed cursor from HomeScreen
 //TODO - load all songs from folder in queue when playing from file???
-//TODO - if playing last song fails, don't do it next time (some sort of pair in preferences that must be completed)
-//TODO - test all subscribing connection for case when connection fails or it suspends
+//TODO - if playing last song fails, don't do it next time (some sort of pair in preferences that must be completed) - DONE, needs to be tested
 //TODO - there is no cancel button on lockscreen and notification player >LOLLIPOP
 
-//TODO - continue refactoring and asyncing from SettingsActivity and forward
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener
 {
 

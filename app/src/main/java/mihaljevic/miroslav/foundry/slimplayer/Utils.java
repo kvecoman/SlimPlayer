@@ -54,17 +54,20 @@ public final class Utils {
         int         count;
         View        item;
 
+
         adapter = listView.getAdapter();
         count   = adapter.getCount();
-        item    = adapter.getView(0, null, listView);
 
-        if (adapter.getCount() <= 0)
+        if (count <= 0)
             return 0;
 
-        item.measure(0,0);
+        item = adapter.getView(0, null, listView);
+
+
+        item.measure( 0, 0 );
 
         height = item.getMeasuredHeight() * count;
-        height += listView.getDividerHeight() * (count - 1);
+        height += listView.getDividerHeight() * ( count - 1 );
 
         return height;
     }

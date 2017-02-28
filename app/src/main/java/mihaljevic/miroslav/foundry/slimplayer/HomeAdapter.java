@@ -11,6 +11,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 /**
  * Adapter for recycler view in home screen
  *
@@ -21,16 +23,15 @@ import android.widget.TextView;
 public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
 
     private Context                 mContext;
-    private Cursor                  mCursor;
     private View.OnClickListener    mOnClickListener;
+    private ArrayList<StatRow>      mData;
 
 
-    public HomeAdapter(Context context, Cursor cursor,@Nullable View.OnClickListener listener)
+    public HomeAdapter(Context context, ArrayList<StatRow> data, @Nullable View.OnClickListener listener)
     {
         mContext            = context;
-        mCursor             = cursor;
+        mData               = data;
         mOnClickListener    = listener;
-
     }
 
     @Override
@@ -48,13 +49,13 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder( ViewHolder holder, int position )
     {
-        if ( mCursor == null || mCursor.isClosed() )
+        if ( mData == null )
             return;
 
         String itemTitle;
 
-        mCursor.moveToPosition( position );
-        itemTitle = mCursor.getString( mCursor.getColumnIndex( StatsContract.SourceStats.COLUMN_NAME_DISPLAY_NAME ) );
+
+        itemTitle = mData.get( position ).displayName;
         holder.mTextView.setText( itemTitle );
 
     }
@@ -62,30 +63,18 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
     @Override
     public int getItemCount()
     {
-        if ( mCursor != null && !mCursor.isClosed() )
-            return mCursor.getCount();
+        if ( mData != null )
+            return mData.size();
 
         return 0;
     }
 
 
-    public Cursor getCursor()
-    {
-        return mCursor;
-    }
+    public ArrayList<StatRow> getData() { return mData; }
 
-    public void setCursor( Cursor mCursor )
-    {
-        this.mCursor = mCursor;
-    }
+    public void setData( ArrayList<StatRow> data ) { mData = data; }
 
-    public void closeCursor()
-    {
-        if ( mCursor != null && !mCursor.isClosed() )
-        {
-            mCursor.close();
-        }
-    }
+
 
     public static class ViewHolder extends RecyclerView.ViewHolder
     {
@@ -100,6 +89,18 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
         }
 
 
+    }
+
+    public static class StatRow
+    {
+        public String   source;
+        public String   parameter;
+        public String   displayName;
+        public int      lastPosition;
+
+        public StatRow()
+        {
+        }
     }
 
 }

@@ -21,6 +21,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaBrowserServiceCompat;
+import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -38,9 +39,10 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 
-public class MediaPlayerService extends MediaBrowserServiceCompat implements MediaPlayer.OnCompletionListener, MediaPlayer.OnPreparedListener, AudioManager.OnAudioFocusChangeListener {
+public class MediaPlayerService extends MediaBrowserServiceCompat implements MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 
     protected final String TAG = getClass().getSimpleName();
 
@@ -102,6 +104,11 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     private PackageValidator mPackageValidator;
 
     private ExecutorService mExecutorService;
+
+    private StatsDbHelper mStatsDbHelper;
+
+    //Used to hold type of task of which can be only one in queue
+    private Future<?> mCancelableTask;
 
 
 
@@ -203,15 +210,20 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
         mExecutorService = Executors.newSingleThreadExecutor();
 
+        mStatsDbHelper = StatsDbHelper.getInstance();
+
         //Register to detect headphones in/out
         registerReceiver( mHeadsetChangeReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG ) );
         registerReceiver( mNoisyReceiver, new IntentFilter( AudioManager.ACTION_AUDIO_BECOMING_NOISY ) );
 
         //Recreate last remembered state
-        if (isLastStateSuccess())
-            playLastStateAsync();
+        /*if ( isLastStateSuccess() )
+        {
+            setLastStateFailed();
+            playLastStateRunnable();
+        }
 
-        setLastStateSuccess();
+        setLastStateSuccess();*/
 
     }
 
@@ -371,11 +383,11 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
 
     //Returns whether the source is different than one before
-    public synchronized boolean setQueue( @Nullable final String source, @Nullable final String parameter, @Nullable final String queueTitle)
+    public synchronized boolean setQueue( @Nullable final String source, @Nullable final String parameter, @Nullable final String queueTitle )
     {
         Log.v(TAG,"setQueue()");
 
-
+        SharedPreferences                   preferences;
         List<MediaBrowserCompat.MediaItem>  mediaItems;
         MediaSessionCompat.QueueItem        queueItem;
         MediaBrowserCompat.MediaItem        mediaItem;
@@ -389,6 +401,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         oldSource       = mQueueSource;
         oldParameter    = mQueueParameter;
         sessionExtras   = new Bundle();
+        preferences     = PreferenceManager.getDefaultSharedPreferences( MediaPlayerService.this );
 
         //Since we are changing queue let's set state to none before we know anything
         stopAndClearList();
@@ -456,17 +469,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         //If the source is different and not file then update stats database
         if ( !source.equals( Const.FILE_URI_KEY ) &&  isSourceChanged )
         {
-
-            new AsyncTask<Void,Void,Void>()
-            {
-                @Override
-                protected Void doInBackground(Void... params)
-                {
-                    StatsDbHelper statsDbHelper = StatsDbHelper.getInstance();
-                    statsDbHelper.updateStats(source,parameter, queueTitle);
-                    return null;
-                }
-            }.execute();
+            mStatsDbHelper.updateStatsAsync( source, parameter, queueTitle );
         }
 
         mQueueSource    = source;
@@ -474,14 +477,11 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
 
         //Save song list source in preferences so we remember this list for auto-start playback
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(MediaPlayerService.this);
-        preferences.edit()
+        preferences .edit()
                     .putString( LAST_SOURCE_KEY, source)
                     .putString( LAST_PARAMETER_KEY, parameter)
                     .putString( LAST_TITLE_KEY, queueTitle )
                     .apply();
-
-
 
 
         return isSourceChanged;
@@ -561,6 +561,16 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     }
 
+    private void cancelCurrentTask()
+    {
+        if ( mCancelableTask == null )
+            return;
+
+        mCancelableTask.cancel( false );
+
+        mCancelableTask = null;
+    }
+
 
     /*private void loadChildrenRunnable( final @NonNull String parentId, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result, final @Nullable Bundle options )
     {
@@ -623,7 +633,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     private void seekToRunnable( final long pos )
     {
-        mExecutorService.submit( new Runnable()
+        cancelCurrentTask();
+
+        mCancelableTask = mExecutorService.submit( new Runnable()
         {
             @Override
             public void run()
@@ -661,7 +673,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     private void skipToQueueItemRunnable( final long id )
     {
-        mExecutorService.submit( new Runnable()
+        cancelCurrentTask();
+
+        mCancelableTask = mExecutorService.submit( new Runnable()
         {
             @Override
             public void run()
@@ -807,12 +821,17 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     {
         String mediaID;
 
-        if (queue == null || targetPosition < 0 || targetPosition > queue.size() || targetID == null || targetID.equals( Const.UNKNOWN ))
+
+        if ( queue == null || targetPosition < 0 || targetPosition > queue.size() )
             return false;
+
+        //If target ID is unknown then we assume position is ok (if within bounds)
+        if ( targetID == null || TextUtils.equals( targetID, Const.UNKNOWN ) )
+            return true;
 
         mediaID = queue.get( targetPosition ).getDescription().getMediaId();
 
-        if (mediaID == null)
+        if ( mediaID == null )
             return false;
 
         //Return true if the ID's match, it means the position is ok
@@ -857,7 +876,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
         source      = prefs.getString ( LAST_SOURCE_KEY, null );
         parameter   = prefs.getString ( LAST_PARAMETER_KEY, null );
-        position    = prefs.getInt    ( LAST_POSITION_KEY, 0 );
+        position    = prefs.getInt    ( LAST_POSITION_KEY, -1 );
         queueTitle  = prefs.getString ( LAST_TITLE_KEY, "" );
 
         if ( source != null )
@@ -874,26 +893,44 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     {
         Log.v(TAG, "playLastStateAsync()");
 
-        setLastStateFailed();
+
 
         new AsyncTask<Void, Void, Void>()
         {
             @Override
             protected Void doInBackground( Void... params )
             {
-                int result;
-
-                result = recreateLastPlaybackState();
-
-                //If we could recreate state then play the position
-                if ( result != -1 )
-                    play( result );
+                playLastState();
 
                 return null;
             }
 
 
         }.execute();
+    }
+
+    private void playLastStateRunnable()
+    {
+        mExecutorService.submit( new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                playLastState();
+            }
+        } );
+    }
+
+    private void playLastState()
+    {
+
+        int lastPosition;
+
+        lastPosition = recreateLastPlaybackState();
+
+        //If we could recreate state then play the position
+        if ( lastPosition != -1 )
+            play( lastPosition );
     }
 
     private void setLastStateFailed()
@@ -963,15 +1000,20 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         Log.v( TAG, "play() position: " + position );
 
 
-        Uri mediaFileUri;
-        SharedPreferences preferences;
+        Uri                     mediaFileUri;
+        SharedPreferences       preferences;
+        Intent                  startedServiceIntent;
+        MediaMetadataCompat     metadata;
+        MediaDescriptionCompat  mediaDescription;
 
 
         //If something is wrong then do nothing
         if ( mState == PlaybackStateCompat.STATE_NONE || position < 0 || position >= mCount || mQueue == null )
             return;
 
-        mediaFileUri = mQueue.get(position).getDescription().getMediaUri();
+        mediaDescription        = mQueue.get(position).getDescription();
+        mediaFileUri            = mediaDescription.getMediaUri();
+        startedServiceIntent    = new Intent( getApplicationContext(), MediaPlayerService.class );
 
         if (mediaFileUri == null)
         {
@@ -1007,8 +1049,24 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             mPlayer.reset();
             mPlayer.setDataSource           ( MediaPlayerService.this, mediaFileUri );
             mPlayer.setOnCompletionListener ( MediaPlayerService.this );
-            mPlayer.setOnPreparedListener   ( this );
-            mPlayer.prepareAsync();
+            mPlayer.prepare();
+
+            mPlayer.start();
+
+            showNotificationAsync( false, true );
+
+            //Set service as started
+            startService( startedServiceIntent );
+
+            //Update playback state
+            updateState( PlaybackStateCompat.STATE_PLAYING );
+
+
+            mStatsDbHelper.updateLastPositionAsync( mQueueSource, mQueueParameter, mPosition );
+
+            metadata = mMusicProvider.getMetadata( mediaDescription.getMediaId() );
+
+            mMediaSession.setMetadata( metadata );
 
         }
         catch (IOException e)
@@ -1046,33 +1104,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         }.execute();
     }*/
 
-    @Override
-    public synchronized void onPrepared( MediaPlayer mp )
-    {
-        Log.v(TAG,"onPrepared()");
-
-        Intent              intent;
-        MediaMetadataCompat metadata;
-
-
-        //Try to acquire media metadata if it is bundled with media description
-        metadata    = mMusicProvider.getMetadata( mQueue.get( mPosition ).getDescription().getMediaId() );
-        intent      = new Intent( getApplicationContext(), MediaPlayerService.class );
-
-        mp.start();
-
-        showNotificationAsync(false, true);
-
-        //Set service as started
-        startService( intent );
-
-        mMediaSession.setMetadata( metadata );
-
-        //Update playback state
-        updateState( PlaybackStateCompat.STATE_PLAYING );
-
-        updateQueueLastPositionAsync();
-    }
 
     //This is called when song is finished playing
     @Override
@@ -1139,7 +1170,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     private void playNextRunnable()
     {
-        mExecutorService.submit( new Runnable()
+        cancelCurrentTask();
+
+        mCancelableTask = mExecutorService.submit( new Runnable()
         {
             @Override
             public void run()
@@ -1164,7 +1197,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             if ( shouldRepeatPlaylist() )
             {
                 //If we are repeating playlist then start from the begining
-                playRunnable( 0 );
+                play( 0 );
             }
             else
             {
@@ -1174,13 +1207,15 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         else
         {
             //Play next song
-            playRunnable( mPosition + 1 );
+            play( mPosition + 1 );
         }
     }
 
     private void playPreviousRunnable()
     {
-        mExecutorService.submit( new Runnable()
+        cancelCurrentTask();
+
+        mCancelableTask = mExecutorService.submit( new Runnable()
         {
             @Override
             public void run()
@@ -1200,12 +1235,14 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         //updateState( PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS);
 
         //Play previous song
-        playRunnable( mPosition - 1 );
+        play( mPosition - 1 );
 
     }
 
     private void stopRunnable()
     {
+        cancelCurrentTask();
+
         mExecutorService.submit( new Runnable()
         {
             @Override
@@ -1240,6 +1277,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     private void stopAndClearListRunnable()
     {
+        cancelCurrentTask();
+
         mExecutorService.submit( new Runnable()
         {
             @Override
@@ -1262,20 +1301,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     }
 
-    public synchronized void updateQueueLastPositionAsync()
-    {
-        //Start new task to update last play position for this source
-        new AsyncTask<Void,Void,Void>()
-        {
-            @Override
-            protected Void doInBackground(Void... params)
-            {
-                StatsDbHelper statsDbHelper = StatsDbHelper.getInstance();
-                statsDbHelper.updateLastPosition( mQueueSource, mQueueParameter,mPosition);
-                return null;
-            }
-        }.execute();
-    }
+
+
 
     public boolean shouldRepeatPlaylist()
     {
@@ -1312,7 +1339,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         MediaMetadataCompat             mediaMetadata;
         Intent                          intent;
         PendingIntent                   pendingIntent;
-        String                          filePath;
         String                          artist;
         Bitmap                          art;
 
@@ -1321,30 +1347,12 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         currentQueueItem    = mQueue.get( mPosition );
         mediaMetadata       = mMusicProvider.getMetadata( currentQueueItem.getDescription().getMediaId() );
 
-        filePath    = Uri.parse( mediaMetadata.getString( MediaMetadataCompat.METADATA_KEY_MEDIA_URI ) ).toString();
-        artist      = mediaMetadata.getString( MediaMetadataCompat.METADATA_KEY_ARTIST );
-        art         = null;
 
-        //Load album art
-        try
-        {
-            art = Glide.with    ( MediaPlayerService.this )
-                    .load       ( new EmbeddedArtGlide( filePath ) )
-                    .asBitmap()
-                    .override   ( 200, 200 )
-                    .centerCrop()
-                    .into       ( 200, 200 )
-                    .get();
+        artist = mediaMetadata == null ? "" : mediaMetadata.getString( MediaMetadataCompat.METADATA_KEY_ARTIST );
 
-        }
-        catch ( InterruptedException e )
-        {
-            e.printStackTrace();
-        }
-        catch ( ExecutionException e )
-        {
-            //This is called if image loading fails for any reason, mostly because there is no image
-        }
+
+        art  = loadArt( mediaMetadata );
+
 
         //If there is no album art just download default art
         if ( art == null )
@@ -1424,6 +1432,43 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                 startForeground( NOTIFICATION_PLAYER_ID, notification );
             }
         } );
+
+    }
+
+
+    private Bitmap loadArt( MediaMetadataCompat metadata)
+    {
+        Bitmap art;
+        String filePath;
+
+        if ( metadata == null )
+            return null;
+
+        filePath    = Uri.parse( metadata.getString( MediaMetadataCompat.METADATA_KEY_MEDIA_URI ) ).toString();
+        art         = null;
+
+        //Load album art
+        try
+        {
+            art = Glide.with    ( MediaPlayerService.this )
+                    .load       ( new EmbeddedArtGlide( filePath ) )
+                    .asBitmap()
+                    .override   ( 200, 200 )
+                    .centerCrop()
+                    .into       ( 200, 200 )
+                    .get();
+
+        }
+        catch ( InterruptedException e )
+        {
+            e.printStackTrace();
+        }
+        catch ( ExecutionException e )
+        {
+            //This is called if image loading fails for any reason, mostly because there is no image
+        }
+
+        return art;
 
     }
 

@@ -238,7 +238,7 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
         //If we are not selecting items, then we want to play them
         if ( !mSelectMode && !mSelectSongsForResult && mMediaBrowser.isConnected() )
         {
-            Bundle              bundle;
+            Bundle              extras;
             Intent              intent;
             PlaybackStateCompat playbackState;
 
@@ -258,13 +258,13 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
             {
                 //We need to load queue
 
-                bundle = new Bundle();
-                bundle.putString( Const.SOURCE_KEY, mSource );
-                bundle.putString( Const.PARAMETER_KEY, mParameter );
-                bundle.putString( Const.DISPLAY_NAME, mDisplayName );
-                bundle.putInt   ( Const.POSITION_KEY, position );
+                extras = new Bundle();
+                extras.putString( Const.SOURCE_KEY, mSource );
+                extras.putString( Const.PARAMETER_KEY, mParameter );
+                extras.putString( Const.DISPLAY_NAME, mDisplayName );
+                extras.putInt   ( Const.POSITION_KEY, position );
 
-                mMediaController.getTransportControls().playFromMediaId( mediaID, bundle );
+                mMediaController.getTransportControls().playFromMediaId( mediaID, extras );
             }
 
 

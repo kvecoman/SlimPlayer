@@ -64,7 +64,8 @@ public abstract class SelectSongsActivity extends BackHandledFragmentActivity {
     }
 
     @Override
-    public boolean onOptionsItemSelected( MenuItem item ) {
+    public boolean onOptionsItemSelected( MenuItem item )
+    {
 
         int     id;
         Intent  intent;
@@ -81,7 +82,7 @@ public abstract class SelectSongsActivity extends BackHandledFragmentActivity {
 
 
                 intent.putStringArrayListExtra  ( SELECTED_SONGS_KEY, new ArrayList<>( mSelectedSongIdsList ) );
-                intent.putExtra                 ( SelectSongsActivity.SELECTING_FINISHED_KEY, true);
+                intent.putExtra                 ( SelectSongsActivity.SELECTING_FINISHED_KEY, true );
 
                 setResult( requestCode, intent );
                 finish();

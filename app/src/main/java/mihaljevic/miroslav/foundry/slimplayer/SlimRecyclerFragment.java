@@ -22,6 +22,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import java.util.List;
 
@@ -42,7 +43,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
     protected RecyclerView mRecyclerView;
     protected MediaAdapter mAdapter;
 
-    protected View mEmptyView;
+    protected TextView mEmptyView;
 
     //Current source for this fragment (all songs, songs by genre, songs by artist etc...)
     protected String mSource;
@@ -95,6 +96,8 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         {
             super.onConnectionSuspended();
 
+            updateContentDisplay( getString( R.string.empty_connection_suspended) );
+
             Log.i(TAG, "Connection is suspended");
         }
 
@@ -103,7 +106,9 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         {
             super.onConnectionFailed();
 
-            Log.e(TAG, "Connection has failed");
+            updateContentDisplay( getString( R.string.empty_connection_failed ) );
+
+            Log.w(TAG, "Connection has failed");
         }
     }
 
@@ -128,14 +133,20 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         @Override
         public void onError(@NonNull String parentId)
         {
+            Log.d( TAG, "Error happened when receiving subscription callback" );
             super.onError( parentId );
+
+            updateContentDisplay( getString( R.string.empty_connection_failed ) );
 
         }
 
         @Override
         public void onError(@NonNull String parentId, @NonNull Bundle options)
         {
+            Log.d( TAG, "Error happened when receiving subscription callback" );
             super.onError( parentId, options );
+
+            updateContentDisplay( getString( R.string.empty_connection_failed ) );
 
         }
     }
@@ -151,7 +162,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         mAdapter.setMediaItemsList(children);
         mAdapter.notifyDataSetChanged();
 
-        updateContentDisplay();
+        updateContentDisplay( getString( R.string.empty_placeholder ) );
 
     }
 
@@ -183,7 +194,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         contentView = inflater.inflate(R.layout.fragment_slim_recycler, container, false);
 
         mRecyclerView   = ( RecyclerView ) contentView.findViewById( R.id.recycler );
-        mEmptyView      = contentView.findViewById( R.id.empty );
+        mEmptyView      = ( TextView ) contentView.findViewById( R.id.empty );
 
         return contentView;
     }
@@ -295,8 +306,13 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         return backConsumed;
     }
 
+   protected void updateContentDisplay()
+   {
+       updateContentDisplay( null );
+   }
+
     //It decides whether to show empty message or to display content
-    protected void updateContentDisplay()
+    protected void updateContentDisplay( @Nullable String message )
     {
         if ( mEmptyView == null || mRecyclerView == null )
         {
@@ -307,6 +323,9 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         List<MediaBrowserCompat.MediaItem> data;
 
         data = mAdapter.getMediaItemsList();
+
+        if ( message != null )
+            mEmptyView.setText( message );
 
         if (data == null || data.size() == 0)
         {

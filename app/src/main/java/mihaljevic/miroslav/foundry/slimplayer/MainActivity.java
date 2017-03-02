@@ -37,8 +37,11 @@ import junit.framework.Test;
 //TODO - add optimizations for screen rotations (already done for NowPlayingFragment)
 //TODO - sometimes it can happen that Stats.db database is not open at startup, definitively need to check that, it happens at getItemCount() - probably solved, as we removed cursor from HomeScreen
 //TODO - load all songs from folder in queue when playing from file???
-//TODO - there is no cancel button on lockscreen and notification player >LOLLIPOP
+//TODO - bug when screen is turned off and then songs is changed with lockscreen controls
+//TODO - implement all media controlls (like idk)
+//TODO - opening NowPlayingActivity from notification will be empty, you have to send source and parameter to it in notification intent
 
+//TODO - continue here - notification controls are invisible for some reason, test on emulator if it is the same
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener
 {
 

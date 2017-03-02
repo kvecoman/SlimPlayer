@@ -182,7 +182,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
 
 
-        //TODO - this needs to be tested on >=LOLLIPOP (media buttons only, lock screen controls work)
         //If we are on lollipop or latter then we set media button receiver using this method
         if ( Build.VERSION.SDK_INT >= 21 ) //Lollipop 5.0
         {
@@ -216,18 +215,11 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         registerReceiver( mHeadsetChangeReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG ) );
         registerReceiver( mNoisyReceiver, new IntentFilter( AudioManager.ACTION_AUDIO_BECOMING_NOISY ) );
 
-        //Recreate last remembered state
-        /*if ( isLastStateSuccess() )
-        {
-            setLastStateFailed();
-            playLastStateRunnable();
-        }
-
-        setLastStateSuccess();*/
 
     }
 
-    public int onStartCommand(Intent intent, int flags, int startId) {
+    public int onStartCommand(Intent intent, int flags, int startId)
+    {
         Log.v(TAG,"onStartCommand()");
 
         //Handle action from media button
@@ -375,9 +367,37 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         {
             super.onSeekTo( pos );
 
-            seekToRunnable( pos );
+            seekToRunnable( (int) pos );
+        }
+
+        @Override
+        public boolean onMediaButtonEvent( Intent mediaButtonEvent )
+        {
+            return super.onMediaButtonEvent( mediaButtonEvent );
+
+
+        }
+
+        @Override
+        public void onFastForward()
+        {
+            super.onFastForward();
+
+
+            fastForwardRunnable();
+
+        }
+
+        @Override
+        public void onRewind()
+        {
+            super.onRewind();
+
+            rewindRunnable();
         }
     }
+
+
 
 
 
@@ -519,6 +539,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                                                 | PlaybackStateCompat.ACTION_SKIP_TO_QUEUE_ITEM
                                                 | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
                                                 | PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                                                | PlaybackStateCompat.ACTION_FAST_FORWARD
+                                                | PlaybackStateCompat.ACTION_REWIND
                                                 | PlaybackStateCompat.ACTION_PAUSE
                                                 | PlaybackStateCompat.ACTION_PLAY_PAUSE
                                                 | PlaybackStateCompat.ACTION_SEEK_TO )
@@ -530,6 +552,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                                                 | PlaybackStateCompat.ACTION_SKIP_TO_QUEUE_ITEM
                                                 | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
                                                 | PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                                                | PlaybackStateCompat.ACTION_FAST_FORWARD
+                                                | PlaybackStateCompat.ACTION_REWIND
                                                 | PlaybackStateCompat.ACTION_PLAY
                                                 | PlaybackStateCompat.ACTION_PLAY_PAUSE
                                                 | PlaybackStateCompat.ACTION_SEEK_TO )
@@ -631,7 +655,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         result.sendResult( mediaItems );
     }
 
-    private void seekToRunnable( final long pos )
+    private void seekToRunnable( final int pos )
     {
         cancelCurrentTask();
 
@@ -661,14 +685,18 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         }.execute(  );
     }*/
 
-    private synchronized void seekTo ( long pos )
+    private synchronized void seekTo ( int pos )
     {
         //Seek to position in ms if we have song loaded and update state with new position
-        if ( mState == PlaybackStateCompat.STATE_PLAYING || mState == PlaybackStateCompat.STATE_PAUSED )
-        {
-            mPlayer.seekTo( ( int ) pos );
-            updateState( mState );
-        }
+        if ( !(mState == PlaybackStateCompat.STATE_PLAYING || mState == PlaybackStateCompat.STATE_PAUSED) )
+            return;
+
+        if ( pos < 0 || pos >= mPlayer.getDuration() )
+            return;
+
+        mPlayer.seekTo( pos );
+        updateState( mState );
+
     }
 
     private void skipToQueueItemRunnable( final long id )
@@ -859,6 +887,54 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         //We didn't find position
         return -1;
 
+    }
+
+    private void fastForwardRunnable()
+    {
+        mExecutorService.submit( new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                fastForward();
+            }
+        } );
+    }
+
+    private synchronized void fastForward()
+    {
+        int position;
+
+        position = mPlayer.getCurrentPosition();
+
+        position += 4000;
+
+        //If position is out of bounds, seekTo() will do nothing
+        seekTo( position );
+    }
+
+    private void rewindRunnable()
+    {
+        mExecutorService.submit( new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                rewind();
+            }
+        } );
+    }
+
+    private synchronized void rewind()
+    {
+        int position;
+
+        position = mPlayer.getCurrentPosition();
+
+        position -= 4000;
+
+        //If position is out of bounds, seekTo() will do nothing
+        seekTo( position );
     }
 
 
@@ -1137,6 +1213,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             giveUpAudioFocus();
             updateState( PlaybackStateCompat.STATE_PAUSED );
             showNotificationAsync( true, false );
+            stopSelf();
         }
     }
 
@@ -1331,7 +1408,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     public synchronized void showNotification( final boolean playIcon, final boolean ticker)
     {
         final Notification              notification;
-        NotificationManager             notificationManager;
+        final NotificationManager       notificationManager;
         MediaSessionCompat.Token        sessionToken;           //For purposes of keeping all media session calls on same thread
         NotificationCompat.MediaStyle   mediaStyle;
         NotificationCompat.Builder      builder;
@@ -1342,7 +1419,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         String                          artist;
         Bitmap                          art;
 
-        //notificationManager = ( NotificationManager )getSystemService(NOTIFICATION_SERVICE);
+        notificationManager = ( NotificationManager )getSystemService(NOTIFICATION_SERVICE);
         sessionToken        = mMediaSession.getSessionToken();
         currentQueueItem    = mQueue.get( mPosition );
         mediaMetadata       = mMusicProvider.getMetadata( currentQueueItem.getDescription().getMediaId() );
@@ -1421,7 +1498,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
         notification = builder.build();
 
-        //startForeground( NOTIFICATION_PLAYER_ID, notification );
 
         //Make sure that show notification is run on UI thread
         SlimPlayerApplication.getInstance().getHandler().post( new Runnable()
@@ -1429,7 +1505,18 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             @Override
             public void run()
             {
-                startForeground( NOTIFICATION_PLAYER_ID, notification );
+
+
+                if (playIcon)
+                {
+                    //If we are paused
+                    notificationManager.notify( NOTIFICATION_PLAYER_ID, notification );
+                    stopForeground( false );
+                }
+                else
+                {
+                    startForeground( NOTIFICATION_PLAYER_ID, notification );
+                }
             }
         } );
 

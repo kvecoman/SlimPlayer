@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -23,6 +24,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.SeekBar;
 
 import java.util.List;
@@ -56,6 +59,8 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
             {
                 mMediaController = new MediaControllerCompat( NowPlayingActivity.this, mMediaBrowser.getSessionToken() );
                 mMediaController.registerCallback( mMediaControllerCallbacks );
+
+
 
                 startFilePlayingIfNeeded();
 
@@ -180,7 +185,9 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     {
         super.onCreate(savedInstanceState);
 
-        Intent intent;
+        Intent      intent;
+        ImageButton rewindButton;
+        ImageButton fastForwardButton;
 
         intent = getIntent();
 
@@ -201,6 +208,12 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
         mSeekBarHandler     = new Handler(  );
         mSeekBarRunnable    = new SeekBarRunnable();
+
+        rewindButton        = ( ImageButton ) findViewById( R.id.rewind_button );
+        fastForwardButton   = ( ImageButton ) findViewById( R.id.fast_forward_button );
+
+        rewindButton.setOnClickListener     ( new RewindListener() );
+        fastForwardButton.setOnClickListener( new FastForwardListener() );
 
         mMediaBrowser = new MediaBrowserCompat( this, MediaPlayerService.COMPONENT_NAME, mConnectionCallbacks, null );
     }
@@ -547,4 +560,28 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
     @Override
     public void onPageScrollStateChanged(int state) {}
+
+    private class RewindListener implements Button.OnClickListener
+    {
+        @Override
+        public void onClick( View v )
+        {
+            if ( mMediaBrowser == null || !mMediaBrowser.isConnected() || mMediaController == null )
+                return;
+
+            mMediaController.getTransportControls().rewind();
+        }
+    }
+
+    private class FastForwardListener implements Button.OnClickListener
+    {
+        @Override
+        public void onClick( View v )
+        {
+            if ( mMediaBrowser == null || !mMediaBrowser.isConnected() || mMediaController == null )
+                return;
+
+            mMediaController.getTransportControls().fastForward();
+        }
+    }
 }

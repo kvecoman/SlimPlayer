@@ -48,7 +48,7 @@ public final class ScreenBundles {
     }
 
     //Central function to obtain bundle for songs by playlist, or songs by artist screen
-    public static Bundle getBundleForSubScreen (String currentScreen, Cursor cursor )
+    /*public static Bundle getBundleForSubScreen (String currentScreen, Cursor cursor )
     {
         Bundle bundle = null;
         String parameter;
@@ -81,7 +81,7 @@ public final class ScreenBundles {
 
 
         return bundle;
-    }
+    }*/
 
     //Also central function for retrieving bundle, but when we already know parameter
     public static Bundle getBundleForSubScreen (String currentScreen, String parameter )
@@ -142,7 +142,10 @@ public final class ScreenBundles {
         bundle.putStringArray( Const.SELECTION_ARGS_KEY,selectionArgs);
         bundle.putString( Const.SORT_ORDER_KEY,sortOrder);
 
-        bundle.putString( Const.DISPLAY_FIELD_KEY,MediaStore.Audio.Media.TITLE);
+        bundle.putString( Const.DISPLAY_FIELD_KEY, MediaStore.Audio.Media.TITLE);
+
+        //Just for all screen, we need to set up display name
+        bundle.putString( Const.DISPLAY_NAME, sAppContext.getString( R.string.all_songs_screen_title ) );
 
         return bundle;
     }

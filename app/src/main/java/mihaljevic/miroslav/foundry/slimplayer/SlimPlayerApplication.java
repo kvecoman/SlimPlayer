@@ -13,6 +13,7 @@ import android.os.Looper;
 import android.os.RemoteException;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v7.app.AppCompatDelegate;
 import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 
@@ -33,7 +34,8 @@ import static mihaljevic.miroslav.foundry.slimplayer.MediaPlayerService.LAST_TIT
  *
  * @author Miroslav Mihaljević
  */
-public class SlimPlayerApplication extends Application {
+public class SlimPlayerApplication extends Application
+{
 
     protected final String TAG = getClass().getSimpleName();
 

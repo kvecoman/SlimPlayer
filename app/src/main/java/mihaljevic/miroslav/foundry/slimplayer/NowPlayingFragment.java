@@ -46,13 +46,15 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
     private final String TAG = getClass().getSimpleName();
 
 
-    private Context mContext;
 
     private int mPosition;
 
     private View mContentView;
 
     private MediaMetadataCompat mMetadata;
+
+    //We assume this song has album art so we try to load it, and after loading we set this variable either to true or false for future loads
+    private boolean mHasArt;
 
 
     protected MediaBrowserCompat    mMediaBrowser;
@@ -70,7 +72,8 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
                 mMediaController.registerCallback           ( mControllerCallbacks );
 
             }
-            catch (RemoteException e){
+            catch (RemoteException e)
+            {
                 e.printStackTrace();
             }
         }
@@ -107,10 +110,14 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
         Log.v(TAG,"onCreate()");
 
         //Make sure that we get onCreateOptionsMenu() call
-        setHasOptionsMenu(true);
+        setHasOptionsMenu( true );
 
         //Keep alive this fragment after configuration changes (so we can re-use data)
-        //setRetainInstance( true );
+        setRetainInstance( true );
+
+        //Assume this song has art, so we start loading process for first time
+        mHasArt = true;
+
     }
 
     @Override
@@ -120,6 +127,8 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
         // Inflate the layout for this fragment
         mContentView = inflater.inflate( R.layout.fragment_now_playing, container, false );
+
+
         return mContentView;
     }
 
@@ -130,40 +139,36 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
         super.onActivityCreated(savedInstanceState);
         Log.v(TAG,"onActivityCreated()");
 
-        ComponentName playerServiceComponent;
+        Context context;
 
-        playerServiceComponent = new ComponentName( getContext(), MediaPlayerService.class );
 
-        mContext = getContext();
+        context = getContext();
 
 
         //Handle taps on screen
-        if (mContext instanceof View.OnClickListener)
-            mContentView.setOnClickListener((View.OnClickListener)mContext);
+        if ( context instanceof View.OnClickListener )
+            mContentView.setOnClickListener( ( View.OnClickListener ) context );
 
 
-        loadSongInfo();
+        //OnGlobalLayout listener is little hack so we know that UI is already set up when we need to use it
+        if ( mHasArt )
+            mContentView.getViewTreeObserver().addOnGlobalLayoutListener( this );
 
-        //Little hack so we know that UI is already set up when we need to use it
-        mContentView.getViewTreeObserver().addOnGlobalLayoutListener(this);
+        if ( mPosition == -1 )
+            loadSongInfo();
+
+
 
         mMediaBrowser = new MediaBrowserCompat( getContext(), MediaPlayerService.COMPONENT_NAME, mConnectionCallbacks, null );
 
-
     }
 
     @Override
-    public void onStart() {
+    public void onStart()
+    {
         super.onStart();
 
         mMediaBrowser.connect();
-
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        Log.v(TAG,"onResume()");
 
     }
 
@@ -180,7 +185,7 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
 
         //Once we display art we don't need this callback anymore
-        if (Build.VERSION.SDK_INT >= 16)
+        if ( Build.VERSION.SDK_INT >= 16 )
             mContentView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
         else
             mContentView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
@@ -190,38 +195,22 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
 
     @Override
-    public void onStop() {
+    public void onStop()
+    {
         super.onStop();
         Log.v(TAG,"onStop()");
 
 
-        if (mMediaController != null)
+        if ( mMediaController != null )
             mMediaController.unregisterCallback( mControllerCallbacks );
 
-        if (mMediaBrowser != null)
+        if ( mMediaBrowser != null )
             mMediaBrowser.disconnect();
 
 
     }
 
-    //Here we do cleanup of things expecting hosting activity will be recreated, so we don't want to leak anything
-    @Override
-    public void onDetach()
-    {
-        super.onDetach();
 
-        mContext = null;
-        mContentView = null;
-    }
-
-    @Override
-    public void onDestroy()
-    {
-        super.onDestroy();
-        Log.v(TAG,"onDestroy()");
-
-
-    }
 
 
     public void loadSongInfo()
@@ -230,22 +219,21 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
         Log.v(TAG,"loadSongInfo()");
 
         Bundle args;
-        String mediaId;
 
         args = getArguments();
 
         if (args == null)
             return;
 
-        mPosition = args.getInt(Const.POSITION_KEY, -1);
-        mMetadata = args.getParcelable( Const.METADATA_KEY );
+        mPosition = args.getInt         ( Const.POSITION_KEY, -1);
+        mMetadata = args.getParcelable  ( Const.METADATA_KEY );
 
-        if (mMetadata == null)
+        if ( mMetadata == null )
             return;
 
         //Update text views with new info
-        ((TextView) mContentView.findViewById(R.id.song_title)).setText(mMetadata.getString( MediaMetadataCompat.METADATA_KEY_TITLE ));
-        ((TextView) mContentView.findViewById(R.id.song_artist)).setText(mMetadata.getString( MediaMetadataCompat.METADATA_KEY_ARTIST ));
+        ((TextView) mContentView.findViewById(R.id.song_title)).setText ( mMetadata.getString( MediaMetadataCompat.METADATA_KEY_TITLE ) );
+        ((TextView) mContentView.findViewById(R.id.song_artist)).setText( mMetadata.getString( MediaMetadataCompat.METADATA_KEY_ARTIST ) );
     }
 
 
@@ -254,17 +242,26 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
     {
         Log.v(TAG,"displayArtAsync()");
 
-        if ( mContentView.getWidth() <= 0 || mContentView.getHeight() <= 0 )
+        if ( mContentView.getWidth() <= 0 || mContentView.getHeight() <= 0 || !mHasArt || !isAdded() )
             return;
+
+        if ( mMetadata == null )
+        {
+            mHasArt = false;
+            return;
+        }
 
         String  mediaPath;
         int     width;
         int     height;
 
-        //TODO - null check for metadata
+
         mediaPath   = Uri.parse( mMetadata.getString( MediaMetadataCompat.METADATA_KEY_MEDIA_URI ) ).toString();
         width       = mContentView.getWidth();
         height      = mContentView.getHeight();
+
+        //At this point assume it is false, but if we have it, it will be set to true
+        mHasArt = false;
 
         Glide   .with       ( this)
                 .load       ( new EmbeddedArtGlide( mediaPath ) )
@@ -277,7 +274,12 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
                     public void onResourceReady( Bitmap bitmap, GlideAnimation<? super Bitmap> glideAnimation )
                     {
                         if ( bitmap == null )
+                        {
+                            mHasArt = false;
                             return;
+                        }
+
+                        mHasArt = true;
 
                         if ( Build.VERSION.SDK_INT >= 16 )
                         {

@@ -1484,9 +1484,11 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         //Show play screen/main action
         //We build intent with MainActivity as parent activity in stack
         intent = new Intent( getApplicationContext(), NowPlayingActivity.class );
+        intent.putExtra( Const.SOURCE_KEY, mQueueSource );
+        intent.putExtra( Const.PARAMETER_KEY, mQueueParameter );
         intent.setFlags( Intent.FLAG_ACTIVITY_CLEAR_TOP );
 
-        pendingIntent = PendingIntent.getActivity( MediaPlayerService.this, 0, intent, 0 );
+        pendingIntent = PendingIntent.getActivity( MediaPlayerService.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT );
         builder.setContentIntent( pendingIntent );
 
 

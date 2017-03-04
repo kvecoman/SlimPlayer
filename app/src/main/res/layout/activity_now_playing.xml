@@ -25,7 +25,7 @@
     <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:srcCompat="@drawable/ic_fast_forward_ltblue_36dp"
+        android:src="@drawable/ic_fast_forward_ltblue_36dp"
         android:id="@+id/fast_forward_button"
         android:background="@null"
         android:layout_above="@+id/seek_bar"
@@ -35,7 +35,7 @@
     <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:srcCompat="@drawable/ic_fast_rewind_ltblue_36dp"
+        android:src="@drawable/ic_fast_rewind_ltblue_36dp"
         android:id="@+id/rewind_button"
         android:background="@null"
         android:layout_above="@+id/seek_bar"

@@ -36,7 +36,8 @@ public class NowPlayingPagerAdapter extends FragmentStatePagerAdapter {
     }
 
     @Override
-    public Fragment getItem(int position) {
+    public Fragment getItem(int position)
+    {
         Fragment            fragment;
         Bundle              args;
         MediaMetadataCompat metadata;

@@ -94,7 +94,9 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
     private void initQueue()
     {
-        //TODO - sometimes calling this on screen rotation can crash the app
+        //This is so we prevent calls at some crazy times (like configuration change callbacks when things are not initialized)
+        if ( mMediaBrowser == null || !mMediaBrowser.isConnected() )
+            return;
 
         if ( !isThisQueueLoaded() )
             return;
@@ -218,6 +220,19 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         mMediaBrowser = new MediaBrowserCompat( this, MediaPlayerService.COMPONENT_NAME, mConnectionCallbacks, null );
     }
 
+    /*@Override
+    protected void onNewIntent( Intent intent )
+    {
+        super.onNewIntent( intent );
+
+        //NOTE - intent handling to function?
+        if (intent != null && intent.hasExtra( Const.SOURCE_KEY ))
+        {
+            mQueueSource    = intent.getStringExtra( Const.SOURCE_KEY );
+            mQueueParameter = intent.getStringExtra( Const.PARAMETER_KEY );
+        }
+
+    }*/
 
     @Override
     protected void onStart() {
@@ -261,7 +276,6 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         super.onCreateOptionsMenu( menu );
         getMenuInflater().inflate( R.menu.now_playing_menu, menu );
 
-
         updateRepeatIcon( menu );
 
         return true;
@@ -301,14 +315,6 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
             mSeekBarHandler.removeCallbacks( mSeekBarRunnable );
     }
 
-    @Override
-    protected void onDestroy()
-    {
-        Log.v(TAG, "onDestroy()");
-
-
-        super.onDestroy();
-    }
 
     @Override
     public void onRequestPermissionsResult( int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults )

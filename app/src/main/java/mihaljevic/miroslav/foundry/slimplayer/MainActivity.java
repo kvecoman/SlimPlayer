@@ -35,13 +35,10 @@ import junit.framework.Test;
 //TODO - make visualization
 //TODO - ability for some code parts/methods to fail without throwing exception (or with catching exception) (add checks for things you connect to in onStart())
 //TODO - add optimizations for screen rotations (already done for NowPlayingFragment)
-//TODO - sometimes it can happen that Stats.db database is not open at startup, definitively need to check that, it happens at getItemCount() - probably solved, as we removed cursor from HomeScreen
 //TODO - load all songs from folder in queue when playing from file???
-//TODO - bug when screen is turned off and then songs is changed with lockscreen controls
-//TODO - implement all media controlls (like idk)
-//TODO - opening NowPlayingActivity from notification will be empty, you have to send source and parameter to it in notification intent
+//TODO -bug - possibility of metadata being deleted while the list is loaded
 
-//TODO - continue here - notification controls are invisible for some reason, test on emulator if it is the same
+
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener
 {
 

@@ -336,6 +336,8 @@ public class WeakMap<K,V>
 
         }
 
+        if ( deletedCount > 0 )
+            Log.d( TAG, "Deleted " + deletedCount + " entries" );
 
         mSize -= deletedCount;
     }

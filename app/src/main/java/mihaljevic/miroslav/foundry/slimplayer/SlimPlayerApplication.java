@@ -1,25 +1,14 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.app.Application;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
 import android.os.RemoteException;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.MediaControllerCompat;
-import android.support.v7.app.AppCompatDelegate;
 import android.support.v7.preference.PreferenceManager;
-import android.util.Log;
-
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 import static mihaljevic.miroslav.foundry.slimplayer.MediaPlayerService.LAST_PARAMETER_KEY;
 import static mihaljevic.miroslav.foundry.slimplayer.MediaPlayerService.LAST_POSITION_KEY;
@@ -63,13 +52,13 @@ public class SlimPlayerApplication extends Application
             {
                 mediaController = new MediaControllerCompat( SlimPlayerApplication.this, mMediaBrowser.getSessionToken() );
 
-                if ( isLastStateSuccess() )
+                if ( isLastPlaySuccess() )
                 {
-                    setLastStateFailed();
+                    setLastPlayFailed();
                     playLastState( mediaController );
                 }
 
-                setLastStateSuccess();
+                setLastPlaySuccess();
 
             }
             catch (RemoteException e)
@@ -136,7 +125,7 @@ public class SlimPlayerApplication extends Application
 
     }
 
-    private void setLastStateFailed()
+    public void setLastPlayFailed()
     {
         SharedPreferences preferences;
 
@@ -147,7 +136,7 @@ public class SlimPlayerApplication extends Application
                 .apply();
     }
 
-    private void setLastStateSuccess()
+    public void setLastPlaySuccess()
     {
         SharedPreferences preferences;
 
@@ -158,7 +147,7 @@ public class SlimPlayerApplication extends Application
                 .apply();
     }
 
-    private boolean isLastStateSuccess()
+    public boolean isLastPlaySuccess()
     {
         SharedPreferences preferences;
 

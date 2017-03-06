@@ -14,7 +14,7 @@ import java.util.ArrayList;
 
 public class LRUCache<K, V>
 {
-    private final String TAG = getClass().getSimpleName();
+    protected final String TAG = getClass().getSimpleName();
 
     protected int       mCapacity;
     protected int       mSize;

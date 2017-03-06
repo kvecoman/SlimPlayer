@@ -41,6 +41,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import static android.support.v4.media.MediaBrowserCompat.MediaItem.FLAG_BROWSABLE;
+
 
 public class MediaPlayerService extends MediaBrowserServiceCompat implements MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 
@@ -109,6 +111,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     //Used to hold type of task of which can be only one in queue
     private Future<?> mCancelableTask;
+
+    //We keep reference to list of used metadata so istances of it aren't garbage collected
+    private List<MediaMetadataCompat> mMetadataList;
 
 
 
@@ -446,12 +451,15 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         }
         else
         {
-            mediaItems = mMusicProvider.loadMedia( source, parameter );
+            mMetadataList   = mMusicProvider.loadMetadataList( source, parameter );
+            mediaItems      = mMusicProvider.mediaItemsFromMetadata( mMetadataList, Utils.isSongs( source, parameter ) ?  MediaBrowserCompat.MediaItem.FLAG_PLAYABLE :  MediaBrowserCompat.MediaItem.FLAG_BROWSABLE);
         }
 
 
         if ( mediaItems == null || mediaItems.size() <= 0 )
             return true;
+
+        //dbgMediaItemList = mediaItems;
 
 
         mQueue = new ArrayList<>( mediaItems.size() );
@@ -638,6 +646,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         final String                        source;
         final String                        parameter;
         String[]                            split;
+        List<MediaMetadataCompat>           metadataList;
         List<MediaBrowserCompat.MediaItem>  mediaItems;
 
 
@@ -646,10 +655,11 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         source      = split[ 0 ];
         parameter   = split[ 1 ];
 
-        if (source == null)
+        if ( source == null )
             return;
 
         //Load media from music provider
+
         mediaItems = mMusicProvider.loadMedia( source, parameter );
 
         result.sendResult( mediaItems );
@@ -1097,6 +1107,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             return;
         }
 
+        SlimPlayerApplication.getInstance().setLastPlayFailed();
+
         tryToGetAudioFocus();
 
         if (!mAudioFocus)
@@ -1143,6 +1155,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             metadata = mMusicProvider.getMetadata( mediaDescription.getMediaId() );
 
             mMediaSession.setMetadata( metadata );
+
+            SlimPlayerApplication.getInstance().setLastPlaySuccess();
 
         }
         catch (IOException e)

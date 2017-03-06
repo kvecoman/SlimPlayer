@@ -118,6 +118,8 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
         //Assume this song has art, so we start loading process for first time
         mHasArt = true;
 
+        mPosition = -1;
+
     }
 
     @Override

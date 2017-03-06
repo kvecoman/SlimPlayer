@@ -1,8 +1,6 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 
-import android.content.ComponentName;
-import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -182,6 +180,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         mConnectionCallbacks    = new ConnectionCallbacks();
         mSubscriptionCallbacks  = new SubscriptionCallbacks();
         mControllerCallbacks    = new ControllerCallbacks();
+
     }
 
 
@@ -218,8 +217,8 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         //Set up selection
         mSelectedItems = new SparseBooleanArray();
 
-        //Adapter is inited here, but data will be loaded later
-        mAdapter = new MediaAdapter(getContext(), null, R.layout.recycler_item, this, mSelectedItems);
+        //Adapter is initiated here, but data will be loaded later
+        mAdapter = new MediaAdapter( getContext(), null, R.layout.recycler_item, this, mSelectedItems );
 
         //Set up recycler view
         mRecyclerView.setHasFixedSize   ( true );

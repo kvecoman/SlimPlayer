@@ -1,5 +1,7 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
+import android.util.Log;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -18,9 +20,9 @@ public class IntervalLRUCache<K, V> extends LRUCache<K, V>
         @Override
         public void run()
         {
+            Log.v( TAG, "remove last node task");
             removeLastNode();
 
-            int x = 0;
         }
     };
 

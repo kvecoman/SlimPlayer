@@ -591,5 +591,14 @@ public final class Utils {
         return false;
     }
 
+    public static boolean isSongs( String source, String parameter )
+    {
+        if ( source == null )
+            return false;
+
+
+        return source.equals( Const.ALL_SCREEN ) || parameter != null;
+    }
+
 
 }

@@ -65,30 +65,23 @@ public class MusicProvider {
 
     }
 
+    public List<MediaBrowserCompat.MediaItem> loadMedia( String source, String parameter )
+    {
+        List<MediaMetadataCompat>           metadataList;
+        List<MediaBrowserCompat.MediaItem>  mediaItems;
+
+        metadataList    = loadMetadataList( source, parameter );
+        mediaItems      = mediaItemsFromMetadata( metadataList, Utils.isSongs( source, parameter ) ?  MediaBrowserCompat.MediaItem.FLAG_PLAYABLE :  MediaBrowserCompat.MediaItem.FLAG_BROWSABLE );
+
+        return mediaItems;
+    }
 
 
-    public List<MediaBrowserCompat.MediaItem> loadMedia(String source, String parameter)
+    public List<MediaBrowserCompat.MediaItem> mediaItemsFromMetadata( List<MediaMetadataCompat> metadataList, @MediaBrowserCompat.MediaItem.Flags int flag )
     {
 
         MediaBrowserCompat.MediaItem        mediaItem;
         List<MediaBrowserCompat.MediaItem>  mediaItemsList;
-        String                              parentKey;
-        List<MediaMetadataCompat>           metadataList;
-
-        if ( Build.VERSION.SDK_INT >= 16 &&  !Utils.checkPermission(  android.Manifest.permission.READ_EXTERNAL_STORAGE ) )
-            return null;
-
-
-        parentKey = Utils.createParentString( source, parameter );
-
-        //Try to retrieve cached list if it exists
-        metadataList = mMediaListsCache.get( parentKey );
-
-        //If we don't have anything cached then load metadata from database
-        if ( metadataList == null )
-        {
-            metadataList = loadMetadata( source, parameter );
-        }
 
         //Something wrong went with loading metadata, return null
         if ( metadataList == null )
@@ -97,45 +90,22 @@ public class MusicProvider {
 
         mediaItemsList = new ArrayList<>( metadataList.size() );
 
-        //Check whether we load songs or categories and build metadata for it from cursor
-        if (source.equals( Const.ALL_SCREEN ) || parameter != null)
+
+        for (MediaMetadataCompat metadata : metadataList)
         {
-            //If we are loading songs
-            for (MediaMetadataCompat metadata : metadataList)
-            {
 
-                //Get media item
-                mediaItem = new MediaBrowserCompat.MediaItem( metadata.getDescription(), MediaBrowserCompat.MediaItem.FLAG_PLAYABLE );
+            //Get media item
+            mediaItem = new MediaBrowserCompat.MediaItem( metadata.getDescription(), flag );
 
-                //Cache metadata
-                mMusicMetadataCache.put( mediaItem.getMediaId(), metadata );
-
-                mediaItemsList.add( mediaItem );
-            }
-        }
-        else
-        {
-            //We are loading categories
-            for (MediaMetadataCompat metadata : metadataList)
-            {
-
-                mediaItem = new MediaBrowserCompat.MediaItem(metadata.getDescription(), MediaBrowserCompat.MediaItem.FLAG_BROWSABLE);
-
-
-                mediaItemsList.add(mediaItem);
-
-            }
+            mediaItemsList.add( mediaItem );
         }
 
-        //Cache this list for later retrieval
-        mMediaListsCache.put(parentKey, metadataList);
 
         return mediaItemsList;
-
     }
 
 
-    private List<MediaMetadataCompat> loadMetadata(String source, String parameter)
+    public synchronized List<MediaMetadataCompat> loadMetadataList(String source, String parameter)
     {
         Bundle                              cursorBundle;
         Cursor                              cursor;
@@ -146,6 +116,21 @@ public class MusicProvider {
         String                              mediaUriStr;
         String                              mediaID;
         boolean                             tryCache;
+        String                              parentKey;
+
+        if ( Build.VERSION.SDK_INT >= 16 &&  !Utils.checkPermission(  android.Manifest.permission.READ_EXTERNAL_STORAGE ) )
+            return null;
+
+
+        parentKey = Utils.createParentString( source, parameter );
+
+        //Try to retrieve cached list if it exists
+        metadataList = mMediaListsCache.get( parentKey );
+
+        //If we have anything cached then return it
+        if ( metadataList != null )
+            return metadataList;
+
 
         //Retrieve appropriate cursorBundle for cursor
         if (parameter == null)
@@ -163,13 +148,13 @@ public class MusicProvider {
 
         metadataList = new ArrayList<>( cursor.getCount() );
 
-        //Here we try to predict is there even apoint in looking at cache for metadata
+        //Here we try to predict is there even a point in looking at cache for metadata
         if ( cursor.getCount() > mMusicMetadataCache.size() )
             tryCache = false;
         else
             tryCache = true;
 
-        if ( source.equals( Const.ALL_SCREEN ) || parameter != null)
+        if ( Utils.isSongs( source, parameter ) )
         {
 
             //If we are loading songs
@@ -209,11 +194,14 @@ public class MusicProvider {
                 mediaMetadata = metadataBuilder.build();
 
                 metadataList.add( mediaMetadata );
+
+                mMusicMetadataCache.put( mediaID, mediaMetadata );
             }
 
         }
         else
         {
+            //We are loading categories
             while (cursor.moveToNext())
             {
                 mediaID = cursor.getString( 0 );
@@ -231,6 +219,9 @@ public class MusicProvider {
         }
 
         cursor.close();
+
+        //Cache this list for later retrieval
+        mMediaListsCache.put( parentKey, metadataList );
 
         return metadataList;
 
@@ -282,7 +273,7 @@ public class MusicProvider {
     }
 
 
-    public MediaMetadataCompat getMetadata(String mediaID)
+    public synchronized MediaMetadataCompat getMetadata(String mediaID)
     {
         return mMusicMetadataCache.get( mediaID );
     }
@@ -297,7 +288,7 @@ public class MusicProvider {
     }
 
     //Discard only one list and notify media service to make a call to load list again
-    public void invalidateDataAndNotify(String source, String parameter)
+    public synchronized void invalidateDataAndNotify(String source, String parameter)
     {
         String parentString;
 

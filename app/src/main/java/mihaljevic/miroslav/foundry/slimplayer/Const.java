@@ -4,6 +4,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
  * Created by Miroslav on 16.1.2017..
  */
 
+//TODO - some of this strings should be loaded from resource files
 public final class Const {
     //Keys that are used when transferring data about different screens
     public static final String SOURCE_KEY           = "source"; //Which screen, like all songs, genres etc
@@ -42,6 +43,7 @@ public final class Const {
     public static final String PLAYLIST_NUMBER_PREF_KEY = "pref_key_playlist_number";
     public static final String RESCAN_PREF_KEY          = "pref_key_rescan";
     public static final String REPEAT_PREF_KEY          = "pref_key_repeat";
+    public static final String AUTOPLAY_PREF_KEY        = "pref_key_autoplay";
 
     public static final int STORAGE_PERMISSIONS_REQUEST = 36; //Random number
 }

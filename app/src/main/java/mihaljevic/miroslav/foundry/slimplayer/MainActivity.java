@@ -36,6 +36,8 @@ import junit.framework.Test;
 //TODO - ability for some code parts/methods to fail without throwing exception (or with catching exception) (add checks for things you connect to in onStart())
 //TODO - add optimizations for screen rotations (already done for NowPlayingFragment)
 //TODO - load all songs from folder in queue when playing from file???
+//TODO - test again receiving a call while playing
+//TODO - hashSet with integers instead of sparse booleanarray for selected items in lists
 
 //TODO - keep rolling
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener
@@ -81,6 +83,7 @@ public class MainActivity extends SelectSongsActivity implements TextView.OnClic
     protected void onStart()
     {
         super.onStart();
+
 
         //Ask for permissions if needed
         if ( Build.VERSION.SDK_INT >= 16 )

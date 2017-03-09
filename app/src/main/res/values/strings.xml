@@ -23,6 +23,8 @@
 
     <string name="pref_title_rescan">Rescan</string>
 
+    <string name="pref_title_autoplay">Auto play last song on start-up</string>
+
     <!--Keys used in preferences and possibly in some other cases-->
     <string name="pref_key_tabs">pref_key_tabs</string>
 
@@ -42,6 +44,8 @@
     <string name="pref_key_empty_genres">pref_key_empty_genres</string>
 
     <string name="pref_key_playlist_number">pref_key_playlist_number</string>
+
+    <string name="pref_key_autoplay">pref_key_autoplay</string>
     <!-- There are also some other keys defined as constants in project files-->
 
     <!--Directory select dialog -->

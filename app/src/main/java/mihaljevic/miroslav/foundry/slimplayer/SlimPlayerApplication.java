@@ -52,13 +52,17 @@ public class SlimPlayerApplication extends Application
             {
                 mediaController = new MediaControllerCompat( SlimPlayerApplication.this, mMediaBrowser.getSessionToken() );
 
-                if ( isLastPlaySuccess() )
+                if ( shouldAutoplay() )
                 {
-                    setLastPlayFailed();
-                    playLastState( mediaController );
-                }
 
-                setLastPlaySuccess();
+                    if ( isLastPlaySuccess() )
+                    {
+                        setLastPlayFailed();
+                        playLastState( mediaController );
+                    }
+
+                    setLastPlaySuccess();
+                }
 
             }
             catch (RemoteException e)
@@ -154,6 +158,15 @@ public class SlimPlayerApplication extends Application
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         return preferences.getBoolean( LAST_STATE_PLAYED, false );
+    }
+
+    public boolean shouldAutoplay()
+    {
+        SharedPreferences preferences;
+
+        preferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        return preferences.getBoolean( Const.AUTOPLAY_PREF_KEY, false );
     }
 
 

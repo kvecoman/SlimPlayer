@@ -277,11 +277,11 @@ public final class Utils {
         String      sortOrder;
 
         //Create query that will fetch songs that we need for this screen
-        uri             = Uri.parse(args.getString( Const.URI_KEY));
-        projection      = args.getStringArray( Const.PROJECTION_KEY);
-        selection       = args.getString( Const.SELECTION_KEY);
-        selectionArgs   = args.getStringArray( Const.SELECTION_ARGS_KEY);
-        sortOrder       = args.getString( Const.SORT_ORDER_KEY);
+        uri             = Uri.parse(args.getString  ( Const.URI_KEY));
+        projection      = args.getStringArray       ( Const.PROJECTION_KEY);
+        selection       = args.getString            ( Const.SELECTION_KEY);
+        selectionArgs   = args.getStringArray       ( Const.SELECTION_ARGS_KEY);
+        sortOrder       = args.getString            ( Const.SORT_ORDER_KEY);
 
         return sAppContext.getContentResolver().query(  uri,
                                                         projection,
@@ -561,23 +561,23 @@ public final class Utils {
         }
     }
 
-    public static void showMessageOKCancel( Activity activity, String message, DialogInterface.OnClickListener okListener )
+    public static void showMessageOKCancel( Context context, String message, DialogInterface.OnClickListener okListener )
     {
-        showMessageOKCancel( activity, message, okListener, null );
+        showMessageOKCancel( context, message, okListener, null );
     }
 
 
-    public static void showMessageOKCancel( Activity activity, String message, DialogInterface.OnClickListener okListener, DialogInterface.OnClickListener cancelListener )
+    public static void showMessageOKCancel( Context context, String message, DialogInterface.OnClickListener okListener, DialogInterface.OnClickListener cancelListener )
     {
-        new AlertDialog.Builder( activity )
+        new AlertDialog.Builder( context )
                         .setMessage( message )
-                        .setPositiveButton( activity.getString( R.string.OK ), okListener )
-                        .setNegativeButton( activity.getString( R.string.Cancel ), cancelListener )
+                        .setPositiveButton( context.getString( R.string.OK ), okListener )
+                        .setNegativeButton( context.getString( R.string.Cancel ), cancelListener )
                         .create()
                         .show();
     }
 
-    public static <T> boolean existsInArray( T[] array, T target )
+    /*public static <T> boolean existsInArray( T[] array, T target )
     {
         if ( array == null || array.length == 0 || target == null)
             return false;
@@ -589,7 +589,7 @@ public final class Utils {
         }
 
         return false;
-    }
+    }*/
 
     public static boolean isSongs( String source, String parameter )
     {

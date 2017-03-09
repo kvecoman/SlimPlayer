@@ -7,6 +7,11 @@
         android:summary="Directories from which to load music"
         />
 
+    <CheckBoxPreference
+        android:key="@string/pref_key_autoplay"
+        android:title="@string/pref_title_autoplay"
+        android:defaultValue="true"/>
+
     <PreferenceCategory
             android:title="@string/pref_title_tabs"
             android:key="@string/pref_key_tabs"

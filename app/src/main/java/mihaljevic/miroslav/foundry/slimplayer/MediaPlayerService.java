@@ -12,10 +12,13 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.session.PlaybackState;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -67,6 +70,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     //Constant that allows media subscribers to have access to media content
     private static final String MEDIA_ROOT_ID = "slim_player_root";
+
+    public static final int FF_SPEED = 4000; //Fast forward rewind speed
 
 
     //Machinery that actually plays our music
@@ -163,6 +168,20 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     public MediaPlayerService() {
     }
+
+   /* @Override
+    public IBinder onBind( Intent intent )
+    {
+        return new MediaPlayerServiceBinder();
+    }
+
+    public class MediaPlayerServiceBinder extends Binder
+    {
+        public MediaPlayerService getService()
+        {
+            return MediaPlayerService.this;
+        }
+    }*/
 
 
 
@@ -320,6 +339,22 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     private final class MediaSessionCallback extends MediaSessionCompat.Callback
     {
         @Override
+        public void onPrepareFromMediaId( String mediaId, Bundle extras )
+        {
+            super.onPrepareFromMediaId( mediaId, extras );
+
+            prepareFromMediaIDRunnable( extras );
+        }
+
+        @Override
+        public void onStop()
+        {
+            super.onStop();
+
+            stopRunnable();
+        }
+
+        @Override
         public void onPlay()
         {
             super.onPlay();
@@ -375,13 +410,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             seekToRunnable( (int) pos );
         }
 
-        @Override
-        public boolean onMediaButtonEvent( Intent mediaButtonEvent )
-        {
-            return super.onMediaButtonEvent( mediaButtonEvent );
-
-
-        }
 
         @Override
         public void onFastForward()
@@ -665,6 +693,37 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         result.sendResult( mediaItems );
     }
 
+    private void prepareFromMediaIDRunnable( final Bundle extras )
+    {
+        mExecutorService.submit( new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                prepareFromMediaID( extras );
+            }
+        } );
+    }
+
+    private synchronized void prepareFromMediaID( Bundle extras )
+    {
+        String  source;
+        String  parameter;
+        String  displayName;
+
+        if ( extras == null )
+            return;
+
+        source      = extras.getString  ( Const.SOURCE_KEY, null );
+        parameter   = extras.getString  ( Const.PARAMETER_KEY, null );
+        displayName = extras.getString  ( Const.DISPLAY_NAME, "" );
+
+        if ( source == null )
+            return;
+
+        setQueue( source, parameter, displayName );
+    }
+
     private void seekToRunnable( final int pos )
     {
         cancelCurrentTask();
@@ -792,9 +851,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     private synchronized void playFromMediaID(String mediaID, Bundle extras)
     {
-        String  source;
-        String  parameter;
-        String  displayName;
+
         int     position;
 
         if ( extras == null )
@@ -805,20 +862,12 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
             return;
         }
 
-
-        source      = extras.getString  ( Const.SOURCE_KEY, null );
-        parameter   = extras.getString  ( Const.PARAMETER_KEY, null );
-        position    = extras.getInt     ( Const.POSITION_KEY, -1 );
-        displayName = extras.getString  ( Const.DISPLAY_NAME, "" );
-
-        if ( source == null )
-            return;
-
-        //If none of the cases above worked then do full list loading
-        setQueue( source, parameter, displayName );
+        prepareFromMediaID( extras );
 
         if (mQueue == null)
             return;
+
+        position = extras.getInt     ( Const.POSITION_KEY, -1 );
 
         //Check if bundle provided correct play position, if not set it to -1
         if ( !isPositionOK( mQueue, position, mediaID ) )
@@ -832,6 +881,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         if ( position >= 0 )
             play( position );
     }
+
+
 
     private synchronized boolean tryPlayMediaID(String mediaID)
     {
@@ -917,7 +968,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
         position = mPlayer.getCurrentPosition();
 
-        position += 4000;
+        position += FF_SPEED;
 
         //If position is out of bounds, seekTo() will do nothing
         seekTo( position );
@@ -941,114 +992,13 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
         position = mPlayer.getCurrentPosition();
 
-        position -= 4000;
+        position -= FF_SPEED;
 
         //If position is out of bounds, seekTo() will do nothing
         seekTo( position );
     }
 
 
-    //Returns position of last played song
-    private int recreateLastPlaybackState()
-    {
-        //Recreate last playback state
-        SharedPreferences   prefs;
-        String              source;
-        String              parameter;
-        String              queueTitle;
-        int                 position;
-
-        prefs = PreferenceManager.getDefaultSharedPreferences(this);
-
-        source      = prefs.getString ( LAST_SOURCE_KEY, null );
-        parameter   = prefs.getString ( LAST_PARAMETER_KEY, null );
-        position    = prefs.getInt    ( LAST_POSITION_KEY, -1 );
-        queueTitle  = prefs.getString ( LAST_TITLE_KEY, "" );
-
-        if ( source != null )
-        {
-            //This method is called async so no need to wrap it in async task
-            setQueue( source, parameter, queueTitle );
-            return position;
-        }
-        return -1;
-    }
-
-    //Try to get last playback state (if there is none, nothing will happen)
-    public void playLastStateAsync()
-    {
-        Log.v(TAG, "playLastStateAsync()");
-
-
-
-        new AsyncTask<Void, Void, Void>()
-        {
-            @Override
-            protected Void doInBackground( Void... params )
-            {
-                playLastState();
-
-                return null;
-            }
-
-
-        }.execute();
-    }
-
-    private void playLastStateRunnable()
-    {
-        mExecutorService.submit( new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                playLastState();
-            }
-        } );
-    }
-
-    private void playLastState()
-    {
-
-        int lastPosition;
-
-        lastPosition = recreateLastPlaybackState();
-
-        //If we could recreate state then play the position
-        if ( lastPosition != -1 )
-            play( lastPosition );
-    }
-
-    private void setLastStateFailed()
-    {
-        SharedPreferences preferences;
-
-        preferences = PreferenceManager.getDefaultSharedPreferences(this);
-
-        preferences .edit()
-                    .putBoolean( LAST_STATE_PLAYED, false )
-                    .apply();
-    }
-
-    private void setLastStateSuccess()
-    {
-        SharedPreferences preferences;
-
-        preferences = PreferenceManager.getDefaultSharedPreferences(this);
-
-        preferences .edit()
-                    .putBoolean( LAST_STATE_PLAYED, true )
-                    .apply();
-    }
-
-    private boolean isLastStateSuccess()
-    {
-        SharedPreferences preferences;
-
-        preferences = PreferenceManager.getDefaultSharedPreferences(this);
-
-        return preferences.getBoolean( LAST_STATE_PLAYED, false );
-    }
 
     private synchronized void tryToGetAudioFocus()
     {
@@ -1433,6 +1383,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         String                          artist;
         Bitmap                          art;
 
+        if ( mState == PlaybackStateCompat.STATE_STOPPED || mState == PlaybackStateCompat.STATE_NONE )
+            return;
+
         notificationManager = ( NotificationManager )getSystemService(NOTIFICATION_SERVICE);
         sessionToken        = mMediaSession.getSessionToken();
         currentQueueItem    = mQueue.get( mPosition );
@@ -1587,5 +1540,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
         return new NotificationCompat.Action.Builder( icon, title, pendingIntent ).build();
     }
+
+
 
 }

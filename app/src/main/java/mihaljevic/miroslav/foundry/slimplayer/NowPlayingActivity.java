@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.media.Image;
+import android.media.audiofx.Visualizer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -263,11 +264,13 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
 
     @Override
-    protected void onResume() {
+    protected void onResume()
+    {
         super.onResume();
 
         //Update pager with current song when we return to this activity (if we are connected to media service)
         updatePagerWithCurrentSong();
+
     }
 
     @Override

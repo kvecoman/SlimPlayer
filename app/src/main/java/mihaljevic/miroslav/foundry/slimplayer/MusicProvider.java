@@ -319,17 +319,17 @@ public class MusicProvider {
     //DEBUG function - it counts number of weak references with null value
     /*public int countNullReferences()
     {
-        int count;
+        int timesProcessOutputBufferCalled;
 
-        count = 0;
+        timesProcessOutputBufferCalled = 0;
 
         for (WeakReference<MediaMetadataCompat> ref : mMusicMetadataCache.values())
         {
             if (ref.get() == null)
-                count++;
+                timesProcessOutputBufferCalled++;
         }
 
-        return count;
+        return timesProcessOutputBufferCalled;
     }*/
 
 

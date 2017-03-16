@@ -49,12 +49,17 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     protected MediaBrowserCompat    mMediaBrowser;
     protected MediaControllerCompat mMediaController;
 
+    private Visualizer      mVisualizer;
+    private VisualizerView  mVisualizerView;
+
     private MediaBrowserCompat.ConnectionCallback mConnectionCallbacks = new MediaBrowserCompat.ConnectionCallback()
     {
         @Override
         public void onConnected()
         {
             super.onConnected();
+
+            int audioSessionID;
 
             try
             {
@@ -66,6 +71,28 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
                 startFilePlayingIfNeeded();
 
                 initQueue();
+
+                audioSessionID = getAudioSessionID();
+
+                mVisualizer     = new Visualizer( audioSessionID );
+                mVisualizerView = ( VisualizerView ) findViewById( R.id.visualizer );
+
+                mVisualizer.setCaptureSize( Visualizer.getCaptureSizeRange()[1] );
+
+                mVisualizer.setDataCaptureListener( new Visualizer.OnDataCaptureListener()
+                {
+                    @Override
+                    public void onWaveFormDataCapture( Visualizer visualizer, byte[] waveform, int samplingRate )
+                    {
+                        //mVisualizerView.updateVisualizer( waveform );
+                    }
+
+                    @Override
+                    public void onFftDataCapture( Visualizer visualizer, byte[] fft, int samplingRate )
+                    {}
+                }, Visualizer.getMaxCaptureRate() / 2, true, false );
+
+                mVisualizer.setEnabled( true );
 
                 mSeekBarHandler.post( mSeekBarRunnable );
 
@@ -221,19 +248,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         mMediaBrowser = new MediaBrowserCompat( this, MediaPlayerService.COMPONENT_NAME, mConnectionCallbacks, null );
     }
 
-    /*@Override
-    protected void onNewIntent( Intent intent )
-    {
-        super.onNewIntent( intent );
 
-        //NOTE - intent handling to function?
-        if (intent != null && intent.hasExtra( Const.SOURCE_KEY ))
-        {
-            mQueueSource    = intent.getStringExtra( Const.SOURCE_KEY );
-            mQueueParameter = intent.getStringExtra( Const.PARAMETER_KEY );
-        }
-
-    }*/
 
     @Override
     protected void onStart() {
@@ -316,6 +331,9 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
         if (mSeekBarHandler != null && mSeekBarRunnable != null)
             mSeekBarHandler.removeCallbacks( mSeekBarRunnable );
+
+        if ( mVisualizer != null )
+            mVisualizer.release();
     }
 
 
@@ -357,6 +375,22 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         }
 
         super.onRequestPermissionsResult( requestCode, permissions, grantResults );
+    }
+
+    private int getAudioSessionID()
+    {
+        if ( mMediaBrowser == null || !mMediaBrowser.isConnected() || mMediaController == null )
+            return -1;
+
+        Bundle  sessionExtras;
+
+        sessionExtras = mMediaController.getExtras();
+
+        if ( sessionExtras == null || !sessionExtras.containsKey( Const.AUDIO_SESSION_KEY ) )
+            return -1;
+
+        return sessionExtras.getInt( Const.AUDIO_SESSION_KEY );
+
     }
 
     //Check if we need to start playing a file

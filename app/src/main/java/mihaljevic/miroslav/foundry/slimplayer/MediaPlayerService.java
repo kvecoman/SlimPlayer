@@ -12,13 +12,10 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.media.session.PlaybackState;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -43,8 +40,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-
-import static android.support.v4.media.MediaBrowserCompat.MediaItem.FLAG_BROWSABLE;
 
 
 public class MediaPlayerService extends MediaBrowserServiceCompat implements MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
@@ -76,6 +71,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     //Machinery that actually plays our music
     private MediaPlayer mPlayer;
+
+    //Audio session of media player, used for retrieving audio data for visualization
+    private int mAudioSessionID;
 
     //AudioManager notifies us whenever phone is receiving call or when headset is plugged out
     private AudioManager mAudioManager;
@@ -169,19 +167,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     public MediaPlayerService() {
     }
 
-   /* @Override
-    public IBinder onBind( Intent intent )
-    {
-        return new MediaPlayerServiceBinder();
-    }
 
-    public class MediaPlayerServiceBinder extends Binder
-    {
-        public MediaPlayerService getService()
-        {
-            return MediaPlayerService.this;
-        }
-    }*/
 
 
 
@@ -191,14 +177,25 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         Log.v(TAG,"onCreate()");
         super.onCreate();
 
-        Intent intent;
-        PendingIntent pendingIntent;
+        Intent          intent;
+        PendingIntent   pendingIntent;
+        Bundle          sessionExtras;
+
+        sessionExtras = new Bundle(  );
+
+        mPlayer = new MediaPlayer();
+        mPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+
+        mAudioSessionID = mPlayer.getAudioSessionId();
+
+        sessionExtras.putInt( Const.AUDIO_SESSION_KEY, mAudioSessionID );
 
 
-        mMediaSession = new MediaSessionCompat(this,TAG);
-        mMediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
-        mMediaSession.setCallback( new MediaSessionCallback() );
-        mMediaSession.setActive( true );
+        mMediaSession = new MediaSessionCompat( this, TAG );
+        mMediaSession.setFlags      ( MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS );
+        mMediaSession.setCallback   ( new MediaSessionCallback() );
+        mMediaSession.setActive     ( true );
+        mMediaSession.setExtras     ( sessionExtras );
 
         setSessionToken(mMediaSession.getSessionToken());
 
@@ -224,8 +221,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
         mQueue = new ArrayList<>();
 
-        mPlayer = new MediaPlayer();
-        mPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
 
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
@@ -506,8 +501,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         mCount = mQueue.size();
 
 
-        sessionExtras.putString( Const.SOURCE_KEY,      source );
-        sessionExtras.putString( Const.PARAMETER_KEY,   parameter );
+        sessionExtras.putString ( Const.SOURCE_KEY,      source );
+        sessionExtras.putString ( Const.PARAMETER_KEY,   parameter );
+        sessionExtras.putInt    ( Const.AUDIO_SESSION_KEY, mAudioSessionID );
 
         //State stopped means that nothing is playing but we have media loaded
         updateState( PlaybackStateCompat.STATE_STOPPED );

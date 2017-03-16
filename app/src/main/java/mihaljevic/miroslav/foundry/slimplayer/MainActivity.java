@@ -39,7 +39,7 @@ import junit.framework.Test;
 //TODO - test again receiving a call while playing
 //TODO - hashSet with integers instead of sparse booleanarray for selected items in lists
 
-//TODO - keep rolling
+//TODO - keep rolling - keep working on visualization to make it not use microphone permission
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener
 {
 

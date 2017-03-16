@@ -31,6 +31,7 @@ dependencies {
     compile 'com.android.support:support-v4:25.2.0'
     compile 'com.android.support:support-media-compat:25.2.0'
     compile 'com.github.bumptech.glide:glide:3.7.0'
+    compile 'com.google.android.exoplayer:exoplayer:r2.2.0'
 
     testCompile 'junit:junit:4.12'
 
@@ -43,7 +44,7 @@ dependencies {
     androidTestCompile 'com.android.support.test:rules:0.4'
     // Set this dependency to build and run Espresso tests
     androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2'
-    androidTestCompile ('com.android.support.test.espresso:espresso-contrib:2.2.2'){
+    androidTestCompile ('com.android.support.test.espresso:espresso-contrib:2.2.2') {
         exclude module: 'support-annotations'
         exclude module: 'support-v4'
         exclude module: 'support-v13'

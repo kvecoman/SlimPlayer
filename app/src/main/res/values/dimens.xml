@@ -17,9 +17,9 @@
     <dimen name="notification_icon_size">64dp</dimen>
     <dimen name="notification_horizontal_margin">11dp</dimen>
     <dimen name="notification_vertical_margin">2dp</dimen>
-    <dimen  name="notification_outer_padding">4dp</dimen>
-    <dimen  name="notification_inner_padding">8dp</dimen>
-    <dimen  name="notification_vertical_padding">2dp</dimen>
+    <dimen name="notification_outer_padding">4dp</dimen>
+    <dimen name="notification_inner_padding">8dp</dimen>
+    <dimen name="notification_vertical_padding">2dp</dimen>
 
-    <dimen  name="notification_close_button_outer_padding">7dp</dimen>
+    <dimen name="notification_close_button_outer_padding">7dp</dimen>
 </resources>

@@ -4,14 +4,15 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.PointF;
 import android.graphics.Rect;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 
-import java.nio.ByteBuffer;
-import java.util.LinkedList;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.List;
 
 /**
  * Created by miroslav on 11.03.17..
@@ -23,22 +24,69 @@ public class VisualizerView extends View
 {
     protected final String TAG = getClass().getSimpleName();
 
+    private static final int DEFAULT_TARGET_SAMPLES_TO_SHOW = 200;
+
+    private static final int DEFAULT_FPS = 60;
+
+    private static final int TRANSITION_FRAMES = 3;
+
+    //TODO - transition frames and curve_points should be settable from outside
+
+    //Points that will be calculated from N sectors of waveform
+    private static final int CURVE_POINTS = 8;
+
+    private int dbgLinePos = 0;
+
+
+
     private int dbgOnDrawCalled = 0;
 
-    private byte[]  mBytes;
-    private float[] mPoints;
-    private Rect    mRect = new Rect();
-    private Paint   mForePaint = new Paint();
+    //Connecting point between audio renderer and visualizer, it transfers obtained samples to here
+    private AudioBufferManager mAudioBufferManager;
 
-    private ByteBuffer  mByteBuffer;
-    private int         mFrameSize;
+    //Height values of curve points
+    private float[] mCurveHeights;
 
-    private LinkedBlockingQueue<BufferWrap > mBufferWrapQueue;
+    //private byte[]      mSamples;
 
-    private LinkedList<BufferWrap > mBufferWrapList = new LinkedList<>();
+    private AudioBufferManager.BufferWrap mSamplesBuffer;
 
-    private int mBuffersToShow;
-    private int mSamplesToShow;
+    private PointF[]    mWaveformPoints;
+    private float[]     mWaveformPointsFloat;
+    private Rect        mCanvasRect = new Rect();
+    private Paint       mForePaint = new Paint();
+
+
+
+    //How much samples we try to show in one frame
+    private int mTargetSamplesToShow;
+
+    //Provides curve a every frame as needed
+    private CurveAnimator mCurveAnimator;
+
+
+    //Whether we are drawing visualizations or not
+    private boolean     mUpdateEnabled = false;
+
+    //Delay between calling of update handler
+    private long        mUpdateDelayMs;
+
+    //Handler used as timer to time next draw of visualization
+    private Handler     mUpdateHandler = new Handler(  );
+
+    //Runnable where we call update methods for visualization to update
+    private Runnable    mUpdateRunable = new Runnable()
+    {
+        @Override
+        public void run()
+        {
+            if ( !mUpdateEnabled )
+                return;
+
+            updateVisualizer();
+            mUpdateHandler.postDelayed( this, mUpdateDelayMs );
+        }
+    };
 
     public VisualizerView( Context context )
     {
@@ -60,150 +108,245 @@ public class VisualizerView extends View
 
     private void init()
     {
-        mBytes = null;
         mForePaint.setStrokeWidth   ( 1f );
         mForePaint.setAntiAlias     ( true );
         mForePaint.setColor         ( Color.rgb( 0, 128, 255 ) );
+        mForePaint.setStyle         ( Paint.Style.STROKE );
 
-        mBufferWrapQueue = new LinkedBlockingQueue<>(  );
+        setSamplesToShow( DEFAULT_TARGET_SAMPLES_TO_SHOW );
+
+        setFps( DEFAULT_FPS );
+
+        mCurveAnimator = new CurveAnimator( CURVE_POINTS, TRANSITION_FRAMES );
+
+        mCurveHeights = new float[ CURVE_POINTS ];
+
     }
 
-    public void updateVisualizer( byte[] monoSamples, long presentationTimeUs, long currentTimeUs )
+
+
+    public void setFps( int fps )
     {
-        BufferWrap bufferWrap;
+        mUpdateDelayMs = 1000 / fps;
+    }
 
-        if ( monoSamples == null )
+    public void setSamplesToShow( int targetSamplesCount )
+    {
+        if ( targetSamplesCount <= 0 )
             return;
 
-        bufferWrap = new BufferWrap( monoSamples, presentationTimeUs );
+        mTargetSamplesToShow = targetSamplesCount;
 
-        mBufferWrapList.addLast( bufferWrap );
+        mWaveformPoints = new PointF[ targetSamplesCount ];
 
-        bufferWrap = null;
-
-        //Remove all bufers that are before current position (these are not needed anymore)
-        while ( !mBufferWrapList.isEmpty() && mBufferWrapList.getFirst().presentationTimeUs < currentTimeUs )
-            mBufferWrapList.removeFirst();
-
-        if ( mBufferWrapList.isEmpty() )
-            return;
-
-        bufferWrap = mBufferWrapList.getFirst();
-
-        //Check the distance form current position to first bufferWrap after it is not too big
-        //TODO - this to some constant, like maximum displacement time or something
-        if ( Math.abs( bufferWrap.presentationTimeUs - currentTimeUs) > 200000 )
-            return;
-
-
-        mBuffersToShow = 0;
-        mSamplesToShow = 0;
-
-        //Calculate how many buffers we will show and to which amount of samples it will come to
-        while ( mBuffersToShow < mBufferWrapList.size() && mSamplesToShow + mBufferWrapList.get( mBuffersToShow ).buffer.length <= TestPlayerActivity.VISUALIZATION_SAMPLES )
+        for ( int i = 0; i < mWaveformPoints.length; i++ )
         {
-            mSamplesToShow += mBufferWrapList.get( mBuffersToShow ).buffer.length;
-            mBuffersToShow++;
+            mWaveformPoints[ i ] = new PointF();
         }
 
-        invalidate();
+        mWaveformPointsFloat = new float[ ( targetSamplesCount - 1 ) * 4 ];
     }
 
-    public void updateVisualizer ( ByteBuffer byteBuffer, int frameSize )
+    public void setAudioBufferManager( AudioBufferManager audioBufferManager )
     {
-        mByteBuffer = byteBuffer;
-        mFrameSize = frameSize;
-        invalidate();
+        mAudioBufferManager = audioBufferManager;
     }
+
+    public void enableUpdate()
+    {
+        if ( mUpdateEnabled )
+            return;
+
+        mUpdateHandler.post( mUpdateRunable );
+
+        mUpdateEnabled = true;
+    }
+
+    public void disableUpdate()
+    {
+        mUpdateEnabled = false;
+    }
+
+    private void absoluteSamples()
+    {
+        for ( int i = 0; i <= mSamplesBuffer.end; i++ )
+        {
+            mSamplesBuffer.buffer[ i ] = ( byte ) Math.abs(  mSamplesBuffer.buffer[i] );
+        }
+    }
+
+
+    private byte findMaxByte( AudioBufferManager.BufferWrap bufferWrap, int start, int end )
+    {
+        byte max = Byte.MIN_VALUE;
+
+        for ( int i = start; i < end; i++ )
+        {
+            if ( bufferWrap.buffer[i] > max )
+                max = bufferWrap.buffer[i];
+        }
+
+        return max;
+    }
+
+    //Samples should be absoluted before calling this method
+    private void calculateCurvePointHeights()
+    {
+        int     sectorSize;
+        byte    maxSample;
+
+        sectorSize = ( mSamplesBuffer.end + 1 ) / CURVE_POINTS;
+
+        for ( int i = 0; i < CURVE_POINTS; i++ )
+        {
+            maxSample = findMaxByte( mSamplesBuffer, i * sectorSize, i * sectorSize + sectorSize );
+            mCurveHeights[i] = ( float ) maxSample;
+        }
+    }
+
+
+
+
+    public void updateVisualizer()
+    {
+
+        if ( mAudioBufferManager == null )
+            return;
+
+        mSamplesBuffer = mAudioBufferManager.getSamples();
+
+        if ( mSamplesBuffer == null )
+            return;
+
+        absoluteSamples();
+
+        calculateCurvePointHeights();
+
+        calculateWaveformData(  );
+
+        invalidate();
+
+
+    }
+
+
+    private PointF[] calculateCurvePointsFromHeights()
+    {
+        PointF[] curvePoints;
+        Rect    curveRect;
+        int     pointDistance;
+        float   scaledHeight;
+        float   scaling;
+
+        curvePoints     = new PointF[ CURVE_POINTS ];
+        pointDistance   = getWidth() / (CURVE_POINTS - 1);
+
+        //For debug purposes we only take lower half
+        curveRect       = new Rect( 0, getHeight() / 2, getWidth(), getHeight()  );
+
+        scaling = ( float ) curveRect.height() / 128f;
+
+        for ( int i = 0; i < CURVE_POINTS; i++ )
+        {
+            scaledHeight = scaling * mCurveHeights[ i ];
+
+            curvePoints[ i ] = new PointF( i * pointDistance, curveRect.height() + scaledHeight );
+        }
+
+        return curvePoints;
+    }
+
+    private void calculateWaveformData()
+    {
+        int samplesCount;
+
+        //For normal waveform data we use upper half of canvas rectangle
+        mCanvasRect.set( 0, 0, getWidth(), getHeight() / 2 );
+
+
+        samplesCount = mSamplesBuffer.end + 1;
+
+        for ( int i = 0; i <= mSamplesBuffer.end; i++ )
+        {
+            mWaveformPoints[ i ].x = mCanvasRect.width() * i / ( samplesCount - 1 );
+            mWaveformPoints[ i ].y = mCanvasRect.height() / 2 + ( ( byte ) ( mSamplesBuffer.buffer[ i ] + 128 ) ) * ( mCanvasRect.height() / 2 ) / 128;
+        }
+
+
+
+    }
+
+
+    private void drawWaveformData( Canvas canvas )
+    {
+        int count;
+
+
+        count = mWaveformPoints.length;
+
+
+        for ( int i = 0; i < ( ( count - 1 ) ); i++ )
+        {
+            mWaveformPointsFloat[ i * 4 ]       = mWaveformPoints[ i ].x;
+            mWaveformPointsFloat[ i * 4 + 1 ]   = mWaveformPoints[ i ].y;
+            mWaveformPointsFloat[ i * 4 + 2 ]   = mWaveformPoints[ i + 1 ].x;
+            mWaveformPointsFloat[ i * 4 + 3 ]   = mWaveformPoints[ i + 1 ].y;
+        }
+
+        canvas.drawLines( mWaveformPointsFloat, 0, (count - 1) * 4 , mForePaint );
+    }
+
+    private void drawCurve( Canvas canvas )
+    {
+        PointF[]    curvePoints;
+        Path        curvePath;
+
+        curvePoints = calculateCurvePointsFromHeights();
+
+        if ( mCurveAnimator.isDone() )
+            mCurveAnimator.addPoints( curvePoints );
+
+        curvePath = mCurveAnimator.getCurveForCurrentFrame();
+
+
+        canvas.drawPath( curvePath, mForePaint );
+    }
+
+
 
     @Override
     protected void onDraw( Canvas canvas )
     {
-        dbgOnDrawCalled++;
-        Log.v(TAG, dbgOnDrawCalled + " onDraw()");
-
-
         super.onDraw( canvas );
 
-        byte[] buffer;
-        int newIndex;
-        int count;
 
-        if ( mByteBuffer != null)
+
+        dbgOnDrawCalled++;
+        //Log.v(TAG, dbgOnDrawCalled + " onDraw()");
+
+        //Report whether we have hardware acceleration
+        /*if ( dbgOnDrawCalled == 1 )
         {
-            int size;
+            String hardwareAccelerationStatus;
 
-            size = ( mByteBuffer.limit() - mByteBuffer.position() ) / mFrameSize;
+            hardwareAccelerationStatus = "Hardware acceleration: ";
 
-            if ( mPoints == null || mPoints.length < size * 4 )
-            {
-                mPoints = new float[ size * 4 ];
-            }
+            hardwareAccelerationStatus += canvas.isHardwareAccelerated() ? "ON" : "OFF";
 
-            mRect.set( 0, 0, getWidth(), getHeight() );
+            Log.i( TAG, hardwareAccelerationStatus );
+        }*/
 
-            for( int i = 0; i < size - 1; i++ )
-            {
-                mPoints[ i * 4 ]        = mRect.width() * i / ( size - 1 );
-                mPoints[ i * 4 + 1 ]    = mRect.height() / 2 + ( ( byte ) ( mByteBuffer.get( i * mFrameSize ) + 128 ) ) * ( mRect.height() / 2 ) / 128;
-                mPoints[ i * 4 + 2 ]    = mRect.width() * ( i + 1 ) / ( size - 1 );
-                mPoints[ i * 4 + 3 ]    = mRect.height() / 2 + ( ( byte ) ( mByteBuffer.get( ( i + 1 ) * mFrameSize ) + 128 ) ) * ( mRect.height() / 2 ) / 128;
-            }
 
-            canvas.drawLines( mPoints, mForePaint );
-        }
-        else
-        {
-            if ( mBufferWrapList == null || mBufferWrapList.size() == 0 || mSamplesToShow == 0 || mBuffersToShow == 0 )
-                return;
+        drawWaveformData( canvas );
 
-            count = mSamplesToShow - mBuffersToShow;
+        drawCurve( canvas );
 
-            if ( mPoints == null || mPoints.length != count * 4 )
-            {
-                mPoints = new float[ count * 4 ];
-            }
+        //DEBUG STUFF
+        canvas.drawLine( dbgLinePos, 0, dbgLinePos, getHeight(), mForePaint );
+        dbgLinePos += getWidth() / DEFAULT_FPS;
+        dbgLinePos %= getWidth();
 
-            mRect.set( 0, 0, getWidth(), getHeight() );
 
-            newIndex = 0;
-
-            for ( int i = 0;i < mBuffersToShow; i++ )
-            {
-                buffer = mBufferWrapList.get( i ).buffer;
-
-                for ( int k = 0; k < buffer.length - 1; k++ )
-                {
-                    mPoints[ newIndex * 4 ]        = mRect.width() * ( newIndex ) / ( count - 1 );
-                    mPoints[ newIndex * 4 + 1 ]    = mRect.height() / 2 + ( ( byte ) ( buffer[k] + 128 ) ) * ( mRect.height() / 2 ) / 128;
-                    mPoints[ newIndex * 4 + 2 ]    = mRect.width() * ( newIndex + 1 ) / ( count - 1 );
-                    mPoints[ newIndex * 4 + 3 ]    = mRect.height() / 2 + ( ( byte ) ( buffer[k + 1] + 128 ) ) * ( mRect.height() / 2 ) / 128;
-
-                    newIndex++;
-                }
-            }
-
-            /*for( int i = 0; i < mSamplesToShow - 1; i++ )
-            {
-                mPoints[ i * 4 ]        = mRect.width() * i / ( mBytes.length - 1 );
-                mPoints[ i * 4 + 1 ]    = mRect.height() / 2 + ( ( byte ) ( mBytes[i] + 128 ) ) * ( mRect.height() / 2 ) / 128;
-                mPoints[ i * 4 + 2 ]    = mRect.width() * ( i + 1 ) / ( mBytes.length - 1 );
-                mPoints[ i * 4 + 3 ]    = mRect.height() / 2 + ( ( byte ) ( mBytes[i + 1] + 128 ) ) * ( mRect.height() / 2 ) / 128;
-            }*/
-
-            canvas.drawLines( mPoints, mForePaint );
-        }
     }
 
-    private class BufferWrap
-    {
-        long presentationTimeUs;
-        byte[] buffer;
-
-        public BufferWrap( byte[] buffer, long presentationTimeUs )
-        {
-            this.presentationTimeUs = presentationTimeUs;
-            this.buffer = buffer;
-        }
-    }
 }

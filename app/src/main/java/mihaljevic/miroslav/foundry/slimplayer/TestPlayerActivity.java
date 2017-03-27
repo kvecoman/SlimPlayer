@@ -1,10 +1,6 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
-import android.media.MediaCodec;
-import android.media.audiofx.Visualizer;
 import android.net.Uri;
-import android.os.Handler;
-import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,37 +13,30 @@ import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.LoadControl;
 import com.google.android.exoplayer2.Renderer;
 import com.google.android.exoplayer2.audio.MediaCodecAudioRenderer;
-import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.extractor.Extractor;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
 import com.google.android.exoplayer2.mediacodec.MediaCodecSelector;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
-import com.google.android.exoplayer2.source.LoopingMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.source.SingleSampleMediaSource;
-import com.google.android.exoplayer2.trackselection.AdaptiveVideoTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.upstream.DataSource;
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
-import com.google.android.exoplayer2.upstream.FileDataSource;
 import com.google.android.exoplayer2.upstream.FileDataSourceFactory;
-import com.google.android.exoplayer2.upstream.TransferListener;
 
 import java.io.File;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
-public class TestPlayerActivity extends AppCompatActivity implements Button.OnClickListener, CustomMediaCodecAudioRenderer.OutputBufferListener
+public class TestPlayerActivity extends AppCompatActivity implements Button.OnClickListener/*, CustomMediaCodecAudioRenderer.OutputBufferListener*/
 {
     protected final String TAG = getClass().getSimpleName();
 
     //This number of samples represent below defined time span
-    public static final int VISUALIZATION_SAMPLES = 500;
+    public static final int VISUALIZATION_SAMPLES = 200;
 
     //How much time does visualization represent ( in ms )
-    public static final int VISUALIZATION_TIME_SPAN = 300;
+    public static final int VISUALIZATION_TIME_SPAN = 500;
 
 
     private Button button;
@@ -57,6 +46,8 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
     private VisualizerView  mVisualizerView;
 
     MediaCodecAudioRenderer mAudioRenderer;
+
+    private AudioBufferManager mAudioBufferManager;
 
 
 
@@ -71,8 +62,14 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
 
         mVisualizerView = ( VisualizerView ) findViewById( R.id.visualizer );
 
-
         initExoPlayer();
+
+        mAudioBufferManager = new AudioBufferManager( mAudioRenderer, VISUALIZATION_SAMPLES, VISUALIZATION_TIME_SPAN );
+
+        mVisualizerView.setAudioBufferManager( mAudioBufferManager );
+
+        ( ( CustomMediaCodecAudioRenderer ) mAudioRenderer ).setAudioBufferManager( mAudioBufferManager );
+
     }
 
     @Override
@@ -81,6 +78,10 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
         super.onDestroy();
 
         exoPlayer.release();
+
+        mVisualizerView.disableUpdate();
+
+        mVisualizerView = null;
 
 
     }
@@ -108,7 +109,7 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
         mediaCodecSelector = MediaCodecSelector.DEFAULT;
 
 
-        audioRenderer   = new CustomMediaCodecAudioRenderer( mediaCodecSelector, this, VISUALIZATION_SAMPLES, VISUALIZATION_TIME_SPAN );
+        audioRenderer   = new CustomMediaCodecAudioRenderer( mediaCodecSelector, null );
         renderers       = new Renderer[] { audioRenderer };
 
         trackSelector   = new DefaultTrackSelector();
@@ -137,6 +138,7 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
         {
             exoPlayer.setPlayWhenReady( true );
             button.setText( "Pause" );
+            mVisualizerView.enableUpdate();
 
 
         }
@@ -144,29 +146,15 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
         {
             exoPlayer.setPlayWhenReady( false );
             button.setText( "Play" );
+            mVisualizerView.disableUpdate();
+
         }
     }
 
-    @Override
-    public void onOutputBuffer( final byte[] buffer, final long bufferPresentationTimeUs )
-    {
-
-        Log.v( TAG, "onOutputBuffer()" );
-
-        runOnUiThread( new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                mVisualizerView.updateVisualizer( buffer, bufferPresentationTimeUs, mAudioRenderer.getPositionUs() );
-            }
-        } );
-    }
 
 
 
-
-    private static class AudioExtractorsFactory implements ExtractorsFactory
+    public static class AudioExtractorsFactory implements ExtractorsFactory
     {
         private static List< Class< ? extends Extractor > > audioExtractorClasses;
 

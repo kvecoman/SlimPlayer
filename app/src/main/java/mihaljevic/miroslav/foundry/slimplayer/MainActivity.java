@@ -33,11 +33,12 @@ import junit.framework.Test;
 //TODO - first time opening the app and home screen is empty, at least add indicators that there are more tabs
 //TODO - make visual style for project
 //TODO - make visualization
-//TODO - ability for some code parts/methods to fail without throwing exception (or with catching exception) (add checks for things you connect to in onStart())
-//TODO - add optimizations for screen rotations (already done for NowPlayingFragment)
+//TODO - ability for some code parts/methods to fail without throwing exception (or with catching exception) ( add checks for things you connect to in onStart() )
+//TODO - add optimizations for screen rotations ( already done for NowPlayingFragment )
 //TODO - load all songs from folder in queue when playing from file???
 //TODO - test again receiving a call while playing
-//TODO - hashSet with integers instead of sparse booleanarray for selected items in lists
+//TODO - hashSet with integers instead of sparse boolean array for selected items in lists
+//TODO - see licences for glide, commons-math and maybe some other stuff to put it somewhere
 
 //TODO - keep rolling - keep working on visualization to make it not use microphone permission
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener

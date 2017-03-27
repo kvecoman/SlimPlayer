@@ -32,6 +32,7 @@ dependencies {
     compile 'com.android.support:support-media-compat:25.2.0'
     compile 'com.github.bumptech.glide:glide:3.7.0'
     compile 'com.google.android.exoplayer:exoplayer:r2.2.0'
+    compile 'org.apache.commons:commons-math3:3.6.1'
 
     testCompile 'junit:junit:4.12'
 

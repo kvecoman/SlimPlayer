@@ -1,6 +1,7 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.net.Uri;
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -28,9 +29,13 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public class TestPlayerActivity extends AppCompatActivity implements Button.OnClickListener/*, CustomMediaCodecAudioRenderer.OutputBufferListener*/
+public class TestPlayerActivity extends AppCompatActivity implements Button.OnClickListener
 {
+
     protected final String TAG = getClass().getSimpleName();
+
+    public static final String TEST_SONG_PATH           = "/storage/sdcard0/Samsung/Music/Jelena VuÄŤkoviÄ‡ feat DJ Vujo_91 - Led.mp3";
+    public static final String TEST_SONG_PATH_API_23    = "/storage/15FC-0502/Jelena Vuckovic feat DJ Vujo_91 - Led.mp3";
 
     //This number of samples represent below defined time span
     public static final int VISUALIZATION_SAMPLES = 200;
@@ -48,6 +53,20 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
     MediaCodecAudioRenderer mAudioRenderer;
 
     private AudioBufferManager mAudioBufferManager;
+
+
+
+
+    /*static{
+        System.loadLibrary( "hello-jnicpp" );
+    }
+
+
+
+    public native String helloFromTheOtherSide();*/
+
+
+
 
 
 
@@ -83,6 +102,8 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
 
         mVisualizerView = null;
 
+        mAudioBufferManager.release();
+
 
     }
     public void initExoPlayer()
@@ -99,7 +120,7 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
         Renderer[]          renderers;
         MediaCodecSelector  mediaCodecSelector;
 
-        filePath    = "/storage/sdcard0/Samsung/Music/Martin Solveig - Do It Right ft. Tkay Maidza.mp3";
+        filePath    = Build.VERSION.SDK_INT >= 22 ? TEST_SONG_PATH_API_23 : TEST_SONG_PATH;
         file        = new File( filePath );
         fileURI     = Uri.fromFile( file );
 
@@ -149,6 +170,8 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
             mVisualizerView.disableUpdate();
 
         }
+
+        //Utils.toastShort( helloFromTheOtherSide() );
     }
 
 

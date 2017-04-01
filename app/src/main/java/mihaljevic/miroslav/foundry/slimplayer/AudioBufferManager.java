@@ -2,15 +2,15 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.util.Log;
 
-import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.audio.MediaCodecAudioRenderer;
+import com.google.android.exoplayer2.decoder.Buffer;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by miroslav on 25.03.17..
@@ -22,14 +22,39 @@ public class AudioBufferManager
 {
     protected final String TAG = getClass().getSimpleName();
 
+    //Lock when both mBufferWrapList and mFreeBufferList are in use
+    //private final String BOTH_LISTS_LOCK = "both_lists_lock";
+
     private MediaCodecAudioRenderer mAudioRenderer;
 
 
-    private int mTargetSamples;
-    private int mTargetTimeSpan;
+    private final int mTargetSamples;
+    private final int mTargetTimeSpan;
 
-    private LinkedList< BufferWrap > mBufferWrapList;
+    /*private LinkedList< BufferWrap > mBufferWrapList;
+    private LinkedList< ByteBuffer > mFreeBufferList;*/
+    private List< BufferWrap > mBufferWrapList;
+    private List< ByteBuffer > mFreeBufferList;
 
+    //Memory allocated for samples that are retreived when getSamples is called
+    private ByteBuffer mResultByteBuffer;
+
+    /*private long dbgStartTime;
+    private long dbgEndTime;
+    private double dbgAverageTime = 0;*/
+
+    /*static
+    {
+        System.loadLibrary( "visualizer" );
+
+    }*/
+
+
+    /*private static native void init();
+
+    private static native void destroy();
+
+    private native ByteBuffer createMonoSamples( ByteBuffer byteBuffer, int pcmFrameSize, int sampleRate );*/
 
 
 
@@ -37,40 +62,74 @@ public class AudioBufferManager
 
     public AudioBufferManager( MediaCodecAudioRenderer audioRenderer,  int targetSamples, int targetTimeSpan )
     {
-        mBufferWrapList = new LinkedList<>();
+
         mAudioRenderer  = audioRenderer;
 
         mTargetSamples  = targetSamples;
         mTargetTimeSpan = targetTimeSpan;
 
-        mBufferWrapList = new LinkedList<>(  );
+        /*mBufferWrapList = new LinkedList<>(  );
+        mFreeBufferList = new LinkedList<>(  );*/
+
+        mBufferWrapList = Collections.synchronizedList( new LinkedList<BufferWrap>(  ) );
+        mFreeBufferList = Collections.synchronizedList( new LinkedList<ByteBuffer>(  ) );;
+
+        mResultByteBuffer = ByteBuffer.allocateDirect( mTargetSamples );
+
+
+
+        //init();
 
 
     }
 
     public void onProcessBuffer2( ByteBuffer byteBuffer, long presentationTimeUs, int pcmFrameSize, int sampleRate )
     {
+        BufferWrap  bufferWrap;
+        ByteBuffer  newBuffer;
+
+        //ByteBuffer javaBuffer = createMonoSamplesJava( byteBuffer, pcmFrameSize, sampleRate );
+        //dbgStartTime    = System.currentTimeMillis();
+        newBuffer       = createMonoSamplesJava( byteBuffer, pcmFrameSize, sampleRate );
+        //dbgEndTime      = System.currentTimeMillis();
+
+        //dbgAverageTime = ( ( dbgAverageTime + ( double )( dbgEndTime - dbgStartTime ) ) ) / 2f;
+
+
+        //Log.d( TAG, "createMonoSamples() average time: "  + String.format( "%.06f", dbgAverageTime ) + " ms");
+
+        if ( newBuffer == null )
+            return;
+
+        bufferWrap = new BufferWrap( newBuffer, presentationTimeUs );
+
+        //mBufferWrapList.addLast( bufferWrap );
+
+        mBufferWrapList.add( bufferWrap );
+
+
+
+    }
+
+    private ByteBuffer createMonoSamplesJava( ByteBuffer byteBuffer, int pcmFrameSize, int sampleRate )
+    {
         int     originalSamplesCount;
         float   representedTime;
         int     monoSamplesCount;
         int     sampleJump;
 
-        BufferWrap bufferWrap;
+        byte        monoSample;
+        ByteBuffer  newBuffer;
 
-        //TODO - new system of passing samples work, but the bug with renderer time still persists
-
-        //Log.d( TAG, "onProcessBuffer2()" );
 
         originalSamplesCount = ( byteBuffer.limit() - byteBuffer.position() ) / pcmFrameSize;
 
         if ( originalSamplesCount == 0 )
-            return;
+            return null;
 
         representedTime = ( float ) originalSamplesCount / ( float ) sampleRate * 1000f;
 
         monoSamplesCount = ( int )( representedTime / ( float ) mTargetTimeSpan * ( float ) mTargetSamples );
-
-
 
 
         //Bellow we test extreme max and min cases
@@ -83,42 +142,79 @@ public class AudioBufferManager
 
         sampleJump = originalSamplesCount / monoSamplesCount;
 
-        bufferWrap = new BufferWrap( null, presentationTimeUs );
-        bufferWrap.buffer = new Byte[ monoSamplesCount ];
+        newBuffer = getFreeByteBuffer( monoSamplesCount );
+
+        if ( newBuffer == null )
+        {
+            newBuffer = ByteBuffer.allocateDirect( monoSamplesCount );
+        }
 
 
         for ( int i = 0; i < monoSamplesCount; i++ )
         {
             //Obtain the most significant sample (last one in frame) every "sampleJump" samples
-            bufferWrap.buffer[ i ] = byteBuffer.get( ( i * pcmFrameSize * sampleJump ) + ( pcmFrameSize - 1 ) );
+            monoSample = byteBuffer.get( ( i * pcmFrameSize * sampleJump ) + ( pcmFrameSize - 1 ) );
+
+            newBuffer.put( i, monoSample );
         }
 
-        synchronized ( this )
+        return newBuffer;
+    }
+
+    private ByteBuffer getFreeByteBuffer( int targetCapacity )
+    {
+        ByteBuffer freeBuffer;
+
+        for ( int i = 0; i < mFreeBufferList.size(); i++ )
         {
-            mBufferWrapList.addLast( bufferWrap );
+            freeBuffer = mFreeBufferList.get( i );
+
+
+            if ( freeBuffer.capacity() <= targetCapacity  )
+            {
+                mFreeBufferList.remove( i );
+
+                freeBuffer.limit( targetCapacity );
+
+                return freeBuffer;
+            }
         }
 
-
-
+        return null;
     }
 
 
-    private synchronized void deleteStaleBufferWraps()
+
+
+
+    private void deleteStaleBufferWraps()
     {
         long currentTimeUs;
+        BufferWrap bufferWrap;
 
         currentTimeUs = mAudioRenderer.getPositionUs();
 
-        Log.d( TAG, "deleteStaleBufferWraps() - current time us: " + currentTimeUs );
+        //Log.d( TAG, "deleteStaleBufferWraps() - current time us: " + currentTimeUs );
 
-        while ( !mBufferWrapList.isEmpty() && mBufferWrapList.getFirst().presentationTimeUs < currentTimeUs )
-            mBufferWrapList.removeFirst();
+        /*while ( !mBufferWrapList.isEmpty() && mBufferWrapList.getFirst().presentationTimeUs < currentTimeUs )
+        {
+            bufferWrap = mBufferWrapList.pollFirst();
+
+            mFreeBufferList.addLast( bufferWrap.buffer );
+        }*/
+
+        while ( !mBufferWrapList.isEmpty() && mBufferWrapList.get(0).presentationTimeUs < currentTimeUs )
+        {
+            bufferWrap = mBufferWrapList.remove( 0 );
+
+            mFreeBufferList.add( bufferWrap.buffer );
+        }
     }
 
-    public synchronized BufferWrap getSamples()
+    public ByteBuffer getSamples()
     {
         BufferWrap bufferWrap;
-        BufferWrap resultBufferWrap;
+        //BufferWrap resultBufferWrap;
         int samplesCount;
         int buffersCount;
 
@@ -126,34 +222,42 @@ public class AudioBufferManager
         samplesCount = 0;
         buffersCount = 0;
 
-        //Log.d( TAG, "getSamples()" );
 
         deleteStaleBufferWraps();
 
         if ( mBufferWrapList.isEmpty() )
             return null;
 
-        resultBufferWrap        = new BufferWrap( null, -1 );
-        resultBufferWrap.buffer = new Byte[ mTargetSamples ];
 
-        while ( buffersCount < mBufferWrapList.size() && samplesCount + mBufferWrapList.get( buffersCount ).buffer.length <= mTargetSamples )
+        mResultByteBuffer.limit( mTargetSamples );
+
+        while ( buffersCount < mBufferWrapList.size() && samplesCount + mBufferWrapList.get( buffersCount ).buffer.limit() <= mTargetSamples )
         {
             bufferWrap = mBufferWrapList.get( buffersCount );
 
-            for ( int i = 0; i < bufferWrap.buffer.length; i++ )
+            for ( int i = 0; i < bufferWrap.buffer.limit(); i++ )
             {
-                resultBufferWrap.buffer[ samplesCount + i ] = bufferWrap.buffer[ i ];
+                mResultByteBuffer.put( samplesCount + i, bufferWrap.buffer.get( i ) );
             }
 
 
-            samplesCount += bufferWrap.buffer.length;
+            samplesCount += bufferWrap.buffer.limit();
             buffersCount++;
         }
 
-        resultBufferWrap.end = samplesCount - 1;
 
-        return resultBufferWrap;
+        mResultByteBuffer.limit( samplesCount );
 
+        return mResultByteBuffer;
+
+    }
+
+
+
+
+    public void release()
+    {
+        /*destroy();*/
     }
 
 
@@ -161,15 +265,16 @@ public class AudioBufferManager
     public static class BufferWrap
     {
         long presentationTimeUs;
-        Byte[] buffer;
-        int end = -1;
+        ByteBuffer buffer;
 
-        public BufferWrap( Byte[] buffer, long presentationTimeUs )
+        public BufferWrap( ByteBuffer buffer, long presentationTimeUs )
         {
             this.presentationTimeUs = presentationTimeUs;
             this.buffer = buffer;
         }
     }
+
+
 
 
 }

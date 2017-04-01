@@ -12,6 +12,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
@@ -49,7 +50,7 @@ public class VisualizerView extends View
 
     //private byte[]      mSamples;
 
-    private AudioBufferManager.BufferWrap mSamplesBuffer;
+    private ByteBuffer mSamplesBuffer;
 
     private PointF[]    mWaveformPoints;
     private float[]     mWaveformPointsFloat;
@@ -169,21 +170,24 @@ public class VisualizerView extends View
 
     private void absoluteSamples()
     {
-        for ( int i = 0; i <= mSamplesBuffer.end; i++ )
+        byte absolutedSample;
+
+        for ( int i = 0; i < mSamplesBuffer.limit(); i++ )
         {
-            mSamplesBuffer.buffer[ i ] = ( byte ) Math.abs(  mSamplesBuffer.buffer[i] );
+            absolutedSample = ( byte ) Math.abs(  mSamplesBuffer.get( i ) );
+            mSamplesBuffer.put( i, absolutedSample );
         }
     }
 
 
-    private byte findMaxByte( AudioBufferManager.BufferWrap bufferWrap, int start, int end )
+    private byte findMaxByte( ByteBuffer buffer, int start, int end )
     {
         byte max = Byte.MIN_VALUE;
 
         for ( int i = start; i < end; i++ )
         {
-            if ( bufferWrap.buffer[i] > max )
-                max = bufferWrap.buffer[i];
+            if ( buffer.get( i ) > max )
+                max = buffer.get( i );
         }
 
         return max;
@@ -195,7 +199,7 @@ public class VisualizerView extends View
         int     sectorSize;
         byte    maxSample;
 
-        sectorSize = ( mSamplesBuffer.end + 1 ) / CURVE_POINTS;
+        sectorSize = ( mSamplesBuffer.limit() ) / CURVE_POINTS;
 
         for ( int i = 0; i < CURVE_POINTS; i++ )
         {
@@ -264,12 +268,12 @@ public class VisualizerView extends View
         mCanvasRect.set( 0, 0, getWidth(), getHeight() / 2 );
 
 
-        samplesCount = mSamplesBuffer.end + 1;
+        samplesCount = mSamplesBuffer.limit();
 
-        for ( int i = 0; i <= mSamplesBuffer.end; i++ )
+        for ( int i = 0; i < mSamplesBuffer.limit(); i++ )
         {
             mWaveformPoints[ i ].x = mCanvasRect.width() * i / ( samplesCount - 1 );
-            mWaveformPoints[ i ].y = mCanvasRect.height() / 2 + ( ( byte ) ( mSamplesBuffer.buffer[ i ] + 128 ) ) * ( mCanvasRect.height() / 2 ) / 128;
+            mWaveformPoints[ i ].y = mCanvasRect.height() / 2 + ( ( byte ) ( mSamplesBuffer.get( i ) + 128 ) ) * ( mCanvasRect.height() / 2 ) / 128;
         }
 
 

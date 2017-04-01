@@ -38,7 +38,7 @@ public class CustomMediaCodecAudioRenderer extends MediaCodecAudioRenderer
     @C.PcmEncoding
     private int mOutputPcmEncoding;
 
-    private String mOutputMimeType;
+    //private String mOutputMimeType;
 
     private int mOutputChanelCount;
     private int mOutputSampleRate;
@@ -99,7 +99,7 @@ public class CustomMediaCodecAudioRenderer extends MediaCodecAudioRenderer
         Log.d( TAG, "outputFormatChanged: " + outputFormat);
 
         //Get format info
-        mOutputMimeType     = outputFormat.getString    ( MediaFormat.KEY_MIME );
+        //mOutputMimeType     = outputFormat.getString    ( MediaFormat.KEY_MIME );
         mOutputChanelCount  = outputFormat.getInteger   ( MediaFormat.KEY_CHANNEL_COUNT );
         mOutputSampleRate   = outputFormat.getInteger   ( MediaFormat.KEY_SAMPLE_RATE );
 
@@ -136,6 +136,7 @@ public class CustomMediaCodecAudioRenderer extends MediaCodecAudioRenderer
             int x = 0;
         }*/
 
+        //TODO - enable/disable callback method for this
 
         //Make sure we have fresh buffer and also the one that won't be skipped
         if ( mOldBufferIndex != bufferIndex && !shouldSkip && mAudioBufferManager != null )

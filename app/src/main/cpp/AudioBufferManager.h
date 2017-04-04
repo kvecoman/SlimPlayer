@@ -26,6 +26,11 @@ Java_mihaljevic_miroslav_foundry_slimplayer_AudioBufferManager_createMonoSamples
 
 jobject getFreeByteBuffer( JNIEnv * env, jobject * thiz, jint targetCapacity );
 
+void deleteStaleBufferWraps( JNIEnv * env, jobject * thiz );
+
+JNIEXPORT jobject JNICALL
+        Java_mihaljevic_miroslav_foundry_slimplayer_AudioBufferManager_getSamples( JNIEnv * env, jobject thiz );
+
 #ifdef __cplusplus
 }
 #endif

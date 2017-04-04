@@ -13,7 +13,6 @@ import android.util.Log;
 import android.view.View;
 
 import java.nio.ByteBuffer;
-import java.util.List;
 
 /**
  * Created by miroslav on 11.03.17..
@@ -48,9 +47,14 @@ public class VisualizerView extends View
     //Height values of curve points
     private float[] mCurveHeights;
 
+    private PointF[] mCurvePoints;
+
+
+
     //private byte[]      mSamples;
 
-    private ByteBuffer mSamplesBuffer;
+    private ByteBuffer  mSamplesBuffer;
+    private int         mSamplesCount;
 
     private PointF[]    mWaveformPoints;
     private float[]     mWaveformPointsFloat;
@@ -89,25 +93,44 @@ public class VisualizerView extends View
         }
     };
 
+
+
+    static{
+        System.loadLibrary( "visualizer" );
+    }
+
+    private native void init();
+
+    private native void destroy();
+
+    private native void calculateWaveformData( ByteBuffer samplesBuffer, int samplesCount );
+
+    private native void calculateCurvePoints( ByteBuffer samplesBuffer, int curvePointsCount );
+
+
+
+
+
+
     public VisualizerView( Context context )
     {
         super( context );
-        init();
+        initJava();
     }
 
     public VisualizerView( Context context, AttributeSet attrs )
     {
         super( context, attrs );
-        init();
+        initJava();
     }
 
     public VisualizerView( Context context, AttributeSet attrs, int defStyleAttr )
     {
         super( context, attrs, defStyleAttr );
-        init();
+        initJava();
     }
 
-    private void init()
+    private void initJava()
     {
         mForePaint.setStrokeWidth   ( 1f );
         mForePaint.setAntiAlias     ( true );
@@ -122,6 +145,21 @@ public class VisualizerView extends View
 
         mCurveHeights = new float[ CURVE_POINTS ];
 
+        mCurvePoints = new PointF[ CURVE_POINTS ];
+
+        //Init points to something
+        for ( int i = 0; i < CURVE_POINTS; i++ )
+        {
+            mCurvePoints[i] = new PointF( 0, 0 );
+        }
+
+        init();
+
+    }
+
+    public void release()
+    {
+        destroy();
     }
 
 
@@ -168,7 +206,7 @@ public class VisualizerView extends View
         mUpdateEnabled = false;
     }
 
-    private void absoluteSamples()
+    /*private void absoluteSamples()
     {
         byte absolutedSample;
 
@@ -176,6 +214,208 @@ public class VisualizerView extends View
         {
             absolutedSample = ( byte ) Math.abs(  mSamplesBuffer.get( i ) );
             mSamplesBuffer.put( i, absolutedSample );
+        }
+    }*/
+
+
+
+    //Samples should be absoluted before calling this method
+    /*private void calculateCurvePointHeights()
+    {
+        int     sectorSize;
+        byte    maxSample;
+
+        sectorSize = ( mSamplesBuffer.limit() ) / CURVE_POINTS;
+
+        for ( int i = 0; i < CURVE_POINTS; i++ )
+        {
+            maxSample = findMaxByte( mSamplesBuffer, i * sectorSize, i * sectorSize + sectorSize );
+            mCurveHeights[i] = ( float ) maxSample;
+        }
+    }*/
+
+    private void calculateWaveformDataJava(ByteBuffer samplesBuffer, int samplesCount)
+    {
+        //For normal waveform data we use upper half of canvas rectangle
+        //mCanvasRect.set( 0, 0, getWidth(), getHeight() / 2 );
+
+        Rect rect;
+
+        rect = new Rect( 0, 0, getWidth(), getHeight() / 2  );
+
+        float x;
+        float y;
+        float oldx;
+        float oldy;
+
+
+        /*for ( int i = 0; i < samplesCount; i++ )
+        {
+            mWaveformPoints[ i ].x = rect.width() * i / ( samplesCount - 1 );
+            mWaveformPoints[ i ].y = rect.height() / 2 + ( ( byte ) ( samplesBuffer.get( i ) + 128 ) ) * ( rect.height() / 2 ) / 128;
+        }*/
+
+        oldx = 0;
+        oldy = rect.height() / 2 + ( ( byte ) ( samplesBuffer.get( 0 ) + 128 ) ) * ( rect.height() / 2 ) / 128;
+
+        for ( int i = 0; i <  ( samplesCount - 1 ); i++ )
+        {
+            /*mWaveformPointsFloat[ i * 4 ]       = mWaveformPoints[ i ].x;
+            mWaveformPointsFloat[ i * 4 + 1 ]   = mWaveformPoints[ i ].y;
+            mWaveformPointsFloat[ i * 4 + 2 ]   = mWaveformPoints[ i + 1 ].x;
+            mWaveformPointsFloat[ i * 4 + 3 ]   = mWaveformPoints[ i + 1 ].y;*/
+
+            x = rect.width() * (i + 1) / ( samplesCount - 1 );
+            y = rect.height() / 2 + ( ( byte ) ( samplesBuffer.get( i + 1 ) + 128 ) ) * ( rect.height() / 2 ) / 128;
+
+            mWaveformPointsFloat[ i * 4 ]       = oldx;
+            mWaveformPointsFloat[ i * 4 + 1 ]   = oldy;
+            mWaveformPointsFloat[ i * 4 + 2 ]   = x;
+            mWaveformPointsFloat[ i * 4 + 3 ]   = y;
+
+            oldx = x;
+            oldy = y;
+        }
+    }
+
+
+
+    private boolean acquireSamples()
+    {
+        if ( mAudioBufferManager == null )
+            return false;
+
+
+
+        //dbgStartTime    = System.currentTimeMillis();
+        mSamplesBuffer  = mAudioBufferManager.getSamplesJava(); //NOTE - JAVA version is faster
+        //dbgEndTime      = System.currentTimeMillis();
+
+        //dbgTimeSum += dbgEndTime - dbgStartTime;
+        //dbgCalls++;
+
+        //dbgAverageTime = ( double )dbgTimeSum / ( double )dbgCalls;
+        //Log.d( TAG, "getSamples() average time: "  + String.format( "%.06f", dbgAverageTime ) + " ms after " + dbgCalls + " calls");
+
+        if ( mSamplesBuffer == null )
+            return false;
+
+        mSamplesCount = mSamplesBuffer.limit();
+
+        return true;
+    }
+
+
+    long dbgStartTime;
+    long dbgEndTime;
+    long dbgTimeSum = 0;
+    long dbgCalls = 0;
+    double dbgAverageTime = 0;
+
+    public void updateVisualizer()
+    {
+
+        boolean samplesAcquired;
+
+        samplesAcquired = acquireSamples();
+
+        if ( !samplesAcquired )
+            return;
+
+        //This is called first, because samples are apsoluted inside and that will be shown on raw waveform data when it is drawn
+        //dbgStartTime    = System.currentTimeMillis();
+        calculateCurvePoints( mSamplesBuffer, CURVE_POINTS );
+        //dbgEndTime      = System.currentTimeMillis();
+
+        //dbgTimeSum += dbgEndTime - dbgStartTime;
+        //dbgCalls++;
+
+        //dbgAverageTime = ( double )dbgTimeSum / ( double )dbgCalls;
+        //Log.d( TAG, "calculateCurvePoints() average time: "  + String.format( "%.06f", dbgAverageTime ) + " ms after " + dbgCalls + " calls");
+
+
+
+        //This is called first, because samples are apsoluted inside and that will be shown on raw waveform data when it is drawn
+        dbgStartTime    = System.currentTimeMillis();
+        calculateWaveformData( mSamplesBuffer, mSamplesCount );
+        dbgEndTime      = System.currentTimeMillis();
+
+        dbgTimeSum += dbgEndTime - dbgStartTime;
+        dbgCalls++;
+
+        dbgAverageTime = ( double )dbgTimeSum / ( double )dbgCalls;
+        Log.d( TAG, "calculateWaveformData() average time: "  + String.format( "%.06f", dbgAverageTime ) + " ms after " + dbgCalls + " calls");
+
+        invalidate();
+
+
+    }
+
+
+    private void calculateCurvePointsJava( ByteBuffer samplesBuffer, int curvePointsCount )
+    {
+
+        Rect    curveRect;
+        int     pointDistance;
+        float   scaledHeight;
+        float   scaling;
+        //float[] curveHeights;
+        int     sectorSize;
+        byte    maxSectorHeight;
+
+
+        pointDistance   = getWidth() / ( curvePointsCount - 1 );
+
+        //For debug purposes we only take lower half
+        curveRect       = new Rect( 0, getHeight() / 2, getWidth(), getHeight()  );
+
+        absoluteSamples( samplesBuffer );
+
+        //curveHeights = calculateCurvePointHeights( samplesBuffer, curvePointsCount );
+
+        scaling = ( float ) curveRect.height() / 128f;
+
+        sectorSize      = ( samplesBuffer.limit() ) / curvePointsCount;
+
+        for ( int i = 0; i < curvePointsCount; i++ )
+        {
+            maxSectorHeight = findMaxByte( samplesBuffer, i * sectorSize, i * sectorSize + sectorSize );
+
+            scaledHeight = scaling * maxSectorHeight;
+
+            mCurvePoints[ i ] = new PointF( i * pointDistance, curveRect.height() + scaledHeight );
+        }
+
+    }
+
+    /*private float[] calculateCurvePointHeights( ByteBuffer samplesBuffer, int curvePointsCount )
+    {
+        float[] curveHeights;
+        int     sectorSize;
+        byte    maxSample;
+
+        curveHeights    = new float[ curvePointsCount ];
+        sectorSize      = ( samplesBuffer.limit() ) / curvePointsCount;
+
+        for ( int i = 0; i < curvePointsCount; i++ )
+        {
+            maxSample = findMaxByte( samplesBuffer, i * sectorSize, i * sectorSize + sectorSize );
+            curveHeights[i] = ( float ) maxSample;
+        }
+
+
+        return curveHeights;
+
+    }*/
+
+    private void absoluteSamples( ByteBuffer samplesBuffer )
+    {
+        byte absolutedSample;
+
+        for ( int i = 0; i < samplesBuffer.limit(); i++ )
+        {
+            absolutedSample = ( byte ) Math.abs(  samplesBuffer.get( i ) );
+            samplesBuffer.put( i, absolutedSample );
         }
     }
 
@@ -193,122 +433,26 @@ public class VisualizerView extends View
         return max;
     }
 
-    //Samples should be absoluted before calling this method
-    private void calculateCurvePointHeights()
-    {
-        int     sectorSize;
-        byte    maxSample;
-
-        sectorSize = ( mSamplesBuffer.limit() ) / CURVE_POINTS;
-
-        for ( int i = 0; i < CURVE_POINTS; i++ )
-        {
-            maxSample = findMaxByte( mSamplesBuffer, i * sectorSize, i * sectorSize + sectorSize );
-            mCurveHeights[i] = ( float ) maxSample;
-        }
-    }
 
 
 
-
-    public void updateVisualizer()
-    {
-
-        if ( mAudioBufferManager == null )
-            return;
-
-        mSamplesBuffer = mAudioBufferManager.getSamples();
-
-        if ( mSamplesBuffer == null )
-            return;
-
-        absoluteSamples();
-
-        calculateCurvePointHeights();
-
-        calculateWaveformData(  );
-
-        invalidate();
-
-
-    }
-
-
-    private PointF[] calculateCurvePointsFromHeights()
-    {
-        PointF[] curvePoints;
-        Rect    curveRect;
-        int     pointDistance;
-        float   scaledHeight;
-        float   scaling;
-
-        curvePoints     = new PointF[ CURVE_POINTS ];
-        pointDistance   = getWidth() / (CURVE_POINTS - 1);
-
-        //For debug purposes we only take lower half
-        curveRect       = new Rect( 0, getHeight() / 2, getWidth(), getHeight()  );
-
-        scaling = ( float ) curveRect.height() / 128f;
-
-        for ( int i = 0; i < CURVE_POINTS; i++ )
-        {
-            scaledHeight = scaling * mCurveHeights[ i ];
-
-            curvePoints[ i ] = new PointF( i * pointDistance, curveRect.height() + scaledHeight );
-        }
-
-        return curvePoints;
-    }
-
-    private void calculateWaveformData()
-    {
-        int samplesCount;
-
-        //For normal waveform data we use upper half of canvas rectangle
-        mCanvasRect.set( 0, 0, getWidth(), getHeight() / 2 );
-
-
-        samplesCount = mSamplesBuffer.limit();
-
-        for ( int i = 0; i < mSamplesBuffer.limit(); i++ )
-        {
-            mWaveformPoints[ i ].x = mCanvasRect.width() * i / ( samplesCount - 1 );
-            mWaveformPoints[ i ].y = mCanvasRect.height() / 2 + ( ( byte ) ( mSamplesBuffer.get( i ) + 128 ) ) * ( mCanvasRect.height() / 2 ) / 128;
-        }
-
-
-
-    }
 
 
     private void drawWaveformData( Canvas canvas )
     {
-        int count;
-
-
-        count = mWaveformPoints.length;
-
-
-        for ( int i = 0; i < ( ( count - 1 ) ); i++ )
-        {
-            mWaveformPointsFloat[ i * 4 ]       = mWaveformPoints[ i ].x;
-            mWaveformPointsFloat[ i * 4 + 1 ]   = mWaveformPoints[ i ].y;
-            mWaveformPointsFloat[ i * 4 + 2 ]   = mWaveformPoints[ i + 1 ].x;
-            mWaveformPointsFloat[ i * 4 + 3 ]   = mWaveformPoints[ i + 1 ].y;
-        }
-
-        canvas.drawLines( mWaveformPointsFloat, 0, (count - 1) * 4 , mForePaint );
+        canvas.drawLines( mWaveformPointsFloat, 0, (mSamplesCount - 1) * 4 , mForePaint );
     }
+
+
 
     private void drawCurve( Canvas canvas )
     {
-        PointF[]    curvePoints;
+
         Path        curvePath;
 
-        curvePoints = calculateCurvePointsFromHeights();
-
+        //TODO - points don't need to be calculated every frame/update
         if ( mCurveAnimator.isDone() )
-            mCurveAnimator.addPoints( curvePoints );
+            mCurveAnimator.addPoints( mCurvePoints );
 
         curvePath = mCurveAnimator.getCurveForCurrentFrame();
 

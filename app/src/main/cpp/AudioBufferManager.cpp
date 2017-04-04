@@ -14,11 +14,28 @@ static jclass       class_AudioBufferManager;
 static jfieldID     fieldID_AudioBufferManager_targetTimeSpan;
 static jfieldID     fieldID_AudioBufferManager_targetSamples;
 static jfieldID     fieldID_AudioBufferManager_freeBufferList;
+static jfieldID     fieldID_AudioBufferManager_audioRenderer;
+static jfieldID     fieldID_AudioBufferManager_bufferWrapList;
+static jfieldID     fieldID_AudioBufferManager_resultByteBuffer;
 
 static jclass       class_LinkedList;
 static jmethodID    methodID_LinkedList_size;
 static jmethodID    methodID_LinkedList_get;
 static jmethodID    methodID_LinkedList_remove;
+
+static jclass       class_List;
+static jmethodID    methodID_List_size;
+static jmethodID    methodID_List_get;
+static jmethodID    methodID_List_remove;
+static jmethodID    methodID_List_isEmpty;
+static jmethodID    methodID_List_add;
+
+static jclass       class_MediaCodecAudioRenderer;
+static jmethodID    methodID_MediaCodecAudioRenderer_getPositionUs;
+
+static jclass       class_BufferWrap;
+static jfieldID     fieldID_BufferWrap_presentationTimeUs;
+static jfieldID     fieldID_BufferWrap_buffer;
 
 JNIEXPORT void JNICALL
 Java_mihaljevic_miroslav_foundry_slimplayer_AudioBufferManager_init
@@ -33,17 +50,38 @@ Java_mihaljevic_miroslav_foundry_slimplayer_AudioBufferManager_init
     class_AudioBufferManager                    = env->FindClass( "mihaljevic/miroslav/foundry/slimplayer/AudioBufferManager" );
     fieldID_AudioBufferManager_targetTimeSpan   = env->GetFieldID( class_AudioBufferManager, "mTargetTimeSpan", "I" );
     fieldID_AudioBufferManager_targetSamples    = env->GetFieldID( class_AudioBufferManager, "mTargetSamples", "I" );
-    fieldID_AudioBufferManager_freeBufferList   = env->GetFieldID(class_AudioBufferManager, "mFreeBufferList", "Ljava/util/LinkedList;");
+    fieldID_AudioBufferManager_freeBufferList   = env->GetFieldID( class_AudioBufferManager, "mFreeBufferList", "Ljava/util/List;");
+    fieldID_AudioBufferManager_audioRenderer    = env->GetFieldID( class_AudioBufferManager, "mAudioRenderer", "Lcom/google/android/exoplayer2/audio/MediaCodecAudioRenderer;" );
+    fieldID_AudioBufferManager_bufferWrapList   = env->GetFieldID( class_AudioBufferManager, "mBufferWrapList", "Ljava/util/List;" );
+    fieldID_AudioBufferManager_resultByteBuffer = env->GetFieldID( class_AudioBufferManager, "mResultByteBuffer", "Ljava/nio/ByteBuffer;" );
 
     class_LinkedList            = env->FindClass( "java/util/LinkedList" );
     methodID_LinkedList_size    = env->GetMethodID( class_LinkedList, "size", "()I" );
     methodID_LinkedList_get     = env->GetMethodID( class_LinkedList, "get", "(I)Ljava/lang/Object;" );
     methodID_LinkedList_remove  = env->GetMethodID( class_LinkedList, "remove", "(I)Ljava/lang/Object;" );
 
+    class_List                  = env->FindClass( "java/util/List" );
+    methodID_List_size          = env->GetMethodID( class_List, "size", "()I" );
+    methodID_List_get           = env->GetMethodID( class_List, "get", "(I)Ljava/lang/Object;" );
+    methodID_List_remove        = env->GetMethodID( class_List, "remove", "(I)Ljava/lang/Object;" );
+    methodID_List_isEmpty       = env->GetMethodID( class_List, "isEmpty", "()Z" );
+    methodID_List_add           = env->GetMethodID( class_List, "add", "(Ljava/lang/Object;)Z" );
 
-    class_ByteBuffer            = ( jclass ) env->NewGlobalRef( class_ByteBuffer );
-    class_AudioBufferManager    = ( jclass ) env->NewGlobalRef( class_AudioBufferManager );
-    class_LinkedList            = ( jclass ) env->NewGlobalRef( class_LinkedList );
+    class_MediaCodecAudioRenderer                   = env->FindClass( "com/google/android/exoplayer2/audio/MediaCodecAudioRenderer" );
+    methodID_MediaCodecAudioRenderer_getPositionUs  = env->GetMethodID( class_MediaCodecAudioRenderer, "getPositionUs", "()J" );
+
+    class_BufferWrap                        = env->FindClass( "mihaljevic/miroslav/foundry/slimplayer/AudioBufferManager$BufferWrap" );
+    fieldID_BufferWrap_presentationTimeUs   = env->GetFieldID( class_BufferWrap, "presentationTimeUs", "J" );
+    fieldID_BufferWrap_buffer               = env->GetFieldID( class_BufferWrap, "buffer", "Ljava/nio/ByteBuffer;" );
+
+
+
+    class_ByteBuffer                = ( jclass ) env->NewGlobalRef( class_ByteBuffer );
+    class_AudioBufferManager        = ( jclass ) env->NewGlobalRef( class_AudioBufferManager );
+    class_LinkedList                = ( jclass ) env->NewGlobalRef( class_LinkedList );
+    class_List                      = ( jclass ) env->NewGlobalRef( class_List );
+    class_MediaCodecAudioRenderer   = ( jclass ) env->NewGlobalRef( class_MediaCodecAudioRenderer );
+    class_BufferWrap                = ( jclass ) env->NewGlobalRef( class_BufferWrap );
 
 }
 
@@ -52,10 +90,11 @@ Java_mihaljevic_miroslav_foundry_slimplayer_AudioBufferManager_destroy
         ( JNIEnv * env, jobject thiz )
 {
     env->DeleteGlobalRef( class_ByteBuffer );
-
     env->DeleteGlobalRef( class_AudioBufferManager );
-
     env->DeleteGlobalRef( class_LinkedList );
+    env->DeleteGlobalRef( class_List );
+    env->DeleteGlobalRef( class_MediaCodecAudioRenderer );
+    env->DeleteGlobalRef( class_BufferWrap );
 }
 
 
@@ -153,7 +192,7 @@ jobject getFreeByteBuffer( JNIEnv * env, jobject * thiz, jint targetCapacity )
 
     freeBufferList = env->GetObjectField( *thiz, fieldID_AudioBufferManager_freeBufferList );
 
-    size = env->CallIntMethod( freeBufferList, methodID_LinkedList_size );
+    size = env->CallIntMethod( freeBufferList, methodID_List_size );
 
     if ( size <= 0 )
         return nullptr;
@@ -161,13 +200,13 @@ jobject getFreeByteBuffer( JNIEnv * env, jobject * thiz, jint targetCapacity )
 
     for ( jint i = 0; i < size; i++ )
     {
-        freeBuffer = env->CallObjectMethod( freeBufferList, methodID_LinkedList_get, i );
+        freeBuffer = env->CallObjectMethod( freeBufferList, methodID_List_get, i );
 
         capacity = env->CallIntMethod( freeBuffer, methodID_ByteBuffer_capacity  );
 
         if ( capacity <= targetCapacity )
         {
-            env->CallObjectMethod( freeBufferList, methodID_LinkedList_remove, i );
+            env->CallObjectMethod( freeBufferList, methodID_List_remove, i );
 
             env->CallObjectMethod( freeBuffer, methodID_ByteBuffer_setLimit, targetCapacity );
 
@@ -177,4 +216,88 @@ jobject getFreeByteBuffer( JNIEnv * env, jobject * thiz, jint targetCapacity )
     }
 
     return nullptr;
+}
+
+
+void deleteStaleBufferWraps( JNIEnv * env, jobject * thiz )
+{
+    jlong   currentTimeUs;
+    jobject bufferWrap;
+
+    jobject audioRenderer;
+    jobject bufferWrapList;
+    jobject freeBufferList;
+    jobject buffer;
+
+    audioRenderer   = env->GetObjectField( *thiz, fieldID_AudioBufferManager_audioRenderer );
+    bufferWrapList  = env->GetObjectField( *thiz, fieldID_AudioBufferManager_bufferWrapList );
+    freeBufferList  = env->GetObjectField( *thiz, fieldID_AudioBufferManager_freeBufferList );
+
+    currentTimeUs = env->CallLongMethod( audioRenderer, methodID_MediaCodecAudioRenderer_getPositionUs );
+
+    while ( !env->CallBooleanMethod( bufferWrapList, methodID_List_isEmpty ) && env->GetLongField( env->CallObjectMethod( bufferWrapList, methodID_List_get, 0 ), fieldID_BufferWrap_presentationTimeUs ) < currentTimeUs )
+    {
+        bufferWrap = env->CallObjectMethod( bufferWrapList, methodID_List_remove, 0 );
+
+        buffer = env->GetObjectField( bufferWrap, fieldID_BufferWrap_buffer );
+
+        env->CallBooleanMethod( freeBufferList, methodID_List_add, buffer );
+    }
+
+
+}
+
+JNIEXPORT jobject JNICALL
+        Java_mihaljevic_miroslav_foundry_slimplayer_AudioBufferManager_getSamples( JNIEnv * env, jobject thiz )
+{
+    jobject bufferWrap;
+    jint samplesCount;
+    jint buffersCount;
+
+    jobject bufferWrapList;
+    jobject resultByteBuffer;
+    jint    targetSamples;
+
+    jint limit;
+
+    jbyte * resultBufferPtr;
+    jbyte * bufferPtr;
+
+    samplesCount = 0;
+    buffersCount = 0;
+
+    bufferWrapList      = env->GetObjectField( thiz, fieldID_AudioBufferManager_bufferWrapList );
+    resultByteBuffer    = env->GetObjectField( thiz, fieldID_AudioBufferManager_resultByteBuffer );
+    targetSamples       = env->GetIntField( thiz, fieldID_AudioBufferManager_targetSamples);
+
+    deleteStaleBufferWraps( env, &thiz );
+
+    if ( env->CallBooleanMethod( bufferWrapList, methodID_List_isEmpty ) )
+        return nullptr;
+
+    env->CallObjectMethod( resultByteBuffer, methodID_ByteBuffer_setLimit, targetSamples );
+
+    resultBufferPtr = ( jbyte* )env->GetDirectBufferAddress( resultByteBuffer );
+
+
+
+    while ( buffersCount < env->CallIntMethod( bufferWrapList, methodID_List_size ) && samplesCount + env->CallIntMethod( env->GetObjectField( env->CallObjectMethod( bufferWrapList, methodID_List_get, buffersCount ), fieldID_BufferWrap_buffer ), methodID_ByteBuffer_limit ) <= targetSamples )
+    {
+        bufferWrap = env->CallObjectMethod( bufferWrapList, methodID_List_get, buffersCount );
+
+        limit = env->CallIntMethod( env->GetObjectField( bufferWrap, fieldID_BufferWrap_buffer ), methodID_ByteBuffer_limit );
+
+        bufferPtr = ( jbyte* )env->GetDirectBufferAddress( env->GetObjectField( bufferWrap, fieldID_BufferWrap_buffer ) );
+
+        for ( int i = 0; i < limit; i++ )
+        {
+            resultBufferPtr[ samplesCount + i ] = bufferPtr[ i ];
+        }
+
+        samplesCount += limit;
+        buffersCount++;
+
+    }
+
+    return resultByteBuffer;
 }

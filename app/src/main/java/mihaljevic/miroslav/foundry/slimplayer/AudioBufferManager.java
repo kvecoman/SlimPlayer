@@ -43,18 +43,20 @@ public class AudioBufferManager
     private long dbgEndTime;
     private double dbgAverageTime = 0;*/
 
-    /*static
+    static
     {
         System.loadLibrary( "visualizer" );
 
-    }*/
+    }
 
 
-    /*private static native void init();
+    private static native void init();
 
     private static native void destroy();
 
-    private native ByteBuffer createMonoSamples( ByteBuffer byteBuffer, int pcmFrameSize, int sampleRate );*/
+    private native ByteBuffer createMonoSamples( ByteBuffer byteBuffer, int pcmFrameSize, int sampleRate );
+
+    public native ByteBuffer getSamples();
 
 
 
@@ -78,10 +80,16 @@ public class AudioBufferManager
 
 
 
-        //init();
+        init();
 
 
     }
+
+    long dbgStartTime;
+    long dbgEndTime;
+    long dbgTimeSum = 0;
+    long dbgCalls = 0;
+    double dbgAverageTime = 0;
 
     public void onProcessBuffer2( ByteBuffer byteBuffer, long presentationTimeUs, int pcmFrameSize, int sampleRate )
     {
@@ -90,13 +98,15 @@ public class AudioBufferManager
 
         //ByteBuffer javaBuffer = createMonoSamplesJava( byteBuffer, pcmFrameSize, sampleRate );
         //dbgStartTime    = System.currentTimeMillis();
-        newBuffer       = createMonoSamplesJava( byteBuffer, pcmFrameSize, sampleRate );
+        newBuffer       = createMonoSamples( byteBuffer, pcmFrameSize, sampleRate );
         //dbgEndTime      = System.currentTimeMillis();
 
-        //dbgAverageTime = ( ( dbgAverageTime + ( double )( dbgEndTime - dbgStartTime ) ) ) / 2f;
+        //dbgTimeSum += dbgEndTime - dbgStartTime;
+        //dbgCalls++;
 
+        //dbgAverageTime = ( double )dbgTimeSum / ( double )dbgCalls;
+        //Log.d( TAG, "createMonoSamples() average time: "  + String.format( "%.06f", dbgAverageTime ) + " ms after " + dbgCalls + " calls");
 
-        //Log.d( TAG, "createMonoSamples() average time: "  + String.format( "%.06f", dbgAverageTime ) + " ms");
 
         if ( newBuffer == null )
             return;
@@ -105,8 +115,8 @@ public class AudioBufferManager
 
         //mBufferWrapList.addLast( bufferWrap );
 
-        mBufferWrapList.add( bufferWrap );
 
+        mBufferWrapList.add( bufferWrap );
 
 
     }
@@ -211,7 +221,7 @@ public class AudioBufferManager
         }
     }
 
-    public ByteBuffer getSamples()
+    public ByteBuffer getSamplesJava()
     {
         BufferWrap bufferWrap;
         //BufferWrap resultBufferWrap;
@@ -257,7 +267,7 @@ public class AudioBufferManager
 
     public void release()
     {
-        /*destroy();*/
+        destroy();
     }
 
 

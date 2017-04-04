@@ -99,10 +99,12 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
         exoPlayer.release();
 
         mVisualizerView.disableUpdate();
-
+        mVisualizerView.release();
         mVisualizerView = null;
 
         mAudioBufferManager.release();
+
+
 
 
     }

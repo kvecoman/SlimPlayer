@@ -19,7 +19,7 @@ add_library( visualizer
 
              SHARED
 
-             AudioBufferManager.h AudioBufferManager.cpp )
+             AudioBufferManager.h AudioBufferManager.cpp VisualizerView.h VisualizerView.cpp Jrect.h Jrect.cpp )
 
 target_link_libraries( visualizer android log )
 

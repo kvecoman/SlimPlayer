@@ -15,13 +15,6 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 # automatically packages shared libraries with your APK.
 
 
-add_library( visualizer
-
-             SHARED
-
-             AudioBufferManager.h AudioBufferManager.cpp VisualizerView.h VisualizerView.cpp Jrect.h Jrect.cpp )
-
-target_link_libraries( visualizer android log )
 
 add_library( # Specifies the name of the library.
              hello-jnicpp
@@ -40,6 +33,32 @@ add_library( # Specifies the name of the library.
 
               # Provides a relative path to your source file(s).
               hello-jni.c )
+
+
+
+  add_library( visualizer
+
+               SHARED
+
+               AudioBufferManager.h
+               AudioBufferManager.cpp
+               Jrect.h
+               Jrect.cpp
+               Point.h
+               Point.cpp
+               GLES20Renderer.h
+               GLES20Renderer.cpp
+               CurveAnimator.h
+               CurveAnimator.cpp
+               nanovg/fontstash.h
+               nanovg/nanovg.c
+               nanovg/nanovg.h
+               nanovg/nanovg_gl.h
+               nanovg/nanovg_gl_utils.h
+               nanovg/stb_image.h
+               nanovg/stb_truetype.h)
+
+  target_link_libraries( visualizer android log GLESv2 EGL )
 
 # Specifies a path to native header files.
 #include_directories( **relative_path_without_quotes** )

@@ -38,7 +38,7 @@ static jfieldID     fieldID_BufferWrap_presentationTimeUs;
 static jfieldID     fieldID_BufferWrap_buffer;
 
 JNIEXPORT void JNICALL
-Java_mihaljevic_miroslav_foundry_slimplayer_AudioBufferManager_init
+Java_mihaljevic_miroslav_foundry_slimplayer_AudioBufferManager_initNative
         ( JNIEnv * env, jobject thiz )
 {
     class_ByteBuffer                = env->FindClass( "java/nio/ByteBuffer" );
@@ -86,7 +86,7 @@ Java_mihaljevic_miroslav_foundry_slimplayer_AudioBufferManager_init
 }
 
 JNIEXPORT void JNICALL
-Java_mihaljevic_miroslav_foundry_slimplayer_AudioBufferManager_destroy
+Java_mihaljevic_miroslav_foundry_slimplayer_AudioBufferManager_releaseNative
         ( JNIEnv * env, jobject thiz )
 {
     env->DeleteGlobalRef( class_ByteBuffer );
@@ -121,12 +121,8 @@ Java_mihaljevic_miroslav_foundry_slimplayer_AudioBufferManager_createMonoSamples
     void *  newBufferDataPtr;
 
 
-
     byteBufferLimit     = env->CallIntMethod( byteBuffer, methodID_ByteBuffer_limit );
     byteBufferPosition  = env->CallIntMethod( byteBuffer, methodID_ByteBuffer_position );
-
-
-    //getFreeByteBufferMethodID   = env->GetMethodID( class_AudioBufferManager, "getFreeByteBuffer", "(I)Ljava/nio/ByteBuffer;" );
 
 
     targetTimeSpan  = env->GetIntField( thiz, fieldID_AudioBufferManager_targetTimeSpan );
@@ -151,14 +147,13 @@ Java_mihaljevic_miroslav_foundry_slimplayer_AudioBufferManager_createMonoSamples
 
     sampleJump = originalSamplesCount / monoSamplesCount;
 
-    //newBuffer = env->CallObjectMethod( thiz, getFreeByteBufferMethodID, monoSamplesCount );
     newBuffer = getFreeByteBuffer( env, &thiz, monoSamplesCount );
 
     if ( newBuffer == nullptr )
     {
         newBufferDataPtr = new jbyte[monoSamplesCount];
         newBuffer = env->NewDirectByteBuffer( newBufferDataPtr, monoSamplesCount );
-        __android_log_print( ANDROID_LOG_DEBUG, "AudioBufferManager", "Allocating new buffer");
+        //__android_log_print( ANDROID_LOG_DEBUG, "AudioBufferManager", "Allocating new buffer");
     }
     else
     {

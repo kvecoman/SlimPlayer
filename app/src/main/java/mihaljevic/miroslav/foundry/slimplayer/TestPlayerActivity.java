@@ -1,12 +1,22 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
+import android.app.ActivityManager;
+import android.content.Context;
+import android.content.pm.ConfigurationInfo;
 import android.net.Uri;
+import android.opengl.GLSurfaceView;
 import android.os.Build;
+import android.support.v4.app.ActivityManagerCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlayer;
@@ -14,6 +24,7 @@ import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.LoadControl;
 import com.google.android.exoplayer2.Renderer;
 import com.google.android.exoplayer2.audio.MediaCodecAudioRenderer;
+import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.extractor.Extractor;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
 import com.google.android.exoplayer2.mediacodec.MediaCodecSelector;
@@ -31,6 +42,8 @@ import java.util.List;
 
 public class TestPlayerActivity extends AppCompatActivity implements Button.OnClickListener
 {
+
+    private static boolean dbgFullscreenGLES = false;
 
     protected final String TAG = getClass().getSimpleName();
 
@@ -56,14 +69,9 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
 
 
 
+    private GLSurfaceView mGLSurfaceView;
 
-    /*static{
-        System.loadLibrary( "hello-jnicpp" );
-    }
-
-
-
-    public native String helloFromTheOtherSide();*/
+    private GLES20Renderer mGLES20Renderer;
 
 
 
@@ -79,16 +87,67 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
         button = ( Button ) findViewById( R.id.button );
         button.setOnClickListener( this );
 
-        mVisualizerView = ( VisualizerView ) findViewById( R.id.visualizer );
-
         initExoPlayer();
 
         mAudioBufferManager = new AudioBufferManager( mAudioRenderer, VISUALIZATION_SAMPLES, VISUALIZATION_TIME_SPAN );
 
-        mVisualizerView.setAudioBufferManager( mAudioBufferManager );
+        /*mVisualizerView = ( VisualizerView ) findViewById( R.id.visualizer );
+        mVisualizerView.setAudioBufferManager( mAudioBufferManager );*/
+
+
+
+        if ( hasGLES20() )
+        {
+            mGLES20Renderer = new GLES20Renderer();
+            mGLES20Renderer.setAudioBufferManager( mAudioBufferManager );
+
+            mGLSurfaceView = new GLSurfaceView( this );
+            mGLSurfaceView.setEGLConfigChooser( 8, 8, 8, 8, 16, 0 );
+            mGLSurfaceView.setEGLContextClientVersion( 2 );
+            mGLSurfaceView.setPreserveEGLContextOnPause( true );
+            mGLSurfaceView.setRenderer( mGLES20Renderer );
+            mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_CONTINUOUSLY );
+        }
+        else
+        {
+            Log.w( TAG, "GLES 2.0 not supported" );
+        }
+
+
 
         ( ( CustomMediaCodecAudioRenderer ) mAudioRenderer ).setAudioBufferManager( mAudioBufferManager );
 
+        //GLES2.0 code
+        RelativeLayout.LayoutParams layoutParams;
+        ViewGroup viewGroup;
+
+        layoutParams = new RelativeLayout.LayoutParams( 200, 200 );
+        layoutParams.addRule( RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE );
+        layoutParams.addRule( RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE );
+        layoutParams.addRule( RelativeLayout.ALIGN_PARENT_START, RelativeLayout.TRUE );
+        layoutParams.addRule( RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE );
+        layoutParams.addRule( RelativeLayout.ALIGN_PARENT_END, RelativeLayout.TRUE );
+
+        viewGroup = ( ViewGroup ) findViewById( R.id.activity_test_player );
+
+        viewGroup.addView( mGLSurfaceView, 1, layoutParams);
+
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+
+        mGLSurfaceView.onResume();
+    }
+
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+
+        mGLSurfaceView.onPause();
     }
 
     @Override
@@ -98,16 +157,18 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
 
         exoPlayer.release();
 
-        mVisualizerView.disableUpdate();
+        /*mVisualizerView.disableUpdate();
         mVisualizerView.release();
-        mVisualizerView = null;
+        mVisualizerView = null;*/
 
         mAudioBufferManager.release();
 
-
-
+        mGLES20Renderer.release();
 
     }
+
+
+
     public void initExoPlayer()
     {
         TrackSelector       trackSelector;
@@ -127,7 +188,8 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
         fileURI     = Uri.fromFile( file );
 
         dataSourceFactory = new FileDataSourceFactory();
-        extractorsFactory = new AudioExtractorsFactory();
+        //extractorsFactory = new AudioExtractorsFactory();
+        extractorsFactory = new DefaultExtractorsFactory();
 
         mediaCodecSelector = MediaCodecSelector.DEFAULT;
 
@@ -148,38 +210,57 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
     }
 
 
+    private boolean hasGLES20()
+    {
+        ActivityManager     activityManager;
+        ConfigurationInfo   configurationInfo;
+
+        activityManager = ( ActivityManager ) getSystemService( Context.ACTIVITY_SERVICE );
+
+        configurationInfo = activityManager.getDeviceConfigurationInfo();
+
+        return configurationInfo.reqGlEsVersion >= 0x20000;
+
+    }
+
+    private boolean playPause()
+    {
+        boolean playing;
+
+        playing = exoPlayer.getPlayWhenReady();
+
+        exoPlayer.setPlayWhenReady( !playing );
+
+        return !playing;
+
+    }
+
 
 
     @Override
     public void onClick( View v )
     {
-        String buttonText;
+        boolean playing;
 
-        buttonText = ( String ) button.getText();
+        playing = playPause();
 
-        if ( buttonText.equals( "Play" ) )
+        if ( playing )
         {
-            exoPlayer.setPlayWhenReady( true );
             button.setText( "Pause" );
-            mVisualizerView.enableUpdate();
-
-
+            //mVisualizerView.enableUpdate();
         }
         else
         {
-            exoPlayer.setPlayWhenReady( false );
             button.setText( "Play" );
-            mVisualizerView.disableUpdate();
-
+            //mVisualizerView.disableUpdate();
         }
 
-        //Utils.toastShort( helloFromTheOtherSide() );
     }
 
 
 
 
-    public static class AudioExtractorsFactory implements ExtractorsFactory
+    /*public static class AudioExtractorsFactory implements ExtractorsFactory
     {
         private static List< Class< ? extends Extractor > > audioExtractorClasses;
 
@@ -258,7 +339,7 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
             }
             return extractors;
         }
-    }
+    }*/
 
 
 

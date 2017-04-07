@@ -9,7 +9,6 @@ import android.graphics.PointF;
 import android.graphics.Rect;
 import android.os.Handler;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 
 import java.nio.ByteBuffer;
@@ -39,34 +38,33 @@ public class VisualizerView extends View
 
 
 
-    private int dbgOnDrawCalled = 0;
+    //private int dbgOnDrawCalled = 0;
 
     //Connecting point between audio renderer and visualizer, it transfers obtained samples to here
     private AudioBufferManager mAudioBufferManager;
 
     //Height values of curve points
-    private float[] mCurveHeights;
+    //private float[] mCurveHeights;
 
     private PointF[] mCurvePoints;
 
 
 
-    //private byte[]      mSamples;
 
     private ByteBuffer  mSamplesBuffer;
-    private int         mSamplesCount;
+    private int         mSamplesCount = 1;
 
     private PointF[]    mWaveformPoints;
     private float[]     mWaveformPointsFloat;
-    private Rect        mCanvasRect = new Rect();
+    //private Rect        mCanvasRect = new Rect();
     private Paint       mForePaint = new Paint();
 
 
 
     //How much samples we try to show in one frame
-    private int mTargetSamplesToShow;
+    //private int mTargetSamplesToShow;
 
-    //Provides curve a every frame as needed
+    //Provides curve every frame as needed
     private CurveAnimator mCurveAnimator;
 
 
@@ -99,9 +97,9 @@ public class VisualizerView extends View
         System.loadLibrary( "visualizer" );
     }
 
-    private native void init();
+    private native void initNative();
 
-    private native void destroy();
+    private native void releaseNative();
 
     private native void calculateWaveformData( ByteBuffer samplesBuffer, int samplesCount );
 
@@ -115,22 +113,22 @@ public class VisualizerView extends View
     public VisualizerView( Context context )
     {
         super( context );
-        initJava();
+        init();
     }
 
     public VisualizerView( Context context, AttributeSet attrs )
     {
         super( context, attrs );
-        initJava();
+        init();
     }
 
     public VisualizerView( Context context, AttributeSet attrs, int defStyleAttr )
     {
         super( context, attrs, defStyleAttr );
-        initJava();
+        init();
     }
 
-    private void initJava()
+    private void init()
     {
         mForePaint.setStrokeWidth   ( 1f );
         mForePaint.setAntiAlias     ( true );
@@ -143,7 +141,6 @@ public class VisualizerView extends View
 
         mCurveAnimator = new CurveAnimator( CURVE_POINTS, TRANSITION_FRAMES );
 
-        mCurveHeights = new float[ CURVE_POINTS ];
 
         mCurvePoints = new PointF[ CURVE_POINTS ];
 
@@ -153,13 +150,13 @@ public class VisualizerView extends View
             mCurvePoints[i] = new PointF( 0, 0 );
         }
 
-        init();
+        initNative();
 
     }
 
     public void release()
     {
-        destroy();
+        releaseNative();
     }
 
 
@@ -174,7 +171,7 @@ public class VisualizerView extends View
         if ( targetSamplesCount <= 0 )
             return;
 
-        mTargetSamplesToShow = targetSamplesCount;
+        //mTargetSamplesToShow = targetSamplesCount;
 
         mWaveformPoints = new PointF[ targetSamplesCount ];
 
@@ -206,33 +203,110 @@ public class VisualizerView extends View
         mUpdateEnabled = false;
     }
 
-    /*private void absoluteSamples()
+
+
+    private boolean acquireSamples()
     {
-        byte absolutedSample;
-
-        for ( int i = 0; i < mSamplesBuffer.limit(); i++ )
-        {
-            absolutedSample = ( byte ) Math.abs(  mSamplesBuffer.get( i ) );
-            mSamplesBuffer.put( i, absolutedSample );
-        }
-    }*/
+        if ( mAudioBufferManager == null )
+            return false;
 
 
+        mSamplesBuffer  = mAudioBufferManager.getSamplesJava(); //NOTE - JAVA version is faster
 
-    //Samples should be absoluted before calling this method
-    /*private void calculateCurvePointHeights()
+
+        if ( mSamplesBuffer == null )
+            return false;
+
+        mSamplesCount = mSamplesBuffer.limit();
+
+        return true;
+    }
+
+
+    long dbgStartTime;
+    long dbgEndTime;
+    long dbgTimeSum = 0;
+    long dbgCalls = 0;
+    double dbgAverageTime = 0;
+
+    //dbgStartTime    = System.currentTimeMillis();
+    //CODE TO MEASURE GOES HERE
+    //dbgEndTime      = System.currentTimeMillis();
+
+    //dbgTimeSum += dbgEndTime - dbgStartTime;
+    //dbgCalls++;
+
+    //dbgAverageTime = ( double )dbgTimeSum / ( double )dbgCalls;
+    //Log.d( TAG, "calculateWaveformData() average time: "  + String.format( "%.06f", dbgAverageTime ) + " ms after " + dbgCalls + " calls");
+
+    public void updateVisualizer()
     {
-        int     sectorSize;
-        byte    maxSample;
 
-        sectorSize = ( mSamplesBuffer.limit() ) / CURVE_POINTS;
+        boolean samplesAcquired;
 
-        for ( int i = 0; i < CURVE_POINTS; i++ )
-        {
-            maxSample = findMaxByte( mSamplesBuffer, i * sectorSize, i * sectorSize + sectorSize );
-            mCurveHeights[i] = ( float ) maxSample;
-        }
-    }*/
+        samplesAcquired = acquireSamples();
+
+        if ( !samplesAcquired )
+            return;
+
+        //This is called first, because samples are apsoluted inside and that will be shown on raw waveform data when it is drawn
+        calculateCurvePoints( mSamplesBuffer, CURVE_POINTS );
+
+
+        calculateWaveformData( mSamplesBuffer, mSamplesCount );
+
+
+        invalidate();
+
+
+    }
+
+
+    private void drawWaveformData( Canvas canvas )
+    {
+        canvas.drawLines( mWaveformPointsFloat, 0, (mSamplesCount - 1) * 4 , mForePaint );
+    }
+
+
+
+    private void drawCurve( Canvas canvas )
+    {
+
+        Path curvePath;
+
+        //TODO - points don't need to be calculated every frame/update
+        if ( mCurveAnimator.isDone() )
+            mCurveAnimator.addPoints( mCurvePoints );
+
+        curvePath = mCurveAnimator.getCurveForCurrentFrame();
+
+
+        canvas.drawPath( curvePath, mForePaint );
+    }
+
+
+
+    @Override
+    protected void onDraw( Canvas canvas )
+    {
+        super.onDraw( canvas );
+
+
+        drawWaveformData( canvas );
+
+        drawCurve( canvas );
+
+        //DEBUG STUFF
+        canvas.drawLine( dbgLinePos, 0, dbgLinePos, getHeight(), mForePaint );
+        dbgLinePos += getWidth() / DEFAULT_FPS;
+        dbgLinePos %= getWidth();
+
+
+    }
+
+
+
+    //UNUSED JAVA IMPLEMENTATION OF CODE (NATIVE C++ used) ***************************************************************************************************************
 
     private void calculateWaveformDataJava(ByteBuffer samplesBuffer, int samplesCount)
     {
@@ -278,80 +352,6 @@ public class VisualizerView extends View
         }
     }
 
-
-
-    private boolean acquireSamples()
-    {
-        if ( mAudioBufferManager == null )
-            return false;
-
-
-
-        //dbgStartTime    = System.currentTimeMillis();
-        mSamplesBuffer  = mAudioBufferManager.getSamplesJava(); //NOTE - JAVA version is faster
-        //dbgEndTime      = System.currentTimeMillis();
-
-        //dbgTimeSum += dbgEndTime - dbgStartTime;
-        //dbgCalls++;
-
-        //dbgAverageTime = ( double )dbgTimeSum / ( double )dbgCalls;
-        //Log.d( TAG, "getSamples() average time: "  + String.format( "%.06f", dbgAverageTime ) + " ms after " + dbgCalls + " calls");
-
-        if ( mSamplesBuffer == null )
-            return false;
-
-        mSamplesCount = mSamplesBuffer.limit();
-
-        return true;
-    }
-
-
-    long dbgStartTime;
-    long dbgEndTime;
-    long dbgTimeSum = 0;
-    long dbgCalls = 0;
-    double dbgAverageTime = 0;
-
-    public void updateVisualizer()
-    {
-
-        boolean samplesAcquired;
-
-        samplesAcquired = acquireSamples();
-
-        if ( !samplesAcquired )
-            return;
-
-        //This is called first, because samples are apsoluted inside and that will be shown on raw waveform data when it is drawn
-        //dbgStartTime    = System.currentTimeMillis();
-        calculateCurvePoints( mSamplesBuffer, CURVE_POINTS );
-        //dbgEndTime      = System.currentTimeMillis();
-
-        //dbgTimeSum += dbgEndTime - dbgStartTime;
-        //dbgCalls++;
-
-        //dbgAverageTime = ( double )dbgTimeSum / ( double )dbgCalls;
-        //Log.d( TAG, "calculateCurvePoints() average time: "  + String.format( "%.06f", dbgAverageTime ) + " ms after " + dbgCalls + " calls");
-
-
-
-        //This is called first, because samples are apsoluted inside and that will be shown on raw waveform data when it is drawn
-        dbgStartTime    = System.currentTimeMillis();
-        calculateWaveformData( mSamplesBuffer, mSamplesCount );
-        dbgEndTime      = System.currentTimeMillis();
-
-        dbgTimeSum += dbgEndTime - dbgStartTime;
-        dbgCalls++;
-
-        dbgAverageTime = ( double )dbgTimeSum / ( double )dbgCalls;
-        Log.d( TAG, "calculateWaveformData() average time: "  + String.format( "%.06f", dbgAverageTime ) + " ms after " + dbgCalls + " calls");
-
-        invalidate();
-
-
-    }
-
-
     private void calculateCurvePointsJava( ByteBuffer samplesBuffer, int curvePointsCount )
     {
 
@@ -388,26 +388,6 @@ public class VisualizerView extends View
 
     }
 
-    /*private float[] calculateCurvePointHeights( ByteBuffer samplesBuffer, int curvePointsCount )
-    {
-        float[] curveHeights;
-        int     sectorSize;
-        byte    maxSample;
-
-        curveHeights    = new float[ curvePointsCount ];
-        sectorSize      = ( samplesBuffer.limit() ) / curvePointsCount;
-
-        for ( int i = 0; i < curvePointsCount; i++ )
-        {
-            maxSample = findMaxByte( samplesBuffer, i * sectorSize, i * sectorSize + sectorSize );
-            curveHeights[i] = ( float ) maxSample;
-        }
-
-
-        return curveHeights;
-
-    }*/
-
     private void absoluteSamples( ByteBuffer samplesBuffer )
     {
         byte absolutedSample;
@@ -431,70 +411,6 @@ public class VisualizerView extends View
         }
 
         return max;
-    }
-
-
-
-
-
-
-    private void drawWaveformData( Canvas canvas )
-    {
-        canvas.drawLines( mWaveformPointsFloat, 0, (mSamplesCount - 1) * 4 , mForePaint );
-    }
-
-
-
-    private void drawCurve( Canvas canvas )
-    {
-
-        Path        curvePath;
-
-        //TODO - points don't need to be calculated every frame/update
-        if ( mCurveAnimator.isDone() )
-            mCurveAnimator.addPoints( mCurvePoints );
-
-        curvePath = mCurveAnimator.getCurveForCurrentFrame();
-
-
-        canvas.drawPath( curvePath, mForePaint );
-    }
-
-
-
-    @Override
-    protected void onDraw( Canvas canvas )
-    {
-        super.onDraw( canvas );
-
-
-
-        dbgOnDrawCalled++;
-        //Log.v(TAG, dbgOnDrawCalled + " onDraw()");
-
-        //Report whether we have hardware acceleration
-        /*if ( dbgOnDrawCalled == 1 )
-        {
-            String hardwareAccelerationStatus;
-
-            hardwareAccelerationStatus = "Hardware acceleration: ";
-
-            hardwareAccelerationStatus += canvas.isHardwareAccelerated() ? "ON" : "OFF";
-
-            Log.i( TAG, hardwareAccelerationStatus );
-        }*/
-
-
-        drawWaveformData( canvas );
-
-        drawCurve( canvas );
-
-        //DEBUG STUFF
-        canvas.drawLine( dbgLinePos, 0, dbgLinePos, getHeight(), mForePaint );
-        dbgLinePos += getWidth() / DEFAULT_FPS;
-        dbgLinePos %= getWidth();
-
-
     }
 
 }

@@ -14,11 +14,11 @@ extern "C" {
 
 
 JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_AudioBufferManager_init
+        Java_mihaljevic_miroslav_foundry_slimplayer_AudioBufferManager_initNative
         ( JNIEnv * env, jobject thiz );
 
 JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_AudioBufferManager_destroy
+        Java_mihaljevic_miroslav_foundry_slimplayer_AudioBufferManager_releaseNative
         ( JNIEnv * env, jobject thiz );
 
 JNIEXPORT jobject JNICALL

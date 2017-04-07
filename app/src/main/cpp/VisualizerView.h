@@ -7,7 +7,7 @@
 
 #include <jni.h>
 #include <android/log.h>
-#include <cstdlib>
+#include "SlimShared.h"
 #include "Jrect.h"
 
 #ifdef __cplusplus
@@ -15,11 +15,11 @@ extern "C" {
 #endif
 
 JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerView_init
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerView_initNative
         ( JNIEnv * env, jobject thiz );
 
 JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerView_destroy
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerView_releaseNative
         ( JNIEnv * env, jobject thiz );
 
 JNIEXPORT void JNICALL
@@ -30,9 +30,6 @@ JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerView_calculateCurvePoints
         ( JNIEnv * env, jobject thiz, jobject samplesBuffer, jint curvePointsCount );
 
-jbyte findMaxByte( jbyte * buffer, int start, int end );
-
-void absoluteSamples( jbyte * bufferPtr, jint count );
 
 #ifdef __cplusplus
 }

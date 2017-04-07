@@ -23,7 +23,7 @@ static jmethodID    methodID_ByteBuffer_limit;
 
 
 JNIEXPORT void JNICALL
-Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerView_init
+Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerView_initNative
         ( JNIEnv * env, jobject thiz )
 {
     class_VisualizerView                            = env->FindClass( "mihaljevic/miroslav/foundry/slimplayer/VisualizerView" );
@@ -48,7 +48,7 @@ Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerView_init
 }
 
 JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerView_destroy
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerView_releaseNative
         ( JNIEnv * env, jobject thiz )
 {
     env->DeleteGlobalRef( class_VisualizerView );
@@ -214,39 +214,6 @@ JNIEXPORT void JNICALL
 
     //__android_log_print( ANDROID_LOG_VERBOSE, "VisualizerView", "calculateCurvePoints() EXIT");
 
-}
-
-jbyte findMaxByte( jbyte * buffer, int start, int end )
-{
-    //__android_log_print( ANDROID_LOG_VERBOSE, "VisualizerView", "findMaxBytes()");
-
-
-    jbyte max = -128;
-
-    for ( int i = start; i < end; i++ )
-    {
-        if ( buffer[i] > max )
-            max = buffer[i];
-    }
-
-    //__android_log_print( ANDROID_LOG_VERBOSE, "VisualizerView", "findMaxBytes DONE()");
-
-    return max;
-}
-
-void absoluteSamples( jbyte * bufferPtr, jint count )
-{
-    //__android_log_print( ANDROID_LOG_VERBOSE, "VisualizerView", "absoluteSamples()");
-
-    jbyte absolutedSample;
-
-    for ( int i = 0; i < count; i++ )
-    {
-        absolutedSample = ( jbyte ) abs( bufferPtr[i] );
-        bufferPtr[i]    = absolutedSample;
-    }
-
-    //__android_log_print( ANDROID_LOG_VERBOSE, "VisualizerView", "absoluteSamples() - DONE");
 }
 
 

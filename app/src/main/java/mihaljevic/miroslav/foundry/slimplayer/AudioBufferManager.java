@@ -18,8 +18,6 @@ public class AudioBufferManager
     protected final String TAG = getClass().getSimpleName();
 
 
-    private MediaCodecAudioRenderer mAudioRenderer;
-
 
     private final int mTargetSamples;
     private final int mTargetTimeSpan;
@@ -30,6 +28,8 @@ public class AudioBufferManager
 
     //Memory allocated for samples that are retreived when getSamples is called
     private ByteBuffer mResultByteBuffer;
+
+    private long mLastCurrentTimeUs;
 
 
 
@@ -51,16 +51,15 @@ public class AudioBufferManager
 
 
 
-    public AudioBufferManager( MediaCodecAudioRenderer audioRenderer,  int targetSamples, int targetTimeSpan )
+    public AudioBufferManager( int targetSamples, int targetTimeSpan )
     {
 
-        mAudioRenderer  = audioRenderer;
 
         mTargetSamples  = targetSamples;
         mTargetTimeSpan = targetTimeSpan;
 
         mBufferWrapList = Collections.synchronizedList( new LinkedList<BufferWrap>(  ) );
-        mFreeBufferList = Collections.synchronizedList( new LinkedList<ByteBuffer>(  ) );;
+        mFreeBufferList = Collections.synchronizedList( new LinkedList<ByteBuffer>(  ) );
 
         mResultByteBuffer = ByteBuffer.allocateDirect( mTargetSamples );
 
@@ -70,7 +69,7 @@ public class AudioBufferManager
     }
 
 
-    public void onProcessBuffer2( ByteBuffer byteBuffer, long presentationTimeUs, int pcmFrameSize, int sampleRate )
+    public void onProcessBuffer2( ByteBuffer byteBuffer, long presentationTimeUs, int pcmFrameSize, int sampleRate, long currentTimeUs )
     {
         BufferWrap  bufferWrap;
         ByteBuffer  newBuffer;
@@ -85,6 +84,8 @@ public class AudioBufferManager
 
         mBufferWrapList.add( bufferWrap );
 
+        mLastCurrentTimeUs = currentTimeUs;
+
 
     }
 
@@ -94,7 +95,7 @@ public class AudioBufferManager
         long currentTimeUs;
         BufferWrap bufferWrap;
 
-        currentTimeUs = mAudioRenderer.getPositionUs();
+        currentTimeUs = mLastCurrentTimeUs;
 
         while ( !mBufferWrapList.isEmpty() && mBufferWrapList.get(0).presentationTimeUs < currentTimeUs )
         {
@@ -107,7 +108,6 @@ public class AudioBufferManager
     public ByteBuffer getSamplesJava()
     {
         BufferWrap bufferWrap;
-        //BufferWrap resultBufferWrap;
         int samplesCount;
         int buffersCount;
 

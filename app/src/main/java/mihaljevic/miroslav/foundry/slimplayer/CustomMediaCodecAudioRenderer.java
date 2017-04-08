@@ -143,7 +143,7 @@ public class CustomMediaCodecAudioRenderer extends MediaCodecAudioRenderer
         {
             //processBuffer( buffer, bufferPresentationTimeUs, positionUs );
 
-            mAudioBufferManager.onProcessBuffer2( buffer, bufferPresentationTimeUs, mPcmFrameSize, mOutputSampleRate );
+            mAudioBufferManager.onProcessBuffer2( buffer, bufferPresentationTimeUs, mPcmFrameSize, mOutputSampleRate, positionUs );
 
             mOldBufferIndex = bufferIndex;
         }

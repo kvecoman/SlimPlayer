@@ -47,7 +47,7 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
 
     protected final String TAG = getClass().getSimpleName();
 
-    public static final String TEST_SONG_PATH           = "/storage/sdcard0/Samsung/Music/Jelena VuÄŤkoviÄ‡ feat DJ Vujo_91 - Led.mp3";
+    public static final String TEST_SONG_PATH           = "/storage/sdcard0/Samsung/Music/Bass Modulators - Mantra.mp3";
     public static final String TEST_SONG_PATH_API_23    = "/storage/15FC-0502/Jelena Vuckovic feat DJ Vujo_91 - Led.mp3";
 
     //This number of samples represent below defined time span
@@ -89,7 +89,7 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
 
         initExoPlayer();
 
-        mAudioBufferManager = new AudioBufferManager( mAudioRenderer, VISUALIZATION_SAMPLES, VISUALIZATION_TIME_SPAN );
+        mAudioBufferManager = new AudioBufferManager( VISUALIZATION_SAMPLES, VISUALIZATION_TIME_SPAN );
 
         /*mVisualizerView = ( VisualizerView ) findViewById( R.id.visualizer );
         mVisualizerView.setAudioBufferManager( mAudioBufferManager );*/

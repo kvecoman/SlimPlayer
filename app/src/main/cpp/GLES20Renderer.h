@@ -27,7 +27,7 @@ extern "C" {
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_GLES20Renderer_initNative
-        ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames );
+        ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount );
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_GLES20Renderer_releaseNative
@@ -44,10 +44,14 @@ JNIEXPORT void JNICALL
 
 
 JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_GLES20Renderer_drawCurve
-        ( JNIEnv * env, jobject thiz, jobject samplesBuffer );
+        Java_mihaljevic_miroslav_foundry_slimplayer_GLES20Renderer_render
+        ( JNIEnv * env, jobject thiz, jobject samplesBuffer, jint samplesCount );
 
-void calculateCurvePoints( JNIEnv * env, jobject samplesBuffer );
+void drawWaveform(NVGcontext * nvgContext );
+
+void calculateWaveformPoints( JNIEnv * env, jobject samplesBuffer, jint samplesCount );
+
+void calculateCurvePoints( JNIEnv * env, jobject samplesBuffer, jint samplesCount );
 
 jbyte findMaxByte( jbyte * buffer, int start, int end );
 

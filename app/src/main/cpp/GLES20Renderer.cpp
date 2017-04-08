@@ -4,12 +4,9 @@
 
 #include "GLES20Renderer.h"
 
+//TODO - everything up until now should maybe be put in single class VisualizerSurface which extends GLSurface
 
 static jclass       class_GLES20Renderer;
-static jfieldID     fieldID_GLES20Renderer_curvePoints;
-static jfieldID     fieldID_GLES20Renderer_samplesCount;
-static jfieldID     fieldID_GLES20Renderer_waveformPoints;
-static jfieldID     fieldID_GLES20Renderer_waveformPointsFloat;
 
 
 static jclass       class_ByteBuffer;
@@ -23,20 +20,19 @@ static struct NVGcontext * sNVGCtx;
 static jint sWidth;
 static jint sHeight;
 
+static jint sSamplesCount;
+
 static jint sCurvePointsCount;
 static Point * sCurvePoints;
+static Point * sWaveformPoints;
 
 static CurveAnimator * sCurveAnimator;
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_GLES20Renderer_initNative
-        ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames )
+        ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount )
 {
-        class_GLES20Renderer                            = env->FindClass( "mihaljevic/miroslav/foundry/slimplayer/GLES20Renderer" );
-        fieldID_GLES20Renderer_curvePoints              = env->GetFieldID( class_GLES20Renderer, "mCurvePoints","[Landroid/graphics/PointF;" );
-        fieldID_GLES20Renderer_samplesCount             = env->GetFieldID( class_GLES20Renderer, "mSamplesCount", "I" );
-        fieldID_GLES20Renderer_waveformPoints           = env->GetFieldID( class_GLES20Renderer, "mWaveformPoints", "[Landroid/graphics/PointF;" );
-        fieldID_GLES20Renderer_waveformPointsFloat      = env->GetFieldID( class_GLES20Renderer, "mWaveformPointsFloat", "[F" );
+        class_GLES20Renderer                = env->FindClass( "mihaljevic/miroslav/foundry/slimplayer/GLES20Renderer" );
 
         class_PointF                        = env->FindClass( "android/graphics/PointF" );
         methodID_PointF_constructor         = env->GetMethodID( class_PointF, "<init>", "(FF)V" );
@@ -52,6 +48,8 @@ JNIEXPORT void JNICALL
         sCurvePoints = new Point[ curvePointsCount ];
 
         sCurveAnimator = new CurveAnimator( curvePointsCount, transitionFrames );
+
+        sWaveformPoints = new Point[ targetSamplesCount ];
 }
 
 JNIEXPORT void JNICALL
@@ -72,6 +70,7 @@ Java_mihaljevic_miroslav_foundry_slimplayer_GLES20Renderer_initGLES
         if ( sNVGCtx != nullptr )
                 nvgDeleteGLES2( sNVGCtx );
 
+        //TODO - see which flags are best to use
         sNVGCtx = nvgCreateGLES2( NVG_STENCIL_STROKES | NVG_DEBUG );
 
         sWidth = width;
@@ -91,21 +90,23 @@ Java_mihaljevic_miroslav_foundry_slimplayer_GLES20Renderer_releaseGLES
 
 
 JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_GLES20Renderer_drawCurve
-        ( JNIEnv * env, jobject thiz, jobject samplesBuffer )
+        Java_mihaljevic_miroslav_foundry_slimplayer_GLES20Renderer_render
+        ( JNIEnv * env, jobject thiz, jobject samplesBuffer, jint samplesCount )
 {
-        //Point * curvePoints;
 
-        /*Point  start;
-        Point  ctrl1;
-        Point  ctrl2;
-        Point  end;*/
+        sSamplesCount = samplesCount;
 
-        calculateCurvePoints( env, samplesBuffer);
+        //Here the samples are absoluted
+        calculateCurvePoints( env, samplesBuffer, samplesCount);
+
+        //This needs to be called after the samples are absoluted
+        calculateWaveformPoints( env, samplesBuffer, samplesCount );
 
         glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
 
         nvgBeginFrame( sNVGCtx, 200, 200, 1 );
+
+        drawWaveform( sNVGCtx );
 
         if ( sCurveAnimator->isDone() )
                 sCurveAnimator->addPoints( sCurvePoints );
@@ -114,45 +115,60 @@ JNIEXPORT void JNICALL
 
         sCurveAnimator->drawCurrentFrameCurve( sNVGCtx );
 
-        
 
-        /*nvgBeginPath( sNVGCtx );
-        
-
-        nvgMoveTo( sNVGCtx, sCurvePoints[0].x, sCurvePoints[0].y );
-
-        for ( int i = 1; i < sCurvePointsCount; i++ )
-        {
-                start.x = sCurvePoints[ i - 1 ].x;
-                start.y = sCurvePoints[ i - 1 ].y;
-
-                end.x = sCurvePoints[ i ].x;
-                end.y = sCurvePoints[ i ].y;
-
-                ctrl1.x = start.x - ( ( start.x - end.x ) / 2 );
-                ctrl1.y = start.y;
-
-                ctrl2.x = ctrl1.x;
-                ctrl2.y = end.y;
-                
-                nvgBezierTo( sNVGCtx, ctrl1.x, ctrl1.y, ctrl2.x, ctrl2.y, end.x, end.y );
-        }
-
-        nvgStrokeColor( sNVGCtx, nvgRGBA( 54, 194, 249, 255 ) );
-        nvgStrokeWidth( sNVGCtx, 10 );
-        nvgStroke( sNVGCtx );*/
-
-        /*nvgBeginPath( sNVGCtx );
-        nvgRect( sNVGCtx, 20, 20, 100, 100 );
-        nvgFillColor( sNVGCtx, nvgRGBA( 255, 192, 0, 255 ) );
-        nvgFill( sNVGCtx );*/
 
         nvgEndFrame( sNVGCtx );
 
 }
 
 
-void calculateCurvePoints( JNIEnv * env, jobject samplesBuffer )
+void drawWaveform(NVGcontext * nvgContext )
+{
+        nvgBeginPath( nvgContext );
+
+        nvgMoveTo( nvgContext, sWaveformPoints[0].x, sWaveformPoints[0].y );
+
+        for ( int i = 1; i < sSamplesCount; i++ )
+        {
+                nvgLineTo( nvgContext, sWaveformPoints[i].x, sWaveformPoints[i].y );
+        }
+
+
+        //TODO - stroke parameters somewhero elso, they also need to be moved from CurveAnimator::DrawCurrentCurve or something
+        nvgStrokeColor( nvgContext, nvgRGBA( 54, 194, 249, 255 ) );
+        nvgStrokeWidth( nvgContext, 5 );
+        nvgStroke( nvgContext );
+}
+
+
+void calculateWaveformPoints( JNIEnv * env, jobject samplesBuffer, jint samplesCount )
+{
+        jbyte * bufferPtr;
+
+        jfloat x;
+        jfloat y;
+
+        Jrect rect( 0, 0, sWidth, sHeight / 2 );
+        Point * point;
+
+        bufferPtr = ( jbyte* )env->GetDirectBufferAddress( samplesBuffer );
+
+
+        for ( jint i = 0; i < samplesCount; i++ )
+        {
+                x = rect.getWitdth() * i / ( samplesCount - 1 );
+                y = rect.getHeight() / 2 + ( ( jbyte ) ( bufferPtr[ i ] + 128 ) ) * ( rect.getHeight() / 2 ) / 128;
+
+                point = &sWaveformPoints[i];
+
+                point->x = x;
+                point->y = y;
+        }
+
+}
+
+
+void calculateCurvePoints( JNIEnv * env, jobject samplesBuffer, jint samplesCount )
 {
         jint        pointDistance;
         jfloat      scaledHeight;
@@ -163,23 +179,18 @@ void calculateCurvePoints( JNIEnv * env, jobject samplesBuffer )
         jint y;
 
         jbyte * samplesBufferPtr;
-        jint    samplesCount;
 
         jfloat maxSectorHeight;
         jint sectorSize;
 
-        //Point  curvePoints[ sCurvePointsCount ]; //TODO - optimize, to static variable
+        Jrect rect(0, sHeight / 2, sWidth, sHeight);
 
 
 
-        //__android_log_print( ANDROID_LOG_VERBOSE, "VisualizerView", "calculateCurvePoints()");
-
-
-        samplesCount        = env->CallIntMethod( samplesBuffer, methodID_ByteBuffer_limit );
         samplesBufferPtr    = (jbyte*)env->GetDirectBufferAddress( samplesBuffer );
 
 
-        pointDistance = sWidth / ( sCurvePointsCount - 1 );
+        pointDistance = rect.getWitdth() / ( sCurvePointsCount - 1 );
 
 
 
@@ -187,7 +198,7 @@ void calculateCurvePoints( JNIEnv * env, jobject samplesBuffer )
 
 
 
-        scaling = ( jfloat ) sHeight / ( jfloat )128;
+        scaling = ( jfloat ) rect.getHeight() / ( jfloat )128;
 
 
 
@@ -201,8 +212,8 @@ void calculateCurvePoints( JNIEnv * env, jobject samplesBuffer )
                 scaledHeight = scaling * maxSectorHeight;
 
                 x = i * pointDistance;
-                //y = sHeight + scaledHeight;
-                y = scaledHeight;
+                //y = scaledHeight; This is when we use full screen space
+                y = rect.getHeight() + scaledHeight;
 
 
                 sCurvePoints[ i ].x = x;

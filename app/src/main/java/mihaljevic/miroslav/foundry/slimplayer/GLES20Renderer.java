@@ -35,6 +35,8 @@ public class GLES20Renderer implements GLSurfaceView.Renderer
 
     private static final int DEFAULT_TARGET_SAMPLES_TO_SHOW = 200;
 
+    private static final int DEFAULT_TARGET_TIME_SPAN = 500;
+
     private static final int DEFAULT_FPS = 60;
 
     private static final int TRANSITION_FRAMES = 3;
@@ -56,7 +58,7 @@ public class GLES20Renderer implements GLSurfaceView.Renderer
         System.loadLibrary( "visualizer" );
     }
 
-    private native void initNative( int curvePointsCount, int transitionFrames, int targetSamplesCount );
+    private native void initNative( int curvePointsCount, int transitionFrames, int targetSamplesCount, int targetTimeSpan );
 
     private native void releaseNative();
 
@@ -66,7 +68,9 @@ public class GLES20Renderer implements GLSurfaceView.Renderer
 
 
 
-    private native void render( ByteBuffer samplesBuffer, int samplesCount );
+    private native void render( );
+
+    public native void processBuffer( ByteBuffer samplesBuffer, int samplesCount, long presentationTimeUs, int pcmFrameSize, int sampleRate, long currentTimeUs );
 
 
 
@@ -82,7 +86,8 @@ public class GLES20Renderer implements GLSurfaceView.Renderer
     public GLES20Renderer()
     {
 
-        initNative( CURVE_POINTS, TRANSITION_FRAMES, DEFAULT_TARGET_SAMPLES_TO_SHOW );
+        //TODO - all of this to parameter
+        initNative( CURVE_POINTS, TRANSITION_FRAMES, DEFAULT_TARGET_SAMPLES_TO_SHOW, DEFAULT_TARGET_TIME_SPAN );
 
     }
 
@@ -112,21 +117,21 @@ public class GLES20Renderer implements GLSurfaceView.Renderer
     {
 
 
-        boolean samplesAcquired;
+        /*boolean samplesAcquired;
 
         samplesAcquired = acquireSamples();
 
         if ( !samplesAcquired )
-            return;
+            return;*/
 
 
-        render( mSamplesBuffer, mSamplesBuffer.limit() );
+        render(  );
     }
 
 
 
 
-    private boolean acquireSamples()
+    /*private boolean acquireSamples()
     {
         if ( mAudioBufferManager == null )
             return false;
@@ -147,7 +152,7 @@ public class GLES20Renderer implements GLSurfaceView.Renderer
     public void setAudioBufferManager( AudioBufferManager audioBufferManager )
     {
         mAudioBufferManager = audioBufferManager;
-    }
+    }*/
 
 
 

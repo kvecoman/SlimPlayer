@@ -61,7 +61,6 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
 
     private ExoPlayer exoPlayer;
 
-    private VisualizerView  mVisualizerView;
 
     MediaCodecAudioRenderer mAudioRenderer;
 
@@ -89,22 +88,20 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
 
         initExoPlayer();
 
-        mAudioBufferManager = new AudioBufferManager( VISUALIZATION_SAMPLES, VISUALIZATION_TIME_SPAN );
+        //mAudioBufferManager = new AudioBufferManager( VISUALIZATION_SAMPLES, VISUALIZATION_TIME_SPAN );
 
-        /*mVisualizerView = ( VisualizerView ) findViewById( R.id.visualizer );
-        mVisualizerView.setAudioBufferManager( mAudioBufferManager );*/
 
 
 
         if ( hasGLES20() )
         {
             mGLES20Renderer = new GLES20Renderer();
-            mGLES20Renderer.setAudioBufferManager( mAudioBufferManager );
+            //mGLES20Renderer.setAudioBufferManager( mAudioBufferManager );
 
             mGLSurfaceView = new GLSurfaceView( this );
             mGLSurfaceView.setEGLConfigChooser( 8, 8, 8, 8, 16, 0 );
             mGLSurfaceView.setEGLContextClientVersion( 2 );
-            mGLSurfaceView.setPreserveEGLContextOnPause( true );
+            mGLSurfaceView.setPreserveEGLContextOnPause( true ); //TODO - handle this preservation on pause???
             mGLSurfaceView.setRenderer( mGLES20Renderer );
             mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_CONTINUOUSLY );
         }
@@ -115,7 +112,8 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
 
 
 
-        ( ( CustomMediaCodecAudioRenderer ) mAudioRenderer ).setAudioBufferManager( mAudioBufferManager );
+        //( ( CustomMediaCodecAudioRenderer ) mAudioRenderer ).setAudioBufferManager( mAudioBufferManager );
+        ( ( CustomMediaCodecAudioRenderer ) mAudioRenderer ).setVisualizerRenderer( mGLES20Renderer );
 
         //GLES2.0 code
         RelativeLayout.LayoutParams layoutParams;
@@ -194,7 +192,7 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
         mediaCodecSelector = MediaCodecSelector.DEFAULT;
 
 
-        audioRenderer   = new CustomMediaCodecAudioRenderer( mediaCodecSelector, null );
+        audioRenderer   = new CustomMediaCodecAudioRenderer( mediaCodecSelector );
         renderers       = new Renderer[] { audioRenderer };
 
         trackSelector   = new DefaultTrackSelector();

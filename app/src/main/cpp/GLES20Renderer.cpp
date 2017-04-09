@@ -28,9 +28,11 @@ static Point * sWaveformPoints;
 
 static CurveAnimator * sCurveAnimator;
 
+static AudioBufferManager2 * sAudioBufferManager;
+
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_GLES20Renderer_initNative
-        ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount )
+        ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan )
 {
         class_GLES20Renderer                = env->FindClass( "mihaljevic/miroslav/foundry/slimplayer/GLES20Renderer" );
 
@@ -50,6 +52,8 @@ JNIEXPORT void JNICALL
         sCurveAnimator = new CurveAnimator( curvePointsCount, transitionFrames );
 
         sWaveformPoints = new Point[ targetSamplesCount ];
+
+        sAudioBufferManager = new AudioBufferManager2( targetSamplesCount, targetTimeSpan );
 }
 
 JNIEXPORT void JNICALL
@@ -87,20 +91,49 @@ Java_mihaljevic_miroslav_foundry_slimplayer_GLES20Renderer_releaseGLES
         nvgDeleteGLES2( sNVGCtx );
 }
 
+JNIEXPORT void JNICALL
+        Java_mihaljevic_miroslav_foundry_slimplayer_GLES20Renderer_processBuffer
+        ( JNIEnv * env, jobject thiz, jobject samplesBuffer, jint samplesCount, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs )
+{
+        Buffer * buffer;
+
+        jbyte * bufferPtr;
+        jint capacity;
+
+        bufferPtr       = ( jbyte* )env->GetDirectBufferAddress( samplesBuffer );
+        capacity        = env->GetDirectBufferCapacity( samplesBuffer );
+
+        buffer = new Buffer( bufferPtr, samplesCount, capacity );
+
+        sAudioBufferManager->processBuffer( buffer, presentationTimeUs, pcmFrameSize, sampleRate, currentTimeUs );
+
+}
+
 
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_GLES20Renderer_render
-        ( JNIEnv * env, jobject thiz, jobject samplesBuffer, jint samplesCount )
+        ( JNIEnv * env, jobject thiz )
 {
+
+        Buffer * buffer;
+        int samplesCount;
+
+
+        buffer = sAudioBufferManager->getSamples();
+
+        if ( buffer == nullptr )
+                return;
+
+        samplesCount = buffer->len;
 
         sSamplesCount = samplesCount;
 
         //Here the samples are absoluted
-        calculateCurvePoints( env, samplesBuffer, samplesCount);
+        calculateCurvePoints( env, buffer);
 
         //This needs to be called after the samples are absoluted
-        calculateWaveformPoints( env, samplesBuffer, samplesCount );
+        calculateWaveformPoints( env, buffer );
 
         glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
 
@@ -141,9 +174,9 @@ void drawWaveform(NVGcontext * nvgContext )
 }
 
 
-void calculateWaveformPoints( JNIEnv * env, jobject samplesBuffer, jint samplesCount )
+void calculateWaveformPoints( JNIEnv * env, Buffer * buffer )
 {
-        jbyte * bufferPtr;
+        int samplesCount;
 
         jfloat x;
         jfloat y;
@@ -151,13 +184,14 @@ void calculateWaveformPoints( JNIEnv * env, jobject samplesBuffer, jint samplesC
         Jrect rect( 0, 0, sWidth, sHeight / 2 );
         Point * point;
 
-        bufferPtr = ( jbyte* )env->GetDirectBufferAddress( samplesBuffer );
+        samplesCount = buffer->len;
+
 
 
         for ( jint i = 0; i < samplesCount; i++ )
         {
                 x = rect.getWitdth() * i / ( samplesCount - 1 );
-                y = rect.getHeight() / 2 + ( ( jbyte ) ( bufferPtr[ i ] + 128 ) ) * ( rect.getHeight() / 2 ) / 128;
+                y = rect.getHeight() / 2 + ( ( jbyte ) ( buffer->buffer[ i ] + 128 ) ) * ( rect.getHeight() / 2 ) / 128;
 
                 point = &sWaveformPoints[i];
 
@@ -168,17 +202,17 @@ void calculateWaveformPoints( JNIEnv * env, jobject samplesBuffer, jint samplesC
 }
 
 
-void calculateCurvePoints( JNIEnv * env, jobject samplesBuffer, jint samplesCount )
+void calculateCurvePoints( JNIEnv * env, Buffer * buffer )
 {
         jint        pointDistance;
         jfloat      scaledHeight;
         jfloat      scaling;
+        int         samplesCount;
 
 
         jint x;
         jint y;
 
-        jbyte * samplesBufferPtr;
 
         jfloat maxSectorHeight;
         jint sectorSize;
@@ -186,15 +220,14 @@ void calculateCurvePoints( JNIEnv * env, jobject samplesBuffer, jint samplesCoun
         Jrect rect(0, sHeight / 2, sWidth, sHeight);
 
 
-
-        samplesBufferPtr    = (jbyte*)env->GetDirectBufferAddress( samplesBuffer );
+        samplesCount = buffer->len;
 
 
         pointDistance = rect.getWitdth() / ( sCurvePointsCount - 1 );
 
 
 
-        absoluteSamples( samplesBufferPtr, samplesCount );
+        absoluteSamples( buffer );
 
 
 
@@ -207,7 +240,7 @@ void calculateCurvePoints( JNIEnv * env, jobject samplesBuffer, jint samplesCoun
 
         for ( int i = 0; i < sCurvePointsCount; i++ )
         {
-                maxSectorHeight = findMaxByte( samplesBufferPtr, i * sectorSize, i * sectorSize + sectorSize );
+                maxSectorHeight = findMaxByte( buffer, i * sectorSize, i * sectorSize + sectorSize );
 
                 scaledHeight = scaling * maxSectorHeight;
 
@@ -227,7 +260,7 @@ void calculateCurvePoints( JNIEnv * env, jobject samplesBuffer, jint samplesCoun
 
 }
 
-jbyte findMaxByte( jbyte * buffer, int start, int end )
+jbyte findMaxByte( Buffer * buffer, int start, int end )
 {
         //__android_log_print( ANDROID_LOG_VERBOSE, "VisualizerView", "findMaxBytes()");
 
@@ -236,8 +269,8 @@ jbyte findMaxByte( jbyte * buffer, int start, int end )
 
         for ( int i = start; i < end; i++ )
         {
-                if ( buffer[i] > max )
-                        max = buffer[i];
+                if ( buffer->buffer[i] > max )
+                        max = buffer->buffer[i];
         }
 
         //__android_log_print( ANDROID_LOG_VERBOSE, "VisualizerView", "findMaxBytes DONE()");
@@ -245,16 +278,19 @@ jbyte findMaxByte( jbyte * buffer, int start, int end )
         return max;
 }
 
-void absoluteSamples( jbyte * bufferPtr, jint count )
+void absoluteSamples( Buffer * buffer )
 {
         //__android_log_print( ANDROID_LOG_VERBOSE, "VisualizerView", "absoluteSamples()");
 
-        jbyte absolutedSample;
+        jbyte   absolutedSample;
+        int     count;
+
+        count = buffer->len;
 
         for ( int i = 0; i < count; i++ )
         {
-                absolutedSample = ( jbyte ) abs( bufferPtr[i] );
-                bufferPtr[i]    = absolutedSample;
+                absolutedSample = ( jbyte ) abs( buffer->buffer[i] );
+                buffer->buffer[i]     = absolutedSample;
         }
 
         //__android_log_print( ANDROID_LOG_VERBOSE, "VisualizerView", "absoluteSamples() - DONE");

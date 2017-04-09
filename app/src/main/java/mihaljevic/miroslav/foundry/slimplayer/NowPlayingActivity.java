@@ -50,7 +50,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     protected MediaControllerCompat mMediaController;
 
     private Visualizer      mVisualizer;
-    private VisualizerView  mVisualizerView;
+    //private VisualizerView  mVisualizerView;
 
     private MediaBrowserCompat.ConnectionCallback mConnectionCallbacks = new MediaBrowserCompat.ConnectionCallback()
     {
@@ -75,7 +75,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
                 audioSessionID = getAudioSessionID();
 
                 mVisualizer     = new Visualizer( audioSessionID );
-                mVisualizerView = ( VisualizerView ) findViewById( R.id.visualizer );
+                //mVisualizerView = ( VisualizerView ) findViewById( R.id.visualizer );
 
                 mVisualizer.setCaptureSize( Visualizer.getCaptureSizeRange()[1] );
 

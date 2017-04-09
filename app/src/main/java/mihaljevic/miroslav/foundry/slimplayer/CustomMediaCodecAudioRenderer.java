@@ -45,15 +45,22 @@ public class CustomMediaCodecAudioRenderer extends MediaCodecAudioRenderer
 
     private int mPcmFrameSize;
 
+    private GLES20Renderer mVisualizerRenderer;
+
 
 
     protected final String TAG = getClass().getSimpleName();
 
 
-    private AudioBufferManager mAudioBufferManager;
+    //private AudioBufferManager mAudioBufferManager;
+
+    public CustomMediaCodecAudioRenderer( MediaCodecSelector mediaCodecSelector )
+    {
+        super( mediaCodecSelector );
+    }
 
 
-    public CustomMediaCodecAudioRenderer( MediaCodecSelector mediaCodecSelector, AudioBufferManager audioBufferManager/*, int targetSamples, int targetTimeSpan */)
+    /*public CustomMediaCodecAudioRenderer( MediaCodecSelector mediaCodecSelector, AudioBufferManager audioBufferManager)
     {
         super( mediaCodecSelector );
 
@@ -63,6 +70,11 @@ public class CustomMediaCodecAudioRenderer extends MediaCodecAudioRenderer
     public void setAudioBufferManager( AudioBufferManager audioBufferManager )
     {
         mAudioBufferManager = audioBufferManager;
+    }*/
+
+    public void setVisualizerRenderer( GLES20Renderer visualizerRenderer )
+    {
+        mVisualizerRenderer = visualizerRenderer;
     }
 
 
@@ -139,11 +151,11 @@ public class CustomMediaCodecAudioRenderer extends MediaCodecAudioRenderer
         //TODO - enable/disable callback method for this
 
         //Make sure we have fresh buffer and also the one that won't be skipped
-        if ( mOldBufferIndex != bufferIndex && !shouldSkip && mAudioBufferManager != null )
+        if ( mOldBufferIndex != bufferIndex && !shouldSkip && mVisualizerRenderer != null )
         {
             //processBuffer( buffer, bufferPresentationTimeUs, positionUs );
 
-            mAudioBufferManager.onProcessBuffer2( buffer, bufferPresentationTimeUs, mPcmFrameSize, mOutputSampleRate, positionUs );
+            mVisualizerRenderer.processBuffer( buffer, buffer.limit(), bufferPresentationTimeUs, mPcmFrameSize, mOutputSampleRate, positionUs );
 
             mOldBufferIndex = bufferIndex;
         }

@@ -90,20 +90,6 @@ public class AudioBufferManager
     }
 
 
-    private void deleteStaleBufferWraps()
-    {
-        long currentTimeUs;
-        BufferWrap bufferWrap;
-
-        currentTimeUs = mLastCurrentTimeUs;
-
-        while ( !mBufferWrapList.isEmpty() && mBufferWrapList.get(0).presentationTimeUs < currentTimeUs )
-        {
-            bufferWrap = mBufferWrapList.remove( 0 );
-
-            mFreeBufferList.add( bufferWrap.buffer );
-        }
-    }
 
     public ByteBuffer getSamplesJava()
     {
@@ -222,6 +208,21 @@ public class AudioBufferManager
         }
 
         return newBuffer;
+    }
+
+    private void deleteStaleBufferWraps()
+    {
+        long currentTimeUs;
+        BufferWrap bufferWrap;
+
+        currentTimeUs = mLastCurrentTimeUs;
+
+        while ( !mBufferWrapList.isEmpty() && mBufferWrapList.get(0).presentationTimeUs < currentTimeUs )
+        {
+            bufferWrap = mBufferWrapList.remove( 0 );
+
+            mFreeBufferList.add( bufferWrap.buffer );
+        }
     }
 
     private ByteBuffer getFreeByteBuffer( int targetCapacity )

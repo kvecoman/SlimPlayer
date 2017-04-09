@@ -13,6 +13,15 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        externalNativeBuild {
+            cmake {
+                // Available argumetns are inside ${SDK}/cmake/.../android.toolchain.cmake file
+                arguments '-DANDROID_PLATFORM=android-9',
+                        '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=gnustl_static'
+            }
+        }
+
     }
     buildTypes {
         release {
@@ -20,6 +29,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
     // Encapsulates your external native build configurations.
     externalNativeBuild {
 

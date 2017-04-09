@@ -50,6 +50,8 @@ add_library( # Specifies the name of the library.
                GLES20Renderer.cpp
                CurveAnimator.h
                CurveAnimator.cpp
+               AudioBufferManager2.h
+               AudioBufferManager2.cpp
                nanovg/fontstash.h
                nanovg/nanovg.c
                nanovg/nanovg.h

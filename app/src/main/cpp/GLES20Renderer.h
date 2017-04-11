@@ -20,36 +20,36 @@
 #include "Jrect.h"
 #include "Point.h"
 #include "CurveAnimator.h"
-#include "AudioBufferManager2.h"
+#include "AudioBufferManager.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_GLES20Renderer_initNative
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initNative
         ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan );
 
 JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_GLES20Renderer_releaseNative
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseNative
         ( JNIEnv * env, jobject thiz );
 
 JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_GLES20Renderer_initGLES
-        ( JNIEnv * env, jobject thiz, int width, int height );
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initGLES
+        ( JNIEnv * env, jobject thiz, int width, int height, jfloat clearRed, jfloat clearGreen, jfloat clearBlue );
 
 JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_GLES20Renderer_releaseGLES
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseGLES
         ( JNIEnv * env, jobject thiz );
 
 
 JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_GLES20Renderer_processBuffer
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBuffer
         ( JNIEnv * env, jobject thiz, jobject samplesBuffer, jint samplesCount, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs );
 
 
 JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_GLES20Renderer_render
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_render
         ( JNIEnv * env, jobject thiz );
 
 
@@ -57,9 +57,9 @@ JNIEXPORT void JNICALL
 
 void drawWaveform(NVGcontext * nvgContext );
 
-void calculateWaveformPoints( JNIEnv * env, Buffer * buffer );
+void calculateWaveformPoints( Buffer * buffer );
 
-void calculateCurvePoints( JNIEnv * env, Buffer * buffer );
+void calculateCurvePoints( Buffer * buffer );
 
 jbyte findMaxByte( Buffer * buffer, int start, int end );
 

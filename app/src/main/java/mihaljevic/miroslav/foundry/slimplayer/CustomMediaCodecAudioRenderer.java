@@ -27,10 +27,6 @@ import java.nio.ByteBuffer;
 
 public class CustomMediaCodecAudioRenderer extends MediaCodecAudioRenderer
 {
-    private byte[] dbgDummyMonoSamples = { 25,67, 35, 100, 111, 1, 36, 74, 45, 55, 12, 19, 66, 69 };
-    private long dbgOldTime;
-
-    private long timesProcessOutputBufferCalled = 0;
 
 
     private int mOldBufferIndex = -1;
@@ -38,43 +34,42 @@ public class CustomMediaCodecAudioRenderer extends MediaCodecAudioRenderer
     @C.PcmEncoding
     private int mOutputPcmEncoding;
 
-    //private String mOutputMimeType;
 
     private int mOutputChanelCount;
     private int mOutputSampleRate;
 
     private int mPcmFrameSize;
 
-    private GLES20Renderer mVisualizerRenderer;
+    private BufferReceiver mBufferReceiver;
+
+    private boolean mEnabled = true;
 
 
 
     protected final String TAG = getClass().getSimpleName();
 
 
-    //private AudioBufferManager mAudioBufferManager;
 
     public CustomMediaCodecAudioRenderer( MediaCodecSelector mediaCodecSelector )
     {
         super( mediaCodecSelector );
     }
 
-
-    /*public CustomMediaCodecAudioRenderer( MediaCodecSelector mediaCodecSelector, AudioBufferManager audioBufferManager)
+    public void setBufferProcessing( boolean bufferProcessing )
     {
-        super( mediaCodecSelector );
-
-        mAudioBufferManager     = audioBufferManager;
+        mEnabled = bufferProcessing;
     }
 
-    public void setAudioBufferManager( AudioBufferManager audioBufferManager )
+    public boolean isBufferProcessing()
     {
-        mAudioBufferManager = audioBufferManager;
-    }*/
+        return mEnabled;
+    }
 
-    public void setVisualizerRenderer( GLES20Renderer visualizerRenderer )
+
+
+    public void setBufferReceiver( BufferReceiver bufferReceiver )
     {
-        mVisualizerRenderer = visualizerRenderer;
+        mBufferReceiver = bufferReceiver;
     }
 
 
@@ -110,8 +105,7 @@ public class CustomMediaCodecAudioRenderer extends MediaCodecAudioRenderer
 
         Log.d( TAG, "outputFormatChanged: " + outputFormat);
 
-        //Get format info
-        //mOutputMimeType     = outputFormat.getString    ( MediaFormat.KEY_MIME );
+
         mOutputChanelCount  = outputFormat.getInteger   ( MediaFormat.KEY_CHANNEL_COUNT );
         mOutputSampleRate   = outputFormat.getInteger   ( MediaFormat.KEY_SAMPLE_RATE );
 
@@ -136,26 +130,21 @@ public class CustomMediaCodecAudioRenderer extends MediaCodecAudioRenderer
 
     }
 
+
     @Override
     protected boolean processOutputBuffer( long positionUs, long elapsedRealtimeUs, MediaCodec codec, ByteBuffer buffer, int bufferIndex, int bufferFlags, long bufferPresentationTimeUs, boolean shouldSkip ) throws ExoPlaybackException
     {
         boolean fullyProcessed;
 
-        /*Log.d( TAG, "Current position time:" + positionUs );
 
-        if ( positionUs - dbgOldTime > 100000 )
-        {
-            int x = 0;
-        }*/
 
         //TODO - enable/disable callback method for this
 
         //Make sure we have fresh buffer and also the one that won't be skipped
-        if ( mOldBufferIndex != bufferIndex && !shouldSkip && mVisualizerRenderer != null )
+        if ( mEnabled && mOldBufferIndex != bufferIndex && !shouldSkip && mBufferReceiver != null )
         {
-            //processBuffer( buffer, bufferPresentationTimeUs, positionUs );
 
-            mVisualizerRenderer.processBuffer( buffer, buffer.limit(), bufferPresentationTimeUs, mPcmFrameSize, mOutputSampleRate, positionUs );
+            mBufferReceiver.processBuffer( buffer, buffer.limit(), bufferPresentationTimeUs, mPcmFrameSize, mOutputSampleRate, positionUs );
 
             mOldBufferIndex = bufferIndex;
         }
@@ -171,6 +160,11 @@ public class CustomMediaCodecAudioRenderer extends MediaCodecAudioRenderer
                                                     shouldSkip );
 
         return fullyProcessed;
+    }
+
+    interface BufferReceiver
+    {
+       void processBuffer( ByteBuffer samplesBuffer, int samplesCount, long presentationTimeUs, int pcmFrameSize, int sampleRate, long currentTimeUs );
     }
 
 

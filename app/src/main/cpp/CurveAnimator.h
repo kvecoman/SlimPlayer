@@ -63,6 +63,8 @@ public:
 
     CurveAnimator( int pointCount, int frameCount );
 
+    void copyPoints( Point * src, Point * dest, int count );
+
     bool isDone();
 
     void addPoints( Point points[] );

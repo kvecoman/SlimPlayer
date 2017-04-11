@@ -6,15 +6,11 @@ import android.content.pm.ConfigurationInfo;
 import android.net.Uri;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
-import android.support.v4.app.ActivityManagerCompat;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 
@@ -25,7 +21,6 @@ import com.google.android.exoplayer2.LoadControl;
 import com.google.android.exoplayer2.Renderer;
 import com.google.android.exoplayer2.audio.MediaCodecAudioRenderer;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
-import com.google.android.exoplayer2.extractor.Extractor;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
 import com.google.android.exoplayer2.mediacodec.MediaCodecSelector;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
@@ -36,25 +31,16 @@ import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.FileDataSourceFactory;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 
 public class TestPlayerActivity extends AppCompatActivity implements Button.OnClickListener
 {
 
-    private static boolean dbgFullscreenGLES = false;
 
     protected final String TAG = getClass().getSimpleName();
 
-    public static final String TEST_SONG_PATH           = "/storage/sdcard0/Samsung/Music/Bass Modulators - Mantra.mp3";
+    public static final String TEST_SONG_PATH           = "/storage/sdcard0/Samsung/Music/RELJA POPOVIC - LOM (OFFICIAL VIDEO).mp3";
     public static final String TEST_SONG_PATH_API_23    = "/storage/15FC-0502/Jelena Vuckovic feat DJ Vujo_91 - Led.mp3";
 
-    //This number of samples represent below defined time span
-    public static final int VISUALIZATION_SAMPLES = 200;
-
-    //How much time does visualization represent ( in ms )
-    public static final int VISUALIZATION_TIME_SPAN = 500;
 
 
     private Button button;
@@ -64,13 +50,12 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
 
     MediaCodecAudioRenderer mAudioRenderer;
 
-    private AudioBufferManager mAudioBufferManager;
 
 
 
     private GLSurfaceView mGLSurfaceView;
 
-    private GLES20Renderer mGLES20Renderer;
+    private VisualizerGLRenderer mVisualizerGLRenderer;
 
 
 
@@ -88,21 +73,20 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
 
         initExoPlayer();
 
-        //mAudioBufferManager = new AudioBufferManager( VISUALIZATION_SAMPLES, VISUALIZATION_TIME_SPAN );
-
 
 
 
         if ( hasGLES20() )
         {
-            mGLES20Renderer = new GLES20Renderer();
-            //mGLES20Renderer.setAudioBufferManager( mAudioBufferManager );
+            mVisualizerGLRenderer = new VisualizerGLRenderer();
 
             mGLSurfaceView = new GLSurfaceView( this );
+            //mGLSurfaceView = ( GLSurfaceView ) findViewById( R.id.visualizer );
+
             mGLSurfaceView.setEGLConfigChooser( 8, 8, 8, 8, 16, 0 );
             mGLSurfaceView.setEGLContextClientVersion( 2 );
             mGLSurfaceView.setPreserveEGLContextOnPause( true ); //TODO - handle this preservation on pause???
-            mGLSurfaceView.setRenderer( mGLES20Renderer );
+            mGLSurfaceView.setRenderer( mVisualizerGLRenderer );
             mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_CONTINUOUSLY );
         }
         else
@@ -112,15 +96,14 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
 
 
 
-        //( ( CustomMediaCodecAudioRenderer ) mAudioRenderer ).setAudioBufferManager( mAudioBufferManager );
-        ( ( CustomMediaCodecAudioRenderer ) mAudioRenderer ).setVisualizerRenderer( mGLES20Renderer );
+        ( ( CustomMediaCodecAudioRenderer ) mAudioRenderer ).setBufferReceiver( mVisualizerGLRenderer );
 
         //GLES2.0 code
-        RelativeLayout.LayoutParams layoutParams;
-        ViewGroup viewGroup;
+        RelativeLayout.LayoutParams   layoutParams;
+        ViewGroup                       viewGroup;
 
         layoutParams = new RelativeLayout.LayoutParams( 200, 200 );
-        layoutParams.addRule( RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE );
+        layoutParams.addRule( RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE );
         layoutParams.addRule( RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE );
         layoutParams.addRule( RelativeLayout.ALIGN_PARENT_START, RelativeLayout.TRUE );
         layoutParams.addRule( RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE );
@@ -128,7 +111,7 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
 
         viewGroup = ( ViewGroup ) findViewById( R.id.activity_test_player );
 
-        viewGroup.addView( mGLSurfaceView, 1, layoutParams);
+        viewGroup.addView( mGLSurfaceView, 0, layoutParams );
 
     }
 
@@ -155,13 +138,8 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
 
         exoPlayer.release();
 
-        /*mVisualizerView.disableUpdate();
-        mVisualizerView.release();
-        mVisualizerView = null;*/
 
-        mAudioBufferManager.release();
-
-        mGLES20Renderer.release();
+        mVisualizerGLRenderer.release();
 
     }
 
@@ -186,7 +164,6 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
         fileURI     = Uri.fromFile( file );
 
         dataSourceFactory = new FileDataSourceFactory();
-        //extractorsFactory = new AudioExtractorsFactory();
         extractorsFactory = new DefaultExtractorsFactory();
 
         mediaCodecSelector = MediaCodecSelector.DEFAULT;
@@ -194,7 +171,6 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
 
         audioRenderer   = new CustomMediaCodecAudioRenderer( mediaCodecSelector );
         renderers       = new Renderer[] { audioRenderer };
-
         trackSelector   = new DefaultTrackSelector();
         loadControl     = new DefaultLoadControl();
         mediaSource     = new ExtractorMediaSource( fileURI, dataSourceFactory, extractorsFactory, null, null );
@@ -245,99 +221,19 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
         if ( playing )
         {
             button.setText( "Pause" );
-            //mVisualizerView.enableUpdate();
+            ( ( CustomMediaCodecAudioRenderer ) mAudioRenderer ).setBufferProcessing( true );
+            mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+
         }
         else
         {
             button.setText( "Play" );
-            //mVisualizerView.disableUpdate();
+            ( ( CustomMediaCodecAudioRenderer ) mAudioRenderer ).setBufferProcessing( false );
+            mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_WHEN_DIRTY );
+
         }
 
     }
-
-
-
-
-    /*public static class AudioExtractorsFactory implements ExtractorsFactory
-    {
-        private static List< Class< ? extends Extractor > > audioExtractorClasses;
-
-        public AudioExtractorsFactory()
-        {
-            synchronized ( AudioExtractorsFactory.class )
-            {
-
-                if ( audioExtractorClasses == null )
-                {
-                    List< Class< ? extends Extractor > > extractorClasses = new ArrayList<>();
-
-                    try
-                    {
-                        extractorClasses.add(
-                                Class.forName( "com.google.android.exoplayer2.extractor.mp3.Mp3Extractor" )
-                                     .asSubclass( Extractor.class ) );
-                    } catch ( ClassNotFoundException e )
-                    {
-                        // Extractor not found.
-                    }
-
-                    try
-                    {
-                        extractorClasses.add(
-                                Class.forName( "com.google.android.exoplayer2.extractor.ts.Ac3Extractor" )
-                                     .asSubclass( Extractor.class ) );
-                    } catch ( ClassNotFoundException e )
-                    {
-                        // Extractor not found.
-                    }
-
-                    try
-                    {
-                        extractorClasses.add(
-                                Class.forName( "com.google.android.exoplayer2.extractor.ogg.OggExtractor" )
-                                     .asSubclass( Extractor.class ) );
-                    } catch ( ClassNotFoundException e )
-                    {
-                        // Extractor not found.
-                    }
-
-                    try
-                    {
-                        extractorClasses.add(
-                                Class.forName( "com.google.android.exoplayer2.extractor.wav.WavExtractor" )
-                                     .asSubclass( Extractor.class ) );
-                    } catch ( ClassNotFoundException e )
-                    {
-                        // Extractor not found.
-                    }
-
-                    audioExtractorClasses = extractorClasses;
-                }
-            }
-        }
-
-        @Override
-        public Extractor[] createExtractors()
-        {
-            Extractor[] extractors;
-
-            extractors = new Extractor[ audioExtractorClasses.size() ];
-
-            for ( int i = 0; i < extractors.length; i++ )
-            {
-                try
-                {
-                    extractors[ i ] = audioExtractorClasses.get( i ).getConstructor().newInstance();
-                }
-                catch ( Exception e )
-                {
-                    // Should never happen.
-                    throw new IllegalStateException( "Unexpected error creating default extractor", e );
-                }
-            }
-            return extractors;
-        }
-    }*/
 
 
 

@@ -9,6 +9,20 @@ CurveAnimator::CurveAnimator( int pointCount, int frameCount )
     mPointsCount    = pointCount;
     mFramesCount    = frameCount;
     mCurrentPoints  = new Point[ pointCount ];
+    mStartPoints    = new Point[ pointCount ];
+    mEndPoints      = new Point[ pointCount ];
+}
+
+void CurveAnimator::copyPoints( Point * src, Point * dest, int count )
+{
+    if ( src == nullptr || dest == nullptr )
+        return;
+
+    for ( int i = 0; i < count; i++ )
+    {
+        dest[i].x = src[i].x;
+        dest[i].y = src[i].y;
+    }
 }
 
 
@@ -32,16 +46,19 @@ void CurveAnimator::addPoints( Point points[] )
         return;
 
 
-    mEndPoints = points;
+    //mEndPoints = points;
+    copyPoints( points, mEndPoints, mPointsCount );
 
     if ( mFirstAdd )
     {
         mFirstAdd = false;
-        mStartPoints = points;
+        //mStartPoints = points;
+        copyPoints( points, mStartPoints, mPointsCount );
     }
     else
     {
-        mStartPoints = mCurrentPoints;
+        //mStartPoints = mCurrentPoints;
+        copyPoints( mCurrentPoints, mStartPoints, mPointsCount );
     }
 
 

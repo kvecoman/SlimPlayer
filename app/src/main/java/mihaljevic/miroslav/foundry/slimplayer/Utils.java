@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -598,6 +599,22 @@ public final class Utils {
 
 
         return source.equals( Const.ALL_SCREEN ) || parameter != null;
+    }
+
+
+    public static void calculateColorForGL( int colorID, Float red, Float green, Float blue )
+    {
+        int color;
+
+        color = ContextCompat.getColor( sAppContext, colorID );
+
+        red     = Float.valueOf( color & 0xFF0000 );
+        green   = Float.valueOf( color & 0x00FF00 );
+        blue    = Float.valueOf( color & 0x0000FF );
+
+        red     /= 255f;
+        green   /= 255f;
+        blue    /= 255f;
     }
 
 

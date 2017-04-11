@@ -1,37 +1,68 @@
 //
-// Created by miroslav on 29.03.17..
+// Created by miroslav on 08.04.17..
 //
 
-#ifndef SLIMPLAYER_AUDIOBUFFERMANAGER_H
-#define SLIMPLAYER_AUDIOBUFFERMANAGER_H
+#ifndef SLIMPLAYER_AUDIOBUFFERMANAGER2_H
+#define SLIMPLAYER_AUDIOBUFFERMANAGER2_H
 
 #include <jni.h>
-#include <android/log.h>
+#include <list>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+class Buffer
+{
+public:
+    jbyte * buffer;
+    int len;
+    int cap;
+
+    Buffer( int cap );
+
+    Buffer( jbyte * buffer, int len, int cap );
 
 
-JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_AudioBufferManager_initNative
-        ( JNIEnv * env, jobject thiz );
 
-JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_AudioBufferManager_releaseNative
-        ( JNIEnv * env, jobject thiz );
+};
 
-JNIEXPORT jobject JNICALL
-Java_mihaljevic_miroslav_foundry_slimplayer_AudioBufferManager_createMonoSamples( JNIEnv * env, jobject thiz, jobject byteBuffer, jint pcmFrameSize, jint sampleRate );
+class BufferWrap
+{
+public:
+    jlong presentationTimeUs;
+    Buffer * buffer;
 
-jobject getFreeByteBuffer( JNIEnv * env, jobject * thiz, jint targetCapacity );
+    BufferWrap( Buffer * buffer, jlong presentationTimeUs );
+};
 
-void deleteStaleBufferWraps( JNIEnv * env, jobject * thiz );
+class AudioBufferManager2
+{
 
-JNIEXPORT jobject JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_AudioBufferManager_getSamples( JNIEnv * env, jobject thiz );
 
-#ifdef __cplusplus
-}
-#endif
-#endif //SLIMPLAYER_AUDIOBUFFERMANAGER_H
+private:
+    int mTargetSamples;
+    int mTargetTimeSpan;
+
+    std::list<BufferWrap*> mBufferWrapList;
+    std::list<Buffer*>     mFreeBufferList;
+
+    Buffer * mResultBuffer;
+
+    jlong mLastCurrentTimeUs;
+
+
+public:
+
+    AudioBufferManager2( int targetSamples, int targetTimeSpan );
+
+    void processBuffer( Buffer * buffer, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs );
+
+    Buffer * createMonoSamples( Buffer * buffer, jint pcmFrameSize, jint sampleRate );
+
+    void deleteStaleBufferWraps();
+
+    Buffer * getFreeByteBuffer( int targetCapacity );
+
+    Buffer * getSamples();
+
+};
+
+
+#endif //SLIMPLAYER_AUDIOBUFFERMANAGER2_H

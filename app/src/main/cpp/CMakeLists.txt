@@ -42,16 +42,14 @@ add_library( # Specifies the name of the library.
 
                AudioBufferManager.h
                AudioBufferManager.cpp
+               CurveAnimator.h
+               CurveAnimator.cpp
                Jrect.h
                Jrect.cpp
                Point.h
                Point.cpp
                GLES20Renderer.h
                GLES20Renderer.cpp
-               CurveAnimator.h
-               CurveAnimator.cpp
-               AudioBufferManager2.h
-               AudioBufferManager2.cpp
                nanovg/fontstash.h
                nanovg/nanovg.c
                nanovg/nanovg.h

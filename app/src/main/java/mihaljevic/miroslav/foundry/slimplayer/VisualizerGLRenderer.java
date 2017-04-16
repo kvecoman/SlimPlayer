@@ -136,6 +136,7 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
 
         //Utils.calculateColorForGL( , red, green, blue );
 
+        //TODO - remove colors
         initGLES( mNativeInstancePtr, width, height, 0.785f, 0.985f, 0.985f );
     }
 

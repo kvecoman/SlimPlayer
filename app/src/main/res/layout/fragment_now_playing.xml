@@ -27,15 +27,16 @@
         android:layout_marginTop="22dp"
         android:textSize="15sp"/>
 
-    <android.opengl.GLSurfaceView
+    <!--<mihaljevic.miroslav.foundry.slimplayer.VisualizerGLSurfaceView
         android:id="@+id/visualizer"
+        android:visibility="visible"
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:layout_centerVertical="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"/>
+        android:layout_alignParentEnd="true"/>-->
 
 
 </RelativeLayout>

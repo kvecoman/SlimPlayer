@@ -63,8 +63,8 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
     protected MediaBrowserCompat    mMediaBrowser;
     protected MediaControllerCompat mMediaController;
 
-    private VisualizerGLRenderer    mVisualizerGLRenderer;
-    private GLSurfaceView           mGLSurfaceView;
+    //private VisualizerGLRenderer  mVisualizerGLRenderer;
+    private VisualizerGLSurfaceView mGLSurfaceView;
     private DirectPlayerAccess      mDirectPlayerAccess;
 
     protected MediaBrowserCompat.ConnectionCallback mConnectionCallbacks = new MediaBrowserCompat.ConnectionCallback()
@@ -176,15 +176,15 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
         if ( Utils.hasGLES20() )
         {
-            mVisualizerGLRenderer = new VisualizerGLRenderer();
+            //mVisualizerGLRenderer = new VisualizerGLRenderer();
             //mVisualizerGLRenderer = directPlayerAccess.visualizerGLRenderer;
 
 
-            mGLSurfaceView = new GLSurfaceView( context );
-            //mGLSurfaceView = ( GLSurfaceView ) findViewById( R.id.visualizer );
+            mGLSurfaceView = new VisualizerGLSurfaceView( context );
+            //mGLSurfaceView = ( VisualizerGLSurfaceView ) mContentView.findViewById( R.id.visualizer );
 
 
-            mGLSurfaceView.getHolder().setFormat( PixelFormat.TRANSLUCENT );
+            /*mGLSurfaceView.getHolder().setFormat( PixelFormat.TRANSLUCENT );
             mGLSurfaceView.setEGLConfigChooser( 8, 8, 8, 8, 16, 0 );
             mGLSurfaceView.setEGLContextClientVersion( 2 );
             mGLSurfaceView.setPreserveEGLContextOnPause( true ); //TODO - handle this preservation on pause???
@@ -192,6 +192,7 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
             mGLSurfaceView.setRenderer( mVisualizerGLRenderer );
             mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_WHEN_DIRTY );
+            mGLSurfaceView.onPause();*/
         }
         else
         {
@@ -207,13 +208,13 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
         }*/
 
         RelativeLayout.LayoutParams     layoutParams;
-        ViewGroup                       viewGroup;
 
         layoutParams = new RelativeLayout.LayoutParams( 200, 200 );
         layoutParams.addRule( RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE );
         layoutParams.addRule( RelativeLayout.ALIGN_PARENT_START, RelativeLayout.TRUE );
         layoutParams.addRule( RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE );
         layoutParams.addRule( RelativeLayout.ALIGN_PARENT_END, RelativeLayout.TRUE );
+        layoutParams.addRule( RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE );
 
 
         ((ViewGroup)mContentView).addView( mGLSurfaceView, 2, layoutParams );
@@ -236,9 +237,10 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
         super.onCreateOptionsMenu( menu, inflater );
 
 
-        mDirectPlayerAccess.switchVisualizationRenderer( mVisualizerGLRenderer );
-        //mVisualizerGLRenderer.reset();
-        mVisualizerGLRenderer.setEnabled( true );
+        //mGLSurfaceView.setRenderer( mVisualizerGLRenderer );
+
+        mGLSurfaceView.onResume();
+        mDirectPlayerAccess.switchVisualizationRenderer( mGLSurfaceView.getRenderer() );
         mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_CONTINUOUSLY );
     }
 
@@ -250,6 +252,9 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
         //We keep this listener for as long as we need until we get valid width and height values
         if ( mContentView == null || mContentView.getWidth() <= 0 || mContentView.getHeight() <= 0 )
             return;
+
+
+
 
         //Now that we have valid width and height values, display album art
         displayArtAsync();
@@ -277,6 +282,9 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
         if ( mMediaBrowser != null )
             mMediaBrowser.disconnect();
+
+        if ( mGLSurfaceView != null )
+            mGLSurfaceView.onPause();
 
 
     }

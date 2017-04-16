@@ -51,7 +51,7 @@ AudioBufferManager::AudioBufferManager( int targetSamples, int targetTimeSpan )
  */
 void AudioBufferManager::processBuffer( Buffer * buffer, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs )
 {
-    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "processBuffer()" );
+    //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "processBuffer()" );
 
     BufferWrap *    bufferWrap;
     Buffer *        newBuffer;
@@ -89,7 +89,7 @@ void AudioBufferManager::processBuffer( Buffer * buffer, jlong presentationTimeU
  */
 Buffer * AudioBufferManager::createMonoSamples( Buffer * buffer, jint pcmFrameSize, jint sampleRate )
 {
-    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "createMonoSamples()" );
+    //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "createMonoSamples()" );
 
     int     originalSamplesCount;
     float   representedTime;
@@ -144,7 +144,7 @@ Buffer * AudioBufferManager::createMonoSamples( Buffer * buffer, jint pcmFrameSi
  */
 Buffer * AudioBufferManager::getFreeByteBuffer( int targetCapacity )
 {
-    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "getFreeByteBuffer()" );
+    //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "getFreeByteBuffer()" );
 
     Buffer * freeBuffer;
 
@@ -196,7 +196,7 @@ Buffer * AudioBufferManager::getFreeByteBuffer( int targetCapacity )
  */
 void AudioBufferManager::deleteStaleBufferWraps()
 {
-    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "deleteStaleBufferWraps()" );
+    //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "deleteStaleBufferWraps()" );
 
     long currentTimeUs;
     BufferWrap * bufferWrap;
@@ -227,7 +227,7 @@ void AudioBufferManager::deleteStaleBufferWraps()
  */
 Buffer * AudioBufferManager::getSamples()
 {
-    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "getSamples()" );
+    //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "getSamples()" );
 
     BufferWrap * bufferWrap;
     int samplesCount;

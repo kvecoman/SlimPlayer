@@ -4,10 +4,11 @@
 
 #include "GLES20Renderer.h"
 
+//static std::vector<GLES20RendererData> sClassData;
 
-static struct NVGcontext * sNVGCtx;
+//static struct NVGcontext * mNVGCtx;
 
-static jint sWidth;
+/*static jint sWidth;
 static jint sHeight;
 
 static jint sSamplesCount;
@@ -18,71 +19,80 @@ static Point * sWaveformPoints;
 
 static CurveAnimator * sCurveAnimator;
 
-static AudioBufferManager2 * sAudioBufferManager;
+static AudioBufferManager * sAudioBufferManager;*/
 
-JNIEXPORT void JNICALL
+
+
+JNIEXPORT jlong JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initNative
-        ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan )
+        ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan, jint strokeWidth )
 {
 
+        jlong instancePtr;
 
-        sCurvePointsCount = curvePointsCount;
-        sCurvePoints = new Point[ curvePointsCount ];
+        instancePtr = ( ( jlong )( new GLES20Renderer( curvePointsCount,  transitionFrames,  targetSamplesCount,  targetTimeSpan, strokeWidth ) ) );
 
-        sCurveAnimator = new CurveAnimator( curvePointsCount, transitionFrames );
-
-        sWaveformPoints = new Point[ targetSamplesCount ];
-
-        sAudioBufferManager = new AudioBufferManager2( targetSamplesCount, targetTimeSpan );
+        return instancePtr;
+        
 }
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseNative
-        ( JNIEnv * env, jobject thiz )
+        ( JNIEnv * env, jobject thiz, jlong objPtr )
 {
+        GLES20Renderer * instance;
 
+        instance = (GLES20Renderer*)objPtr;
+
+        instance->releaseNative();
+
+        delete instance;
 }
 
 JNIEXPORT void JNICALL
 Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initGLES
-        ( JNIEnv * env, jobject thiz, jint width, jint height, jfloat clearRed, jfloat clearGreen, jfloat clearBlue  )
+        ( JNIEnv * env, jobject thiz, jlong objPtr, jint width, jint height, jfloat clearRed, jfloat clearGreen, jfloat clearBlue  )
 {
-        if ( sNVGCtx != nullptr )
-                nvgDeleteGLES2( sNVGCtx );
+        GLES20Renderer * instance;
 
-        //TODO - see which flags are best to use
-        sNVGCtx = nvgCreateGLES2( NVG_STENCIL_STROKES | NVG_DEBUG );
+        instance = (GLES20Renderer*)objPtr;
 
-        sWidth = width;
-        sHeight = height;
-
-        glClearColor( clearRed, clearGreen, clearBlue, 0 );
-        glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
+        instance->initGLES( width, height, clearRed,  clearGreen, clearBlue );
 
 }
 
 JNIEXPORT void JNICALL
 Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseGLES
-        ( JNIEnv * env, jobject thiz )
+        ( JNIEnv * env, jobject thiz, jlong objPtr )
 {
-        nvgDeleteGLES2( sNVGCtx );
+        GLES20Renderer * instance;
+
+        instance = (GLES20Renderer*)objPtr;
+
+        instance->releaseGLES();
+
 }
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBuffer
-        ( JNIEnv * env, jobject thiz, jobject samplesBuffer, jint samplesCount, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs )
+        ( JNIEnv * env, jobject thiz, jlong objPtr, jobject samplesBuffer, jint samplesCount, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs )
 {
         Buffer * buffer;
 
+        GLES20Renderer * instance;
+
         jbyte * bufferPtr;
         jint capacity;
+
+        instance = (GLES20Renderer*)objPtr;
 
         bufferPtr       = ( jbyte* )env->GetDirectBufferAddress( samplesBuffer );
         capacity        = env->GetDirectBufferCapacity( samplesBuffer );
 
         buffer = new Buffer( bufferPtr, samplesCount, capacity );
 
-        sAudioBufferManager->processBuffer( buffer, presentationTimeUs, pcmFrameSize, sampleRate, currentTimeUs );
+        instance->mAudioBufferManager->processBuffer( buffer, presentationTimeUs, pcmFrameSize, sampleRate, currentTimeUs );
+
 
 }
 
@@ -90,20 +100,99 @@ JNIEXPORT void JNICALL
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_render
-        ( JNIEnv * env, jobject thiz )
+        ( JNIEnv * env, jobject thiz, jlong objPtr )
 {
 
+        GLES20Renderer * instance;
+
+        instance = (GLES20Renderer*)objPtr;
+
+        instance->render();
+
+
+
+}
+
+
+
+JNIEXPORT void JNICALL
+Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_reset
+        ( JNIEnv * env, jobject thiz, jlong objPtr )
+{
+        GLES20Renderer * instance;
+
+        instance = (GLES20Renderer*)objPtr;
+
+        instance->reset();
+}
+
+
+
+GLES20Renderer::GLES20Renderer( jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan, jint strokeWidth )
+{
+        __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "GLES20Renderer() - constructor" );
+
+        mCurvePointsCount       = curvePointsCount;
+
+        mCurvePoints            = new Point[ curvePointsCount ];
+
+        mCurveAnimator          = new CurveAnimator( curvePointsCount, transitionFrames, strokeWidth );
+
+        mWaveformPoints         = new Point[ targetSamplesCount ];
+
+        mAudioBufferManager     = new AudioBufferManager( targetSamplesCount, targetTimeSpan );
+
+        mStrokeWidth            = strokeWidth;
+}
+
+GLES20Renderer::~GLES20Renderer()
+{
+        __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "~GLES20Renderer() - destructor" );
+        nvgDeleteGLES2( mNVGCtx );
+}
+
+void GLES20Renderer::releaseNative()
+{
+
+}
+
+void GLES20Renderer::initGLES( int width, int height, jfloat clearRed, jfloat clearGreen, jfloat clearBlue )
+{
+
+        __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "initGLES()" );
+
+        //TODO - see which flags are best to use
+        mNVGCtx = nvgCreateGLES2( NVG_STENCIL_STROKES | NVG_DEBUG );
+
+
+        mWidth = width;
+        mHeight = height;
+
+        glColorMask( 1, 1, 1, 1 );
+        //glClearColor( clearRed, clearGreen, clearBlue, 0 );
+        glClearColor( 0, 0, 0, 0 );
+        glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
+}
+
+void GLES20Renderer::releaseGLES()
+{
+        /*__android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "releaseGLES()" );
+        nvgDeleteGLES2( mNVGCtx );*/
+}
+
+void GLES20Renderer::render()
+{
         Buffer * buffer;
         int samplesCount;
 
 
-        buffer = sAudioBufferManager->getSamples();
+        buffer = mAudioBufferManager->getSamples();
 
         if ( buffer == nullptr )
                 return;
 
         samplesCount    = buffer->len;
-        sSamplesCount   = samplesCount;
+        mSamplesCount   = samplesCount;
 
         //Here the samples are absoluted
         absoluteSamples( buffer );
@@ -113,56 +202,54 @@ JNIEXPORT void JNICALL
 
         glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
 
-        nvgBeginFrame( sNVGCtx, 200, 200, 1 );
+        nvgBeginFrame( mNVGCtx, 200, 200, 1 );
 
-        drawWaveform( sNVGCtx );
+        drawWaveform( mNVGCtx );
 
 
-        if ( sCurveAnimator->isDone() )
+        if ( mCurveAnimator->isDone() )
         {
                 calculateCurvePoints( buffer);
-                sCurveAnimator->addPoints( sCurvePoints );
+                mCurveAnimator->addPoints( mCurvePoints );
         }
 
 
-        sCurveAnimator->calculateNextFrame();
+        mCurveAnimator->calculateNextFrame();
 
-        sCurveAnimator->drawCurrentFrameCurve( sNVGCtx );
-
-
-        //DEBUG, find out lower point of surfaces
-        /*nvgBeginPath(sNVGCtx);
-        nvgCircle( sNVGCtx, 0, 200, 10 );
-        nvgFillColor( sNVGCtx, nvgRGBA( 100, 100, 0, 255 ) );
-        nvgFill( sNVGCtx );*/
+        mCurveAnimator->drawCurrentFrameCurve( mNVGCtx );
 
 
+        nvgEndFrame( mNVGCtx );
+}
 
-        nvgEndFrame( sNVGCtx );
+void GLES20Renderer::reset()
+{
+        mAudioBufferManager->reset();
+        glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
 
 }
 
 
-void drawWaveform(NVGcontext * nvgContext )
+void GLES20Renderer::drawWaveform(NVGcontext * nvgContext )
 {
         nvgBeginPath( nvgContext );
 
-        nvgMoveTo( nvgContext, sWaveformPoints[0].x, sWaveformPoints[0].y );
+        nvgMoveTo( nvgContext, mWaveformPoints[0].x, mWaveformPoints[0].y );
 
-        for ( int i = 1; i < sSamplesCount; i++ )
+        for ( int i = 1; i < mSamplesCount; i++ )
         {
-                nvgLineTo( nvgContext, sWaveformPoints[i].x, sWaveformPoints[i].y );
+                nvgLineTo( nvgContext, mWaveformPoints[i].x, mWaveformPoints[i].y );
         }
 
 
         //TODO - stroke parameters somewhero elso, they also need to be moved from CurveAnimator::DrawCurrentCurve or something
         nvgStrokeColor( nvgContext, nvgRGBA( 54, 194, 249, 255 ) );
-        nvgStrokeWidth( nvgContext, 5 );
+        nvgStrokeWidth( nvgContext, mStrokeWidth );
         nvgStroke( nvgContext );
 }
 
 
-void calculateWaveformPoints( Buffer * buffer )
+void GLES20Renderer::calculateWaveformPoints( Buffer * buffer )
 {
         int samplesCount;
 
@@ -171,7 +258,11 @@ void calculateWaveformPoints( Buffer * buffer )
 
         jfloat scaling;
 
-        Jrect rect( 0, 0, sWidth, sHeight / 2 );
+        jint strokeOffset;
+
+        strokeOffset = mStrokeWidth;
+
+        Jrect rect( 0, ( 0 + strokeOffset ), mWidth, ( mHeight / 2 ) - strokeOffset );
         Point * point;
 
         samplesCount = buffer->len;
@@ -184,7 +275,7 @@ void calculateWaveformPoints( Buffer * buffer )
                 //y = rect.getHeight() / 2 + ( ( jbyte ) ( buffer->buffer[ i ] + 128 ) ) * ( rect.getHeight() / 2 ) / 128;
                 y = rect.getHeight() - ( ( jint )( scaling * buffer->buffer[i] ) );
 
-                point = &sWaveformPoints[i];
+                point = &mWaveformPoints[i];
 
                 point->x = x;
                 point->y = y;
@@ -193,7 +284,7 @@ void calculateWaveformPoints( Buffer * buffer )
 }
 
 
-void calculateCurvePoints( Buffer * buffer )
+void GLES20Renderer::calculateCurvePoints( Buffer * buffer )
 {
         jint        pointDistance;
         jfloat      scaledHeight;
@@ -208,13 +299,18 @@ void calculateCurvePoints( Buffer * buffer )
         jfloat maxSectorHeight;
         jint sectorSize;
 
-        Jrect rect(0, sHeight / 2, sWidth, sHeight);
+        jint strokeOffset;
+
+        //With stroke offset we make sure that strokes are'nt drawn outside of canvas
+        strokeOffset = mStrokeWidth;
+
+        Jrect rect(0, ( mHeight / 2 ) + strokeOffset, mWidth, mHeight - strokeOffset);
 
 
         samplesCount = buffer->len;
 
 
-        pointDistance = rect.getWitdth() / ( sCurvePointsCount - 1 );
+        pointDistance = rect.getWitdth() / ( mCurvePointsCount - 1 );
 
 
         scaling = ( jfloat ) rect.getHeight() / ( jfloat )128;
@@ -222,9 +318,9 @@ void calculateCurvePoints( Buffer * buffer )
 
 
 
-        sectorSize = samplesCount / sCurvePointsCount;
+        sectorSize = samplesCount / mCurvePointsCount;
 
-        for ( int i = 0; i < sCurvePointsCount; i++ )
+        for ( int i = 0; i < mCurvePointsCount; i++ )
         {
                 maxSectorHeight = findMaxByte( buffer, i * sectorSize, i * sectorSize + sectorSize );
 
@@ -233,11 +329,11 @@ void calculateCurvePoints( Buffer * buffer )
                 x = i * pointDistance;
                 //y = scaledHeight; This is when we use full screen space
                 //y = rect.getHeight() + scaledHeight; When we use half surface but draw towards bottom
-                y = sHeight - scaledHeight;
+                y = mHeight - scaledHeight;
 
 
-                sCurvePoints[ i ].x = x;
-                sCurvePoints[ i ].y = y;
+                mCurvePoints[ i ].x = x;
+                mCurvePoints[ i ].y = y;
 
         }
 
@@ -247,7 +343,7 @@ void calculateCurvePoints( Buffer * buffer )
 
 }
 
-jbyte findMaxByte( Buffer * buffer, int start, int end )
+jbyte GLES20Renderer::findMaxByte( Buffer * buffer, int start, int end )
 {
         //__android_log_print( ANDROID_LOG_VERBOSE, "VisualizerView", "findMaxBytes()");
 
@@ -265,7 +361,7 @@ jbyte findMaxByte( Buffer * buffer, int start, int end )
         return max;
 }
 
-void absoluteSamples( Buffer * buffer )
+void GLES20Renderer::absoluteSamples( Buffer * buffer )
 {
         //__android_log_print( ANDROID_LOG_VERBOSE, "VisualizerView", "absoluteSamples()");
 

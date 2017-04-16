@@ -19,13 +19,13 @@ public class AudioBufferManagerTest
     @Test
     public void testOnProcessBuffer2()
     {
-        AudioBufferManager audioBufferManager;
+       /* AudioBufferManager audioBufferManager;
 
         CustomMediaCodecAudioRenderer customMediaCodecAudioRenderer;
 
         customMediaCodecAudioRenderer = new CustomMediaCodecAudioRenderer( MediaCodecSelector.DEFAULT, null );
 
-        audioBufferManager = new AudioBufferManager( customMediaCodecAudioRenderer, 200, 300 );
+        audioBufferManager = new AudioBufferManager( customMediaCodecAudioRenderer, 200, 300 );*/
 
         //audioBufferManager.onProcessBuffer2(  );
     }

@@ -4,13 +4,14 @@
 
 #include "CurveAnimator.h"
 
-CurveAnimator::CurveAnimator( int pointCount, int frameCount )
+CurveAnimator::CurveAnimator( int pointCount, int frameCount, int strokeWidth )
 {
     mPointsCount    = pointCount;
     mFramesCount    = frameCount;
     mCurrentPoints  = new Point[ pointCount ];
     mStartPoints    = new Point[ pointCount ];
     mEndPoints      = new Point[ pointCount ];
+    mStrokeWidth    = strokeWidth;
 }
 
 void CurveAnimator::copyPoints( Point * src, Point * dest, int count )

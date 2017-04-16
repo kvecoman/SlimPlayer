@@ -76,7 +76,7 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
 
 
 
-        if ( hasGLES20() )
+        if ( Utils.hasGLES20() )
         {
             mVisualizerGLRenderer = new VisualizerGLRenderer();
 
@@ -184,18 +184,6 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
     }
 
 
-    private boolean hasGLES20()
-    {
-        ActivityManager     activityManager;
-        ConfigurationInfo   configurationInfo;
-
-        activityManager = ( ActivityManager ) getSystemService( Context.ACTIVITY_SERVICE );
-
-        configurationInfo = activityManager.getDeviceConfigurationInfo();
-
-        return configurationInfo.reqGlEsVersion >= 0x20000;
-
-    }
 
     private boolean playPause()
     {
@@ -223,6 +211,7 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
             button.setText( "Pause" );
             ( ( CustomMediaCodecAudioRenderer ) mAudioRenderer ).setBufferProcessing( true );
             mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+            mVisualizerGLRenderer.setEnabled( true );
 
         }
         else
@@ -230,6 +219,7 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
             button.setText( "Play" );
             ( ( CustomMediaCodecAudioRenderer ) mAudioRenderer ).setBufferProcessing( false );
             mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_WHEN_DIRTY );
+            mVisualizerGLRenderer.setEnabled( false );
 
         }
 

@@ -72,6 +72,11 @@ public class CustomMediaCodecAudioRenderer extends MediaCodecAudioRenderer
         mBufferReceiver = bufferReceiver;
     }
 
+    public BufferReceiver getBufferReceiver()
+    {
+        return mBufferReceiver;
+    }
+
 
 
     //TODO - test with AAC
@@ -113,7 +118,7 @@ public class CustomMediaCodecAudioRenderer extends MediaCodecAudioRenderer
         switch( mOutputPcmEncoding )
         {
             case C.ENCODING_PCM_8BIT:
-                mPcmFrameSize = 1 * mOutputChanelCount;
+                mPcmFrameSize = mOutputChanelCount;
                 break;
             case C.ENCODING_PCM_16BIT:
                 mPcmFrameSize = 2 * mOutputChanelCount;

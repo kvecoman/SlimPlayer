@@ -35,6 +35,8 @@ import java.util.List;
 public class NowPlayingActivity extends BackHandledFragmentActivity implements  ViewPager.OnPageChangeListener, View.OnClickListener, SeekBar.OnSeekBarChangeListener
 {
 
+    private static final int SEEK_BAR_UPDATE_TIME = 16; //Update time in ms
+
 
     private ViewPager               mPager;
     private NowPlayingPagerAdapter  mPagerAdapter;
@@ -49,7 +51,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     protected MediaBrowserCompat    mMediaBrowser;
     protected MediaControllerCompat mMediaController;
 
-    private Visualizer      mVisualizer;
+    //private Visualizer      mVisualizer;
     //private VisualizerView  mVisualizerView;
 
     private MediaBrowserCompat.ConnectionCallback mConnectionCallbacks = new MediaBrowserCompat.ConnectionCallback()
@@ -59,7 +61,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         {
             super.onConnected();
 
-            int audioSessionID;
+            //int audioSessionID;
 
             try
             {
@@ -72,14 +74,14 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
                 initQueue();
 
-                audioSessionID = getAudioSessionID();
+                //audioSessionID = getAudioSessionID();
 
-                mVisualizer     = new Visualizer( audioSessionID );
+                //mVisualizer     = new Visualizer( audioSessionID );
                 //mVisualizerView = ( VisualizerView ) findViewById( R.id.visualizer );
 
-                mVisualizer.setCaptureSize( Visualizer.getCaptureSizeRange()[1] );
+                //mVisualizer.setCaptureSize( Visualizer.getCaptureSizeRange()[1] );
 
-                mVisualizer.setDataCaptureListener( new Visualizer.OnDataCaptureListener()
+                /*mVisualizer.setDataCaptureListener( new Visualizer.OnDataCaptureListener()
                 {
                     @Override
                     public void onWaveFormDataCapture( Visualizer visualizer, byte[] waveform, int samplingRate )
@@ -92,7 +94,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
                     {}
                 }, Visualizer.getMaxCaptureRate() / 2, true, false );
 
-                mVisualizer.setEnabled( true );
+                mVisualizer.setEnabled( true );*/
 
                 mSeekBarHandler.post( mSeekBarRunnable );
 
@@ -185,27 +187,25 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         @Override
         public void run()
         {
-            PlaybackStateCompat state;
 
-            if ( mMediaBrowser.isConnected() && mMediaController != null )
+            DirectPlayerAccess directPlayerAccess;
+
+            directPlayerAccess = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
+
+            if ( !isThisSongActive() || directPlayerAccess == null || !directPlayerAccess.isNotNull()  )
             {
-                state = mMediaController.getPlaybackState();
-
-                if ( state.getState() == PlaybackStateCompat.STATE_PLAYING || state.getState() == PlaybackStateCompat.STATE_PAUSED )
-                {
-                    if ( state.getActiveQueueItemId() == mPager.getCurrentItem() )
-                    {
-                        mSeekBar.setProgress( ( int )state.getPosition() );
-                    }
-                    else
-                    {
-                        //If something is wrong
-                        mSeekBar.setProgress( 0 );
-                    }
-                }
+                mSeekBar.setProgress( 0 );
+            }
+            else
+            {
+                mSeekBar.setProgress( ( int ) directPlayerAccess.exoPlayer.getCurrentPosition() );
             }
 
-            mSeekBarHandler.postDelayed( this, 1000 );
+
+
+
+
+            mSeekBarHandler.postDelayed( this, SEEK_BAR_UPDATE_TIME );
         }
     }
 
@@ -332,8 +332,8 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         if (mSeekBarHandler != null && mSeekBarRunnable != null)
             mSeekBarHandler.removeCallbacks( mSeekBarRunnable );
 
-        if ( mVisualizer != null )
-            mVisualizer.release();
+        /*if ( mVisualizer != null )
+            mVisualizer.release();*/
     }
 
 
@@ -377,7 +377,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         super.onRequestPermissionsResult( requestCode, permissions, grantResults );
     }
 
-    private int getAudioSessionID()
+    /*private int getAudioSessionID()
     {
         if ( mMediaBrowser == null || !mMediaBrowser.isConnected() || mMediaController == null )
             return -1;
@@ -391,6 +391,27 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
         return sessionExtras.getInt( Const.AUDIO_SESSION_KEY );
 
+    }*/
+
+    /**
+     *
+     * @return Whether this song is in play/pause state or not
+     */
+    private boolean isThisSongActive()
+    {
+        PlaybackStateCompat state;
+
+        if ( mMediaBrowser.isConnected() && mMediaController != null )
+        {
+            state = mMediaController.getPlaybackState();
+
+            if ( state.getState() == PlaybackStateCompat.STATE_PLAYING || state.getState() == PlaybackStateCompat.STATE_PAUSED )
+                if ( state.getActiveQueueItemId() == mPager.getCurrentItem() )
+                    return true;
+
+        }
+
+        return false;
     }
 
     //Check if we need to start playing a file
@@ -562,6 +583,9 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
     }
 
+
+
+
     @Override
     public void onProgressChanged( SeekBar seekBar, int progress, boolean fromUser )
     {
@@ -584,12 +608,19 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     @Override
     public void onStopTrackingTouch( SeekBar seekBar ) {}
 
+
+
+
+
+
     @Override
     public void onPageScrolled( int position, float positionOffset, int positionOffsetPixels ) {}
 
     @Override
     public void onPageSelected( int position )
     {
+        DirectPlayerAccess directPlayerAccess;
+
         if ( !mMediaBrowser.isConnected() || mMediaController == null || mMediaController.getPlaybackState().getActiveQueueItemId() == position )
             return;
 
@@ -599,10 +630,22 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         //If we changed song then we will immediately set seek bar to 0
         mSeekBar.setProgress( 0 );
         updateSeekBarMax( position );
+
+        //Since this might be the first signal of song changing, we stop the active visualizer renderer now
+        directPlayerAccess = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
+
+        directPlayerAccess.stopActiveVisualizerRenderer();
     }
 
     @Override
     public void onPageScrollStateChanged(int state) {}
+
+
+
+
+
+
+
 
     private class RewindListener implements Button.OnClickListener
     {

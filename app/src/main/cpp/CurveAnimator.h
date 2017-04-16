@@ -37,6 +37,8 @@ private:
     //Are we adding points for first time
     bool mFirstAdd = true;
 
+    int mStrokeWidth;
+
 public:
     Point CUBIC_BEZIER_EASE_IN_OUT[4] =  {
             Point( 0, 0 ),
@@ -61,7 +63,7 @@ public:
 
 
 
-    CurveAnimator( int pointCount, int frameCount );
+    CurveAnimator( int pointCount, int frameCount, int strokeWidth );
 
     void copyPoints( Point * src, Point * dest, int count );
 

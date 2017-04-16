@@ -47,5 +47,5 @@ public final class Const {
 
     public static final int STORAGE_PERMISSIONS_REQUEST = 36; //Random number
 
-    public static final String AUDIO_SESSION_KEY = "audio_session";
+    //public static final String AUDIO_SESSION_KEY = "audio_session";
 }

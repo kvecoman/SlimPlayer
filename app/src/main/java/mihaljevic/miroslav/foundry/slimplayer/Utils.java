@@ -2,10 +2,12 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.pm.ConfigurationInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -615,6 +617,19 @@ public final class Utils {
         red     /= 255f;
         green   /= 255f;
         blue    /= 255f;
+    }
+
+    public static boolean hasGLES20()
+    {
+        ActivityManager activityManager;
+        ConfigurationInfo configurationInfo;
+
+        activityManager = ( ActivityManager )SlimPlayerApplication.getInstance().getSystemService( Context.ACTIVITY_SERVICE );
+
+        configurationInfo = activityManager.getDeviceConfigurationInfo();
+
+        return configurationInfo.reqGlEsVersion >= 0x20000;
+
     }
 
 

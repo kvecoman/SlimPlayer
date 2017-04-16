@@ -39,6 +39,7 @@ import junit.framework.Test;
 //TODO - test again receiving a call while playing
 //TODO - hashSet with integers instead of sparse boolean array for selected items in lists
 //TODO - see licences for glide, commons-math and maybe some other stuff to put it somewhere
+//TODO - problem with seek bar when song is completed
 
 //TODO - keep rolling - keep working on visualization to make it not use microphone permission
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener

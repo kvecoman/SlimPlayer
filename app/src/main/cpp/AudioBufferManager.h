@@ -7,6 +7,11 @@
 
 #include <jni.h>
 #include <list>
+#include <string>
+#include <android/log.h>
+#include "Shared.h"
+#include <mutex>
+#include "SynchronizedLinkedList.h"
 
 class Buffer
 {
@@ -32,7 +37,7 @@ public:
     BufferWrap( Buffer * buffer, jlong presentationTimeUs );
 };
 
-class AudioBufferManager2
+class AudioBufferManager
 {
 
 
@@ -41,26 +46,35 @@ private:
     int mTargetTimeSpan;
 
     std::list<BufferWrap*> mBufferWrapList;
+    //SynchronizedLinkedList<BufferWrap> mBufferWrapList;
     std::list<Buffer*>     mFreeBufferList;
+    //SynchronizedLinkedList<Buffer> mFreeBufferList;
+
 
     Buffer * mResultBuffer;
 
     jlong mLastCurrentTimeUs;
 
+    //std::mutex mProviderLock;
+    //std::mutex mConsumerLock;
+    //std::mutex mLock;
+
 
 public:
 
-    AudioBufferManager2( int targetSamples, int targetTimeSpan );
+    AudioBufferManager( int targetSamples, int targetTimeSpan );
 
     void processBuffer( Buffer * buffer, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs );
 
     Buffer * createMonoSamples( Buffer * buffer, jint pcmFrameSize, jint sampleRate );
 
-    void deleteStaleBufferWraps();
-
     Buffer * getFreeByteBuffer( int targetCapacity );
 
+    void deleteStaleBufferWraps();
+
     Buffer * getSamples();
+
+    void reset();
 
 };
 

@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 3.4.1)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fno-exceptions -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fno-exceptions -Wall -Werror")
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # Specifies a library name, specifies whether the library is STATIC or
@@ -50,6 +50,8 @@ add_library( # Specifies the name of the library.
                Point.cpp
                GLES20Renderer.h
                GLES20Renderer.cpp
+               Shared.h
+               SynchronizedLinkedList.h
                nanovg/fontstash.h
                nanovg/nanovg.c
                nanovg/nanovg.h

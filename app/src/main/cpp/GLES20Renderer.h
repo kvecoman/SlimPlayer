@@ -21,49 +21,102 @@
 #include "Point.h"
 #include "CurveAnimator.h"
 #include "AudioBufferManager.h"
+#include <vector>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-JNIEXPORT void JNICALL
+JNIEXPORT jlong JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initNative
-        ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan );
+        ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan, jint strokeWidth );
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseNative
-        ( JNIEnv * env, jobject thiz );
+        ( JNIEnv * env, jobject thiz, jlong objPtr  );
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initGLES
-        ( JNIEnv * env, jobject thiz, int width, int height, jfloat clearRed, jfloat clearGreen, jfloat clearBlue );
+        ( JNIEnv * env, jobject thiz, jlong objPtr, int width, int height, jfloat clearRed, jfloat clearGreen, jfloat clearBlue );
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseGLES
-        ( JNIEnv * env, jobject thiz );
+        ( JNIEnv * env, jobject thiz, jlong objPtr );
 
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBuffer
-        ( JNIEnv * env, jobject thiz, jobject samplesBuffer, jint samplesCount, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs );
+        ( JNIEnv * env, jobject thiz, jlong objPtr, jobject samplesBuffer, jint samplesCount, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs );
 
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_render
-        ( JNIEnv * env, jobject thiz );
+        ( JNIEnv * env, jobject thiz, jlong objPtr );
+
+JNIEXPORT void JNICALL
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_reset
+        ( JNIEnv * env, jobject thiz, jlong objPtr );
 
 
 
 
-void drawWaveform(NVGcontext * nvgContext );
+/*
+ * command to help find errors
+ * adb logcat | ndk-stack -sym /home/miroslav/Documents/SlimPlayer/app/build/intermediates/cmake/debug/obj/armeabi/
+ *
+ */
 
-void calculateWaveformPoints( Buffer * buffer );
 
-void calculateCurvePoints( Buffer * buffer );
+class GLES20Renderer
+{
+public:
+    //static struct NVGcontext * mNVGCtx;
 
-jbyte findMaxByte( Buffer * buffer, int start, int end );
+    struct NVGcontext * mNVGCtx;
 
-void absoluteSamples( Buffer * buffer );
+     jint mWidth;
+     jint mHeight;
+
+     jint mSamplesCount;
+
+     jint mCurvePointsCount;
+     Point * mCurvePoints;
+     Point * mWaveformPoints;
+
+     CurveAnimator * mCurveAnimator;
+
+     AudioBufferManager * mAudioBufferManager;
+
+    jint mStrokeWidth;
+
+
+
+    GLES20Renderer( jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan, jint strokeWidth );
+
+    ~GLES20Renderer();
+
+    void releaseNative();
+
+    void initGLES( int width, int height, jfloat clearRed, jfloat clearGreen, jfloat clearBlue );
+
+    void releaseGLES();
+
+    void render();
+
+    void reset();
+
+
+
+    void drawWaveform(NVGcontext * nvgContext );
+
+    void calculateWaveformPoints( Buffer * buffer );
+
+    void calculateCurvePoints( Buffer * buffer );
+
+    jbyte findMaxByte( Buffer * buffer, int start, int end );
+
+    void absoluteSamples( Buffer * buffer );
+};
 
 
 

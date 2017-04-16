@@ -32,6 +32,23 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.bumptech.glide.Glide;
+import com.google.android.exoplayer2.DefaultLoadControl;
+import com.google.android.exoplayer2.ExoPlaybackException;
+import com.google.android.exoplayer2.ExoPlayer;
+import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.LoadControl;
+import com.google.android.exoplayer2.Renderer;
+import com.google.android.exoplayer2.Timeline;
+import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
+import com.google.android.exoplayer2.extractor.ExtractorsFactory;
+import com.google.android.exoplayer2.mediacodec.MediaCodecSelector;
+import com.google.android.exoplayer2.source.ExtractorMediaSource;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.TrackGroupArray;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
+import com.google.android.exoplayer2.trackselection.TrackSelector;
+import com.google.android.exoplayer2.upstream.FileDataSourceFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,7 +59,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 
-public class MediaPlayerService extends MediaBrowserServiceCompat implements MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
+public class MediaPlayerService extends MediaBrowserServiceCompat implements AudioManager.OnAudioFocusChangeListener,
+                                                                             ExoPlayer.EventListener
+{
 
     protected final String TAG = getClass().getSimpleName();
 
@@ -66,14 +85,14 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     //Constant that allows media subscribers to have access to media content
     private static final String MEDIA_ROOT_ID = "slim_player_root";
 
-    public static final int FF_SPEED = 4000; //Fast forward rewind speed
+    public static final int FF_SPEED = 4000; //Fast forward rewind speed in ms
 
 
     //Machinery that actually plays our music
-    private MediaPlayer mPlayer;
+    //private MediaPlayer mPlayer;
 
     //Audio session of media player, used for retrieving audio data for visualization
-    private int mAudioSessionID;
+    //private int mAudioSessionID;
 
     //AudioManager notifies us whenever phone is receiving call or when headset is plugged out
     private AudioManager mAudioManager;
@@ -108,8 +127,10 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     //Whitelist validator that decides whether we allow app to see and browse media content or not
     private PackageValidator mPackageValidator;
 
+    //Used to queue tasks to be done on different threads like skipToNext or stop etc...
     private ExecutorService mExecutorService;
 
+    //Helper to stats database, used to remember in which list is which song last played, and to store play frequency of lists for home screen
     private StatsDbHelper mStatsDbHelper;
 
     //Used to hold type of task of which can be only one in queue
@@ -117,6 +138,18 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     //We keep reference to list of used metadata so istances of it aren't garbage collected
     private List<MediaMetadataCompat> mMetadataList;
+
+    private ExoPlayer mExoPlayer;
+
+    private CustomMediaCodecAudioRenderer mCustomAudioRenderer;
+
+    private FileDataSourceFactory mDataSourceFactory;
+
+    private ExtractorsFactory mExtractorsFactory;
+
+    //private VisualizerGLRenderer mVisualizerGLRenderer;
+
+
 
 
 
@@ -183,12 +216,12 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
         sessionExtras = new Bundle(  );
 
-        mPlayer = new MediaPlayer();
-        mPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+        //mPlayer = new MediaPlayer();
+        //mPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
 
-        mAudioSessionID = mPlayer.getAudioSessionId();
+        //mAudioSessionID = mPlayer.getAudioSessionId();
 
-        sessionExtras.putInt( Const.AUDIO_SESSION_KEY, mAudioSessionID );
+        //sessionExtras.putInt( Const.AUDIO_SESSION_KEY, mAudioSessionID );
 
 
         mMediaSession = new MediaSessionCompat( this, TAG );
@@ -235,6 +268,35 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         registerReceiver( mNoisyReceiver, new IntentFilter( AudioManager.ACTION_AUDIO_BECOMING_NOISY ) );
 
 
+        initExoPlayer();
+
+        //mVisualizerGLRenderer = new VisualizerGLRenderer(  );
+
+        //mCustomAudioRenderer.setBufferReceiver( mVisualizerGLRenderer );
+
+        SlimPlayerApplication.getInstance().setDirectPlayerAccess( new DirectPlayerAccess( mCustomAudioRenderer, mExoPlayer ) );
+
+    }
+
+    private void initExoPlayer()
+    {
+        TrackSelector       trackSelector;
+        LoadControl         loadControl;
+        Renderer[]          renderers;
+
+        mDataSourceFactory = new FileDataSourceFactory();
+        mExtractorsFactory = new DefaultExtractorsFactory();
+
+        mCustomAudioRenderer = new CustomMediaCodecAudioRenderer( MediaCodecSelector.DEFAULT );
+
+        renderers       = new Renderer[] { mCustomAudioRenderer };
+        trackSelector   = new DefaultTrackSelector();
+        loadControl     = new DefaultLoadControl();
+
+        mExoPlayer = ExoPlayerFactory.newInstance( renderers, trackSelector, loadControl );
+
+        mExoPlayer.addListener( this );
+        mExoPlayer.setPlayWhenReady( false );
     }
 
     public int onStartCommand(Intent intent, int flags, int startId)
@@ -286,15 +348,25 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         mMediaSession.release();
         mExecutorService.shutdown();
 
-        if (mPlayer != null)
+        /*if (mPlayer != null)
         {
             mPlayer.stop();
             mPlayer.release();
             mPlayer = null;
+        }*/
+
+        if ( mExoPlayer != null )
+        {
+            mExoPlayer.setPlayWhenReady( false );
+            mExoPlayer.stop();
+            mExoPlayer.release();
+            mExoPlayer = null;
         }
 
 
         StatsDbHelper.closeInstance();
+
+        SlimPlayerApplication.getInstance().setDirectPlayerAccess( null );
 
 
 
@@ -503,7 +575,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
         sessionExtras.putString ( Const.SOURCE_KEY,      source );
         sessionExtras.putString ( Const.PARAMETER_KEY,   parameter );
-        sessionExtras.putInt    ( Const.AUDIO_SESSION_KEY, mAudioSessionID );
+        //sessionExtras.putInt    ( Const.AUDIO_SESSION_KEY, mAudioSessionID );
 
         //State stopped means that nothing is playing but we have media loaded
         updateState( PlaybackStateCompat.STATE_STOPPED );
@@ -576,7 +648,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                                                 | PlaybackStateCompat.ACTION_PAUSE
                                                 | PlaybackStateCompat.ACTION_PLAY_PAUSE
                                                 | PlaybackStateCompat.ACTION_SEEK_TO )
-                        .setState               ( mState, mPlayer.getCurrentPosition(), 1.0f )
+                        .setState               ( mState, mExoPlayer.getCurrentPosition(), 1.0f )
                         .setActiveQueueItemId   ( mPosition );
                 break;
             case PlaybackStateCompat.STATE_PAUSED:
@@ -589,7 +661,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                                                 | PlaybackStateCompat.ACTION_PLAY
                                                 | PlaybackStateCompat.ACTION_PLAY_PAUSE
                                                 | PlaybackStateCompat.ACTION_SEEK_TO )
-                        .setState               ( mState, mPlayer.getCurrentPosition(), 1.0f )
+                        .setState               ( mState, mExoPlayer.getCurrentPosition(), 1.0f )
                         .setActiveQueueItemId   ( mPosition );
                 break;
             case PlaybackStateCompat.STATE_SKIPPING_TO_NEXT:
@@ -750,16 +822,16 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         }.execute(  );
     }*/
 
-    private synchronized void seekTo ( int pos )
+    private synchronized void seekTo ( long pos )
     {
         //Seek to position in ms if we have song loaded and update state with new position
         if ( !(mState == PlaybackStateCompat.STATE_PLAYING || mState == PlaybackStateCompat.STATE_PAUSED) )
             return;
 
-        if ( pos < 0 || pos >= mPlayer.getDuration() )
+        if ( pos < 0 || pos >= mExoPlayer.getDuration() )
             return;
 
-        mPlayer.seekTo( pos );
+        mExoPlayer.seekTo( pos );
         updateState( mState );
 
     }
@@ -960,9 +1032,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     private synchronized void fastForward()
     {
-        int position;
+        long position;
 
-        position = mPlayer.getCurrentPosition();
+        position = mExoPlayer.getCurrentPosition();
 
         position += FF_SPEED;
 
@@ -984,9 +1056,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     private synchronized void rewind()
     {
-        int position;
+        long position;
 
-        position = mPlayer.getCurrentPosition();
+        position = mExoPlayer.getCurrentPosition();
 
         position -= FF_SPEED;
 
@@ -1037,7 +1109,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         Intent                  startedServiceIntent;
         MediaMetadataCompat     metadata;
         MediaDescriptionCompat  mediaDescription;
+        MediaSource             mediaSource;
 
+        //mVisualizerGLRenderer.setEnabled( false );
 
         //If something is wrong then do nothing
         if ( mState == PlaybackStateCompat.STATE_NONE || position < 0 || position >= mCount || mQueue == null )
@@ -1077,38 +1151,40 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
                     .apply();
 
 
-        try
-        {
-            //Set up media player and start playing when ready
-            mPlayer.reset();
-            mPlayer.setDataSource           ( MediaPlayerService.this, mediaFileUri );
-            mPlayer.setOnCompletionListener ( MediaPlayerService.this );
-            mPlayer.prepare();
 
-            mPlayer.start();
+        //Set up media player and start playing when ready
+        /*mPlayer.reset();
+        mPlayer.setDataSource           ( MediaPlayerService.this, mediaFileUri );
+        mPlayer.setOnCompletionListener ( MediaPlayerService.this );
+        mPlayer.prepare();
 
-            showNotificationAsync( false, true );
-
-            //Set service as started
-            startService( startedServiceIntent );
-
-            //Update playback state
-            updateState( PlaybackStateCompat.STATE_PLAYING );
+        mPlayer.start();*/
 
 
-            mStatsDbHelper.updateLastPositionAsync( mQueueSource, mQueueParameter, mPosition );
+        mediaSource = new ExtractorMediaSource( mediaFileUri, mDataSourceFactory, mExtractorsFactory, null, null );
 
-            metadata = mMusicProvider.getMetadata( mediaDescription.getMediaId() );
+        mExoPlayer.stop();
+        mExoPlayer.prepare( mediaSource, true, true );
+        mExoPlayer.setPlayWhenReady( true );
 
-            mMediaSession.setMetadata( metadata );
+        showNotificationAsync( false, true );
 
-            SlimPlayerApplication.getInstance().setLastPlaySuccess();
+        //Set service as started
+        startService( startedServiceIntent );
 
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
+        //Update playback state
+        updateState( PlaybackStateCompat.STATE_PLAYING );
+
+
+        mStatsDbHelper.updateLastPositionAsync( mQueueSource, mQueueParameter, mPosition );
+
+        metadata = mMusicProvider.getMetadata( mediaDescription.getMediaId() );
+
+        mMediaSession.setMetadata( metadata );
+
+        SlimPlayerApplication.getInstance().setLastPlaySuccess();
+
+
 
 
     }
@@ -1125,6 +1201,52 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
         } );
     }
 
+    @Override
+    public void onPlayerStateChanged( boolean playWhenReady, int playbackState )
+    {
+        //This is called when song is finished playing
+        if ( playbackState == ExoPlayer.STATE_ENDED )
+        {
+            Log.v(TAG,"exo player completed");
+
+            //Continue to next song only if we are set to be playing
+            if ( mState == PlaybackStateCompat.STATE_PLAYING )
+            {
+                MediaPlayerService.this.playNextRunnable();
+            }
+        }
+    }
+
+    @Override
+    public void onTimelineChanged( Timeline timeline, Object manifest )
+    {
+
+    }
+
+    @Override
+    public void onTracksChanged( TrackGroupArray trackGroups, TrackSelectionArray trackSelections )
+    {
+
+    }
+
+    @Override
+    public void onLoadingChanged( boolean isLoading )
+    {
+
+    }
+
+    @Override
+    public void onPlayerError( ExoPlaybackException error )
+    {
+        Log.e(TAG, "exoPlayer reported error");
+        error.printStackTrace();
+    }
+
+    @Override
+    public void onPositionDiscontinuity()
+    {
+
+    }
 
     /*public void playAsync(final int position)
     {
@@ -1141,17 +1263,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     }*/
 
 
-    //This is called when song is finished playing
-    @Override
-    public synchronized void onCompletion(MediaPlayer mp) {
-        Log.v(TAG,"onCompletion()");
 
-        //Continue to next song only if we are set to be playing
-        if ( mState == PlaybackStateCompat.STATE_PLAYING )
-        {
-            MediaPlayerService.this.playNextRunnable();
-        }
-    }
+
 
     private void pauseRunnable()
     {
@@ -1167,9 +1280,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     public synchronized void pause()
     {
-        if ( mPlayer != null && ( mState == PlaybackStateCompat.STATE_PLAYING ) )
+        if ( mExoPlayer != null && ( mState == PlaybackStateCompat.STATE_PLAYING ) )
         {
-            mPlayer.pause();
+            mExoPlayer.setPlayWhenReady(false);
             giveUpAudioFocus();
             updateState( PlaybackStateCompat.STATE_PAUSED );
             showNotificationAsync( true, false );
@@ -1191,14 +1304,14 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
 
     public synchronized void resume()
     {
-        if ( mPlayer != null && ( mPosition != -1 || mState == PlaybackStateCompat.STATE_PAUSED ) )
+        if ( mExoPlayer != null && ( mPosition != -1 || mState == PlaybackStateCompat.STATE_PAUSED ) )
         {
             tryToGetAudioFocus();
 
             if (!mAudioFocus)
                 return;
 
-            mPlayer.start();
+            mExoPlayer.setPlayWhenReady( true );
             updateState( PlaybackStateCompat.STATE_PLAYING );
             showNotificationAsync( false, false );
         }
@@ -1293,23 +1406,21 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Med
     public synchronized void stop()
     {
 
-        if ( mPlayer != null )
-        {
-            updateState( PlaybackStateCompat.STATE_STOPPED );
+        if ( mExoPlayer == null )
+            return;
 
-            giveUpAudioFocus();
+        updateState( PlaybackStateCompat.STATE_STOPPED );
 
-            //Allow this service to be destroyed (only if it becomes non-bound from all activities)
-            stopSelf();
-            stopForeground( true );
+        giveUpAudioFocus();
 
-            mPosition = -1;
+        //Allow this service to be destroyed (only if it becomes non-bound from all activities)
+        stopSelf();
+        stopForeground( true );
 
-            if ( mPlayer.isPlaying() )
-                mPlayer.stop();
+        mPosition = -1;
 
-            mPlayer.reset();
-        }
+        mExoPlayer.stop();
+
     }
 
     private void stopAndClearListRunnable()

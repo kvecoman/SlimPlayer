@@ -38,6 +38,8 @@ public class SlimPlayerApplication extends Application
 
     private MediaBrowserCompat mMediaBrowser;
 
+    private DirectPlayerAccess mDirectPlayerAccess;
+
     protected class ConnectionCallbacks extends MediaBrowserCompat.ConnectionCallback
     {
         @Override
@@ -90,6 +92,16 @@ public class SlimPlayerApplication extends Application
         mMediaBrowser = new MediaBrowserCompat( this, MediaPlayerService.COMPONENT_NAME, new ConnectionCallbacks(), null );
 
         mMediaBrowser.connect();
+    }
+
+    public DirectPlayerAccess getDirectPlayerAccess()
+    {
+        return mDirectPlayerAccess;
+    }
+
+    public void setDirectPlayerAccess( DirectPlayerAccess mDirectPlayerAccess )
+    {
+        this.mDirectPlayerAccess = mDirectPlayerAccess;
     }
 
     private void playLastState( MediaControllerCompat mediaController)

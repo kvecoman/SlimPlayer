@@ -31,9 +31,23 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
 
     private static final int DEFAULT_TARGET_TIME_SPAN = 500;
 
+    private static final int DEFAULT_STROKE_WIDTH = 10;
+
+    //private static int sInstanceCount = 0;
+
+
+
+    //private int mInstance;
+
     //GL ES surface width and height
     private int mWidth;
     private int mHeight;
+
+    private boolean mEnabled = false;
+
+    private boolean mCleared = false;
+
+    private long mNativeInstancePtr = 0;
 
 
 
@@ -46,17 +60,19 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
         System.loadLibrary( "visualizer" );
     }
 
-    private native void initNative( int curvePointsCount, int transitionFrames, int targetSamplesCount, int targetTimeSpan );
+    private native long initNative( int curvePointsCount, int transitionFrames, int targetSamplesCount, int targetTimeSpan, int strokeWidth );
 
-    private native void releaseNative();
+    private native void releaseNative( long objPtr );
 
-    private native void initGLES( int width, int height, float red, float green, float blue );
+    private native void initGLES( long objPtr, int width, int height, float red, float green, float blue );
 
-    private native void releaseGLES();
+    private native void releaseGLES( long objPtr );
 
-    private native void render( );
+    private native void render( long objPtr );
 
-    public native void processBuffer( ByteBuffer samplesBuffer, int samplesCount, long presentationTimeUs, int pcmFrameSize, int sampleRate, long currentTimeUs );
+    public native void processBuffer( long objPtr, ByteBuffer samplesBuffer, int samplesCount, long presentationTimeUs, int pcmFrameSize, int sampleRate, long currentTimeUs );
+
+    private native void reset( long objPtr );
 
     //**************************************************************************************************************************
 
@@ -67,7 +83,10 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
 
     public VisualizerGLRenderer()
     {
-        initNative( CURVE_POINTS, TRANSITION_FRAMES, DEFAULT_TARGET_SAMPLES_TO_SHOW, DEFAULT_TARGET_TIME_SPAN );
+        /*mInstance = sInstanceCount;
+        sInstanceCount++;*/
+
+        mNativeInstancePtr = initNative( CURVE_POINTS, TRANSITION_FRAMES, DEFAULT_TARGET_SAMPLES_TO_SHOW, DEFAULT_TARGET_TIME_SPAN, DEFAULT_STROKE_WIDTH );
     }
 
 
@@ -78,15 +97,20 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
      * @param targetSamplesToShow   - amount of samples that show targeted time span
      * @param targetTimeSpan        - amount of time we see at every moment on screen in curve or waveform
      */
-    public VisualizerGLRenderer( int curvePoints, int transitionFrames, int targetSamplesToShow, int targetTimeSpan )
+    public VisualizerGLRenderer( int curvePoints, int transitionFrames, int targetSamplesToShow, int targetTimeSpan, int strokeWidth )
     {
-        initNative( curvePoints, transitionFrames, targetSamplesToShow, targetTimeSpan );
+        //mInstance = sInstanceCount;
+        //sInstanceCount++;
+
+        mNativeInstancePtr = initNative( curvePoints, transitionFrames, targetSamplesToShow, targetTimeSpan, strokeWidth );
     }
 
     public void release()
     {
-        releaseGLES();
-        releaseNative();
+        //releaseGLES( mNativeInstancePtr );
+        releaseNative( mNativeInstancePtr );
+
+        //sInstanceCount--;
     }
 
     @Override
@@ -99,28 +123,60 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
     @Override
     public void onSurfaceChanged( GL10 gl, int width, int height )
     {
-        Float red;
+        /*Float red;
         Float green;
         Float blue;
 
         red     = 0f;
         green   = 0f;
-        blue    = 0f;
+        blue    = 0f;*/
 
         mWidth  = width;
         mHeight = height;
 
         //Utils.calculateColorForGL( , red, green, blue );
 
-        initGLES( width, height, 0.985f, 0.985f, 0.985f );
+        initGLES( mNativeInstancePtr, width, height, 0.785f, 0.985f, 0.985f );
     }
 
     @Override
     public void onDrawFrame( GL10 gl )
     {
-        render(  );
+
+        if ( mCleared )
+            return;
+
+        if ( mEnabled )
+            render( mNativeInstancePtr );
+        else
+        {
+            GLES20.glClear( GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT );
+            mCleared = true;
+        }
+
+        GLES20.glClearColor(0, 0, 0, 0);
     }
 
+    public boolean isEnabled()
+    {
+        return mEnabled;
+    }
 
+    public void setEnabled( boolean enabled )
+    {
+        this.mEnabled = enabled;
+        mCleared = false;
+    }
 
+    //TODO - remove this whole reset thing
+    public void reset()
+    {
+        reset( mNativeInstancePtr );
+    }
+
+    @Override
+    public void processBuffer( ByteBuffer samplesBuffer, int samplesCount, long presentationTimeUs, int pcmFrameSize, int sampleRate, long currentTimeUs )
+    {
+        processBuffer( mNativeInstancePtr, samplesBuffer, samplesCount, presentationTimeUs, pcmFrameSize, sampleRate, currentTimeUs );
+    }
 }

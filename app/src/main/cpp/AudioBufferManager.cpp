@@ -38,7 +38,7 @@ BufferWrap::BufferWrap( Buffer * buffer, jlong presentationTimeUs )
 
 
 
-AudioBufferManager2::AudioBufferManager2( int targetSamples, int targetTimeSpan )
+AudioBufferManager::AudioBufferManager( int targetSamples, int targetTimeSpan )
 {
     mTargetSamples = targetSamples;
     mTargetTimeSpan = targetTimeSpan;
@@ -49,10 +49,17 @@ AudioBufferManager2::AudioBufferManager2( int targetSamples, int targetTimeSpan 
 /**
  * Here we take buffer, take significant mono samples from it and store them for later use (display)
  */
-void AudioBufferManager2::processBuffer( Buffer * buffer, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs )
+void AudioBufferManager::processBuffer( Buffer * buffer, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs )
 {
+    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "processBuffer()" );
+
     BufferWrap *    bufferWrap;
     Buffer *        newBuffer;
+
+    //__android_log_print( ANDROID_LOG_DEBUG, "AudioBufferManager", "currentTimeUs: %lld", currentTimeUs );
+    //__android_log_print( ANDROID_LOG_DEBUG, "AudioBufferManager", "presentationTimeUs: %lld", presentationTimeUs );
+
+    //mProviderLock.lock();
 
     newBuffer = createMonoSamples( buffer, pcmFrameSize, sampleRate );
 
@@ -63,22 +70,34 @@ void AudioBufferManager2::processBuffer( Buffer * buffer, jlong presentationTime
 
     mBufferWrapList.push_back( bufferWrap );
 
+    //mProviderLock.unlock();
+
+
+
+    //If the seek has happened clear the list of current buffer wraps
+    if ( currentTimeUs < mLastCurrentTimeUs )
+        reset();
+
     mLastCurrentTimeUs = currentTimeUs;
+
+    //__android_log_print( ANDROID_LOG_DEBUG, "AudioBufferManager", "%lld stored in buffer wrap list", presentationTimeUs  );
 }
 
 /**
- * Function that takes in original samples buffer (containing hundreds or thousands of smaples) and
+ * Function that takes in original samples buffer (containing hundreds or thousands of samples) and
  * only take the most significant mono samples
  */
-Buffer * AudioBufferManager2::createMonoSamples( Buffer * buffer, jint pcmFrameSize, jint sampleRate )
+Buffer * AudioBufferManager::createMonoSamples( Buffer * buffer, jint pcmFrameSize, jint sampleRate )
 {
+    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "createMonoSamples()" );
+
     int     originalSamplesCount;
     float   representedTime;
     int     monoSamplesCount;
     int     sampleJump;
 
-    jbyte        monoSample;
-    Buffer *  newBuffer;
+    jbyte           monoSample;
+    Buffer *        newBuffer;
 
 
     originalSamplesCount = buffer->len  / pcmFrameSize;
@@ -121,32 +140,12 @@ Buffer * AudioBufferManager2::createMonoSamples( Buffer * buffer, jint pcmFrameS
 }
 
 /**
- * Here we delete obsolete sample buffers (if the player has already played past them)
- */
-void AudioBufferManager2::deleteStaleBufferWraps()
-{
-    long currentTimeUs;
-    BufferWrap * bufferWrap;
-
-    currentTimeUs = mLastCurrentTimeUs;
-
-    while ( !mBufferWrapList.empty() && mBufferWrapList.front()->presentationTimeUs < currentTimeUs )
-    {
-        bufferWrap = mBufferWrapList.front();
-
-        mFreeBufferList.push_back( bufferWrap->buffer );
-
-        mBufferWrapList.pop_front();
-
-    }
-}
-
-
-/**
  * Method used to find already allocated buffer that is not in use
  */
-Buffer * AudioBufferManager2::getFreeByteBuffer( int targetCapacity )
+Buffer * AudioBufferManager::getFreeByteBuffer( int targetCapacity )
 {
+    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "getFreeByteBuffer()" );
+
     Buffer * freeBuffer;
 
     for (std::list<Buffer*>::const_iterator iterator = mFreeBufferList.begin(), end = mFreeBufferList.end(); iterator != end; ++iterator)
@@ -163,20 +162,79 @@ Buffer * AudioBufferManager2::getFreeByteBuffer( int targetCapacity )
         }
     }
 
+    //mLock.lock();
 
+    /*mFreeBufferList.begin();
+
+    freeBuffer = mFreeBufferList.currentItem();
+
+    while ( freeBuffer != nullptr )
+    {
+
+        if ( freeBuffer->cap <= targetCapacity )
+        {
+            mFreeBufferList.removeCurrent();
+
+            freeBuffer->len = targetCapacity;
+
+            mLock.unlock();
+            return freeBuffer;
+        }
+
+        mFreeBufferList.next();
+        freeBuffer = mFreeBufferList.currentItem();
+    }*/
+
+    //mLock.unlock();
     return nullptr;
 }
+
+
+
+/**
+ * Here we delete obsolete sample buffers (if the player has already played past them)
+ */
+void AudioBufferManager::deleteStaleBufferWraps()
+{
+    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "deleteStaleBufferWraps()" );
+
+    long currentTimeUs;
+    BufferWrap * bufferWrap;
+
+    currentTimeUs = mLastCurrentTimeUs;
+
+    //mLock.lock();
+
+    mBufferWrapList.begin();
+
+    while ( !mBufferWrapList.empty() && mBufferWrapList.front()->presentationTimeUs < currentTimeUs )
+    {
+        bufferWrap = mBufferWrapList.front();
+
+        mFreeBufferList.push_back( bufferWrap->buffer );
+
+        mBufferWrapList.remove( bufferWrap );
+    }
+
+    //mLock.unlock();
+}
+
+
+
 
 /**
  * Get target amount of samples for current playback time
  */
-Buffer * AudioBufferManager2::getSamples()
+Buffer * AudioBufferManager::getSamples()
 {
+    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "getSamples()" );
+
     BufferWrap * bufferWrap;
     int samplesCount;
     int buffersCount;
 
 
+    //mConsumerLock.lock();
 
     samplesCount = 0;
     buffersCount = 0;
@@ -185,12 +243,20 @@ Buffer * AudioBufferManager2::getSamples()
     deleteStaleBufferWraps();
 
     if ( mBufferWrapList.empty() )
+    {
+        //mConsumerLock.unlock();
         return nullptr;
+    }
+
 
 
     mResultBuffer->len = mTargetSamples;
 
     std::list<BufferWrap*>::const_iterator iterator = mBufferWrapList.begin();
+
+    //mLock.lock();
+
+    //mBufferWrapList.begin();
 
     while ( buffersCount < mBufferWrapList.size() && samplesCount + (*iterator)->buffer->len <= mTargetSamples )
     {
@@ -207,8 +273,26 @@ Buffer * AudioBufferManager2::getSamples()
         iterator++;
     }
 
+    //mLock.unlock();
+
 
     mResultBuffer->len = samplesCount;
 
+    //mConsumerLock.unlock();
+
     return mResultBuffer;
+}
+
+void AudioBufferManager::reset()
+{
+    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "reset()" );
+
+    //std::lock( mProviderLock, mConsumerLock );
+
+    mBufferWrapList.clear();
+    mLastCurrentTimeUs = 0;
+
+    //mProviderLock.unlock();
+    //mConsumerLock.unlock();
+
 }

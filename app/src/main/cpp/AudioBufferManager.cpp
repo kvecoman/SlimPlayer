@@ -6,13 +6,15 @@
 
 
 /**
- * Replica of java's ByteBuffer class, has similiar fields, used to trnasfer samples around
+ * Replica of java's ByteBuffer class, has similar fields, used to transfer samples around
  */
 Buffer::Buffer( int cap )
 {
         this->buffer = new jbyte[ cap ];
         this->cap = cap;
         this->len = cap;
+
+        needsDelete = true;
 }
 
 Buffer::Buffer( jbyte * buffer, int len, int cap )
@@ -20,6 +22,16 @@ Buffer::Buffer( jbyte * buffer, int len, int cap )
     this->buffer    = buffer;
     this->cap       = cap;
     this->len       = len;
+
+    needsDelete = false;
+}
+
+Buffer::~Buffer()
+{
+    __android_log_print( ANDROID_LOG_VERBOSE, "Buffer", "~Buffer() - destructor" );
+
+    if ( needsDelete )
+        delete [] buffer;
 }
 
 
@@ -34,6 +46,14 @@ BufferWrap::BufferWrap( Buffer * buffer, jlong presentationTimeUs )
     this->presentationTimeUs    = presentationTimeUs;
 }
 
+BufferWrap::~BufferWrap()
+{
+    __android_log_print( ANDROID_LOG_VERBOSE, "BufferWrap", "~BufferWrap() - destructor" );
+
+    if ( buffer != nullptr )
+        delete buffer;
+}
+
 
 
 
@@ -46,6 +66,27 @@ AudioBufferManager::AudioBufferManager( int targetSamples, int targetTimeSpan )
     mResultBuffer = new Buffer( targetSamples );
 }
 
+AudioBufferManager::~AudioBufferManager()
+{
+    mDeleteLock.lock();
+    mDestructorLock.lock();
+
+    delete  mResultBuffer;
+
+    for (std::list<BufferWrap*>::const_iterator iterator = mBufferWrapList.begin(), end = mBufferWrapList.end(); iterator != end; ++iterator)
+    {
+        delete *iterator;
+    }
+
+    for (std::list<Buffer*>::const_iterator iterator = mFreeBufferList.begin(), end = mFreeBufferList.end(); iterator != end; ++iterator)
+    {
+        delete *iterator;
+    }
+
+    mDeleteLock.unlock();
+    mDestructorLock.unlock();
+}
+
 /**
  * Here we take buffer, take significant mono samples from it and store them for later use (display)
  */
@@ -53,20 +94,26 @@ void AudioBufferManager::processBuffer( Buffer * buffer, jlong presentationTimeU
 {
     //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "processBuffer()" );
 
+    mDestructorLock.lock();
+
     BufferWrap *    bufferWrap;
-    Buffer *        newBuffer;
+    Buffer *        monoBuffer;
 
     //__android_log_print( ANDROID_LOG_DEBUG, "AudioBufferManager", "currentTimeUs: %lld", currentTimeUs );
     //__android_log_print( ANDROID_LOG_DEBUG, "AudioBufferManager", "presentationTimeUs: %lld", presentationTimeUs );
 
     //mProviderLock.lock();
 
-    newBuffer = createMonoSamples( buffer, pcmFrameSize, sampleRate );
+    monoBuffer = createMonoSamples( buffer, pcmFrameSize, sampleRate );
 
-    if ( newBuffer == nullptr )
+    if ( monoBuffer == nullptr )
+    {
+        mDestructorLock.unlock();
         return;
+    }
 
-    bufferWrap = new BufferWrap( newBuffer, presentationTimeUs );
+
+    bufferWrap = new BufferWrap( monoBuffer, presentationTimeUs );
 
     mBufferWrapList.push_back( bufferWrap );
 
@@ -74,13 +121,15 @@ void AudioBufferManager::processBuffer( Buffer * buffer, jlong presentationTimeU
 
 
 
-    //If the seek has happened clear the list of current buffer wraps
-    if ( currentTimeUs < mLastCurrentTimeUs )
-        reset();
+    //If the seek has happened clear the list of current buffer wraps - EDIT: seeking problem solved in delete stale buffer wraps while loop
+    /*if ( currentTimeUs < mLastCurrentTimeUs )
+        reset();*/
 
     mLastCurrentTimeUs = currentTimeUs;
 
     //__android_log_print( ANDROID_LOG_DEBUG, "AudioBufferManager", "%lld stored in buffer wrap list", presentationTimeUs  );
+
+    mDestructorLock.unlock();
 }
 
 /**
@@ -142,7 +191,7 @@ Buffer * AudioBufferManager::createMonoSamples( Buffer * buffer, jint pcmFrameSi
 /**
  * Method used to find already allocated buffer that is not in use
  */
-Buffer * AudioBufferManager::getFreeByteBuffer( int targetCapacity )
+Buffer * AudioBufferManager::getFreeByteBuffer( int minimalCapacity )
 {
     //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "getFreeByteBuffer()" );
 
@@ -152,11 +201,11 @@ Buffer * AudioBufferManager::getFreeByteBuffer( int targetCapacity )
     {
         freeBuffer = *iterator;
 
-        if ( freeBuffer->cap <= targetCapacity  )
+        if ( freeBuffer->cap <= minimalCapacity  )
         {
             mFreeBufferList.remove( freeBuffer );
 
-            freeBuffer->len = targetCapacity;
+            freeBuffer->len = minimalCapacity;
 
             return freeBuffer;
         }
@@ -171,11 +220,11 @@ Buffer * AudioBufferManager::getFreeByteBuffer( int targetCapacity )
     while ( freeBuffer != nullptr )
     {
 
-        if ( freeBuffer->cap <= targetCapacity )
+        if ( freeBuffer->cap <= minimalCapacity )
         {
             mFreeBufferList.removeCurrent();
 
-            freeBuffer->len = targetCapacity;
+            freeBuffer->len = minimalCapacity;
 
             mLock.unlock();
             return freeBuffer;
@@ -198,8 +247,10 @@ void AudioBufferManager::deleteStaleBufferWraps()
 {
     //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "deleteStaleBufferWraps()" );
 
-    long currentTimeUs;
-    BufferWrap * bufferWrap;
+    long            currentTimeUs;
+    BufferWrap *    bufferWrap;
+    Buffer *        buffer;
+    //long            timeDifference;
 
     currentTimeUs = mLastCurrentTimeUs;
 
@@ -207,14 +258,26 @@ void AudioBufferManager::deleteStaleBufferWraps()
 
     mBufferWrapList.begin();
 
-    while ( !mBufferWrapList.empty() && mBufferWrapList.front()->presentationTimeUs < currentTimeUs )
+    //timeDifference =  mBufferWrapList.front()->presentationTimeUs - currentTimeUs;
+
+    mDeleteLock.lock();
+
+    while (  !mBufferWrapList.empty() &&  mBufferWrapList.front()->presentationTimeUs < currentTimeUs )
     {
         bufferWrap = mBufferWrapList.front();
-
-        mFreeBufferList.push_back( bufferWrap->buffer );
-
         mBufferWrapList.remove( bufferWrap );
+
+        buffer = bufferWrap->buffer;
+        mFreeBufferList.push_back( buffer );
+
+        //We decouple buffer and bufferWrap so we can delete bufferWrap without corrupting memory
+        bufferWrap->buffer = nullptr;
+        delete bufferWrap;
+
+        //timeDifference =  mBufferWrapList.front()->presentationTimeUs - currentTimeUs;
     }
+
+    mDeleteLock.unlock();
 
     //mLock.unlock();
 }
@@ -228,6 +291,8 @@ void AudioBufferManager::deleteStaleBufferWraps()
 Buffer * AudioBufferManager::getSamples()
 {
     //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "getSamples()" );
+
+    mDestructorLock.lock();
 
     BufferWrap * bufferWrap;
     int samplesCount;
@@ -245,6 +310,7 @@ Buffer * AudioBufferManager::getSamples()
     if ( mBufferWrapList.empty() )
     {
         //mConsumerLock.unlock();
+        mDestructorLock.unlock();
         return nullptr;
     }
 
@@ -257,6 +323,8 @@ Buffer * AudioBufferManager::getSamples()
     //mLock.lock();
 
     //mBufferWrapList.begin();
+
+    mDeleteLock.lock();
 
     while ( buffersCount < mBufferWrapList.size() && samplesCount + (*iterator)->buffer->len <= mTargetSamples )
     {
@@ -273,12 +341,16 @@ Buffer * AudioBufferManager::getSamples()
         iterator++;
     }
 
+    mDeleteLock.unlock();
+
     //mLock.unlock();
 
 
     mResultBuffer->len = samplesCount;
 
     //mConsumerLock.unlock();
+
+    mDestructorLock.unlock();
 
     return mResultBuffer;
 }
@@ -287,12 +359,17 @@ void AudioBufferManager::reset()
 {
     __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "reset()" );
 
-    //std::lock( mProviderLock, mConsumerLock );
+    mDeleteLock.lock();
+
+    for (std::list<BufferWrap*>::const_iterator iterator = mBufferWrapList.begin(), end = mBufferWrapList.end(); iterator != end; ++iterator)
+    {
+        delete *iterator;
+    }
 
     mBufferWrapList.clear();
     mLastCurrentTimeUs = 0;
 
-    //mProviderLock.unlock();
-    //mConsumerLock.unlock();
+    mDeleteLock.unlock();
+
 
 }

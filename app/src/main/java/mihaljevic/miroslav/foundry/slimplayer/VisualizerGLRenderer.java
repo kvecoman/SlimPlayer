@@ -49,6 +49,8 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
 
     private long mNativeInstancePtr = 0;
 
+    private boolean mReleased = false;
+
 
 
 
@@ -107,8 +109,10 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
 
     public void release()
     {
-        //releaseGLES( mNativeInstancePtr );
+        releaseGLES( mNativeInstancePtr );
         releaseNative( mNativeInstancePtr );
+
+        mReleased = true;
 
         //sInstanceCount--;
     }
@@ -178,6 +182,7 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
     @Override
     public void processBuffer( ByteBuffer samplesBuffer, int samplesCount, long presentationTimeUs, int pcmFrameSize, int sampleRate, long currentTimeUs )
     {
-        processBuffer( mNativeInstancePtr, samplesBuffer, samplesCount, presentationTimeUs, pcmFrameSize, sampleRate, currentTimeUs );
+        if ( !mReleased && mEnabled )
+            processBuffer( mNativeInstancePtr, samplesBuffer, samplesCount, presentationTimeUs, pcmFrameSize, sampleRate, currentTimeUs );
     }
 }

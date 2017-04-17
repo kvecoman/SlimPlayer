@@ -78,4 +78,14 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
 
         mRenderer.setEnabled( false );
     }
+
+    public void release()
+    {
+        setRenderMode( RENDERMODE_WHEN_DIRTY );
+        mRenderer.setEnabled( false );
+        onPause();
+
+        mRenderer.release();
+
+    }
 }

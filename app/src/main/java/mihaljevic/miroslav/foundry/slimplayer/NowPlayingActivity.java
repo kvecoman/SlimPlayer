@@ -1,13 +1,10 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.Manifest;
-import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.media.Image;
-import android.media.audiofx.Visualizer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -51,8 +48,9 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     protected MediaBrowserCompat    mMediaBrowser;
     protected MediaControllerCompat mMediaController;
 
-    //private Visualizer      mVisualizer;
-    //private VisualizerView  mVisualizerView;
+    private PlayPauseListener mPlayPauseListener;
+
+
 
     private MediaBrowserCompat.ConnectionCallback mConnectionCallbacks = new MediaBrowserCompat.ConnectionCallback()
     {
@@ -74,27 +72,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
                 initQueue();
 
-                //audioSessionID = getAudioSessionID();
 
-                //mVisualizer     = new Visualizer( audioSessionID );
-                //mVisualizerView = ( VisualizerView ) findViewById( R.id.visualizer );
-
-                //mVisualizer.setCaptureSize( Visualizer.getCaptureSizeRange()[1] );
-
-                /*mVisualizer.setDataCaptureListener( new Visualizer.OnDataCaptureListener()
-                {
-                    @Override
-                    public void onWaveFormDataCapture( Visualizer visualizer, byte[] waveform, int samplingRate )
-                    {
-                        //mVisualizerView.updateVisualizer( waveform );
-                    }
-
-                    @Override
-                    public void onFftDataCapture( Visualizer visualizer, byte[] fft, int samplingRate )
-                    {}
-                }, Visualizer.getMaxCaptureRate() / 2, true, false );
-
-                mVisualizer.setEnabled( true );*/
 
                 mSeekBarHandler.post( mSeekBarRunnable );
 
@@ -192,7 +170,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
             directPlayerAccess = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
 
-            if ( !isThisSongActive() || directPlayerAccess == null || !directPlayerAccess.isNotNull()  )
+            if ( !isSelectedSongActive() || directPlayerAccess == null || !directPlayerAccess.isNotNull()  )
             {
                 mSeekBar.setProgress( 0 );
             }
@@ -332,8 +310,6 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         if (mSeekBarHandler != null && mSeekBarRunnable != null)
             mSeekBarHandler.removeCallbacks( mSeekBarRunnable );
 
-        /*if ( mVisualizer != null )
-            mVisualizer.release();*/
     }
 
 
@@ -377,27 +353,17 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         super.onRequestPermissionsResult( requestCode, permissions, grantResults );
     }
 
-    /*private int getAudioSessionID()
+    public void setPlayPauseListener( PlayPauseListener listener )
     {
-        if ( mMediaBrowser == null || !mMediaBrowser.isConnected() || mMediaController == null )
-            return -1;
+        mPlayPauseListener = listener;
+    }
 
-        Bundle  sessionExtras;
-
-        sessionExtras = mMediaController.getExtras();
-
-        if ( sessionExtras == null || !sessionExtras.containsKey( Const.AUDIO_SESSION_KEY ) )
-            return -1;
-
-        return sessionExtras.getInt( Const.AUDIO_SESSION_KEY );
-
-    }*/
 
     /**
      *
      * @return Whether this song is in play/pause state or not
      */
-    private boolean isThisSongActive()
+    private boolean isSelectedSongActive()
     {
         PlaybackStateCompat state;
 
@@ -536,6 +502,12 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         return !Utils.isSourceDifferent( mQueueSource, mQueueParameter, sessionSource, sessionParameter );
     }
 
+    private void notifyPlayPauseListener( boolean playing )
+    {
+        if ( mPlayPauseListener != null )
+            mPlayPauseListener.onPlayPause( playing );
+    }
+
 
     //Handle onscreen taps, change between play/pause
     @Override
@@ -554,13 +526,16 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
             case PlaybackStateCompat.STATE_PLAYING:
                 //Pause playback
                 mMediaController.getTransportControls().pause();
+                notifyPlayPauseListener( false );
                 break;
             case PlaybackStateCompat.STATE_PAUSED:
                 //Resume playback
                 mMediaController.getTransportControls().play();
+                notifyPlayPauseListener( true );
                 break;
             case PlaybackStateCompat.STATE_STOPPED:
                 mMediaController.getTransportControls().skipToQueueItem( mPager.getCurrentItem() );
+                notifyPlayPauseListener( true );
                 break;
             case PlaybackStateCompat.STATE_NONE:
                 Bundle  bundle;
@@ -577,6 +552,8 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
                 bundle.putInt   ( Const.POSITION_KEY,  position);
 
                 mMediaController.getTransportControls().playFromMediaId( mediaId, bundle );
+
+                notifyPlayPauseListener( true );
                 break;
         }
 
@@ -642,6 +619,10 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
 
 
+    public interface PlayPauseListener
+    {
+        void onPlayPause( boolean playing );
+    }
 
 
 

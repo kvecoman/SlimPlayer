@@ -44,11 +44,11 @@ import java.util.List;
  *
  * @author Miroslav Mihaljević
  */
-public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnGlobalLayoutListener{
+public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnGlobalLayoutListener, NowPlayingActivity.PlayPauseListener {
 
     private final String TAG = getClass().getSimpleName();
 
-
+    //TODO - continue here - see whats up with cpu consumption
 
     private int mPosition;
 
@@ -66,6 +66,8 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
     //private VisualizerGLRenderer  mVisualizerGLRenderer;
     private VisualizerGLSurfaceView mGLSurfaceView;
     private DirectPlayerAccess      mDirectPlayerAccess;
+
+    private String mTag = "UNKNOWN";
 
     protected MediaBrowserCompat.ConnectionCallback mConnectionCallbacks = new MediaBrowserCompat.ConnectionCallback()
     {
@@ -170,56 +172,9 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
         mMediaBrowser = new MediaBrowserCompat( getContext(), MediaPlayerService.COMPONENT_NAME, mConnectionCallbacks, null );
 
-
-
         mDirectPlayerAccess = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
 
-        if ( Utils.hasGLES20() )
-        {
-            //mVisualizerGLRenderer = new VisualizerGLRenderer();
-            //mVisualizerGLRenderer = directPlayerAccess.visualizerGLRenderer;
-
-
-            mGLSurfaceView = new VisualizerGLSurfaceView( context );
-            //mGLSurfaceView = ( VisualizerGLSurfaceView ) mContentView.findViewById( R.id.visualizer );
-
-
-            /*mGLSurfaceView.getHolder().setFormat( PixelFormat.TRANSLUCENT );
-            mGLSurfaceView.setEGLConfigChooser( 8, 8, 8, 8, 16, 0 );
-            mGLSurfaceView.setEGLContextClientVersion( 2 );
-            mGLSurfaceView.setPreserveEGLContextOnPause( true ); //TODO - handle this preservation on pause???
-            mGLSurfaceView.setZOrderOnTop( true );
-
-            mGLSurfaceView.setRenderer( mVisualizerGLRenderer );
-            mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_WHEN_DIRTY );
-            mGLSurfaceView.onPause();*/
-        }
-        else
-        {
-            Log.w( TAG, "GLES 2.0 not supported" );
-        }
-
-
-
-        /*if ( directPlayerAccess != null && directPlayerAccess.isNotNull() )
-        {
-            directPlayerAccess.audioRenderer.setBufferReceiver( mVisualizerGLRenderer );
-            directPlayerAccess.audioRenderer.setBufferProcessing( true );
-        }*/
-
-        RelativeLayout.LayoutParams     layoutParams;
-
-        layoutParams = new RelativeLayout.LayoutParams( 200, 200 );
-        layoutParams.addRule( RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE );
-        layoutParams.addRule( RelativeLayout.ALIGN_PARENT_START, RelativeLayout.TRUE );
-        layoutParams.addRule( RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE );
-        layoutParams.addRule( RelativeLayout.ALIGN_PARENT_END, RelativeLayout.TRUE );
-        layoutParams.addRule( RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE );
-
-
-        ((ViewGroup)mContentView).addView( mGLSurfaceView, 2, layoutParams );
-
-
+        initVisualizer();
     }
 
     @Override
@@ -239,9 +194,15 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
         //mGLSurfaceView.setRenderer( mVisualizerGLRenderer );
 
-        mGLSurfaceView.onResume();
-        mDirectPlayerAccess.switchVisualizationRenderer( mGLSurfaceView.getRenderer() );
-        mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_CONTINUOUSLY );
+        if ( mGLSurfaceView != null )
+        {
+            registerForPlayPause();
+            mGLSurfaceView.onResume();
+            mDirectPlayerAccess.switchVisualizationRenderer( mGLSurfaceView.getRenderer() );
+            mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_CONTINUOUSLY );
+        }
+
+
     }
 
 
@@ -294,17 +255,51 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
     {
         super.onDestroy();
 
+        Log.v( TAG, "onDestroy() called for fragment with tag: " + mTag );
+
         //FIXME - this part causes app to crash when fragment ( Now Playing activity ) is opened
         /*if ( mVisualizerGLRenderer != null )
             mVisualizerGLRenderer.release();*/
+
+        //TODO - continue here - cleaning GL ES context causes blackout in rest of app, invalid operation message in logcat (shit is fucked up memory wise)
+        if ( mGLSurfaceView != null )
+            mGLSurfaceView.release();
     }
 
-    public void loadSongInfo()
+    private void initVisualizer()
+    {
+        RelativeLayout.LayoutParams     layoutParams;
+
+        if ( !Utils.hasGLES20() )
+        {
+            Log.w( TAG, "GLES 2.0 not supported" );
+            return;
+        }
+
+        //We need to add GLSurfaceView this way, if we add it in layout, it's dimensions are wrong and visualization gets chopped at bottom
+
+        mGLSurfaceView = new VisualizerGLSurfaceView( getContext() );
+
+
+        layoutParams = new RelativeLayout.LayoutParams( 200, 200 );
+        layoutParams.addRule( RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE );
+        layoutParams.addRule( RelativeLayout.ALIGN_PARENT_START, RelativeLayout.TRUE );
+        layoutParams.addRule( RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE );
+        layoutParams.addRule( RelativeLayout.ALIGN_PARENT_END, RelativeLayout.TRUE );
+        layoutParams.addRule( RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE );
+
+
+        ( ( ViewGroup ) mContentView ).addView( mGLSurfaceView, 2, layoutParams );
+    }
+
+    private void loadSongInfo()
     {
         //Bind song info to this fragment
         Log.v(TAG,"loadSongInfo()");
 
         Bundle args;
+        String title;
+        String artist;
 
         args = getArguments();
 
@@ -317,9 +312,14 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
         if ( mMetadata == null )
             return;
 
+        title   = mMetadata.getString( MediaMetadataCompat.METADATA_KEY_TITLE );
+        artist  = mMetadata.getString( MediaMetadataCompat.METADATA_KEY_ARTIST );
+
         //Update text views with new info
-        ((TextView) mContentView.findViewById(R.id.song_title)).setText ( mMetadata.getString( MediaMetadataCompat.METADATA_KEY_TITLE ) );
-        ((TextView) mContentView.findViewById(R.id.song_artist)).setText( mMetadata.getString( MediaMetadataCompat.METADATA_KEY_ARTIST ) );
+        ((TextView) mContentView.findViewById(R.id.song_title)).setText ( title );
+        ((TextView) mContentView.findViewById(R.id.song_artist)).setText( artist );
+
+        mTag = mPosition + ": " + artist + " - " + title;
     }
 
 
@@ -380,4 +380,28 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
     }
 
+    private void registerForPlayPause()
+    {
+        Context context;
+
+        context = getContext();
+
+        if ( context instanceof NowPlayingActivity )
+        {
+            ( ( NowPlayingActivity ) context ).setPlayPauseListener( this );
+        }
+    }
+
+
+    @Override
+    public void onPlayPause( boolean playing )
+    {
+        if ( mGLSurfaceView == null )
+            return;
+
+        if ( playing )
+            mGLSurfaceView.onResume();
+        else
+            mGLSurfaceView.onPause();
+    }
 }

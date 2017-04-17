@@ -72,7 +72,7 @@ class GLES20Renderer
 public:
     //static struct NVGcontext * mNVGCtx;
 
-    struct NVGcontext * mNVGCtx;
+    struct NVGcontext * mNVGCtx = nullptr;
 
      jint mWidth;
      jint mHeight;

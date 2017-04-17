@@ -15,6 +15,11 @@
 
 class Buffer
 {
+private:
+
+    //Some buffers are allocated on java side, and they will be cleaned there, so here we keep track only of those that are created here
+    bool needsDelete;
+
 public:
     jbyte * buffer;
     int len;
@@ -24,7 +29,7 @@ public:
 
     Buffer( jbyte * buffer, int len, int cap );
 
-
+    ~Buffer();
 
 };
 
@@ -35,6 +40,8 @@ public:
     Buffer * buffer;
 
     BufferWrap( Buffer * buffer, jlong presentationTimeUs );
+
+    ~BufferWrap();
 };
 
 class AudioBufferManager
@@ -55,6 +62,11 @@ private:
 
     jlong mLastCurrentTimeUs;
 
+    std::mutex mDeleteLock; //Used to make sure reset() and some other delete operations don't go at same time
+    std::mutex mDestructorLock;
+
+    //BufferWrap * mCurrentActiveBuffer;
+
     //std::mutex mProviderLock;
     //std::mutex mConsumerLock;
     //std::mutex mLock;
@@ -64,11 +76,13 @@ public:
 
     AudioBufferManager( int targetSamples, int targetTimeSpan );
 
+    ~AudioBufferManager();
+
     void processBuffer( Buffer * buffer, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs );
 
     Buffer * createMonoSamples( Buffer * buffer, jint pcmFrameSize, jint sampleRate );
 
-    Buffer * getFreeByteBuffer( int targetCapacity );
+    Buffer * getFreeByteBuffer( int minimalCapacity );
 
     void deleteStaleBufferWraps();
 

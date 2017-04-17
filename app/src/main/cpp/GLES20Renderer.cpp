@@ -148,7 +148,16 @@ GLES20Renderer::GLES20Renderer( jint curvePointsCount, jint transitionFrames, ji
 GLES20Renderer::~GLES20Renderer()
 {
         __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "~GLES20Renderer() - destructor" );
-        nvgDeleteGLES2( mNVGCtx );
+
+        delete[] mCurvePoints;
+        delete[] mWaveformPoints;
+
+        delete mCurveAnimator;
+
+        delete mAudioBufferManager;
+
+        /*if ( mNVGCtx != nullptr )
+                nvgDeleteGLES2( mNVGCtx );*/
 }
 
 void GLES20Renderer::releaseNative()
@@ -176,8 +185,11 @@ void GLES20Renderer::initGLES( int width, int height, jfloat clearRed, jfloat cl
 
 void GLES20Renderer::releaseGLES()
 {
+        //TODO - remove this, this is done in destructor
         /*__android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "releaseGLES()" );
         nvgDeleteGLES2( mNVGCtx );*/
+
+        //nvgDeleteGLES2( mNVGCtx );
 }
 
 void GLES20Renderer::render()
@@ -224,8 +236,8 @@ void GLES20Renderer::render()
 
 void GLES20Renderer::reset()
 {
-        mAudioBufferManager->reset();
-        glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
+        /*mAudioBufferManager->reset();
+        glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );*/
 
 }
 

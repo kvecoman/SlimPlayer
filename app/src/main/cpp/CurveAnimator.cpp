@@ -14,6 +14,15 @@ CurveAnimator::CurveAnimator( int pointCount, int frameCount, int strokeWidth )
     mStrokeWidth    = strokeWidth;
 }
 
+CurveAnimator::~CurveAnimator()
+{
+    __android_log_print( ANDROID_LOG_VERBOSE, "CurveAnimator", "~CurveAnimator() - destructor" );
+
+    delete [] mCurrentPoints;
+    delete [] mStartPoints;
+    delete [] mEndPoints;
+}
+
 void CurveAnimator::copyPoints( Point * src, Point * dest, int count )
 {
     if ( src == nullptr || dest == nullptr )

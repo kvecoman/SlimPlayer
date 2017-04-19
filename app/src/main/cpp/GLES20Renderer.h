@@ -22,6 +22,7 @@
 #include "CurveAnimator.h"
 #include "AudioBufferManager.h"
 #include <vector>
+#include <mutex>
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,9 +40,9 @@ JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initGLES
         ( JNIEnv * env, jobject thiz, jlong objPtr, int width, int height, jfloat clearRed, jfloat clearGreen, jfloat clearBlue );
 
-JNIEXPORT void JNICALL
+/*JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseGLES
-        ( JNIEnv * env, jobject thiz, jlong objPtr );
+        ( JNIEnv * env, jobject thiz, jlong objPtr );*/
 
 
 JNIEXPORT void JNICALL
@@ -57,6 +58,10 @@ JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_reset
         ( JNIEnv * env, jobject thiz, jlong objPtr );
 
+JNIEXPORT void JNICALL
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_deleteNVGContexts
+        ( JNIEnv * env, jobject thiz );
+
 
 
 
@@ -66,11 +71,17 @@ JNIEXPORT void JNICALL
  *
  */
 
+static std::mutex sNVGCreateLock;
+
+static std::list<NVGcontext*> sNVGDeleteList;
+
 
 class GLES20Renderer
 {
 public:
     //static struct NVGcontext * mNVGCtx;
+
+
 
     struct NVGcontext * mNVGCtx = nullptr;
 
@@ -89,6 +100,11 @@ public:
 
     jint mStrokeWidth;
 
+    std::mutex mNVGContextLock;
+
+    //bool mScheduledForDelete = false;
+
+
 
 
     GLES20Renderer( jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan, jint strokeWidth );
@@ -99,7 +115,7 @@ public:
 
     void initGLES( int width, int height, jfloat clearRed, jfloat clearGreen, jfloat clearBlue );
 
-    void releaseGLES();
+    //void releaseGLES();
 
     void render();
 

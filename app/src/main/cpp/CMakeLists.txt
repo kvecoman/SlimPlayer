@@ -60,6 +60,21 @@ add_library( # Specifies the name of the library.
                nanovg/stb_image.h
                nanovg/stb_truetype.h)
 
+ add_library( demo
+
+               SHARED
+
+               demo.cpp
+               nanovg/fontstash.h
+               nanovg/nanovg.c
+               nanovg/nanovg.h
+               nanovg/nanovg_gl.h
+               nanovg/nanovg_gl_utils.h
+               nanovg/stb_image.h
+               nanovg/stb_truetype.h)
+
+  target_link_libraries( demo android log GLESv2 EGL )
+
   target_link_libraries( visualizer android log GLESv2 EGL )
 
 # Specifies a path to native header files.

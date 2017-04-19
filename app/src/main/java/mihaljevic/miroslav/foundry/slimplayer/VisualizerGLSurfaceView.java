@@ -10,7 +10,7 @@ import android.util.AttributeSet;
  * Created by miroslav on 16.04.17..
  */
 
-//TODO - continue here and figure out the thing with incorrect size
+
 
 public class VisualizerGLSurfaceView extends GLSurfaceView
 {
@@ -32,6 +32,7 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
     {
         mRenderer = new VisualizerGLRenderer();
 
+        setDebugFlags( DEBUG_CHECK_GL_ERROR | DEBUG_LOG_GL_CALLS );
         getHolder().setFormat( PixelFormat.TRANSLUCENT );
         setEGLConfigChooser( 8, 8, 8, 8, 16, 0 );
         setEGLContextClientVersion( 2 );
@@ -81,11 +82,26 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
 
     public void release()
     {
-        setRenderMode( RENDERMODE_WHEN_DIRTY );
-        mRenderer.setEnabled( false );
-        onPause();
+        /*mRenderer.scheduleRelease();
+        surfaceChanged( getHolder(), PixelFormat.TRANSLUCENT, 0, 0 );*/
 
-        mRenderer.release();
+        onResume();
+        //setRenderMode( RENDERMODE_WHEN_DIRTY );
+        //mRenderer.setEnabled( false );
+        //mRenderer.release();
+        //requestRender();
+        queueEvent( new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                mRenderer.release(); //TODO - continue here - not working
+            }
+        } );
+        //onPause();
+
+
+
 
     }
 }

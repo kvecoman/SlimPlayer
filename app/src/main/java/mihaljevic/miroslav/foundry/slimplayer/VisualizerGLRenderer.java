@@ -51,6 +51,8 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
 
     private boolean mReleased = false;
 
+    //private boolean mScheduledRelease = false;
+
 
 
 
@@ -68,13 +70,15 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
 
     private native void initGLES( long objPtr, int width, int height, float red, float green, float blue );
 
-    private native void releaseGLES( long objPtr );
+    //private native void releaseGLES( long objPtr );
 
     private native void render( long objPtr );
 
     public native void processBuffer( long objPtr, ByteBuffer samplesBuffer, int samplesCount, long presentationTimeUs, int pcmFrameSize, int sampleRate, long currentTimeUs );
 
     private native void reset( long objPtr );
+
+    public native void deleteNVGContexts();
 
     //**************************************************************************************************************************
 
@@ -107,9 +111,17 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
         mNativeInstancePtr = initNative( curvePoints, transitionFrames, targetSamplesToShow, targetTimeSpan, strokeWidth );
     }
 
+    /*public void scheduleRelease()
+    {
+        mScheduledRelease = true;
+    }*/
+
+    /**
+     * It seems it needs to be called on GL thread
+     */
     public void release()
     {
-        releaseGLES( mNativeInstancePtr );
+        //releaseGLES( mNativeInstancePtr );
         releaseNative( mNativeInstancePtr );
 
         mReleased = true;
@@ -127,6 +139,12 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
     @Override
     public void onSurfaceChanged( GL10 gl, int width, int height )
     {
+        /*if ( mScheduledRelease && !mReleased )
+        {
+            release();
+            return;
+        }*/
+
         /*Float red;
         Float green;
         Float blue;

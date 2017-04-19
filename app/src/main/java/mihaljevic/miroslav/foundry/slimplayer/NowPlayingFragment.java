@@ -1,26 +1,18 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
-import android.app.Activity;
-import android.content.ComponentName;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.PixelFormat;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.opengl.GLSurfaceView;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
-import android.support.v4.media.session.MediaSessionCompat;
-import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -29,14 +21,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.RelativeLayout;
-import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
-
-import java.util.List;
 
 /**
  *
@@ -69,22 +58,16 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
     private String mTag = "UNKNOWN";
 
+    private String mTitle = "Song title";
+    private String mArtist = "Artist";
+
     protected MediaBrowserCompat.ConnectionCallback mConnectionCallbacks = new MediaBrowserCompat.ConnectionCallback()
     {
         @Override
         public void onConnected()
         {
 
-            try
-            {
-                mMediaController = new MediaControllerCompat( getContext(), mMediaBrowser.getSessionToken() );
-                mMediaController.registerCallback           ( mControllerCallbacks );
-
-            }
-            catch (RemoteException e)
-            {
-                e.printStackTrace();
-            }
+            initMediaController();
         }
 
         @Override
@@ -129,6 +112,10 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
         mPosition = -1;
 
+        loadSongInfo();
+
+        initVisualizer();
+
     }
 
     @Override
@@ -165,16 +152,15 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
         if ( mHasArt )
             mContentView.getViewTreeObserver().addOnGlobalLayoutListener( this );
 
-        if ( mPosition == -1 )
-            loadSongInfo();
 
+        displaySongInfo();
 
 
         mMediaBrowser = new MediaBrowserCompat( getContext(), MediaPlayerService.COMPONENT_NAME, mConnectionCallbacks, null );
 
         mDirectPlayerAccess = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
 
-        initVisualizer();
+        attachVisualizer();
     }
 
     @Override
@@ -192,15 +178,8 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
         super.onCreateOptionsMenu( menu, inflater );
 
 
-        //mGLSurfaceView.setRenderer( mVisualizerGLRenderer );
 
-        if ( mGLSurfaceView != null )
-        {
-            registerForPlayPause();
-            mGLSurfaceView.onResume();
-            mDirectPlayerAccess.switchVisualizationRenderer( mGLSurfaceView.getRenderer() );
-            mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_CONTINUOUSLY );
-        }
+        startVisualizer();
 
 
     }
@@ -223,9 +202,9 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
         //Once we display art we don't need this callback anymore
         if ( Build.VERSION.SDK_INT >= 16 )
-            mContentView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+            mContentView.getViewTreeObserver().removeOnGlobalLayoutListener( this );
         else
-            mContentView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+            mContentView.getViewTreeObserver().removeGlobalOnLayoutListener( this );
 
     }
 
@@ -244,8 +223,10 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
         if ( mMediaBrowser != null )
             mMediaBrowser.disconnect();
 
-        if ( mGLSurfaceView != null )
-            mGLSurfaceView.onPause();
+        releaseVisualizer();
+
+        /*if ( mGLSurfaceView != null )
+            mGLSurfaceView.onPause();*/
 
 
     }
@@ -257,39 +238,96 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
         Log.v( TAG, "onDestroy() called for fragment with tag: " + mTag );
 
-        //FIXME - this part causes app to crash when fragment ( Now Playing activity ) is opened
-        /*if ( mVisualizerGLRenderer != null )
-            mVisualizerGLRenderer.release();*/
 
-        //TODO - continue here - cleaning GL ES context causes blackout in rest of app, invalid operation message in logcat (shit is fucked up memory wise)
-        if ( mGLSurfaceView != null )
-            mGLSurfaceView.release();
+        //releaseVisualizer();
+
+    }
+
+    /**
+     * This is to be called only after we are connected to media service
+     */
+    private void initMediaController()
+    {
+        try
+        {
+            mMediaController = new MediaControllerCompat( getContext(), mMediaBrowser.getSessionToken() );
+            mMediaController.registerCallback           ( mControllerCallbacks );
+
+        }
+        catch (RemoteException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     private void initVisualizer()
     {
-        RelativeLayout.LayoutParams     layoutParams;
-
         if ( !Utils.hasGLES20() )
         {
             Log.w( TAG, "GLES 2.0 not supported" );
             return;
         }
 
-        //We need to add GLSurfaceView this way, if we add it in layout, it's dimensions are wrong and visualization gets chopped at bottom
 
         mGLSurfaceView = new VisualizerGLSurfaceView( getContext() );
 
 
-        layoutParams = new RelativeLayout.LayoutParams( 200, 200 );
+    }
+
+
+    private void attachVisualizer()
+    {
+        RelativeLayout.LayoutParams     layoutParams;
+
+
+
+
+        if ( mGLSurfaceView == null )
+            return;
+
+        if ( mGLSurfaceView.getParent() != null )
+        {
+            ( ( ViewGroup ) mGLSurfaceView.getParent() ).removeView( mGLSurfaceView );
+        }
+
+
+        //We need to add GLSurfaceView this way, if we add it in layout, it's dimensions are wrong and visualization gets chopped at bottom
+
+        layoutParams = new RelativeLayout.LayoutParams( 50, 200 );
         layoutParams.addRule( RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE );
-        layoutParams.addRule( RelativeLayout.ALIGN_PARENT_START, RelativeLayout.TRUE );
         layoutParams.addRule( RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE );
-        layoutParams.addRule( RelativeLayout.ALIGN_PARENT_END, RelativeLayout.TRUE );
         layoutParams.addRule( RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE );
+
+        if ( Build.VERSION.SDK_INT >= 17 )
+        {
+            layoutParams.addRule( RelativeLayout.ALIGN_PARENT_START, RelativeLayout.TRUE );
+            layoutParams.addRule( RelativeLayout.ALIGN_PARENT_END, RelativeLayout.TRUE );
+        }
 
 
         ( ( ViewGroup ) mContentView ).addView( mGLSurfaceView, 2, layoutParams );
+    }
+
+    private void startVisualizer()
+    {
+        if ( mGLSurfaceView == null )
+            return;
+
+
+        registerForPlayPause();
+        mGLSurfaceView.onResume();
+        mDirectPlayerAccess.switchVisualizationRenderer( mGLSurfaceView.getRenderer() );
+        mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_CONTINUOUSLY );
+
+        //Cleanup function that is used to delete unused NVGcontexts that couldn't be deleted before
+        //mGLSurfaceView.getRenderer().deleteNVGContexts();
+
+    }
+
+    private void releaseVisualizer()
+    {
+        if ( mGLSurfaceView != null )
+            mGLSurfaceView.release();
     }
 
     private void loadSongInfo()
@@ -298,12 +336,10 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
         Log.v(TAG,"loadSongInfo()");
 
         Bundle args;
-        String title;
-        String artist;
 
         args = getArguments();
 
-        if (args == null)
+        if ( args == null )
             return;
 
         mPosition = args.getInt         ( Const.POSITION_KEY, -1);
@@ -312,21 +348,35 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
         if ( mMetadata == null )
             return;
 
-        title   = mMetadata.getString( MediaMetadataCompat.METADATA_KEY_TITLE );
-        artist  = mMetadata.getString( MediaMetadataCompat.METADATA_KEY_ARTIST );
+        mTitle   = mMetadata.getString( MediaMetadataCompat.METADATA_KEY_TITLE );
+        mArtist  = mMetadata.getString( MediaMetadataCompat.METADATA_KEY_ARTIST );
+
+        mTag = mPosition + ": " + mArtist + " - " + mTitle;
+    }
+
+    private void displaySongInfo()
+    {
+        Log.v(TAG,"displaySongInfo()");
+
+        TextView songTitleTextView;
+        TextView songArtistTextView;
+
+        songTitleTextView = (TextView) mContentView.findViewById( R.id.song_title );
+        songArtistTextView = (TextView) mContentView.findViewById( R.id.song_artist );
+
+        if (  songTitleTextView == null || songArtistTextView == null )
+            return;
 
         //Update text views with new info
-        ((TextView) mContentView.findViewById(R.id.song_title)).setText ( title );
-        ((TextView) mContentView.findViewById(R.id.song_artist)).setText( artist );
-
-        mTag = mPosition + ": " + artist + " - " + title;
+        songTitleTextView.setText ( mTitle );
+        songArtistTextView.setText( mArtist );
     }
 
 
     //Get album art and display it (if it exists)
     private void displayArtAsync()
     {
-        Log.v(TAG,"displayArtAsync()");
+        Log.v( TAG, "displayArtAsync()" );
 
         if ( mContentView.getWidth() <= 0 || mContentView.getHeight() <= 0 || !mHasArt || !isAdded() )
             return;

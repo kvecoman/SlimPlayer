@@ -43,7 +43,7 @@ public abstract class SlimActivity extends AppCompatActivity
         switch (id)
         {
             case R.id.test_activity:
-                startActivity( new Intent( this, TestPlayerActivity.class ) );
+                startActivity( new Intent( this, DemoActivity.class ) );
             case R.id.toggle_repeat:
                 //Toggle repeat action - whether to repeat playlist or not at the end
                 SharedPreferences   preferences;

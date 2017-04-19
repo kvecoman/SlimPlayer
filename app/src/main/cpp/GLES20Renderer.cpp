@@ -46,6 +46,8 @@ JNIEXPORT void JNICALL
 
         instance->releaseNative();
 
+        //instance->mScheduledForDelete = true;
+
         delete instance;
 }
 
@@ -61,7 +63,7 @@ Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initGLES
 
 }
 
-JNIEXPORT void JNICALL
+/*JNIEXPORT void JNICALL
 Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseGLES
         ( JNIEnv * env, jobject thiz, jlong objPtr )
 {
@@ -71,7 +73,7 @@ Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseGLES
 
         instance->releaseGLES();
 
-}
+}*/
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBuffer
@@ -127,6 +129,34 @@ Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_reset
 }
 
 
+JNIEXPORT void JNICALL
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_deleteNVGContexts
+        ( JNIEnv * env, jobject thiz )
+{
+        sNVGCreateLock.lock();
+
+        for (std::list<NVGcontext*>::const_iterator iterator = sNVGDeleteList.begin(), end = sNVGDeleteList.end(); iterator != end; ++iterator)
+        {
+                if ( *iterator != nullptr )
+                        nvgDeleteGLES2( *iterator );
+
+                sNVGDeleteList.remove( *iterator );
+        }
+
+        sNVGCreateLock.unlock();
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 GLES20Renderer::GLES20Renderer( jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan, jint strokeWidth )
 {
@@ -143,10 +173,15 @@ GLES20Renderer::GLES20Renderer( jint curvePointsCount, jint transitionFrames, ji
         mAudioBufferManager     = new AudioBufferManager( targetSamplesCount, targetTimeSpan );
 
         mStrokeWidth            = strokeWidth;
+
 }
 
 GLES20Renderer::~GLES20Renderer()
 {
+        sNVGCreateLock.lock();
+
+        mNVGContextLock.lock();
+
         __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "~GLES20Renderer() - destructor" );
 
         delete[] mCurvePoints;
@@ -156,8 +191,18 @@ GLES20Renderer::~GLES20Renderer()
 
         delete mAudioBufferManager;
 
+
+
+        //TODO - continue here - make this work, the new method of deleting later doesn't work ( try makking minialist use of nanoVG and see if you can delete it then in demo activity)
+        if ( mNVGCtx != nullptr )
+                nvgDeleteGLES2( mNVGCtx );
+
         /*if ( mNVGCtx != nullptr )
-                nvgDeleteGLES2( mNVGCtx );*/
+                sNVGDeleteList.push_back( mNVGCtx );*/
+
+        mNVGContextLock.unlock();
+
+        sNVGCreateLock.unlock();
 }
 
 void GLES20Renderer::releaseNative()
@@ -167,11 +212,21 @@ void GLES20Renderer::releaseNative()
 
 void GLES20Renderer::initGLES( int width, int height, jfloat clearRed, jfloat clearGreen, jfloat clearBlue )
 {
+        sNVGCreateLock.lock();
+
+        mNVGContextLock.lock();
 
         __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "initGLES()" );
 
         //TODO - see which flags are best to use
-        mNVGCtx = nvgCreateGLES2( NVG_STENCIL_STROKES | NVG_DEBUG );
+        if ( mNVGCtx != nullptr )
+                nvgDeleteGLES2( mNVGCtx );
+
+        /*if ( mNVGCtx != nullptr )
+                sNVGDeleteList.push_back( mNVGCtx );*/
+
+
+        mNVGCtx = nvgCreateGLES2( 0/*NVG_STENCIL_STROKES | NVG_DEBUG*/ );
 
 
         mWidth = width;
@@ -181,27 +236,38 @@ void GLES20Renderer::initGLES( int width, int height, jfloat clearRed, jfloat cl
         //glClearColor( clearRed, clearGreen, clearBlue, 0 );
         glClearColor( 0, 0, 0, 0 );
         glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
+
+        mNVGContextLock.unlock();
+
+        sNVGCreateLock.unlock();
 }
 
-void GLES20Renderer::releaseGLES()
-{
-        //TODO - remove this, this is done in destructor
-        /*__android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "releaseGLES()" );
-        nvgDeleteGLES2( mNVGCtx );*/
-
-        //nvgDeleteGLES2( mNVGCtx );
-}
 
 void GLES20Renderer::render()
 {
+        //THis needs tobe outside of lock
+        /*if ( mScheduledForDelete )
+        {
+                delete this;
+                return;
+        }*/
+
+        mNVGContextLock.lock();
+
         Buffer * buffer;
         int samplesCount;
+
+
 
 
         buffer = mAudioBufferManager->getSamples();
 
         if ( buffer == nullptr )
+        {
+                mNVGContextLock.unlock();
                 return;
+        }
+
 
         samplesCount    = buffer->len;
         mSamplesCount   = samplesCount;
@@ -214,7 +280,8 @@ void GLES20Renderer::render()
 
         glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
 
-        nvgBeginFrame( mNVGCtx, 200, 200, 1 );
+        //TODO - see if you need different pixel ratio for HIDP devices
+        nvgBeginFrame( mNVGCtx, mWidth, mHeight, 1 );
 
         drawWaveform( mNVGCtx );
 
@@ -232,10 +299,13 @@ void GLES20Renderer::render()
 
 
         nvgEndFrame( mNVGCtx );
+
+        mNVGContextLock.unlock();
 }
 
 void GLES20Renderer::reset()
 {
+        //TODO - remove this
         /*mAudioBufferManager->reset();
         glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );*/
 
@@ -256,7 +326,7 @@ void GLES20Renderer::drawWaveform(NVGcontext * nvgContext )
 
         //TODO - stroke parameters somewhero elso, they also need to be moved from CurveAnimator::DrawCurrentCurve or something
         nvgStrokeColor( nvgContext, nvgRGBA( 54, 194, 249, 255 ) );
-        nvgStrokeWidth( nvgContext, mStrokeWidth );
+        nvgStrokeWidth( nvgContext, 2 );
         nvgStroke( nvgContext );
 }
 

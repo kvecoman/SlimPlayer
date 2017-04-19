@@ -40,6 +40,9 @@ public class DirectPlayerAccess
         {
             oldRenderer = ( VisualizerGLRenderer ) receiver;
 
+            if ( renderer == oldRenderer )
+                return;
+
             oldRenderer.setEnabled( false );
             //oldRenderer.reset();
         }

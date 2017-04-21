@@ -1111,7 +1111,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
         MediaDescriptionCompat  mediaDescription;
         MediaSource             mediaSource;
 
-        //mVisualizerGLRenderer.setEnabled( false );
+        //mVisualizerGLRenderer.setAcceptSamples( false );
 
         //If something is wrong then do nothing
         if ( mState == PlaybackStateCompat.STATE_NONE || position < 0 || position >= mCount || mQueue == null )

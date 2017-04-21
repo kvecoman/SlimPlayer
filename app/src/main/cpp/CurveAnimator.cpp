@@ -6,6 +6,8 @@
 
 CurveAnimator::CurveAnimator( int pointCount, int frameCount, int strokeWidth )
 {
+    __android_log_print( ANDROID_LOG_VERBOSE, "CurveAnimator", "CurveAnimator() - constructor" );
+
     mPointsCount    = pointCount;
     mFramesCount    = frameCount;
     mCurrentPoints  = new Point[ pointCount ];
@@ -25,6 +27,8 @@ CurveAnimator::~CurveAnimator()
 
 void CurveAnimator::copyPoints( Point * src, Point * dest, int count )
 {
+    //__android_log_print( ANDROID_LOG_VERBOSE, "CurveAnimator", "copyPoints()" );
+
     if ( src == nullptr || dest == nullptr )
         return;
 
@@ -51,6 +55,8 @@ void CurveAnimator::addPoints( Point points[] )
         __android_log_print( ANDROID_LOG_ERROR, "CurveAnimator", "Number of added points don't match expectations");
         return;
     }*/
+
+    //__android_log_print( ANDROID_LOG_VERBOSE, "CurveAnimator", "addPoints()" );
 
     if ( points == nullptr )
         return;
@@ -79,6 +85,8 @@ void CurveAnimator::addPoints( Point points[] )
 
 void CurveAnimator::calculateNextFrame()
 {
+    //__android_log_print( ANDROID_LOG_VERBOSE, "CurveAnimator", "calculateNextFrame()" );
+
     if ( mDone )
         return;
 
@@ -129,6 +137,8 @@ void CurveAnimator::calculateNextFrame()
 //Calculates value effect for current state x ( x is between 0 ( 0% ) and 1 ( 100% ) )
 float CurveAnimator::percentageFromCubicBezier( float x, Point bezierPoints[] )
 {
+    //__android_log_print( ANDROID_LOG_VERBOSE, "CurveAnimator", "percentageFromCubicBezier()" );
+
     float result;
 
     result =    ( float )
@@ -145,6 +155,7 @@ float CurveAnimator::percentageFromCubicBezier( float x, Point bezierPoints[] )
 
 void CurveAnimator::drawCurrentFrameCurve( NVGcontext * nvgContext )
 {
+    //__android_log_print( ANDROID_LOG_VERBOSE, "CurveAnimator", "drawCurrentFrameCurve()" );
 
     Point start;
     Point ctrl1;

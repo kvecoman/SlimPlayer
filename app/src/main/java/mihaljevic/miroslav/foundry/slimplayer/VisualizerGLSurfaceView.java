@@ -1,7 +1,6 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.Context;
-import android.graphics.Canvas;
 import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
@@ -10,10 +9,12 @@ import android.util.AttributeSet;
  * Created by miroslav on 16.04.17..
  */
 
-
+//TODO - continue here - things are mostly okay except forr phantom calls on totally crazy instance numbers for getSamples()... Now handle rotation and processor consumption
 
 public class VisualizerGLSurfaceView extends GLSurfaceView
 {
+    private boolean mEnabled = false;
+
     private VisualizerGLRenderer mRenderer;
 
     public VisualizerGLSurfaceView( Context context )
@@ -40,13 +41,13 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
         setZOrderOnTop( true );
 
         setRenderer( mRenderer );
-        setRenderMode( GLSurfaceView.RENDERMODE_WHEN_DIRTY );
+        setRenderMode( GLSurfaceView.RENDERMODE_CONTINUOUSLY );
         onPause();
     }
 
 
 
-    @Override
+    /*@Override
     protected void onSizeChanged( int w, int h, int oldw, int oldh )
     {
         super.onSizeChanged( w, h, oldw, oldh );
@@ -55,7 +56,7 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
             return;
 
         surfaceChanged( getHolder(), PixelFormat.TRANSLUCENT, w, h );
-    }
+    }*/
 
 
 
@@ -64,43 +65,35 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
         return mRenderer;
     }
 
-    @Override
-    public void onResume()
+    public void enable()
     {
-        super.onResume();
-
-        mRenderer.setEnabled( true );
+        mEnabled = true;
+        onResume();
+        mRenderer.enable();
     }
 
-    @Override
-    public void onPause()
+    public void disable()
     {
-        super.onPause();
+        mEnabled = false;
+        mRenderer.disable();
+        onPause();
 
-        mRenderer.setEnabled( false );
     }
 
     public void release()
     {
-        /*mRenderer.scheduleRelease();
-        surfaceChanged( getHolder(), PixelFormat.TRANSLUCENT, 0, 0 );*/
+        mEnabled = false;
+        mRenderer.disable();
 
         onResume();
-        //setRenderMode( RENDERMODE_WHEN_DIRTY );
-        //mRenderer.setEnabled( false );
-        //mRenderer.release();
-        //requestRender();
         queueEvent( new Runnable()
         {
             @Override
             public void run()
             {
-                mRenderer.release(); //TODO - continue here - not working
+                mRenderer.release();
             }
         } );
-        //onPause();
-
-
 
 
     }

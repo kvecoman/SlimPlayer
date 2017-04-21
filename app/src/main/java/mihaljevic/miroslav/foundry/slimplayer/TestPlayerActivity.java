@@ -1,8 +1,5 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
-import android.app.ActivityManager;
-import android.content.Context;
-import android.content.pm.ConfigurationInfo;
 import android.net.Uri;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
@@ -211,7 +208,7 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
             button.setText( "Pause" );
             ( ( CustomMediaCodecAudioRenderer ) mAudioRenderer ).setBufferProcessing( true );
             mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_CONTINUOUSLY);
-            mVisualizerGLRenderer.setEnabled( true );
+            mVisualizerGLRenderer.enable();
 
         }
         else
@@ -219,7 +216,7 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
             button.setText( "Play" );
             ( ( CustomMediaCodecAudioRenderer ) mAudioRenderer ).setBufferProcessing( false );
             mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_WHEN_DIRTY );
-            mVisualizerGLRenderer.setEnabled( false );
+            mVisualizerGLRenderer.disable();
 
         }
 

@@ -143,7 +143,6 @@ public class CustomMediaCodecAudioRenderer extends MediaCodecAudioRenderer
 
 
 
-        //TODO - enable/disable callback method for this
 
         //Make sure we have fresh buffer and also the one that won't be skipped
         if ( mEnabled && mOldBufferIndex != bufferIndex && !shouldSkip && mBufferReceiver != null )

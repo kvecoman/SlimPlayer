@@ -62,10 +62,7 @@ public class GeneralAppInteractionTest
         ViewPager   pager;
         int         pageCount;
 
-        //onView( withId( R.id.pager ) ).check( ViewAssertions.matches( Matchers.withPageCount( Const.SCREENS.length ) )  );
 
-        //TODO - continue here - test if all screens are loaded, and then do interaction test to get to genre "Oldies"
-        //TODO - as for testing number of screen use TargetContext and try casting it to MainActivity and then do magic
 
         pager       = ( ViewPager ) mActivityRule.getActivity().findViewById( R.id.pager );
         pageCount   = pager.getAdapter().getCount();

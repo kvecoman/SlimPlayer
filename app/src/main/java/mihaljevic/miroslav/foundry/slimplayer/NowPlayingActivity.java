@@ -611,7 +611,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         //Since this might be the first signal of song changing, we stop the active visualizer renderer now
         directPlayerAccess = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
 
-        directPlayerAccess.stopActiveVisualizerRenderer();
+        directPlayerAccess.stopActiveVisualizer();
     }
 
     @Override

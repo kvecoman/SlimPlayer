@@ -33,11 +33,8 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
 
     private static final int DEFAULT_STROKE_WIDTH = 10;
 
-    //private static int sInstanceCount = 0;
 
 
-
-    //private int mInstance;
 
     //GL ES surface width and height
     private int mWidth;
@@ -45,13 +42,10 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
 
     private boolean mEnabled = false;
 
-    private boolean mCleared = false;
-
     private long mNativeInstancePtr = 0;
 
     private boolean mReleased = false;
 
-    //private boolean mScheduledRelease = false;
 
 
 
@@ -66,19 +60,13 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
 
     private native long initNative( int curvePointsCount, int transitionFrames, int targetSamplesCount, int targetTimeSpan, int strokeWidth );
 
-    private native void releaseNative( long objPtr );
+    private native void deleteNativeInstance( long objPtr );
 
-    private native void initGLES( long objPtr, int width, int height, float red, float green, float blue );
-
-    //private native void releaseGLES( long objPtr );
+    private native void initGLES( long objPtr, int width, int height );
 
     private native void render( long objPtr );
 
     public native void processBuffer( long objPtr, ByteBuffer samplesBuffer, int samplesCount, long presentationTimeUs, int pcmFrameSize, int sampleRate, long currentTimeUs );
-
-    private native void reset( long objPtr );
-
-    public native void deleteNVGContexts();
 
     //**************************************************************************************************************************
 
@@ -89,9 +77,6 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
 
     public VisualizerGLRenderer()
     {
-        /*mInstance = sInstanceCount;
-        sInstanceCount++;*/
-
         mNativeInstancePtr = initNative( CURVE_POINTS, TRANSITION_FRAMES, DEFAULT_TARGET_SAMPLES_TO_SHOW, DEFAULT_TARGET_TIME_SPAN, DEFAULT_STROKE_WIDTH );
     }
 
@@ -105,28 +90,7 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
      */
     public VisualizerGLRenderer( int curvePoints, int transitionFrames, int targetSamplesToShow, int targetTimeSpan, int strokeWidth )
     {
-        //mInstance = sInstanceCount;
-        //sInstanceCount++;
-
         mNativeInstancePtr = initNative( curvePoints, transitionFrames, targetSamplesToShow, targetTimeSpan, strokeWidth );
-    }
-
-    /*public void scheduleRelease()
-    {
-        mScheduledRelease = true;
-    }*/
-
-    /**
-     * It seems it needs to be called on GL thread
-     */
-    public void release()
-    {
-        //releaseGLES( mNativeInstancePtr );
-        releaseNative( mNativeInstancePtr );
-
-        mReleased = true;
-
-        //sInstanceCount--;
     }
 
     @Override
@@ -139,62 +103,49 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
     @Override
     public void onSurfaceChanged( GL10 gl, int width, int height )
     {
-        /*if ( mScheduledRelease && !mReleased )
-        {
-            release();
-            return;
-        }*/
-
-        /*Float red;
-        Float green;
-        Float blue;
-
-        red     = 0f;
-        green   = 0f;
-        blue    = 0f;*/
 
         mWidth  = width;
         mHeight = height;
 
-        //Utils.calculateColorForGL( , red, green, blue );
-
-        //TODO - remove colors
-        initGLES( mNativeInstancePtr, width, height, 0.785f, 0.985f, 0.985f );
+        initGLES( mNativeInstancePtr, width, height );
     }
 
     @Override
     public void onDrawFrame( GL10 gl )
     {
 
-        if ( mCleared )
-            return;
-
         if ( mEnabled )
             render( mNativeInstancePtr );
-        else
-        {
-            GLES20.glClear( GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT );
-            mCleared = true;
-        }
 
         GLES20.glClearColor(0, 0, 0, 0);
     }
 
-    public boolean isEnabled()
+    /**
+     * It seems it needs to be called on GL thread
+     */
+    public void release()
     {
-        return mEnabled;
+
+        deleteNativeInstance( mNativeInstancePtr );
+
+        mReleased = true;
+
     }
 
-    public void setEnabled( boolean enabled )
+
+    /*public void setAcceptSamples( boolean accept )
     {
-        this.mEnabled = enabled;
-        mCleared = false;
+        this.mEnabled = accept;
+    }*/
+
+    public void enable()
+    {
+        mEnabled = true;
     }
 
-    //TODO - remove this whole reset thing
-    public void reset()
+    public void disable()
     {
-        reset( mNativeInstancePtr );
+        mEnabled = false;
     }
 
     @Override

@@ -14,6 +14,8 @@ public class DirectPlayerAccess
     ExoPlayer                       exoPlayer;
     //VisualizerGLRenderer            visualizerGLRenderer;
 
+    VisualizerGLSurfaceView         activeVisualizer;
+
     public DirectPlayerAccess( CustomMediaCodecAudioRenderer audioRenderer, ExoPlayer exoPlayer/*, VisualizerGLRenderer visualizerGLRenderer*/ )
     {
         this.audioRenderer          = audioRenderer;
@@ -26,48 +28,21 @@ public class DirectPlayerAccess
         return audioRenderer != null && exoPlayer != null/* && visualizerGLRenderer != null*/;
     }
 
-    public void switchVisualizationRenderer( VisualizerGLRenderer renderer )
+    public void setActiveVisualizer( VisualizerGLSurfaceView visualizer )
     {
-        CustomMediaCodecAudioRenderer.BufferReceiver    receiver;
-        VisualizerGLRenderer                            oldRenderer;
+        stopActiveVisualizer();
 
-        if ( audioRenderer == null )
-            return;
+        activeVisualizer = visualizer;
 
-        receiver = audioRenderer.getBufferReceiver();
-
-        if ( receiver instanceof VisualizerGLRenderer )
-        {
-            oldRenderer = ( VisualizerGLRenderer ) receiver;
-
-            if ( renderer == oldRenderer )
-                return;
-
-            oldRenderer.setEnabled( false );
-            //oldRenderer.reset();
-        }
-
-        audioRenderer.setBufferReceiver( renderer );
+        audioRenderer.setBufferReceiver( visualizer.getRenderer() );
     }
 
-    public void stopActiveVisualizerRenderer()
+    public void stopActiveVisualizer()
     {
-        CustomMediaCodecAudioRenderer.BufferReceiver    receiver;
-        VisualizerGLRenderer                            renderer;
-
-        if ( audioRenderer == null )
-            return;
-
-        receiver = audioRenderer.getBufferReceiver();
-
-        if ( receiver instanceof VisualizerGLRenderer )
+        if ( activeVisualizer != null )
         {
-            renderer = ( VisualizerGLRenderer ) receiver;
-
-            renderer.setEnabled( false );
+            activeVisualizer.disable();
         }
-
-        audioRenderer.setBufferReceiver( null );
-
     }
+
 }

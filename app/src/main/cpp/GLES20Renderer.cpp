@@ -4,23 +4,6 @@
 
 #include "GLES20Renderer.h"
 
-//static std::vector<GLES20RendererData> sClassData;
-
-//static struct NVGcontext * mNVGCtx;
-
-/*static jint sWidth;
-static jint sHeight;
-
-static jint sSamplesCount;
-
-static jint sCurvePointsCount;
-static Point * sCurvePoints;
-static Point * sWaveformPoints;
-
-static CurveAnimator * sCurveAnimator;
-
-static AudioBufferManager * sAudioBufferManager;*/
-
 
 
 JNIEXPORT jlong JNICALL
@@ -37,43 +20,29 @@ JNIEXPORT jlong JNICALL
 }
 
 JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseNative
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_deleteNativeInstance
         ( JNIEnv * env, jobject thiz, jlong objPtr )
 {
         GLES20Renderer * instance;
 
         instance = (GLES20Renderer*)objPtr;
-
-        instance->releaseNative();
-
-        //instance->mScheduledForDelete = true;
 
         delete instance;
 }
 
 JNIEXPORT void JNICALL
 Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initGLES
-        ( JNIEnv * env, jobject thiz, jlong objPtr, jint width, jint height, jfloat clearRed, jfloat clearGreen, jfloat clearBlue  )
+        ( JNIEnv * env, jobject thiz, jlong objPtr, jint width, jint height )
 {
         GLES20Renderer * instance;
 
         instance = (GLES20Renderer*)objPtr;
 
-        instance->initGLES( width, height, clearRed,  clearGreen, clearBlue );
+        instance->initGLES( width, height );
 
 }
 
-/*JNIEXPORT void JNICALL
-Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseGLES
-        ( JNIEnv * env, jobject thiz, jlong objPtr )
-{
-        GLES20Renderer * instance;
 
-        instance = (GLES20Renderer*)objPtr;
-
-        instance->releaseGLES();
-
-}*/
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBuffer
@@ -95,7 +64,6 @@ JNIEXPORT void JNICALL
 
         instance->mAudioBufferManager->processBuffer( buffer, presentationTimeUs, pcmFrameSize, sampleRate, currentTimeUs );
 
-
 }
 
 
@@ -111,48 +79,7 @@ JNIEXPORT void JNICALL
 
         instance->render();
 
-
-
 }
-
-
-
-JNIEXPORT void JNICALL
-Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_reset
-        ( JNIEnv * env, jobject thiz, jlong objPtr )
-{
-        GLES20Renderer * instance;
-
-        instance = (GLES20Renderer*)objPtr;
-
-        instance->reset();
-}
-
-
-JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_deleteNVGContexts
-        ( JNIEnv * env, jobject thiz )
-{
-        sNVGCreateLock.lock();
-
-        for (std::list<NVGcontext*>::const_iterator iterator = sNVGDeleteList.begin(), end = sNVGDeleteList.end(); iterator != end; ++iterator)
-        {
-                if ( *iterator != nullptr )
-                        nvgDeleteGLES2( *iterator );
-
-                sNVGDeleteList.remove( *iterator );
-        }
-
-        sNVGCreateLock.unlock();
-}
-
-
-
-
-
-
-
-
 
 
 
@@ -160,7 +87,9 @@ JNIEXPORT void JNICALL
 
 GLES20Renderer::GLES20Renderer( jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan, jint strokeWidth )
 {
-        __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "GLES20Renderer() - constructor" );
+        mInstance               = sInstanceNumber++;
+
+        __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "GLES20Renderer() - constructor for instance %i", mInstance );
 
         mCurvePointsCount       = curvePointsCount;
 
@@ -170,101 +99,88 @@ GLES20Renderer::GLES20Renderer( jint curvePointsCount, jint transitionFrames, ji
 
         mWaveformPoints         = new Point[ targetSamplesCount ];
 
-        mAudioBufferManager     = new AudioBufferManager( targetSamplesCount, targetTimeSpan );
+        mAudioBufferManager     = new AudioBufferManager( targetSamplesCount, targetTimeSpan, mInstance );
 
         mStrokeWidth            = strokeWidth;
+
+
 
 }
 
 GLES20Renderer::~GLES20Renderer()
 {
-        sNVGCreateLock.lock();
+        //sNVGCreateLock.lock();
+        //mNVGContextLock.lock();
 
-        mNVGContextLock.lock();
+        __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "~GLES20Renderer() - destructor for instance %i", mInstance );
 
-        __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "~GLES20Renderer() - destructor" );
+        mReleased = true;
 
         delete[] mCurvePoints;
         delete[] mWaveformPoints;
 
         delete mCurveAnimator;
-
         delete mAudioBufferManager;
 
-
-
-        //TODO - continue here - make this work, the new method of deleting later doesn't work ( try makking minialist use of nanoVG and see if you can delete it then in demo activity)
         if ( mNVGCtx != nullptr )
                 nvgDeleteGLES2( mNVGCtx );
 
-        /*if ( mNVGCtx != nullptr )
-                sNVGDeleteList.push_back( mNVGCtx );*/
 
-        mNVGContextLock.unlock();
-
-        sNVGCreateLock.unlock();
+        //mNVGContextLock.unlock();
+        //sNVGCreateLock.unlock();
 }
 
-void GLES20Renderer::releaseNative()
+void GLES20Renderer::initGLES( int width, int height )
 {
+        //sNVGCreateLock.lock();
+        //mNVGContextLock.lock();
 
-}
 
-void GLES20Renderer::initGLES( int width, int height, jfloat clearRed, jfloat clearGreen, jfloat clearBlue )
-{
-        sNVGCreateLock.lock();
+        __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "initGLES() for instance %i", mInstance );
+        __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "width: %i, height: %i", width, height );
 
-        mNVGContextLock.lock();
 
-        __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "initGLES()" );
-
-        //TODO - see which flags are best to use
         if ( mNVGCtx != nullptr )
                 nvgDeleteGLES2( mNVGCtx );
 
-        /*if ( mNVGCtx != nullptr )
-                sNVGDeleteList.push_back( mNVGCtx );*/
-
-
-        mNVGCtx = nvgCreateGLES2( 0/*NVG_STENCIL_STROKES | NVG_DEBUG*/ );
-
+        mNVGCtx = nvgCreateGLES2( NVG_DEBUG );
 
         mWidth = width;
         mHeight = height;
 
         glColorMask( 1, 1, 1, 1 );
-        //glClearColor( clearRed, clearGreen, clearBlue, 0 );
         glClearColor( 0, 0, 0, 0 );
         glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
 
-        mNVGContextLock.unlock();
 
-        sNVGCreateLock.unlock();
+        //mNVGContextLock.unlock();
+        //sNVGCreateLock.unlock();
 }
+
 
 
 void GLES20Renderer::render()
 {
-        //THis needs tobe outside of lock
-        /*if ( mScheduledForDelete )
-        {
-                delete this;
-                return;
-        }*/
 
-        mNVGContextLock.lock();
+        __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "render() for instance %i", mInstance );
+
+        //mNVGContextLock.lock();
 
         Buffer * buffer;
         int samplesCount;
 
-
+        if ( mNVGCtx == nullptr || mReleased )
+        {
+            //mNVGContextLock.unlock();
+            return;
+        }
 
 
         buffer = mAudioBufferManager->getSamples();
 
         if ( buffer == nullptr )
         {
-                mNVGContextLock.unlock();
+                //mNVGContextLock.unlock();
                 return;
         }
 
@@ -274,8 +190,6 @@ void GLES20Renderer::render()
 
         //Here the samples are absoluted
         absoluteSamples( buffer );
-
-
         calculateWaveformPoints(  buffer );
 
         glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
@@ -294,26 +208,21 @@ void GLES20Renderer::render()
 
 
         mCurveAnimator->calculateNextFrame();
-
         mCurveAnimator->drawCurrentFrameCurve( mNVGCtx );
 
 
         nvgEndFrame( mNVGCtx );
 
-        mNVGContextLock.unlock();
+        //mNVGContextLock.unlock();
 }
 
-void GLES20Renderer::reset()
-{
-        //TODO - remove this
-        /*mAudioBufferManager->reset();
-        glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );*/
 
-}
 
 
 void GLES20Renderer::drawWaveform(NVGcontext * nvgContext )
 {
+        //__android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "drawWaveform() for instance %i", mInstance );
+
         nvgBeginPath( nvgContext );
 
         nvgMoveTo( nvgContext, mWaveformPoints[0].x, mWaveformPoints[0].y );
@@ -333,6 +242,8 @@ void GLES20Renderer::drawWaveform(NVGcontext * nvgContext )
 
 void GLES20Renderer::calculateWaveformPoints( Buffer * buffer )
 {
+        //__android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "calculateWaveformPoints() for instance %i", mInstance );
+
         int samplesCount;
 
         jfloat x;
@@ -354,7 +265,6 @@ void GLES20Renderer::calculateWaveformPoints( Buffer * buffer )
         for ( jint i = 0; i < samplesCount; i++ )
         {
                 x = rect.getWitdth() * i / ( samplesCount - 1 );
-                //y = rect.getHeight() / 2 + ( ( jbyte ) ( buffer->buffer[ i ] + 128 ) ) * ( rect.getHeight() / 2 ) / 128;
                 y = rect.getHeight() - ( ( jint )( scaling * buffer->buffer[i] ) );
 
                 point = &mWaveformPoints[i];
@@ -368,6 +278,8 @@ void GLES20Renderer::calculateWaveformPoints( Buffer * buffer )
 
 void GLES20Renderer::calculateCurvePoints( Buffer * buffer )
 {
+        //__android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "calculateCurvePoints() for instance %i", mInstance );
+
         jint        pointDistance;
         jfloat      scaledHeight;
         jfloat      scaling;
@@ -428,6 +340,7 @@ void GLES20Renderer::calculateCurvePoints( Buffer * buffer )
 jbyte GLES20Renderer::findMaxByte( Buffer * buffer, int start, int end )
 {
         //__android_log_print( ANDROID_LOG_VERBOSE, "VisualizerView", "findMaxBytes()");
+        //__android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "findMaxBytes() for instance %i", mInstance );
 
 
         jbyte max = -128;
@@ -446,6 +359,8 @@ jbyte GLES20Renderer::findMaxByte( Buffer * buffer, int start, int end )
 void GLES20Renderer::absoluteSamples( Buffer * buffer )
 {
         //__android_log_print( ANDROID_LOG_VERBOSE, "VisualizerView", "absoluteSamples()");
+
+        //__android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "absoluteSamples() for instance %i", mInstance );
 
         jbyte   absolutedSample;
         int     count;

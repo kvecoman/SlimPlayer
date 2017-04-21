@@ -33,16 +33,12 @@ JNIEXPORT jlong JNICALL
         ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan, jint strokeWidth );
 
 JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseNative
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_deleteNativeInstance
         ( JNIEnv * env, jobject thiz, jlong objPtr  );
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initGLES
-        ( JNIEnv * env, jobject thiz, jlong objPtr, int width, int height, jfloat clearRed, jfloat clearGreen, jfloat clearBlue );
-
-/*JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseGLES
-        ( JNIEnv * env, jobject thiz, jlong objPtr );*/
+        ( JNIEnv * env, jobject thiz, jlong objPtr, int width, int height );
 
 
 JNIEXPORT void JNICALL
@@ -54,13 +50,6 @@ JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_render
         ( JNIEnv * env, jobject thiz, jlong objPtr );
 
-JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_reset
-        ( JNIEnv * env, jobject thiz, jlong objPtr );
-
-JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_deleteNVGContexts
-        ( JNIEnv * env, jobject thiz );
 
 
 
@@ -71,15 +60,13 @@ JNIEXPORT void JNICALL
  *
  */
 
-static std::mutex sNVGCreateLock;
+//static std::mutex sNVGCreateLock;
 
-static std::list<NVGcontext*> sNVGDeleteList;
-
+static int sInstanceNumber = 0;
 
 class GLES20Renderer
 {
 public:
-    //static struct NVGcontext * mNVGCtx;
 
 
 
@@ -100,9 +87,14 @@ public:
 
     jint mStrokeWidth;
 
-    std::mutex mNVGContextLock;
+    //std::mutex mNVGContextLock;
 
-    //bool mScheduledForDelete = false;
+    int mInstance = -1;
+
+    bool mReleased = false;
+
+    //bool mEnabled = false;
+
 
 
 
@@ -111,17 +103,9 @@ public:
 
     ~GLES20Renderer();
 
-    void releaseNative();
-
-    void initGLES( int width, int height, jfloat clearRed, jfloat clearGreen, jfloat clearBlue );
-
-    //void releaseGLES();
+    void initGLES( int width, int height );
 
     void render();
-
-    void reset();
-
-
 
     void drawWaveform(NVGcontext * nvgContext );
 

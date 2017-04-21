@@ -194,8 +194,6 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
             return;
 
 
-
-
         //Now that we have valid width and height values, display album art
         displayArtAsync();
 
@@ -315,12 +313,8 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
 
         registerForPlayPause();
-        mGLSurfaceView.onResume();
-        mDirectPlayerAccess.switchVisualizationRenderer( mGLSurfaceView.getRenderer() );
-        mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_CONTINUOUSLY );
-
-        //Cleanup function that is used to delete unused NVGcontexts that couldn't be deleted before
-        //mGLSurfaceView.getRenderer().deleteNVGContexts();
+        mGLSurfaceView.enable();
+        mDirectPlayerAccess.setActiveVisualizer( mGLSurfaceView );
 
     }
 

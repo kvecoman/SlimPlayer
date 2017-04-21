@@ -53,28 +53,26 @@ private:
     int mTargetTimeSpan;
 
     std::list<BufferWrap*> mBufferWrapList;
-    //SynchronizedLinkedList<BufferWrap> mBufferWrapList;
     std::list<Buffer*>     mFreeBufferList;
-    //SynchronizedLinkedList<Buffer> mFreeBufferList;
+
 
 
     Buffer * mResultBuffer;
 
     jlong mLastCurrentTimeUs;
 
-    std::mutex mDeleteLock; //Used to make sure reset() and some other delete operations don't go at same time
+    std::mutex mResetLock; //Used to make sure reset() and some other delete operations don't go at same time
     std::mutex mDestructorLock;
 
-    //BufferWrap * mCurrentActiveBuffer;
+    bool mReleased = false; //Indicates whether destructor has been called
 
-    //std::mutex mProviderLock;
-    //std::mutex mConsumerLock;
-    //std::mutex mLock;
+    int mInstance = -1;
+
 
 
 public:
 
-    AudioBufferManager( int targetSamples, int targetTimeSpan );
+    AudioBufferManager( int targetSamples, int targetTimeSpan, int instance );
 
     ~AudioBufferManager();
 

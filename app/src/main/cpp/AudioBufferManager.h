@@ -68,6 +68,8 @@ private:
 
     int mInstance = -1;
 
+    bool mEnabled = false;
+
 
 
 public:
@@ -87,6 +89,10 @@ public:
     Buffer * getSamples();
 
     void reset();
+
+    void enable();
+
+    void disable();
 
 };
 

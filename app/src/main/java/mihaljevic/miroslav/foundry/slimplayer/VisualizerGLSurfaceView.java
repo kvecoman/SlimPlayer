@@ -9,13 +9,15 @@ import android.util.AttributeSet;
  * Created by miroslav on 16.04.17..
  */
 
-//TODO - continue here - things are mostly okay except forr phantom calls on totally crazy instance numbers for getSamples()... Now handle rotation and processor consumption
 
 public class VisualizerGLSurfaceView extends GLSurfaceView
 {
     private boolean mEnabled = false;
 
     private VisualizerGLRenderer mRenderer;
+
+    private int mWidth;
+    private int mHeight;
 
     public VisualizerGLSurfaceView( Context context )
     {
@@ -47,7 +49,7 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
 
 
 
-    /*@Override
+    @Override
     protected void onSizeChanged( int w, int h, int oldw, int oldh )
     {
         super.onSizeChanged( w, h, oldw, oldh );
@@ -55,8 +57,11 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
         if ( w <= 0 || h <= 0 )
             return;
 
-        surfaceChanged( getHolder(), PixelFormat.TRANSLUCENT, w, h );
-    }*/
+        mWidth = w;
+        mHeight = h;
+
+        //surfaceChanged( getHolder(), PixelFormat.TRANSLUCENT, w, h );
+    }
 
 
 
@@ -70,6 +75,8 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
         mEnabled = true;
         onResume();
         mRenderer.enable();
+        //TODO - this probably needs to be turned on
+        surfaceChanged( getHolder(), PixelFormat.TRANSLUCENT, mWidth, mHeight );
     }
 
     public void disable()
@@ -82,19 +89,7 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
 
     public void release()
     {
-        mEnabled = false;
-        mRenderer.disable();
-
-        onResume();
-        queueEvent( new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                mRenderer.release();
-            }
-        } );
-
-
+        disable();
+        mRenderer.release();
     }
 }

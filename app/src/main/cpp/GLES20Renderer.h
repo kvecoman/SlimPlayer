@@ -40,6 +40,9 @@ JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initGLES
         ( JNIEnv * env, jobject thiz, jlong objPtr, int width, int height );
 
+JNIEXPORT void JNICALL
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseGLES ( JNIEnv * env, jobject thiz, jlong objPtr );
+
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBuffer
@@ -48,6 +51,14 @@ JNIEXPORT void JNICALL
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_render
+        ( JNIEnv * env, jobject thiz, jlong objPtr );
+
+JNIEXPORT void JNICALL
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_enable
+        ( JNIEnv * env, jobject thiz, jlong objPtr );
+
+JNIEXPORT void JNICALL
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_disable
         ( JNIEnv * env, jobject thiz, jlong objPtr );
 
 
@@ -91,9 +102,15 @@ public:
 
     int mInstance = -1;
 
-    bool mReleased = false;
+    bool mDeleted = false;
 
-    //bool mEnabled = false;
+    bool mGLESReleased = true;
+
+    bool mEnabled = false;
+
+    bool mConstructed = false;
+
+    std::mutex mConstructorLock;
 
 
 
@@ -104,6 +121,8 @@ public:
     ~GLES20Renderer();
 
     void initGLES( int width, int height );
+
+    void releaseGLES();
 
     void render();
 
@@ -116,6 +135,10 @@ public:
     jbyte findMaxByte( Buffer * buffer, int start, int end );
 
     void absoluteSamples( Buffer * buffer );
+
+    void enable();
+
+    void disable();
 };
 
 

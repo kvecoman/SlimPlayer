@@ -212,7 +212,7 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
     public void onStop()
     {
         super.onStop();
-        Log.v(TAG,"onStop()");
+        Log.v( TAG, "onStop() called for fragment with tag: " + mTag );
 
 
         if ( mMediaController != null )
@@ -221,7 +221,13 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
         if ( mMediaBrowser != null )
             mMediaBrowser.disconnect();
 
-        releaseVisualizer();
+
+        releaseGLESContext();
+
+        if ( mGLSurfaceView != null )
+            mGLSurfaceView.disable();
+
+
 
         /*if ( mGLSurfaceView != null )
             mGLSurfaceView.onPause();*/
@@ -237,7 +243,7 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
         Log.v( TAG, "onDestroy() called for fragment with tag: " + mTag );
 
 
-        //releaseVisualizer();
+        releaseVisualizer();
 
     }
 
@@ -318,11 +324,29 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
     }
 
+    private void releaseGLESContext()
+    {
+        if ( mGLSurfaceView != null )
+        {
+            mGLSurfaceView.queueEvent( new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    mGLSurfaceView.getRenderer().releaseGLES();
+                }
+            } );
+        }
+
+    }
+
     private void releaseVisualizer()
     {
         if ( mGLSurfaceView != null )
             mGLSurfaceView.release();
     }
+
+
 
     private void loadSongInfo()
     {

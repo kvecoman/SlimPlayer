@@ -66,6 +66,8 @@ BufferWrap::~BufferWrap()
 
 AudioBufferManager::AudioBufferManager( int targetSamples, int targetTimeSpan, int instance )
 {
+    mInstance = instance;
+
     __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "AudioBufferManager() - constructor for instance %i", mInstance );
 
     mTargetSamples = targetSamples;
@@ -73,18 +75,19 @@ AudioBufferManager::AudioBufferManager( int targetSamples, int targetTimeSpan, i
 
     mResultBuffer = new Buffer( targetSamples );
 
-    mInstance = instance;
+
 }
 
 
 AudioBufferManager::~AudioBufferManager()
 {
-    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "~AudioBufferManager() - destructor for instance %i", mInstance );
+
 
     mReleased = true;
 
     mResetLock.lock();
     mDestructorLock.lock();
+    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "~AudioBufferManager() - destructor for instance %i", mInstance );
 
     delete  mResultBuffer;
 
@@ -112,9 +115,13 @@ AudioBufferManager::~AudioBufferManager()
 void AudioBufferManager::processBuffer( Buffer * buffer, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs )
 {
 
-    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "processBuffer() for instance %i", mInstance );
+
+
+    if ( !mEnabled )
+        return;
 
     mDestructorLock.lock();
+    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "processBuffer() for instance %i", mInstance );
 
     if ( mReleased )
     {
@@ -286,15 +293,17 @@ void AudioBufferManager::deleteStaleBufferWraps()
  */
 Buffer * AudioBufferManager::getSamples()
 {
-    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "getSamples() for instance %i", mInstance );
+
+
+    if ( !mEnabled )
+        return nullptr;
 
 
 
     mDestructorLock.lock();
-    //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "destructor lock is locked for instance %i", mInstance );
-    mResetLock.lock(); //TODO - continue here - it seems some kind of lock up is here, see whats with that ( maybe only leave destructor lock here, delete lock should be named reset lock )
-    //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "reset lock is locked for instance %i", mInstance );
-    //std::lock( mDestructorLock, mResetLock );
+    mResetLock.lock();
+    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "getSamples() for instance %i", mInstance );
+
 
     if ( mReleased )
     {
@@ -359,9 +368,10 @@ Buffer * AudioBufferManager::getSamples()
 
 void AudioBufferManager::reset()
 {
-    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "reset()  for instance %i", mInstance );
+
 
     mResetLock.lock();
+    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "reset()  for instance %i", mInstance );
 
     for (std::list<BufferWrap*>::const_iterator iterator = mBufferWrapList.begin(), end = mBufferWrapList.end(); iterator != end; ++iterator)
     {
@@ -372,6 +382,16 @@ void AudioBufferManager::reset()
     mLastCurrentTimeUs = 0;
 
     mResetLock.unlock();
+}
 
 
+void AudioBufferManager::enable()
+{
+    mEnabled = true;
+}
+
+
+void AudioBufferManager::disable()
+{
+    mEnabled = false;
 }

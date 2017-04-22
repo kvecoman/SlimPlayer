@@ -64,9 +64,15 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
 
     private native void initGLES( long objPtr, int width, int height );
 
+    private native void releaseGLES( long objPtr );
+
     private native void render( long objPtr );
 
     public native void processBuffer( long objPtr, ByteBuffer samplesBuffer, int samplesCount, long presentationTimeUs, int pcmFrameSize, int sampleRate, long currentTimeUs );
+
+    private native void enable( long objPtr );
+
+    private native void disable( long objPtr );
 
     //**************************************************************************************************************************
 
@@ -104,6 +110,9 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
     public void onSurfaceChanged( GL10 gl, int width, int height )
     {
 
+        if ( !mEnabled || mReleased || ( mWidth == width && mHeight == height ) )
+            return;
+
         mWidth  = width;
         mHeight = height;
 
@@ -121,15 +130,21 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
     }
 
     /**
-     * It seems it needs to be called on GL thread
+     * This can be called on non GL thread
      */
     public void release()
     {
-
-        deleteNativeInstance( mNativeInstancePtr );
-
         mReleased = true;
 
+        deleteNativeInstance( mNativeInstancePtr );
+    }
+
+    /**
+     * Needs to be called on GL thread
+     */
+    public void releaseGLES()
+    {
+        releaseGLES( mNativeInstancePtr );
     }
 
 
@@ -141,11 +156,13 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
     public void enable()
     {
         mEnabled = true;
+        enable( mNativeInstancePtr );
     }
 
     public void disable()
     {
         mEnabled = false;
+        disable( mNativeInstancePtr );
     }
 
     @Override

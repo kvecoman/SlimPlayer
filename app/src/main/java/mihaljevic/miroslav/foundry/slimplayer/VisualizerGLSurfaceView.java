@@ -12,12 +12,12 @@ import android.util.AttributeSet;
 
 public class VisualizerGLSurfaceView extends GLSurfaceView
 {
-    private boolean mEnabled = false;
+    //private boolean mEnabled = false;
 
     private VisualizerGLRenderer mRenderer;
 
-    private int mWidth;
-    private int mHeight;
+    /*private int mWidth;
+    private int mHeight;*/
 
     public VisualizerGLSurfaceView( Context context )
     {
@@ -43,13 +43,13 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
         setZOrderOnTop( true );
 
         setRenderer( mRenderer );
-        setRenderMode( GLSurfaceView.RENDERMODE_CONTINUOUSLY );
+        setRenderMode( GLSurfaceView.RENDERMODE_WHEN_DIRTY );
         onPause();
     }
 
 
 
-    @Override
+    /*@Override
     protected void onSizeChanged( int w, int h, int oldw, int oldh )
     {
         super.onSizeChanged( w, h, oldw, oldh );
@@ -61,8 +61,7 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
         mHeight = h;
 
         //surfaceChanged( getHolder(), PixelFormat.TRANSLUCENT, w, h );
-    }
-
+    }*/
 
 
     public VisualizerGLRenderer getRenderer()
@@ -70,26 +69,26 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
         return mRenderer;
     }
 
-    public void enable()
+    /*public void enable()
     {
         mEnabled = true;
         onResume();
         mRenderer.enable();
         //TODO - this probably needs to be turned on
         surfaceChanged( getHolder(), PixelFormat.TRANSLUCENT, mWidth, mHeight );
-    }
+    }*/
 
-    public void disable()
+    /*public void disable()
     {
         mEnabled = false;
         mRenderer.disable();
         onPause();
 
-    }
+    }*/
 
     public void release()
     {
-        disable();
+        //disable();
         mRenderer.release();
     }
 }

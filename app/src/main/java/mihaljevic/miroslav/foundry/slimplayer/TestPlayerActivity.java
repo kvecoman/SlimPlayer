@@ -29,9 +29,9 @@ import com.google.android.exoplayer2.upstream.FileDataSourceFactory;
 
 import java.io.File;
 
-public class TestPlayerActivity extends AppCompatActivity implements Button.OnClickListener
+public class TestPlayerActivity /*extends AppCompatActivity implements Button.OnClickListener*/
 {
-
+/*
 
     protected final String TAG = getClass().getSimpleName();
 
@@ -222,7 +222,7 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
 
     }
 
-
+*/
 
 
 }

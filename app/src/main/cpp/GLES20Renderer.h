@@ -106,7 +106,7 @@ public:
 
     bool mGLESReleased = true;
 
-    bool mEnabled = false;
+    //bool mEnabled = false;
 
     bool mConstructed = false;
 
@@ -136,9 +136,9 @@ public:
 
     void absoluteSamples( Buffer * buffer );
 
-    void enable();
+    //void enable();
 
-    void disable();
+    //void disable();
 };
 
 

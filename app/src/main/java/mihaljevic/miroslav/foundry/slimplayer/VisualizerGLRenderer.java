@@ -40,7 +40,7 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
     private int mWidth;
     private int mHeight;
 
-    private boolean mEnabled = false;
+    //private boolean mEnabled = false;
 
     private long mNativeInstancePtr = 0;
 
@@ -110,7 +110,7 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
     public void onSurfaceChanged( GL10 gl, int width, int height )
     {
 
-        if ( !mEnabled || mReleased || ( mWidth == width && mHeight == height ) )
+        if ( /*!mEnabled ||*/ mReleased || ( mWidth == width && mHeight == height ) )
             return;
 
         mWidth  = width;
@@ -123,7 +123,7 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
     public void onDrawFrame( GL10 gl )
     {
 
-        if ( mEnabled )
+        /*if ( mEnabled )*/
             render( mNativeInstancePtr );
 
         GLES20.glClearColor(0, 0, 0, 0);
@@ -153,22 +153,22 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
         this.mEnabled = accept;
     }*/
 
-    public void enable()
+    /*public void enable()
     {
         mEnabled = true;
         enable( mNativeInstancePtr );
-    }
+    }*/
 
-    public void disable()
+    /*public void disable()
     {
         mEnabled = false;
         disable( mNativeInstancePtr );
-    }
+    }*/
 
     @Override
     public void processBuffer( ByteBuffer samplesBuffer, int samplesCount, long presentationTimeUs, int pcmFrameSize, int sampleRate, long currentTimeUs )
     {
-        if ( !mReleased && mEnabled )
+        if ( !mReleased /*&& mEnabled*/ )
             processBuffer( mNativeInstancePtr, samplesBuffer, samplesCount, presentationTimeUs, pcmFrameSize, sampleRate, currentTimeUs );
     }
 }

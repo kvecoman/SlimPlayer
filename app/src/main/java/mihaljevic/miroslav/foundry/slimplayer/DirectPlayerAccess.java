@@ -30,7 +30,7 @@ public class DirectPlayerAccess
 
     public void setActiveVisualizer( VisualizerGLSurfaceView visualizer )
     {
-        stopActiveVisualizer();
+        //stopActiveVisualizer();
 
         activeVisualizer = visualizer;
 
@@ -39,10 +39,27 @@ public class DirectPlayerAccess
 
     public void stopActiveVisualizer()
     {
-        if ( activeVisualizer != null )
+        /*if ( activeVisualizer != null )
         {
             activeVisualizer.disable();
+        }*/
+
+        audioRenderer.setBufferReceiver( null );
+
+        if ( activeVisualizer != null )
+        {
+            /*activeVisualizer.queueEvent( new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    activeVisualizer.getRenderer().releaseGLES();
+                }
+            } );*/
+
+            activeVisualizer.onPause();
         }
+
     }
 
 }

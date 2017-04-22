@@ -601,6 +601,11 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         if ( !mMediaBrowser.isConnected() || mMediaController == null || mMediaController.getPlaybackState().getActiveQueueItemId() == position )
             return;
 
+        //Since this might be the first signal of song changing, we stop the active visualizer renderer now
+        directPlayerAccess = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
+
+        directPlayerAccess.stopActiveVisualizer();
+
         //Play this position when user selects it
         mMediaController.getTransportControls().skipToQueueItem( mPager.getCurrentItem() );
 
@@ -608,10 +613,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         mSeekBar.setProgress( 0 );
         updateSeekBarMax( position );
 
-        //Since this might be the first signal of song changing, we stop the active visualizer renderer now
-        directPlayerAccess = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
 
-        directPlayerAccess.stopActiveVisualizer();
     }
 
     @Override

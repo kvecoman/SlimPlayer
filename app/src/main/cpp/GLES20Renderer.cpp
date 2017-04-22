@@ -72,7 +72,7 @@ JNIEXPORT void JNICALL
 
         buffer = new Buffer( bufferPtr, samplesCount, capacity );
 
-        if ( instance->mEnabled && instance->mConstructed && !instance->mDeleted && instance->mAudioBufferManager != nullptr )
+        if ( /*instance->mEnabled &&*/ instance->mConstructed && !instance->mDeleted && instance->mAudioBufferManager != nullptr )
             instance->mAudioBufferManager->processBuffer( buffer, presentationTimeUs, pcmFrameSize, sampleRate, currentTimeUs );
 
 }
@@ -100,7 +100,7 @@ JNIEXPORT void JNICALL
 
     instance = (GLES20Renderer*)objPtr;
 
-    instance->enable();
+    //instance->enable();
 }
 
 JNIEXPORT void JNICALL
@@ -111,7 +111,7 @@ Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_disable
 
     instance = (GLES20Renderer*)objPtr;
 
-    instance->disable();
+    //instance->disable();
 }
 
 
@@ -183,7 +183,7 @@ void GLES20Renderer::initGLES( int width, int height )
 {
 
 
-         if ( mDeleted || !mEnabled || !mConstructed )
+         if ( mDeleted || /*!mEnabled ||*/ !mConstructed )
             return;
 
         //sNVGCreateLock.lock();
@@ -249,17 +249,20 @@ void GLES20Renderer::render()
 
         //mNVGContextLock.lock();
         mConstructorLock.lock();
-        __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "render() for instance %i", mInstance );
 
-        Buffer * buffer;
-        int samplesCount;
-
-        if ( mNVGCtx == nullptr || mDeleted || mGLESReleased || !mEnabled )
+        if ( mNVGCtx == nullptr || mDeleted || mGLESReleased /*|| !mEnabled*/ )
         {
             //mNVGContextLock.unlock();
             mConstructorLock.unlock();
             return;
         }
+
+        __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "render() for instance %i", mInstance );
+
+
+
+        Buffer * buffer;
+        int samplesCount;
 
 
         buffer = mAudioBufferManager->getSamples();
@@ -482,7 +485,7 @@ void GLES20Renderer::absoluteSamples( Buffer * buffer )
 
 
 
-void GLES20Renderer::enable()
+/*void GLES20Renderer::enable()
 {
     mConstructorLock.lock();
 
@@ -492,9 +495,9 @@ void GLES20Renderer::enable()
         mAudioBufferManager->enable();
 
     mConstructorLock.unlock();
-}
+}*/
 
-void GLES20Renderer::disable()
+/*void GLES20Renderer::disable()
 {
     mConstructorLock.lock();
 
@@ -504,4 +507,4 @@ void GLES20Renderer::disable()
         mAudioBufferManager->disable();
 
     mConstructorLock.unlock();
-}
+}*/

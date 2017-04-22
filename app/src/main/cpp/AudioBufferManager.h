@@ -59,7 +59,7 @@ private:
 
     Buffer * mResultBuffer;
 
-    jlong mLastCurrentTimeUs;
+    jlong mLastCurrentTimeUs = 0;
 
     std::mutex mResetLock; //Used to make sure reset() and some other delete operations don't go at same time
     std::mutex mDestructorLock;
@@ -68,7 +68,9 @@ private:
 
     int mInstance = -1;
 
-    bool mEnabled = false;
+    //bool mEnabled = false;
+
+    bool mConstructed = false;
 
 
 
@@ -90,9 +92,9 @@ public:
 
     void reset();
 
-    void enable();
+    //void enable();
 
-    void disable();
+    //void disable();
 
 };
 

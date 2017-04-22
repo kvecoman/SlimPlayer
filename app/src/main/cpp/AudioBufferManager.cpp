@@ -66,6 +66,8 @@ BufferWrap::~BufferWrap()
 
 AudioBufferManager::AudioBufferManager( int targetSamples, int targetTimeSpan, int instance )
 {
+    mDestructorLock.lock();
+
     mInstance = instance;
 
     __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "AudioBufferManager() - constructor for instance %i", mInstance );
@@ -74,6 +76,10 @@ AudioBufferManager::AudioBufferManager( int targetSamples, int targetTimeSpan, i
     mTargetTimeSpan = targetTimeSpan;
 
     mResultBuffer = new Buffer( targetSamples );
+
+    mConstructed = true;
+
+    mDestructorLock.unlock();
 
 
 }
@@ -89,7 +95,8 @@ AudioBufferManager::~AudioBufferManager()
     mDestructorLock.lock();
     __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "~AudioBufferManager() - destructor for instance %i", mInstance );
 
-    delete  mResultBuffer;
+    if ( mResultBuffer != nullptr )
+        delete  mResultBuffer;
 
     for (std::list<BufferWrap*>::const_iterator iterator = mBufferWrapList.begin(), end = mBufferWrapList.end(); iterator != end; ++iterator)
     {
@@ -117,17 +124,20 @@ void AudioBufferManager::processBuffer( Buffer * buffer, jlong presentationTimeU
 
 
 
-    if ( !mEnabled )
-        return;
+    /*if ( !mEnabled )
+        return;*/
 
     mDestructorLock.lock();
-    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "processBuffer() for instance %i", mInstance );
 
-    if ( mReleased )
+
+
+    if ( mReleased || !mConstructed )
     {
         mDestructorLock.unlock();
         return;
     }
+
+    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "processBuffer() for instance %i", mInstance );
 
 
     BufferWrap *    bufferWrap;
@@ -151,7 +161,7 @@ void AudioBufferManager::processBuffer( Buffer * buffer, jlong presentationTimeU
 
 
 
-    //If the seek has happened clear the list of current buffer wraps - EDIT: seeking problem solved in delete stale buffer wraps while loop
+    //If the seek has happened clear the list of current buffer wraps
     if ( currentTimeUs < mLastCurrentTimeUs )
         reset();
 
@@ -295,24 +305,24 @@ Buffer * AudioBufferManager::getSamples()
 {
 
 
-    if ( !mEnabled )
-        return nullptr;
+    /*if ( !mEnabled )
+        return nullptr;*/
 
 
 
     mDestructorLock.lock();
     mResetLock.lock();
-    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "getSamples() for instance %i", mInstance );
 
 
-    if ( mReleased )
+    if ( mReleased || !mConstructed )
     {
         mResetLock.unlock();
         mDestructorLock.unlock();
 
-        __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "exited getSamples because instance is released for instance %i", mInstance );
         return nullptr;
     }
+
+    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "getSamples() for instance %i", mInstance );
 
     BufferWrap * bufferWrap;
     int samplesCount;
@@ -371,11 +381,18 @@ void AudioBufferManager::reset()
 
 
     mResetLock.lock();
+
+    if ( mReleased || !mConstructed || mBufferWrapList.size() <= 0 )
+    {
+        mResetLock.unlock();
+        return;
+    }
+
     __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "reset()  for instance %i", mInstance );
 
     for (std::list<BufferWrap*>::const_iterator iterator = mBufferWrapList.begin(), end = mBufferWrapList.end(); iterator != end; ++iterator)
     {
-        delete *iterator;
+            delete *iterator;
     }
 
     mBufferWrapList.clear();
@@ -385,13 +402,13 @@ void AudioBufferManager::reset()
 }
 
 
-void AudioBufferManager::enable()
+/*void AudioBufferManager::enable()
 {
     mEnabled = true;
-}
+}*/
 
 
-void AudioBufferManager::disable()
+/*void AudioBufferManager::disable()
 {
     mEnabled = false;
-}
+}*/

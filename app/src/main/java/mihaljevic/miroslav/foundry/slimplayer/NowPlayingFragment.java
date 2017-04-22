@@ -225,12 +225,14 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
         releaseGLESContext();
 
         if ( mGLSurfaceView != null )
-            mGLSurfaceView.disable();
-
-
+            mGLSurfaceView.onPause();
 
         /*if ( mGLSurfaceView != null )
-            mGLSurfaceView.onPause();*/
+            mGLSurfaceView.disable();*/
+
+
+
+
 
 
     }
@@ -319,8 +321,11 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
 
         registerForPlayPause();
-        mGLSurfaceView.enable();
+        //mGLSurfaceView.enable();
         mDirectPlayerAccess.setActiveVisualizer( mGLSurfaceView );
+        mGLSurfaceView.onResume();
+        mGLSurfaceView.setRenderMode( VisualizerGLSurfaceView.RENDERMODE_CONTINUOUSLY );
+
 
     }
 
@@ -464,6 +469,8 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
     @Override
     public void onPlayPause( boolean playing )
     {
+        //TODO - without enable/disable system this will give bugs
+
         if ( mGLSurfaceView == null )
             return;
 

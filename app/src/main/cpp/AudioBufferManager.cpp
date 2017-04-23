@@ -178,14 +178,14 @@ void AudioBufferManager::processBuffer( Buffer * buffer, jlong presentationTimeU
 Buffer * AudioBufferManager::createMonoSamples( Buffer * buffer, jint pcmFrameSize, jint sampleRate )
 {
     //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "createMonoSamples()" );
-    //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "createMonoSamples() for instance %i", mInstance );
+    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "createMonoSamples() for instance %i", mInstance );
 
     int     originalSamplesCount;
     float   representedTime;
     int     monoSamplesCount;
     int     sampleJump;
 
-    jbyte           monoSample;
+    //jbyte           monoSample;
     Buffer *        newBuffer;
 
 
@@ -220,9 +220,12 @@ Buffer * AudioBufferManager::createMonoSamples( Buffer * buffer, jint pcmFrameSi
     for ( int i = 0; i < monoSamplesCount; i++ )
     {
         //Obtain the most significant sample (last one in frame) every "sampleJump" samples
-        monoSample = buffer->buffer[ ( i * pcmFrameSize * sampleJump ) + ( pcmFrameSize - 1 ) ];
+        /*monoSample =
 
-        newBuffer->buffer[i] = monoSample;
+        newBuffer->buffer[i] = monoSample;*/
+
+        //Optimized version
+        newBuffer->buffer[i] = buffer->buffer[ ( i * pcmFrameSize * sampleJump ) + ( pcmFrameSize - 1 ) ];
     }
 
     return newBuffer;
@@ -234,7 +237,7 @@ Buffer * AudioBufferManager::createMonoSamples( Buffer * buffer, jint pcmFrameSi
 Buffer * AudioBufferManager::getFreeByteBuffer( int minimalCapacity )
 {
     //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "getFreeByteBuffer()" );
-    //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "getFreeByteBuffer() for instance %i", mInstance );
+    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "getFreeByteBuffer() for instance %i", mInstance );
 
     Buffer * freeBuffer;
 
@@ -263,7 +266,7 @@ Buffer * AudioBufferManager::getFreeByteBuffer( int minimalCapacity )
 void AudioBufferManager::deleteStaleBufferWraps()
 {
     //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "deleteStaleBufferWraps()" );
-    //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "deleteStaleBufferWraps() for instance %i", mInstance );
+    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "deleteStaleBufferWraps() for instance %i", mInstance );
 
 
     long            currentTimeUs;

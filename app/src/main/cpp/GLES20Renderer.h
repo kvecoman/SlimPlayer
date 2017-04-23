@@ -37,11 +37,11 @@ JNIEXPORT void JNICALL
         ( JNIEnv * env, jobject thiz, jlong objPtr  );
 
 JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initGLES
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initNVG
         ( JNIEnv * env, jobject thiz, jlong objPtr, int width, int height );
 
 JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseGLES ( JNIEnv * env, jobject thiz, jlong objPtr );
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseNVG ( JNIEnv * env, jobject thiz, jlong objPtr );
 
 
 JNIEXPORT void JNICALL
@@ -120,9 +120,9 @@ public:
 
     ~GLES20Renderer();
 
-    void initGLES( int width, int height );
+    void initNVG( int width, int height );
 
-    void releaseGLES();
+    void releaseNVG();
 
     void render();
 

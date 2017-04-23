@@ -22,8 +22,10 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 
 import java.util.List;
@@ -49,6 +51,8 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     protected MediaControllerCompat mMediaController;
 
     private PlayPauseListener mPlayPauseListener;
+
+    private VisualizerGLSurfaceView mGLSurfaceView;
 
 
 
@@ -224,6 +228,12 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         fastForwardButton.setOnClickListener( new FastForwardListener() );
 
         mMediaBrowser = new MediaBrowserCompat( this, MediaPlayerService.COMPONENT_NAME, mConnectionCallbacks, null );
+
+        initVisualizer();
+
+        attachVisualizer();
+
+        //TODO - continue adding visualizer here
     }
 
 
@@ -252,6 +262,8 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
 
         mMediaBrowser.connect();
+
+        startVisualizer();
     }
 
 
@@ -310,8 +322,24 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         if (mSeekBarHandler != null && mSeekBarRunnable != null)
             mSeekBarHandler.removeCallbacks( mSeekBarRunnable );
 
+
+        //stopVisualizer();
+
+        if ( mGLSurfaceView != null )
+            mGLSurfaceView.onPause();
+
     }
 
+    @Override
+    protected void onDestroy()
+    {
+        super.onDestroy();
+
+        if ( mGLSurfaceView != null )
+            mGLSurfaceView.onResume();
+        //releaseNVGContext();
+        releaseVisualizer();
+    }
 
     @Override
     public void onRequestPermissionsResult( int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults )
@@ -353,6 +381,121 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         super.onRequestPermissionsResult( requestCode, permissions, grantResults );
     }
 
+
+
+
+
+    private void initVisualizer()
+    {
+        if ( !Utils.hasGLES20() )
+        {
+            Log.w( TAG, "GLES 2.0 not supported" );
+            return;
+        }
+
+
+        mGLSurfaceView = new VisualizerGLSurfaceView( this );
+
+
+    }
+
+    private void attachVisualizer()
+    {
+        RelativeLayout.LayoutParams     layoutParams;
+
+
+
+
+        if ( mGLSurfaceView == null )
+            return;
+
+        if ( mGLSurfaceView.getParent() != null )
+        {
+            ( ( ViewGroup ) mGLSurfaceView.getParent() ).removeView( mGLSurfaceView );
+        }
+
+
+        //We need to add GLSurfaceView this way, if we add it in layout, it's dimensions are wrong and visualization gets chopped at bottom
+
+        layoutParams = new RelativeLayout.LayoutParams( 50, 200 );
+        layoutParams.addRule( RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE );
+        layoutParams.addRule( RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE );
+        layoutParams.addRule( RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE );
+
+        if ( Build.VERSION.SDK_INT >= 17 )
+        {
+            layoutParams.addRule( RelativeLayout.ALIGN_PARENT_START, RelativeLayout.TRUE );
+            layoutParams.addRule( RelativeLayout.ALIGN_PARENT_END, RelativeLayout.TRUE );
+        }
+
+
+        ( ( ViewGroup ) findViewById( R.id.now_playing_activity ) ).addView( mGLSurfaceView, 4, layoutParams );
+    }
+
+    private void startVisualizer()
+    {
+        if ( mGLSurfaceView == null )
+            return;
+
+
+        DirectPlayerAccess directPlayerAccess = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
+
+
+        directPlayerAccess.setActiveVisualizer( mGLSurfaceView );
+        mGLSurfaceView.onResume();
+        mGLSurfaceView.setRenderMode( VisualizerGLSurfaceView.RENDERMODE_CONTINUOUSLY );
+
+
+    }
+
+
+    /*private void stopVisualizer()
+    {
+        DirectPlayerAccess directPlayerAccess = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
+
+        if ( directPlayerAccess != null )
+            directPlayerAccess.stopActiveVisualizer();
+    }*/
+
+
+    /*private void releaseNVGContext()
+    {
+        if ( mGLSurfaceView != null )
+        {
+            mGLSurfaceView.queueEvent( new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    mGLSurfaceView.getRenderer().releaseNVG();
+                }
+            } );
+        }
+
+    }*/
+
+    private void releaseVisualizer()
+    {
+        if ( mGLSurfaceView != null )
+
+
+        if ( mGLSurfaceView != null )
+        {
+            mGLSurfaceView.queueEvent( new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    mGLSurfaceView.getRenderer().releaseNVG();
+                    mGLSurfaceView.release();
+                }
+            } );
+        }
+    }
+
+
+
+    //TODO - since visualizer is here, this listener might be obsolete
     public void setPlayPauseListener( PlayPauseListener listener )
     {
         mPlayPauseListener = listener;
@@ -527,15 +670,18 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
                 //Pause playback
                 mMediaController.getTransportControls().pause();
                 notifyPlayPauseListener( false );
+                mGLSurfaceView.onPause();
                 break;
             case PlaybackStateCompat.STATE_PAUSED:
                 //Resume playback
                 mMediaController.getTransportControls().play();
                 notifyPlayPauseListener( true );
+                mGLSurfaceView.onResume();
                 break;
             case PlaybackStateCompat.STATE_STOPPED:
                 mMediaController.getTransportControls().skipToQueueItem( mPager.getCurrentItem() );
                 notifyPlayPauseListener( true );
+                mGLSurfaceView.onResume();
                 break;
             case PlaybackStateCompat.STATE_NONE:
                 Bundle  bundle;
@@ -554,6 +700,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
                 mMediaController.getTransportControls().playFromMediaId( mediaId, bundle );
 
                 notifyPlayPauseListener( true );
+                mGLSurfaceView.onResume();
                 break;
         }
 
@@ -601,10 +748,11 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         if ( !mMediaBrowser.isConnected() || mMediaController == null || mMediaController.getPlaybackState().getActiveQueueItemId() == position )
             return;
 
-        //Since this might be the first signal of song changing, we stop the active visualizer renderer now
+
+        //Here we stop buffer processing so stuff don't get messed up while changing songs
         directPlayerAccess = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
 
-        directPlayerAccess.stopActiveVisualizer();
+        directPlayerAccess.disableActiveVisualizer();
 
         //Play this position when user selects it
         mMediaController.getTransportControls().skipToQueueItem( mPager.getCurrentItem() );

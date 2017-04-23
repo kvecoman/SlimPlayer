@@ -1113,6 +1113,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
         //mVisualizerGLRenderer.setAcceptSamples( false );
 
+        //mCustomAudioRenderer.disableActiveVisualizer();
+
         //If something is wrong then do nothing
         if ( mState == PlaybackStateCompat.STATE_NONE || position < 0 || position >= mCount || mQueue == null )
             return;
@@ -1184,7 +1186,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
         SlimPlayerApplication.getInstance().setLastPlaySuccess();
 
-
+        //mCustomAudioRenderer.enableActiveVisualizer();
 
 
     }

@@ -31,25 +31,25 @@ JNIEXPORT void JNICALL
 }
 
 JNIEXPORT void JNICALL
-Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initGLES
+Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initNVG
         ( JNIEnv * env, jobject thiz, jlong objPtr, jint width, jint height )
 {
         GLES20Renderer * instance;
 
         instance = (GLES20Renderer*)objPtr;
 
-        instance->initGLES( width, height );
+        instance->initNVG( width, height );
 
 }
 
 JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseGLES ( JNIEnv * env, jobject thiz, jlong objPtr )
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseNVG ( JNIEnv * env, jobject thiz, jlong objPtr )
 {
     GLES20Renderer * instance;
 
     instance = (GLES20Renderer*)objPtr;
 
-    instance->releaseGLES();
+    instance->releaseNVG();
 }
 
 
@@ -171,7 +171,7 @@ GLES20Renderer::~GLES20Renderer()
         delete mCurveAnimator;
         delete mAudioBufferManager;
 
-        //releaseGLES();
+        //releaseNVG();
 
 
         mConstructorLock.unlock();
@@ -179,7 +179,7 @@ GLES20Renderer::~GLES20Renderer()
         //sNVGCreateLock.unlock();
 }
 
-void GLES20Renderer::initGLES( int width, int height )
+void GLES20Renderer::initNVG( int width, int height )
 {
 
 
@@ -190,7 +190,7 @@ void GLES20Renderer::initGLES( int width, int height )
         //mNVGContextLock.lock();
 
         mConstructorLock.lock();
-        __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "initGLES() for instance %i", mInstance );
+        __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "initNVG() for instance %i", mInstance );
 
         mGLESReleased = true;
 
@@ -219,7 +219,7 @@ void GLES20Renderer::initGLES( int width, int height )
 }
 
 
-void GLES20Renderer::releaseGLES()
+void GLES20Renderer::releaseNVG()
 {
 
 
@@ -227,7 +227,7 @@ void GLES20Renderer::releaseGLES()
     //mNVGContextLock.lock();
 
     mConstructorLock.lock();
-    __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "releaseGLES() for instance %i", mInstance );
+    __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "releaseNVG() for instance %i", mInstance );
 
     mGLESReleased = true;
 

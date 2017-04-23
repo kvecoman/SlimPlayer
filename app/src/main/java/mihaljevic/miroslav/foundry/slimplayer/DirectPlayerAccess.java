@@ -34,7 +34,7 @@ public class DirectPlayerAccess
 
         activeVisualizer = visualizer;
 
-        audioRenderer.setBufferReceiver( visualizer.getRenderer() );
+        audioRenderer.setBufferReceiver( activeVisualizer.getRenderer() );
     }
 
     public void stopActiveVisualizer()
@@ -46,20 +46,43 @@ public class DirectPlayerAccess
 
         audioRenderer.setBufferReceiver( null );
 
-        if ( activeVisualizer != null )
+        /*if ( activeVisualizer != null )
         {
-            /*activeVisualizer.queueEvent( new Runnable()
+            activeVisualizer.queueEvent( new Runnable()
             {
                 @Override
                 public void run()
                 {
-                    activeVisualizer.getRenderer().releaseGLES();
+                    activeVisualizer.getRenderer().releaseNVG();
                 }
-            } );*/
+            } );
 
             activeVisualizer.onPause();
-        }
+        }*/
 
+    }
+
+    public void enableActiveVisualizer()
+    {
+        if ( audioRenderer != null )
+            audioRenderer.enableBufferProcessing();
+
+        if ( activeVisualizer != null )
+        {
+            activeVisualizer.getRenderer().enable();
+
+            //Enable in case we are paused
+            activeVisualizer.onResume();
+        }
+    }
+
+    public void disableActiveVisualizer()
+    {
+        if ( audioRenderer != null )
+            audioRenderer.disableBufferProcessing();
+
+        if ( activeVisualizer != null )
+            activeVisualizer.getRenderer().disable();
     }
 
 }

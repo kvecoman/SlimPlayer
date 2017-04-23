@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
-import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.RemoteException;
@@ -37,7 +36,7 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
     private final String TAG = getClass().getSimpleName();
 
-    //TODO - continue here - see whats up with cpu consumption
+
 
     private int mPosition;
 
@@ -53,7 +52,7 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
     protected MediaControllerCompat mMediaController;
 
     //private VisualizerGLRenderer  mVisualizerGLRenderer;
-    private VisualizerGLSurfaceView mGLSurfaceView;
+    private VisualizerGLSurfaceView mGLSurfaceView; //TODO - remove - not used
     private DirectPlayerAccess      mDirectPlayerAccess;
 
     private String mTag = "UNKNOWN";
@@ -114,7 +113,7 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
         loadSongInfo();
 
-        initVisualizer();
+        //initVisualizer();
 
     }
 
@@ -160,7 +159,7 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
         mDirectPlayerAccess = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
 
-        attachVisualizer();
+        //attachVisualizer();
     }
 
     @Override
@@ -179,7 +178,10 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
 
 
-        startVisualizer();
+        //startVisualizer();
+
+        DirectPlayerAccess directPlayerAccess = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
+        directPlayerAccess.enableActiveVisualizer();
 
 
     }
@@ -222,10 +224,10 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
             mMediaBrowser.disconnect();
 
 
-        releaseGLESContext();
+        //releaseGLESContext();
 
-        if ( mGLSurfaceView != null )
-            mGLSurfaceView.onPause();
+        /*if ( mGLSurfaceView != null )
+            mGLSurfaceView.onPause();*/
 
         /*if ( mGLSurfaceView != null )
             mGLSurfaceView.disable();*/
@@ -245,7 +247,7 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
         Log.v( TAG, "onDestroy() called for fragment with tag: " + mTag );
 
 
-        releaseVisualizer();
+        //releaseVisualizer();
 
     }
 
@@ -338,7 +340,7 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
                 @Override
                 public void run()
                 {
-                    mGLSurfaceView.getRenderer().releaseGLES();
+                    mGLSurfaceView.getRenderer().releaseNVG();
                 }
             } );
         }

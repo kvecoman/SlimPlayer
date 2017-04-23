@@ -60,6 +60,16 @@ public class CustomMediaCodecAudioRenderer extends MediaCodecAudioRenderer
         mEnabled = bufferProcessing;
     }
 
+    public void enableBufferProcessing()
+    {
+        mEnabled = true;
+    }
+
+    public void disableBufferProcessing()
+    {
+        mEnabled = false;
+    }
+
     public boolean isBufferProcessing()
     {
         return mEnabled;

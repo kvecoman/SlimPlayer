@@ -40,7 +40,7 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
     private int mWidth;
     private int mHeight;
 
-    //private boolean mEnabled = false;
+    private boolean mEnabled = false;
 
     private long mNativeInstancePtr = 0;
 
@@ -62,9 +62,9 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
 
     private native void deleteNativeInstance( long objPtr );
 
-    private native void initGLES( long objPtr, int width, int height );
+    private native void initNVG( long objPtr, int width, int height );
 
-    private native void releaseGLES( long objPtr );
+    private native void releaseNVG( long objPtr );
 
     private native void render( long objPtr );
 
@@ -116,15 +116,17 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
         mWidth  = width;
         mHeight = height;
 
-        initGLES( mNativeInstancePtr, width, height );
+        initNVG( mNativeInstancePtr, width, height );
     }
 
     @Override
     public void onDrawFrame( GL10 gl )
     {
 
-        /*if ( mEnabled )*/
+        if ( mEnabled )
             render( mNativeInstancePtr );
+        else
+            GLES20.glClear( GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT );
 
         GLES20.glClearColor(0, 0, 0, 0);
     }
@@ -142,9 +144,9 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
     /**
      * Needs to be called on GL thread
      */
-    public void releaseGLES()
+    public void releaseNVG()
     {
-        releaseGLES( mNativeInstancePtr );
+        releaseNVG( mNativeInstancePtr );
     }
 
 
@@ -153,22 +155,22 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
         this.mEnabled = accept;
     }*/
 
-    /*public void enable()
+    public void enable()
     {
         mEnabled = true;
-        enable( mNativeInstancePtr );
-    }*/
+        //enable( mNativeInstancePtr );
+    }
 
-    /*public void disable()
+    public void disable()
     {
         mEnabled = false;
-        disable( mNativeInstancePtr );
-    }*/
+        //disable( mNativeInstancePtr );
+    }
 
     @Override
     public void processBuffer( ByteBuffer samplesBuffer, int samplesCount, long presentationTimeUs, int pcmFrameSize, int sampleRate, long currentTimeUs )
     {
-        if ( !mReleased /*&& mEnabled*/ )
+        if ( !mReleased && mEnabled )
             processBuffer( mNativeInstancePtr, samplesBuffer, samplesCount, presentationTimeUs, pcmFrameSize, sampleRate, currentTimeUs );
     }
 }

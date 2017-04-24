@@ -51,15 +51,15 @@ JNIEXPORT void JNICALL
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_render
-        ( JNIEnv * env, jobject thiz, jlong objPtr );
+        ( JNIEnv * env, jobject thiz, jlong objPtr, jint drawOffset );
 
-JNIEXPORT void JNICALL
+/*JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_enable
         ( JNIEnv * env, jobject thiz, jlong objPtr );
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_disable
-        ( JNIEnv * env, jobject thiz, jlong objPtr );
+        ( JNIEnv * env, jobject thiz, jlong objPtr );*/
 
 
 
@@ -112,6 +112,8 @@ public:
 
     std::mutex mConstructorLock;
 
+    int mDrawOffset = 0;
+
 
 
 
@@ -124,7 +126,7 @@ public:
 
     void releaseNVG();
 
-    void render();
+    void render( int drawOffset );
 
     void drawWaveform(NVGcontext * nvgContext );
 

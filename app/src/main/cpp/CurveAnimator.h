@@ -79,7 +79,7 @@ public:
     float percentageFromCubicBezier( float x, Point bezierPoints[] );
 
 
-    void drawCurrentFrameCurve( NVGcontext * nvgContext );
+    void drawCurrentFrameCurve( NVGcontext * nvgContext, int drawOffset );
     
     
 };

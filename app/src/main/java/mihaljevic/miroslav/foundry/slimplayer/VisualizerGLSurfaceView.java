@@ -12,12 +12,9 @@ import android.util.AttributeSet;
 
 public class VisualizerGLSurfaceView extends GLSurfaceView
 {
-    //private boolean mEnabled = false;
 
     private VisualizerGLRenderer mRenderer;
 
-    /*private int mWidth;
-    private int mHeight;*/
 
     public VisualizerGLSurfaceView( Context context )
     {
@@ -39,7 +36,7 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
         getHolder().setFormat( PixelFormat.TRANSLUCENT );
         setEGLConfigChooser( 8, 8, 8, 8, 16, 0 );
         setEGLContextClientVersion( 2 );
-        setPreserveEGLContextOnPause( true ); //TODO - handle this preservation on pause???
+        setPreserveEGLContextOnPause( true );
         setZOrderOnTop( true );
 
         setRenderer( mRenderer );
@@ -48,47 +45,29 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
     }
 
 
-
-    /*@Override
-    protected void onSizeChanged( int w, int h, int oldw, int oldh )
-    {
-        super.onSizeChanged( w, h, oldw, oldh );
-
-        if ( w <= 0 || h <= 0 )
-            return;
-
-        mWidth = w;
-        mHeight = h;
-
-        //surfaceChanged( getHolder(), PixelFormat.TRANSLUCENT, w, h );
-    }*/
-
-
     public VisualizerGLRenderer getRenderer()
     {
         return mRenderer;
     }
 
-    /*public void enable()
-    {
-        mEnabled = true;
-        onResume();
-        mRenderer.enable();
-        //TODO - this probably needs to be turned on
-        surfaceChanged( getHolder(), PixelFormat.TRANSLUCENT, mWidth, mHeight );
-    }*/
-
-    /*public void disable()
-    {
-        mEnabled = false;
-        mRenderer.disable();
-        onPause();
-
-    }*/
 
     public void release()
     {
-        //disable();
-        mRenderer.release();
+        onResume();
+        queueEvent( new ReleaseRunnable() );
+    }
+
+
+    /**
+     * Runnable that cleans up native instance of renderer, supposed to be run on GL thread
+     */
+    private class ReleaseRunnable implements Runnable
+    {
+        @Override
+        public void run()
+        {
+            mRenderer.releaseNVG();
+            mRenderer.release();
+        }
     }
 }

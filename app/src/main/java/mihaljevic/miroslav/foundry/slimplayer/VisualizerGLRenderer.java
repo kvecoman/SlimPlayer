@@ -46,6 +46,9 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
 
     private boolean mReleased = false;
 
+    //Used to create scroll illusion
+    private int mDrawOffset = 0;
+
 
 
 
@@ -66,13 +69,13 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
 
     private native void releaseNVG( long objPtr );
 
-    private native void render( long objPtr );
+    private native void render( long objPtr, int drawOffset );
 
     public native void processBuffer( long objPtr, ByteBuffer samplesBuffer, int samplesCount, long presentationTimeUs, int pcmFrameSize, int sampleRate, long currentTimeUs );
 
-    private native void enable( long objPtr );
+    /*private native void enable( long objPtr );
 
-    private native void disable( long objPtr );
+    private native void disable( long objPtr );*/
 
     //**************************************************************************************************************************
 
@@ -124,7 +127,7 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
     {
 
         if ( mEnabled )
-            render( mNativeInstancePtr );
+            render( mNativeInstancePtr, mDrawOffset );
         else
             GLES20.glClear( GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT );
 
@@ -165,6 +168,11 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
     {
         mEnabled = false;
         //disable( mNativeInstancePtr );
+    }
+
+    public void setDrawOffset( int drawOffset )
+    {
+        mDrawOffset = drawOffset;
     }
 
     @Override

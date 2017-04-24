@@ -37,31 +37,6 @@ public class DirectPlayerAccess
         audioRenderer.setBufferReceiver( activeVisualizer.getRenderer() );
     }
 
-    public void stopActiveVisualizer()
-    {
-        /*if ( activeVisualizer != null )
-        {
-            activeVisualizer.disable();
-        }*/
-
-        audioRenderer.setBufferReceiver( null );
-
-        /*if ( activeVisualizer != null )
-        {
-            activeVisualizer.queueEvent( new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    activeVisualizer.getRenderer().releaseNVG();
-                }
-            } );
-
-            activeVisualizer.onPause();
-        }*/
-
-    }
-
     public void enableActiveVisualizer()
     {
         if ( audioRenderer != null )

@@ -32,7 +32,7 @@ import com.bumptech.glide.request.target.SimpleTarget;
  *
  * @author Miroslav Mihaljević
  */
-public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnGlobalLayoutListener, NowPlayingActivity.PlayPauseListener {
+public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnGlobalLayoutListener/*, NowPlayingActivity.PlayPauseListener*/ {
 
     private final String TAG = getClass().getSimpleName();
 
@@ -51,9 +51,6 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
     protected MediaBrowserCompat    mMediaBrowser;
     protected MediaControllerCompat mMediaController;
 
-    //private VisualizerGLRenderer  mVisualizerGLRenderer;
-    private VisualizerGLSurfaceView mGLSurfaceView; //TODO - remove - not used
-    private DirectPlayerAccess      mDirectPlayerAccess;
 
     private String mTag = "UNKNOWN";
 
@@ -113,7 +110,6 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
         loadSongInfo();
 
-        //initVisualizer();
 
     }
 
@@ -157,9 +153,6 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
         mMediaBrowser = new MediaBrowserCompat( getContext(), MediaPlayerService.COMPONENT_NAME, mConnectionCallbacks, null );
 
-        mDirectPlayerAccess = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
-
-        //attachVisualizer();
     }
 
     @Override
@@ -177,11 +170,12 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
         super.onCreateOptionsMenu( menu, inflater );
 
 
+        /*DirectPlayerAccess directPlayerAccess;
 
-        //startVisualizer();
+        directPlayerAccess = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
 
-        DirectPlayerAccess directPlayerAccess = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
-        directPlayerAccess.enableActiveVisualizer();
+        //Here we enable buffer processing which we disabled when we changed songs
+        directPlayerAccess.enableActiveVisualizer();*/
 
 
     }
@@ -222,21 +216,6 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
         if ( mMediaBrowser != null )
             mMediaBrowser.disconnect();
-
-
-        //releaseGLESContext();
-
-        /*if ( mGLSurfaceView != null )
-            mGLSurfaceView.onPause();*/
-
-        /*if ( mGLSurfaceView != null )
-            mGLSurfaceView.disable();*/
-
-
-
-
-
-
     }
 
     @Override
@@ -267,92 +246,6 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
             e.printStackTrace();
         }
     }
-
-    private void initVisualizer()
-    {
-        if ( !Utils.hasGLES20() )
-        {
-            Log.w( TAG, "GLES 2.0 not supported" );
-            return;
-        }
-
-
-        mGLSurfaceView = new VisualizerGLSurfaceView( getContext() );
-
-
-    }
-
-
-    private void attachVisualizer()
-    {
-        RelativeLayout.LayoutParams     layoutParams;
-
-
-
-
-        if ( mGLSurfaceView == null )
-            return;
-
-        if ( mGLSurfaceView.getParent() != null )
-        {
-            ( ( ViewGroup ) mGLSurfaceView.getParent() ).removeView( mGLSurfaceView );
-        }
-
-
-        //We need to add GLSurfaceView this way, if we add it in layout, it's dimensions are wrong and visualization gets chopped at bottom
-
-        layoutParams = new RelativeLayout.LayoutParams( 50, 200 );
-        layoutParams.addRule( RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE );
-        layoutParams.addRule( RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE );
-        layoutParams.addRule( RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE );
-
-        if ( Build.VERSION.SDK_INT >= 17 )
-        {
-            layoutParams.addRule( RelativeLayout.ALIGN_PARENT_START, RelativeLayout.TRUE );
-            layoutParams.addRule( RelativeLayout.ALIGN_PARENT_END, RelativeLayout.TRUE );
-        }
-
-
-        ( ( ViewGroup ) mContentView ).addView( mGLSurfaceView, 2, layoutParams );
-    }
-
-    private void startVisualizer()
-    {
-        if ( mGLSurfaceView == null )
-            return;
-
-
-        registerForPlayPause();
-        //mGLSurfaceView.enable();
-        mDirectPlayerAccess.setActiveVisualizer( mGLSurfaceView );
-        mGLSurfaceView.onResume();
-        mGLSurfaceView.setRenderMode( VisualizerGLSurfaceView.RENDERMODE_CONTINUOUSLY );
-
-
-    }
-
-    private void releaseGLESContext()
-    {
-        if ( mGLSurfaceView != null )
-        {
-            mGLSurfaceView.queueEvent( new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    mGLSurfaceView.getRenderer().releaseNVG();
-                }
-            } );
-        }
-
-    }
-
-    private void releaseVisualizer()
-    {
-        if ( mGLSurfaceView != null )
-            mGLSurfaceView.release();
-    }
-
 
 
     private void loadSongInfo()
@@ -453,32 +346,5 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
                     }
                 } );
 
-    }
-
-    private void registerForPlayPause()
-    {
-        Context context;
-
-        context = getContext();
-
-        if ( context instanceof NowPlayingActivity )
-        {
-            ( ( NowPlayingActivity ) context ).setPlayPauseListener( this );
-        }
-    }
-
-
-    @Override
-    public void onPlayPause( boolean playing )
-    {
-        //TODO - without enable/disable system this will give bugs
-
-        if ( mGLSurfaceView == null )
-            return;
-
-        if ( playing )
-            mGLSurfaceView.onResume();
-        else
-            mGLSurfaceView.onPause();
     }
 }

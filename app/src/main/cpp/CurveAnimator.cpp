@@ -153,7 +153,7 @@ float CurveAnimator::percentageFromCubicBezier( float x, Point bezierPoints[] )
 }
 
 
-void CurveAnimator::drawCurrentFrameCurve( NVGcontext * nvgContext )
+void CurveAnimator::drawCurrentFrameCurve( NVGcontext * nvgContext, int drawOffset )
 {
     //__android_log_print( ANDROID_LOG_VERBOSE, "CurveAnimator", "drawCurrentFrameCurve()" );
 
@@ -166,15 +166,19 @@ void CurveAnimator::drawCurrentFrameCurve( NVGcontext * nvgContext )
     nvgBeginPath( nvgContext );
 
 
-    nvgMoveTo( nvgContext, mCurrentPoints[0].x, mCurrentPoints[0].y );
+    nvgMoveTo( nvgContext, mCurrentPoints[0].x + drawOffset, mCurrentPoints[0].y );
 
     for ( int i = 1; i < mPointsCount; i++ )
     {
         start.x = mCurrentPoints[ i - 1 ].x;
         start.y = mCurrentPoints[ i - 1 ].y;
 
+        start.x += drawOffset;
+
         end.x = mCurrentPoints[ i ].x;
         end.y = mCurrentPoints[ i ].y;
+
+        end.x += drawOffset;
 
         ctrl1.x = start.x - ( ( start.x - end.x ) / 2 );
         ctrl1.y = start.y;

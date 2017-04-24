@@ -81,18 +81,18 @@ JNIEXPORT void JNICALL
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_render
-        ( JNIEnv * env, jobject thiz, jlong objPtr )
+        ( JNIEnv * env, jobject thiz, jlong objPtr, jint drawOffset )
 {
 
         GLES20Renderer * instance;
 
         instance = (GLES20Renderer*)objPtr;
 
-        instance->render();
+        instance->render( drawOffset );
 
 }
 
-JNIEXPORT void JNICALL
+/*JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_enable
         ( JNIEnv * env, jobject thiz, jlong objPtr )
 {
@@ -112,7 +112,7 @@ Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_disable
     instance = (GLES20Renderer*)objPtr;
 
     //instance->disable();
-}
+}*/
 
 
 
@@ -242,7 +242,7 @@ void GLES20Renderer::releaseNVG()
 
 
 
-void GLES20Renderer::render()
+void GLES20Renderer::render( int drawOffset )
 {
 
 
@@ -263,6 +263,8 @@ void GLES20Renderer::render()
 
         Buffer * buffer;
         int samplesCount;
+
+        mDrawOffset = drawOffset;
 
 
         buffer = mAudioBufferManager->getSamples();
@@ -298,7 +300,7 @@ void GLES20Renderer::render()
 
 
         mCurveAnimator->calculateNextFrame();
-        mCurveAnimator->drawCurrentFrameCurve( mNVGCtx );
+        mCurveAnimator->drawCurrentFrameCurve( mNVGCtx, mDrawOffset );
 
 
         nvgEndFrame( mNVGCtx );
@@ -320,11 +322,11 @@ void GLES20Renderer::drawWaveform(NVGcontext * nvgContext )
 
         nvgBeginPath( nvgContext );
 
-        nvgMoveTo( nvgContext, mWaveformPoints[0].x, mWaveformPoints[0].y );
+        nvgMoveTo( nvgContext, mWaveformPoints[0].x + mDrawOffset, mWaveformPoints[0].y );
 
         for ( int i = 1; i < mSamplesCount; i++ )
         {
-                nvgLineTo( nvgContext, mWaveformPoints[i].x, mWaveformPoints[i].y );
+                nvgLineTo( nvgContext, mWaveformPoints[i].x + mDrawOffset, mWaveformPoints[i].y );
         }
 
 

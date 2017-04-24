@@ -1186,7 +1186,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
         SlimPlayerApplication.getInstance().setLastPlaySuccess();
 
-        //mCustomAudioRenderer.enableActiveVisualizer();
+        SlimPlayerApplication.getInstance().getDirectPlayerAccess().enableActiveVisualizer();
 
 
     }

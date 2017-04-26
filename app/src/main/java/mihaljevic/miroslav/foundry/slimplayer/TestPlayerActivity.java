@@ -82,7 +82,7 @@ public class TestPlayerActivity /*extends AppCompatActivity implements Button.On
 
             mGLSurfaceView.setEGLConfigChooser( 8, 8, 8, 8, 16, 0 );
             mGLSurfaceView.setEGLContextClientVersion( 2 );
-            mGLSurfaceView.setPreserveEGLContextOnPause( true ); //TODO - handle this preservation on pause???
+            mGLSurfaceView.setPreserveEGLContextOnPause( true );
             mGLSurfaceView.setRenderer( mVisualizerGLRenderer );
             mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_CONTINUOUSLY );
         }

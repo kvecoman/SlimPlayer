@@ -149,6 +149,11 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
     //private VisualizerGLRenderer mVisualizerGLRenderer;
 
+    /**
+     * This is set on when we need to finish part of play() function in onPlayStateChangedListener()
+     */
+    //private boolean mFinishPlay = false;
+
 
 
 
@@ -1154,27 +1159,32 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
 
 
-        //Set up media player and start playing when ready
-        /*mPlayer.reset();
-        mPlayer.setDataSource           ( MediaPlayerService.this, mediaFileUri );
-        mPlayer.setOnCompletionListener ( MediaPlayerService.this );
-        mPlayer.prepare();
-
-        mPlayer.start();*/
-
 
         mediaSource = new ExtractorMediaSource( mediaFileUri, mDataSourceFactory, mExtractorsFactory, null, null );
 
         mExoPlayer.stop();
+        mExoPlayer.seekTo( 0L );
         mExoPlayer.prepare( mediaSource, true, true );
         mExoPlayer.setPlayWhenReady( true );
+
+
+
+
+       /* startService( startedServiceIntent );
+
+        metadata = mMusicProvider.getMetadata( mediaDescription.getMediaId() );
+
+        mMediaSession.setMetadata( metadata );
+
+        mFinishPlay = true;*/
+
+
 
         showNotificationAsync( false, true );
 
         //Set service as started
         startService( startedServiceIntent );
 
-        //Update playback state
         updateState( PlaybackStateCompat.STATE_PLAYING );
 
 
@@ -1186,7 +1196,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
         SlimPlayerApplication.getInstance().setLastPlaySuccess();
 
-        SlimPlayerApplication.getInstance().getDirectPlayerAccess().enableActiveVisualizer();
+
 
 
     }
@@ -1217,6 +1227,29 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
                 MediaPlayerService.this.playNextRunnable();
             }
         }
+        /*else if ( playbackState == ExoPlayer.STATE_READY )
+        {
+            //Update playback state
+
+
+            //Are we finishing up play() function
+            if ( mFinishPlay )
+            {
+                showNotificationAsync( false, true );
+
+                updateState( PlaybackStateCompat.STATE_PLAYING );
+
+                mStatsDbHelper.updateLastPositionAsync( mQueueSource, mQueueParameter, mPosition );
+
+                SlimPlayerApplication.getInstance().setLastPlaySuccess();
+
+                mFinishPlay = false;
+            }
+
+
+
+            //SlimPlayerApplication.getInstance().getDirectPlayerAccess().enableActiveVisualizer();
+        }*/
     }
 
     @Override

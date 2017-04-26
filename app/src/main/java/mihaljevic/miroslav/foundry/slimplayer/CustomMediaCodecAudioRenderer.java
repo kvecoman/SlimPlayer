@@ -89,7 +89,7 @@ public class CustomMediaCodecAudioRenderer extends MediaCodecAudioRenderer
 
 
 
-    //TODO - test with AAC
+    //test with AAC - EDIT: aparently AAC doesn't show up by android database
     @Override
     protected void onInputFormatChanged( Format newFormat ) throws ExoPlaybackException
     {
@@ -142,6 +142,7 @@ public class CustomMediaCodecAudioRenderer extends MediaCodecAudioRenderer
             default:
                 mPcmFrameSize = 2 * mOutputChanelCount;
         }
+
 
     }
 

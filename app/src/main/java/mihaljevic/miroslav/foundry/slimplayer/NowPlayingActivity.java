@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -30,6 +31,7 @@ import android.widget.SeekBar;
 
 import java.util.List;
 
+//TODO - continue here- move visualizer more up
 
 public class NowPlayingActivity extends BackHandledFragmentActivity implements  ViewPager.OnPageChangeListener, View.OnClickListener, SeekBar.OnSeekBarChangeListener
 {
@@ -154,6 +156,8 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
                 //Check if we need to switch to current page
                 if ( activeQueueId != mPager.getCurrentItem() )
                     updatePagerWithCurrentSong();
+
+                //NowPlayingActivity.this.resumeVisualizer();
             }
         }
 
@@ -213,6 +217,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         }
 
         mPager = ( ViewPager )findViewById( R.id.pager );
+        mPager.setVisibility( View.VISIBLE );
         mPager.addOnPageChangeListener( this );
 
         mSeekBar = ( SeekBar ) findViewById( R.id.seek_bar );
@@ -393,7 +398,10 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
             return;
         }
 
-        mGLSurfaceView = new VisualizerGLSurfaceView( this );
+        mGLSurfaceView = (VisualizerGLSurfaceView ) findViewById( R.id.visualizer );
+
+        if ( mGLSurfaceView == null )
+            mGLSurfaceView = new VisualizerGLSurfaceView( this );
 
     }
 
@@ -401,19 +409,16 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     {
         RelativeLayout.LayoutParams layoutParams;
 
-
-        if ( mGLSurfaceView == null )
+        //Second condition is if the view is already atached, no need to do it twice
+        if ( mGLSurfaceView == null || mGLSurfaceView.getParent() != null )
             return;
 
-        if ( mGLSurfaceView.getParent() != null )
-        {
-            ( ( ViewGroup ) mGLSurfaceView.getParent() ).removeView( mGLSurfaceView );
-        }
+
 
 
         //We need to add GLSurfaceView this way, if we add it in layout, it's dimensions are wrong and visualization gets chopped at bottom
 
-        layoutParams = new RelativeLayout.LayoutParams( 50, 200 );
+        layoutParams = new RelativeLayout.LayoutParams( 50, 150 );
         layoutParams.addRule( RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE );
         layoutParams.addRule( RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE );
         layoutParams.addRule( RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE );
@@ -595,6 +600,21 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         return !Utils.isSourceDifferent( mQueueSource, mQueueParameter, sessionSource, sessionParameter );
     }
 
+    private void pauseVisualizer()
+    {
+
+        //mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_WHEN_DIRTY );
+        if ( mDirectPlayerAccess != null && mDirectPlayerAccess.audioRenderer != null )
+            mDirectPlayerAccess.audioRenderer.disableBufferProcessing();
+    }
+
+    private void resumeVisualizer()
+    {
+        //mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_CONTINUOUSLY );
+        if ( mDirectPlayerAccess != null && mDirectPlayerAccess.audioRenderer != null )
+            mDirectPlayerAccess.audioRenderer.enableBufferProcessing();
+    }
+
 
 
     //Handle onscreen taps, change between play/pause
@@ -615,18 +635,18 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
                 //Pause playback
                 mMediaController.getTransportControls().pause();
                 //notifyPlayPauseListener( false );
-                mGLSurfaceView.onPause();
+                pauseVisualizer();
                 break;
             case PlaybackStateCompat.STATE_PAUSED:
                 //Resume playback
                 mMediaController.getTransportControls().play();
                 //notifyPlayPauseListener( true );
-                mGLSurfaceView.onResume();
+                resumeVisualizer();
                 break;
             case PlaybackStateCompat.STATE_STOPPED:
                 mMediaController.getTransportControls().skipToQueueItem( mPager.getCurrentItem() );
                 //notifyPlayPauseListener( true );
-                mGLSurfaceView.onResume();
+                resumeVisualizer(); //TODO - might produce bugs
                 break;
             case PlaybackStateCompat.STATE_NONE:
                 Bundle  bundle;
@@ -645,7 +665,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
                 mMediaController.getTransportControls().playFromMediaId( mediaId, bundle );
 
                 //notifyPlayPauseListener( true );
-                mGLSurfaceView.onResume();
+                resumeVisualizer(); //TODO - might produce bugs
                 break;
         }
 
@@ -716,7 +736,9 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         if ( !mMediaBrowser.isConnected() || mMediaController == null || mMediaController.getPlaybackState().getActiveQueueItemId() == position )
             return;
 
-
+        //TODO - remove this for release, this is fix only for rooted phones/invalid codecs (doesn't work every time)
+        //Here we stop buffer processing so stuff don't get messed up while changing songs
+        mDirectPlayerAccess.disableActiveVisualizer();
 
         //Play this position when user selects it
         mMediaController.getTransportControls().skipToQueueItem( mPager.getCurrentItem() );
@@ -740,8 +762,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
             //This is first hint of songs changing, time to
             if ( mPosition != mPager.getCurrentItem() )
             {
-                //Here we stop buffer processing so stuff don't get messed up while changing songs
-                mDirectPlayerAccess.disableActiveVisualizer();
+
             }
         }
     }

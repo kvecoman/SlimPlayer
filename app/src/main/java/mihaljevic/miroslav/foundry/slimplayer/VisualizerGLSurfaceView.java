@@ -1,6 +1,7 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.content.Context;
+import android.graphics.Canvas;
 import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
@@ -30,6 +31,9 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
     
     private void init()
     {
+        if ( isInEditMode() )
+            return;
+
         mRenderer = new VisualizerGLRenderer();
 
         setDebugFlags( DEBUG_CHECK_GL_ERROR | DEBUG_LOG_GL_CALLS );
@@ -57,6 +61,14 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
         queueEvent( new ReleaseRunnable() );
     }
 
+    @Override
+    protected void onDraw( Canvas canvas )
+    {
+        if ( isInEditMode() )
+            return;
+
+        super.onDraw( canvas );
+    }
 
     /**
      * Runnable that cleans up native instance of renderer, supposed to be run on GL thread

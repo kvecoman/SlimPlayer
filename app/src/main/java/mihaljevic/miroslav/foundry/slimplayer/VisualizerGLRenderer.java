@@ -23,15 +23,15 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
 
     protected final String TAG = getClass().getSimpleName();
 
-    private static final int CURVE_POINTS = 8;
+    private static final int CURVE_POINTS = 8; //DEFAULT IS 8
 
-    private static final int TRANSITION_FRAMES = 8;  //10 is a nice value, it is synced, yet nicely slow and smooth
+    private static final int TRANSITION_FRAMES = 8;  //10 is a nice value, it is synced, yet nicely slow and smooth, DEFAULT IS 8
 
-    private static final int DEFAULT_TARGET_SAMPLES_TO_SHOW = 200;
+    private static final int DEFAULT_TARGET_SAMPLES_TO_SHOW = 200; //DEFAULT 200, number of samples being shown at screen every moment
 
-    private static final int DEFAULT_TARGET_TIME_SPAN = 500;
+    private static final int DEFAULT_TARGET_TIME_SPAN = 500; //DEFAULT 500, in ms
 
-    private static final int DEFAULT_STROKE_WIDTH = 10;
+    //private static final int DEFAULT_STROKE_WIDTH = 10;
 
 
 
@@ -49,6 +49,8 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
     //Used to create scroll illusion
     private int mDrawOffset = 0;
 
+    private boolean mClear = false;
+
 
 
 
@@ -61,11 +63,11 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
         System.loadLibrary( "visualizer" );
     }
 
-    private native long initNative( int curvePointsCount, int transitionFrames, int targetSamplesCount, int targetTimeSpan, int strokeWidth );
+    private native long initNative( int curvePointsCount, int transitionFrames, int targetSamplesCount, int targetTimeSpan/*, int strokeWidth*/ );
 
     private native void deleteNativeInstance( long objPtr );
 
-    private native void initNVG( long objPtr, int width, int height );
+    private native void initNVG( long objPtr, int width, int height, float density );
 
     private native void releaseNVG( long objPtr );
 
@@ -86,7 +88,7 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
 
     public VisualizerGLRenderer()
     {
-        mNativeInstancePtr = initNative( CURVE_POINTS, TRANSITION_FRAMES, DEFAULT_TARGET_SAMPLES_TO_SHOW, DEFAULT_TARGET_TIME_SPAN, DEFAULT_STROKE_WIDTH );
+        mNativeInstancePtr = initNative( CURVE_POINTS, TRANSITION_FRAMES, DEFAULT_TARGET_SAMPLES_TO_SHOW, DEFAULT_TARGET_TIME_SPAN/*, DEFAULT_STROKE_WIDTH*/ );
     }
 
 
@@ -97,9 +99,9 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
      * @param targetSamplesToShow   - amount of samples that show targeted time span
      * @param targetTimeSpan        - amount of time we see at every moment on screen in curve or waveform
      */
-    public VisualizerGLRenderer( int curvePoints, int transitionFrames, int targetSamplesToShow, int targetTimeSpan, int strokeWidth )
+    public VisualizerGLRenderer( int curvePoints, int transitionFrames, int targetSamplesToShow, int targetTimeSpan/*, int strokeWidth*/ )
     {
-        mNativeInstancePtr = initNative( curvePoints, transitionFrames, targetSamplesToShow, targetTimeSpan, strokeWidth );
+        mNativeInstancePtr = initNative( curvePoints, transitionFrames, targetSamplesToShow, targetTimeSpan/*, strokeWidth*/ );
     }
 
     @Override
@@ -113,25 +115,39 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
     public void onSurfaceChanged( GL10 gl, int width, int height )
     {
 
+        float density;
+
         if ( /*!mEnabled ||*/ mReleased || ( mWidth == width && mHeight == height ) )
             return;
 
         mWidth  = width;
         mHeight = height;
 
-        initNVG( mNativeInstancePtr, width, height );
+        density = SlimPlayerApplication.getInstance().getResources().getDisplayMetrics().density;
+
+        initNVG( mNativeInstancePtr, width, height, density );
+
+        //SlimPlayerApplication.getInstance().getResources().getDisplayMetrics().densityDpi;
+
     }
 
     @Override
     public void onDrawFrame( GL10 gl )
     {
 
+        if ( mClear )
+        {
+            GLES20.glClear( GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT );
+            return;
+        }
+
         if ( mEnabled )
             render( mNativeInstancePtr, mDrawOffset );
-        else
-            GLES20.glClear( GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT );
+        /*else
+            GLES20.glClear( GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT );*/
 
         GLES20.glClearColor(0, 0, 0, 0);
+        //GLES20.glClearColor(230f / 255f, 207f / 255f, 0f, 0.5f);
     }
 
     /**
@@ -168,6 +184,16 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
     {
         mEnabled = false;
         //disable( mNativeInstancePtr );
+    }
+
+    public void enableClear()
+    {
+        mClear = true;
+    }
+
+    public void disableClear()
+    {
+        mClear = false;
     }
 
     public void setDrawOffset( int drawOffset )

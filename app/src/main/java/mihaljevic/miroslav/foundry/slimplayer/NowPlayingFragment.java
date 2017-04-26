@@ -170,12 +170,13 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
         super.onCreateOptionsMenu( menu, inflater );
 
 
-        /*DirectPlayerAccess directPlayerAccess;
 
-        directPlayerAccess = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
-
+        //TODO - remove this for release, this is fix only for rooted phones/invalid codecs (doesn't work every time)
         //Here we enable buffer processing which we disabled when we changed songs
-        directPlayerAccess.enableActiveVisualizer();*/
+        SlimPlayerApplication.getInstance().getDirectPlayerAccess().enableActiveVisualizer();
+
+
+
 
 
     }

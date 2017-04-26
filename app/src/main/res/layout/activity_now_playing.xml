@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:app="http://schemas.android.com/apk/res-auto"
-                xmlns:tools="http://schemas.android.com/tools"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:id="@+id/now_playing_activity"
-                tools:context="mihaljevic.miroslav.foundry.slimplayer.NowPlayingActivity">
+<android.support.percent.PercentRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                                               xmlns:app="http://schemas.android.com/apk/res-auto"
+                                               xmlns:tools="http://schemas.android.com/tools"
+                                               android:layout_width="match_parent"
+                                               android:layout_height="match_parent"
+                                               android:id="@+id/now_playing_activity"
+                                               tools:context="mihaljevic.miroslav.foundry.slimplayer.NowPlayingActivity">
 
 
-   <android.support.v4.view.ViewPager
+  <android.support.v4.view.ViewPager
         android:id="@+id/pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:visibility="gone"/>
 
 
     <SeekBar
@@ -44,4 +45,11 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"/>
 
-</RelativeLayout>
+    <mihaljevic.miroslav.foundry.slimplayer.VisualizerGLSurfaceView
+        android:id="@+id/visualizer"
+        android:layout_width="match_parent"
+        app:layout_heightPercent="15%"
+        app:layout_marginTopPercent="40%"/>
+
+
+</android.support.percent.PercentRelativeLayout>

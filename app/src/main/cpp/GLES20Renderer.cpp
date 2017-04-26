@@ -8,12 +8,12 @@
 
 JNIEXPORT jlong JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initNative
-        ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan, jint strokeWidth )
+        ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan/*, jint strokeWidth*/ )
 {
 
         jlong instancePtr;
 
-        instancePtr = ( ( jlong )( new GLES20Renderer( curvePointsCount,  transitionFrames,  targetSamplesCount,  targetTimeSpan, strokeWidth ) ) );
+        instancePtr = ( ( jlong )( new GLES20Renderer( curvePointsCount,  transitionFrames,  targetSamplesCount,  targetTimeSpan/*, strokeWidth */) ) );
 
         return instancePtr;
         
@@ -32,13 +32,13 @@ JNIEXPORT void JNICALL
 
 JNIEXPORT void JNICALL
 Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initNVG
-        ( JNIEnv * env, jobject thiz, jlong objPtr, jint width, jint height )
+        ( JNIEnv * env, jobject thiz, jlong objPtr, jint width, jint height, jfloat density )
 {
         GLES20Renderer * instance;
 
         instance = (GLES20Renderer*)objPtr;
 
-        instance->initNVG( width, height );
+        instance->initNVG( width, height, density );
 
 }
 
@@ -69,6 +69,8 @@ JNIEXPORT void JNICALL
 
         bufferPtr       = ( jbyte* )env->GetDirectBufferAddress( samplesBuffer );
         capacity        = env->GetDirectBufferCapacity( samplesBuffer );
+
+        //__android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "processBuffer() - capacity is %i for instance %i", capacity,instance->mInstance );
 
         buffer = new Buffer( bufferPtr, samplesCount, capacity );
 
@@ -118,7 +120,7 @@ Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_disable
 
 
 
-GLES20Renderer::GLES20Renderer( jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan, jint strokeWidth )
+GLES20Renderer::GLES20Renderer( jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan/*, jint strokeWidth*/ )
 {
         mConstructorLock.lock();
 
@@ -130,13 +132,13 @@ GLES20Renderer::GLES20Renderer( jint curvePointsCount, jint transitionFrames, ji
 
         mCurvePoints            = new Point[ curvePointsCount ];
 
-        mCurveAnimator          = new CurveAnimator( curvePointsCount, transitionFrames, strokeWidth );
+        mCurveAnimator          = new CurveAnimator( curvePointsCount, transitionFrames );
 
         mWaveformPoints         = new Point[ targetSamplesCount ];
 
         mAudioBufferManager     = new AudioBufferManager( targetSamplesCount, targetTimeSpan, mInstance );
 
-        mStrokeWidth            = strokeWidth;
+        //mStrokeWidth            = strokeWidth;
 
 
         mConstructed = true;
@@ -179,7 +181,7 @@ GLES20Renderer::~GLES20Renderer()
         //sNVGCreateLock.unlock();
 }
 
-void GLES20Renderer::initNVG( int width, int height )
+void GLES20Renderer::initNVG( int width, int height, float density )
 {
 
 
@@ -191,6 +193,8 @@ void GLES20Renderer::initNVG( int width, int height )
 
         mConstructorLock.lock();
         __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "initNVG() for instance %i", mInstance );
+
+        mDensity = density;
 
         mGLESReleased = true;
 
@@ -257,7 +261,7 @@ void GLES20Renderer::render( int drawOffset )
             return;
         }
 
-        __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "render() for instance %i", mInstance );
+        //__android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "render() for instance %i", mInstance );
 
 
 
@@ -282,14 +286,15 @@ void GLES20Renderer::render( int drawOffset )
 
         //Here the samples are absoluted
         absoluteSamples( buffer );
-        calculateWaveformPoints(  buffer );
+
+        //calculateWaveformPoints(  buffer );
 
         glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
 
-        //TODO - see if you need different pixel ratio for HIDP devices
-        nvgBeginFrame( mNVGCtx, mWidth, mHeight, 1 );
 
-        drawWaveform( mNVGCtx );
+        nvgBeginFrame( mNVGCtx, mWidth, mHeight, mDensity );
+
+        //drawWaveform( mNVGCtx );
 
 
         if ( mCurveAnimator->isDone() )
@@ -300,7 +305,13 @@ void GLES20Renderer::render( int drawOffset )
 
 
         mCurveAnimator->calculateNextFrame();
-        mCurveAnimator->drawCurrentFrameCurve( mNVGCtx, mDrawOffset );
+        mCurveAnimator->drawCurrentFrameCurve( mNVGCtx, mDrawOffset, &STROKE_COLOR, STROKE_WIDTH );
+
+
+
+        /*nvgRect( mNVGCtx, 0, 0, mWidth, mHeight );
+        nvgFillColor( mNVGCtx, nvgRGBA( 230, 207, 0, 128 ) );
+        nvgFill( mNVGCtx );*/
 
 
         nvgEndFrame( mNVGCtx );
@@ -330,8 +341,7 @@ void GLES20Renderer::drawWaveform(NVGcontext * nvgContext )
         }
 
 
-        //TODO - stroke parameters somewhero elso, they also need to be moved from CurveAnimator::DrawCurrentCurve or something
-        nvgStrokeColor( nvgContext, nvgRGBA( 54, 194, 249, 255 ) );
+        nvgStrokeColor( nvgContext, STROKE_COLOR );
         nvgStrokeWidth( nvgContext, 2 );
         nvgStroke( nvgContext );
 }
@@ -353,7 +363,7 @@ void GLES20Renderer::calculateWaveformPoints( Buffer * buffer )
 
         jint strokeOffset;
 
-        strokeOffset = mStrokeWidth;
+        strokeOffset = STROKE_WIDTH;
 
         Jrect rect( 0, ( 0 + strokeOffset ), mWidth, ( mHeight / 2 ) - strokeOffset );
         Point * point;
@@ -393,15 +403,15 @@ void GLES20Renderer::calculateCurvePoints( Buffer * buffer )
         jint y;
 
 
-        jfloat maxSectorHeight;
+        jint maxSectorHeight;
         jint sectorSize;
 
-        jint strokeOffset;
+        jint yOffset;
 
         //With stroke offset we make sure that strokes are'nt drawn outside of canvas
-        strokeOffset = mStrokeWidth;
+        yOffset = ( (double)STROKE_WIDTH ) / 2.0;
 
-        Jrect rect(0, ( mHeight / 2 ) + strokeOffset, mWidth, mHeight - strokeOffset);
+        Jrect rect(0, /*( mHeight / 2 ) +*/ yOffset, mWidth, mHeight - yOffset);
 
 
         samplesCount = buffer->len;
@@ -410,7 +420,7 @@ void GLES20Renderer::calculateCurvePoints( Buffer * buffer )
         pointDistance = rect.getWitdth() / ( mCurvePointsCount - 1 );
 
 
-        scaling = ( jfloat ) rect.getHeight() / ( jfloat )128;
+        scaling = ( ( jfloat ) rect.getHeight() ) / ( ( jfloat )127 );
 
 
 
@@ -421,13 +431,19 @@ void GLES20Renderer::calculateCurvePoints( Buffer * buffer )
         {
                 maxSectorHeight = findMaxByte( buffer, i * sectorSize, i * sectorSize + sectorSize );
 
-                scaledHeight = scaling * maxSectorHeight;
+                scaledHeight = scaling * ( (float)maxSectorHeight );
 
                 x = i * pointDistance;
                 //y = scaledHeight; This is when we use full screen space
                 //y = rect.getHeight() + scaledHeight; When we use half surface but draw towards bottom
-                y = mHeight - scaledHeight;
+                y = rect.getHeight() - scaledHeight + rect.starty;
 
+
+                /*if ( maxSectorHeight > 110 )
+                {
+                    __android_log_print( ANDROID_LOG_INFO, "GLES20Renderer", "mWidth: %i, mHeight: %i\n rect width: %i, rect height: %i\n maxSectorHeight: %i, scaling: %f, scaledHeight: %f\n rect top: %i, y: %i",
+                                                                                mWidth, mHeight, rect.getWitdth(), rect.getHeight(), maxSectorHeight, scaling, scaledHeight, yOffset, y );
+                }*/
 
                 mCurvePoints[ i ].x = x;
                 mCurvePoints[ i ].y = y;

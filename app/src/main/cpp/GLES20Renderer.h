@@ -30,7 +30,7 @@ extern "C" {
 
 JNIEXPORT jlong JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initNative
-        ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan, jint strokeWidth );
+        ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan/*, jint strokeWidth*/ );
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_deleteNativeInstance
@@ -38,7 +38,7 @@ JNIEXPORT void JNICALL
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initNVG
-        ( JNIEnv * env, jobject thiz, jlong objPtr, int width, int height );
+        ( JNIEnv * env, jobject thiz, jlong objPtr, jint width, jint height, jfloat density );
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseNVG ( JNIEnv * env, jobject thiz, jlong objPtr );
@@ -79,7 +79,8 @@ class GLES20Renderer
 {
 public:
 
-
+    const NVGcolor  STROKE_COLOR = nvgRGBA( 54, 194, 249, 255 );
+    const int       STROKE_WIDTH = 10;
 
     struct NVGcontext * mNVGCtx = nullptr;
 
@@ -89,14 +90,14 @@ public:
      jint mSamplesCount;
 
      jint mCurvePointsCount;
-     Point * mCurvePoints;
-     Point * mWaveformPoints;
+     Point * mCurvePoints = nullptr;
+     Point * mWaveformPoints = nullptr;
 
-     CurveAnimator * mCurveAnimator;
+     CurveAnimator * mCurveAnimator = nullptr;
 
-     AudioBufferManager * mAudioBufferManager;
+     AudioBufferManager * mAudioBufferManager = nullptr;
 
-    jint mStrokeWidth;
+    //jint mStrokeWidth;
 
     //std::mutex mNVGContextLock;
 
@@ -114,15 +115,17 @@ public:
 
     int mDrawOffset = 0;
 
+    float mDensity = 1.0;
 
 
 
 
-    GLES20Renderer( jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan, jint strokeWidth );
+
+    GLES20Renderer( jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan/*, jint strokeWidth*/ );
 
     ~GLES20Renderer();
 
-    void initNVG( int width, int height );
+    void initNVG( int width, int height, float density );
 
     void releaseNVG();
 

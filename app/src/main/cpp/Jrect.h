@@ -9,13 +9,12 @@
 
 class Jrect
 {
-private:
+public:
     int startx;
     int starty;
     int endx;
     int endy;
 
-public:
     Jrect( jint startx, jint starty, jint endx, jint endy );
 
 

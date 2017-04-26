@@ -4,7 +4,7 @@
 
 #include "CurveAnimator.h"
 
-CurveAnimator::CurveAnimator( int pointCount, int frameCount, int strokeWidth )
+CurveAnimator::CurveAnimator( int pointCount, int frameCount/*, int strokeWidth*/ )
 {
     __android_log_print( ANDROID_LOG_VERBOSE, "CurveAnimator", "CurveAnimator() - constructor" );
 
@@ -13,7 +13,7 @@ CurveAnimator::CurveAnimator( int pointCount, int frameCount, int strokeWidth )
     mCurrentPoints  = new Point[ pointCount ];
     mStartPoints    = new Point[ pointCount ];
     mEndPoints      = new Point[ pointCount ];
-    mStrokeWidth    = strokeWidth;
+    //mStrokeWidth    = strokeWidth;
 }
 
 CurveAnimator::~CurveAnimator()
@@ -153,7 +153,7 @@ float CurveAnimator::percentageFromCubicBezier( float x, Point bezierPoints[] )
 }
 
 
-void CurveAnimator::drawCurrentFrameCurve( NVGcontext * nvgContext, int drawOffset )
+void CurveAnimator::drawCurrentFrameCurve( NVGcontext * nvgContext, int drawOffset, const NVGcolor * color, int strokeWidth )
 {
     //__android_log_print( ANDROID_LOG_VERBOSE, "CurveAnimator", "drawCurrentFrameCurve()" );
 
@@ -189,8 +189,8 @@ void CurveAnimator::drawCurrentFrameCurve( NVGcontext * nvgContext, int drawOffs
         nvgBezierTo( nvgContext, ctrl1.x, ctrl1.y, ctrl2.x, ctrl2.y, end.x, end.y );
     }
 
-    nvgStrokeColor( nvgContext, nvgRGBA( 54, 194, 249, 255 ) );
-    nvgStrokeWidth( nvgContext, 10 );
+    nvgStrokeColor( nvgContext, *color/*nvgRGBA( 54, 194, 249, 255 )*/ );
+    nvgStrokeWidth( nvgContext, strokeWidth/*10*/ );
     nvgStroke( nvgContext );
 
 }

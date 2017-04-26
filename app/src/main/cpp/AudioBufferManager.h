@@ -21,7 +21,7 @@ private:
     bool needsDelete;
 
 public:
-    jbyte * buffer;
+    jbyte * buffer = nullptr;
     int len;
     int cap;
 

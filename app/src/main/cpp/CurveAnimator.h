@@ -37,7 +37,7 @@ private:
     //Are we adding points for first time
     bool mFirstAdd = true;
 
-    int mStrokeWidth;
+    //int mStrokeWidth;
 
 public:
     Point CUBIC_BEZIER_EASE_IN_OUT[4] =  {
@@ -63,7 +63,7 @@ public:
 
 
 
-    CurveAnimator( int pointCount, int frameCount, int strokeWidth );
+    CurveAnimator( int pointCount, int frameCount/*, int strokeWidth*/ );
 
     ~CurveAnimator();
 
@@ -79,7 +79,7 @@ public:
     float percentageFromCubicBezier( float x, Point bezierPoints[] );
 
 
-    void drawCurrentFrameCurve( NVGcontext * nvgContext, int drawOffset );
+    void drawCurrentFrameCurve( NVGcontext * nvgContext, int drawOffset, const NVGcolor * color, int strokeWidth );
     
     
 };

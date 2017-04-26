@@ -51,7 +51,7 @@ public class DemoActivity extends AppCompatActivity implements View.OnClickListe
         mGLSurfaceView.getHolder().setFormat( PixelFormat.TRANSLUCENT );
         mGLSurfaceView.setEGLConfigChooser( 8, 8, 8, 8, 16, 0 );
         mGLSurfaceView.setEGLContextClientVersion( 2 );
-        mGLSurfaceView.setPreserveEGLContextOnPause( true ); //TODO - handle this preservation on pause???
+        mGLSurfaceView.setPreserveEGLContextOnPause( true );
         mGLSurfaceView.setZOrderOnTop( true );
 
         mRenderer = new Renderer();

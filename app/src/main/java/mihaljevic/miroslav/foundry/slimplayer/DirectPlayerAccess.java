@@ -1,5 +1,7 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
+import android.opengl.GLSurfaceView;
+
 import com.google.android.exoplayer2.ExoPlayer;
 
 /**
@@ -45,9 +47,10 @@ public class DirectPlayerAccess
         if ( activeVisualizer != null )
         {
             activeVisualizer.getRenderer().enable();
+            activeVisualizer.getRenderer().disableClear();
 
             //Enable in case we are paused
-            activeVisualizer.onResume();
+            //activeVisualizer.onResume();
         }
     }
 
@@ -57,7 +60,10 @@ public class DirectPlayerAccess
             audioRenderer.disableBufferProcessing();
 
         if ( activeVisualizer != null )
+        {
+            activeVisualizer.getRenderer().enableClear();
             activeVisualizer.getRenderer().disable();
+        }
     }
 
 }

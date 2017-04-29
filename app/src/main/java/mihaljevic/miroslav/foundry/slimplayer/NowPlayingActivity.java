@@ -29,22 +29,24 @@ import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 
+import com.google.android.exoplayer2.ExoPlayer;
+
 import java.util.List;
 
-//TODO - continue here- move visualizer more up
+//TODO - continue here- rotating stopped working in nowplaying activity
 
 public class NowPlayingActivity extends BackHandledFragmentActivity implements  ViewPager.OnPageChangeListener, View.OnClickListener, SeekBar.OnSeekBarChangeListener
 {
 
-    private static final int SEEK_BAR_UPDATE_TIME = 16; //Update time in ms
+    private static final int SEEK_BAR_UPDATE_TIME = /*16*/1000; //Update time in ms EDIT - not used at this moment
 
 
     private ViewPager               mPager;
     private NowPlayingPagerAdapter  mPagerAdapter;
 
     private SeekBar     mSeekBar;
-    private Handler     mSeekBarHandler;
-    private Runnable    mSeekBarRunnable;
+    /*private Handler     mSeekBarHandler;
+    private Runnable    mSeekBarRunnable;*/
 
     private String mQueueSource;
     private String mQueueParameter;
@@ -59,6 +61,49 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     private DirectPlayerAccess mDirectPlayerAccess;
 
     private int mPosition = -1;
+
+    private SeekBarUpdater mSeekBarUpdater;
+
+    private class SeekBarUpdater
+    {
+        private SeekBar mSeekBar;
+        private DirectPlayerAccess mDirectPlayerAccess;
+        private boolean mEnabled = false;
+
+        private Handler mHandler;
+        private Runnable mUpdateRunnable = new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                mSeekBar.setProgress( (int) mDirectPlayerAccess.getCurrentPlayerPosition() );
+
+                if ( mEnabled )
+                    mHandler.postDelayed( this, 1000 );
+            }
+        };
+
+
+        SeekBarUpdater(@NonNull SeekBar seekBar, @NonNull DirectPlayerAccess directPlayerAccess )
+        {
+            mSeekBar = seekBar;
+            mDirectPlayerAccess = directPlayerAccess;
+            mHandler = new Handler(  );
+        }
+
+        public void start()
+        {
+            mEnabled = true;
+            mHandler.post( mUpdateRunnable );
+        }
+
+        public void stop()
+        {
+            mEnabled = false;
+        }
+
+
+    }
 
 
 
@@ -84,7 +129,8 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
 
 
-                mSeekBarHandler.post( mSeekBarRunnable );
+                ///mSeekBarHandler.post( mSeekBarRunnable );
+                mSeekBarUpdater.start();
 
             }
             catch (RemoteException e)
@@ -161,6 +207,8 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
             }
         }
 
+
+
         @Override
         public void onMetadataChanged( MediaMetadataCompat metadata )
         {
@@ -171,13 +219,12 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         }
     };
 
-    private class SeekBarRunnable implements Runnable
+    /*private class SeekBarRunnable implements Runnable
     {
 
         @Override
         public void run()
         {
-
 
             if ( !isSelectedSongActive() || mDirectPlayerAccess == null || !mDirectPlayerAccess.isNotNull()  )
             {
@@ -185,16 +232,13 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
             }
             else
             {
-                mSeekBar.setProgress( ( int ) mDirectPlayerAccess.exoPlayer.getCurrentPosition() );
+                mSeekBar.setProgress( ( int ) mDirectPlayerAccess.mPlayer.getCurrentPosition() );
             }
-
-
-
 
 
             mSeekBarHandler.postDelayed( this, SEEK_BAR_UPDATE_TIME );
         }
-    }
+    }*/
 
 
     @Override
@@ -224,8 +268,8 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         mSeekBar.setProgress( 0 );
         mSeekBar.setOnSeekBarChangeListener( this );
 
-        mSeekBarHandler     = new Handler(  );
-        mSeekBarRunnable    = new SeekBarRunnable();
+        //mSeekBarHandler     = new Handler(  );
+        //mSeekBarRunnable    = new SeekBarRunnable();
 
         rewindButton        = ( ImageButton ) findViewById( R.id.rewind_button );
         fastForwardButton   = ( ImageButton ) findViewById( R.id.fast_forward_button );
@@ -235,9 +279,11 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
         mMediaBrowser = new MediaBrowserCompat( this, MediaPlayerService.COMPONENT_NAME, mConnectionCallbacks, null );
 
-        mDirectPlayerAccess = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
 
-        initVisualizer();
+        mDirectPlayerAccess = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
+        mSeekBarUpdater = new SeekBarUpdater( mSeekBar, mDirectPlayerAccess );
+
+        //initVisualizer();
 
         attachVisualizer();
 
@@ -246,28 +292,13 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
 
 
+
     @Override
     protected void onStart() {
         super.onStart();
 
-        //Ask for permissions if needed
-        if ( Build.VERSION.SDK_INT >= 16 )
-        {
-            Utils.askPermission(    this,
-                                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                                    getString( R.string.permission_storage_explanation ),
-                                    Const.STORAGE_PERMISSIONS_REQUEST,
-                                    new DialogInterface.OnClickListener()
-                                    {
-                                        @Override
-                                        public void onClick( DialogInterface dialog, int which )
-                                        {
-                                            //Go back if we don't have permission
-                                            onBackPressed();
-                                        }
-                                    } );
-        }
 
+        assertStoragePermission();
 
         mMediaBrowser.connect();
 
@@ -319,21 +350,25 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     protected void onStop()
     {
         super.onStop();
+        Log.v(TAG,"onStop()");
 
 
-        if (mMediaController != null)
+        if ( mMediaController != null )
             mMediaController.unregisterCallback( mMediaControllerCallbacks );
 
-        if (mMediaBrowser.isConnected())
+        if ( mMediaBrowser.isConnected() )
             mMediaBrowser.disconnect();
 
-        if (mSeekBarHandler != null && mSeekBarRunnable != null)
-            mSeekBarHandler.removeCallbacks( mSeekBarRunnable );
+        /*if (mSeekBarHandler != null && mSeekBarRunnable != null)
+            mSeekBarHandler.removeCallbacks( mSeekBarRunnable );*/
 
 
 
         if ( mGLSurfaceView != null )
             mGLSurfaceView.onPause();
+
+        if ( mSeekBarUpdater != null )
+            mSeekBarUpdater.stop();
 
     }
 
@@ -341,6 +376,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     protected void onDestroy()
     {
         super.onDestroy();
+        Log.v(TAG,"onDestroy()");
 
 
         releaseVisualizer();
@@ -444,7 +480,21 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         mGLSurfaceView.onResume();
         mGLSurfaceView.setRenderMode( VisualizerGLSurfaceView.RENDERMODE_CONTINUOUSLY );
 
+    }
 
+    private void pauseVisualizer()
+    {
+
+        //mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_WHEN_DIRTY );
+        if ( mDirectPlayerAccess != null && mDirectPlayerAccess.mPlayer != null )
+            mDirectPlayerAccess.mPlayer.disableBufferProcessing();
+    }
+
+    private void resumeVisualizer()
+    {
+        //mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_CONTINUOUSLY );
+        if ( mDirectPlayerAccess != null && mDirectPlayerAccess.mPlayer != null )
+            mDirectPlayerAccess.mPlayer.enableBufferProcessing();
     }
 
 
@@ -456,6 +506,28 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
 
 
+    public void assertStoragePermission()
+    {
+        //Ask for permissions if needed
+        if ( Build.VERSION.SDK_INT >= 16 )
+        {
+            Utils.askPermission(    this,
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    getString( R.string.permission_storage_explanation ),
+                    Const.STORAGE_PERMISSIONS_REQUEST,
+                    new DialogInterface.OnClickListener()
+                    {
+                        @Override
+                        public void onClick( DialogInterface dialog, int which )
+                        {
+                            //Go back if we don't have permission
+                            onBackPressed();
+                        }
+                    } );
+        }
+    }
+
+
 
     /**
      *
@@ -465,7 +537,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     {
         PlaybackStateCompat state;
 
-        if ( mMediaBrowser.isConnected() && mMediaController != null )
+        if ( mMediaBrowser == null || mMediaBrowser.isConnected() && mMediaController != null )
         {
             state = mMediaController.getPlaybackState();
 
@@ -526,7 +598,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         int                 position;
         PlaybackStateCompat playbackState;
 
-        if ( !mMediaBrowser.isConnected() )
+        if ( mMediaBrowser == null || !mMediaBrowser.isConnected() || mMediaController == null || mPager == null )
             return;
 
         playbackState = mMediaController.getPlaybackState();
@@ -548,6 +620,9 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     {
         MediaMetadataCompat             metadata;
         MediaSessionCompat.QueueItem    queueItem;
+
+        if ( mSeekBar == null || mPagerAdapter == null )
+            return;
 
         queueItem = mPagerAdapter.getData().get( position );
 
@@ -600,21 +675,6 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         return !Utils.isSourceDifferent( mQueueSource, mQueueParameter, sessionSource, sessionParameter );
     }
 
-    private void pauseVisualizer()
-    {
-
-        //mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_WHEN_DIRTY );
-        if ( mDirectPlayerAccess != null && mDirectPlayerAccess.audioRenderer != null )
-            mDirectPlayerAccess.audioRenderer.disableBufferProcessing();
-    }
-
-    private void resumeVisualizer()
-    {
-        //mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_CONTINUOUSLY );
-        if ( mDirectPlayerAccess != null && mDirectPlayerAccess.audioRenderer != null )
-            mDirectPlayerAccess.audioRenderer.enableBufferProcessing();
-    }
-
 
 
     //Handle onscreen taps, change between play/pause
@@ -636,17 +696,20 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
                 mMediaController.getTransportControls().pause();
                 //notifyPlayPauseListener( false );
                 pauseVisualizer();
+                mSeekBarUpdater.stop();
                 break;
             case PlaybackStateCompat.STATE_PAUSED:
                 //Resume playback
                 mMediaController.getTransportControls().play();
                 //notifyPlayPauseListener( true );
                 resumeVisualizer();
+                mSeekBarUpdater.start();
                 break;
             case PlaybackStateCompat.STATE_STOPPED:
                 mMediaController.getTransportControls().skipToQueueItem( mPager.getCurrentItem() );
                 //notifyPlayPauseListener( true );
                 resumeVisualizer(); //TODO - might produce bugs
+                mSeekBarUpdater.start();
                 break;
             case PlaybackStateCompat.STATE_NONE:
                 Bundle  bundle;
@@ -666,6 +729,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
                 //notifyPlayPauseListener( true );
                 resumeVisualizer(); //TODO - might produce bugs
+                mSeekBarUpdater.start();
                 break;
         }
 
@@ -717,6 +781,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
         if ( mPager.getCurrentItem() > position )
         {
+
             fullWidth = ( int ) ( ( ( float ) positionOffsetPixels ) / positionOffset );
 
             realOffset = fullWidth - positionOffsetPixels;
@@ -757,14 +822,14 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     {
         if ( state == ViewPager.SCROLL_STATE_IDLE )
             updateDrawOffset( 0 );
-        else if ( state == ViewPager.SCROLL_STATE_SETTLING )
+        /*else if ( state == ViewPager.SCROLL_STATE_SETTLING )
         {
             //This is first hint of songs changing, time to
             if ( mPosition != mPager.getCurrentItem() )
             {
 
             }
-        }
+        }*/
     }
 
 

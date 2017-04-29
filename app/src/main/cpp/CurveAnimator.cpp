@@ -6,7 +6,7 @@
 
 CurveAnimator::CurveAnimator( int pointCount, int frameCount/*, int strokeWidth*/ )
 {
-    __android_log_print( ANDROID_LOG_VERBOSE, "CurveAnimator", "CurveAnimator() - constructor" );
+    //__android_log_print( ANDROID_LOG_VERBOSE, "CurveAnimator", "CurveAnimator() - constructor" );
 
     mPointsCount    = pointCount;
     mFramesCount    = frameCount;
@@ -18,7 +18,7 @@ CurveAnimator::CurveAnimator( int pointCount, int frameCount/*, int strokeWidth*
 
 CurveAnimator::~CurveAnimator()
 {
-    __android_log_print( ANDROID_LOG_VERBOSE, "CurveAnimator", "~CurveAnimator() - destructor" );
+    //__android_log_print( ANDROID_LOG_VERBOSE, "CurveAnimator", "~CurveAnimator() - destructor" );
 
     delete [] mCurrentPoints;
     delete [] mStartPoints;

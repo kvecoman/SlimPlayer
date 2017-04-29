@@ -2,6 +2,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+import android.util.Log;
 
 import java.nio.ByteBuffer;
 
@@ -155,6 +156,7 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
      */
     public void release()
     {
+        Log.v( TAG,"release()" );
         mReleased = true;
 
         deleteNativeInstance( mNativeInstancePtr );
@@ -165,6 +167,7 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
      */
     public void releaseNVG()
     {
+        Log.v( TAG,"releaseNVG()" );
         releaseNVG( mNativeInstancePtr );
     }
 

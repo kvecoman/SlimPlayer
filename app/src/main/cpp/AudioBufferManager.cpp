@@ -32,7 +32,7 @@ Buffer::Buffer( jbyte * buffer, int len, int cap )
 
 Buffer::~Buffer()
 {
-    __android_log_print( ANDROID_LOG_VERBOSE, "Buffer", "~Buffer() - destructor, needsDelete: %i, length: %i, capacity %i", needsDelete, len, cap );
+    //__android_log_print( ANDROID_LOG_VERBOSE, "Buffer", "~Buffer() - destructor, needsDelete: %i, length: %i, capacity %i", needsDelete, len, cap );
 
     if ( needsDelete )
         delete [] buffer;
@@ -54,7 +54,7 @@ BufferWrap::BufferWrap( Buffer * buffer, jlong presentationTimeUs )
 
 BufferWrap::~BufferWrap()
 {
-    __android_log_print( ANDROID_LOG_VERBOSE, "BufferWrap", "~BufferWrap() - destructor" );
+   //__android_log_print( ANDROID_LOG_VERBOSE, "BufferWrap", "~BufferWrap() - destructor" );
 
     if ( buffer != nullptr )
         delete buffer;
@@ -70,7 +70,7 @@ AudioBufferManager::AudioBufferManager( int targetSamples, int targetTimeSpan, i
 
     mInstance = instance;
 
-    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "AudioBufferManager() - constructor for instance %i", mInstance );
+    //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "AudioBufferManager() - constructor for instance %i", mInstance );
 
     mTargetSamples = targetSamples;
     mTargetTimeSpan = targetTimeSpan;
@@ -93,7 +93,7 @@ AudioBufferManager::~AudioBufferManager()
 
     mResetLock.lock();
     mDestructorLock.lock();
-    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "~AudioBufferManager() - destructor for instance %i", mInstance );
+    //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "~AudioBufferManager() - destructor for instance %i", mInstance );
 
     if ( mResultBuffer != nullptr )
         delete  mResultBuffer;
@@ -239,7 +239,7 @@ Buffer * AudioBufferManager::createMonoSamples( Buffer * buffer, jint pcmFrameSi
 Buffer * AudioBufferManager::getFreeByteBuffer( int minimalCapacity )
 {
     //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "getFreeByteBuffer()" );
-    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "getFreeByteBuffer() for instance %i", mInstance );
+    //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "getFreeByteBuffer() for instance %i", mInstance );
 
     Buffer * freeBuffer = nullptr;
 
@@ -393,7 +393,7 @@ void AudioBufferManager::reset()
         return;
     }
 
-    __android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "reset()  for instance %i", mInstance );
+    //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManager", "reset()  for instance %i", mInstance );
 
     for (std::list<BufferWrap*>::const_iterator iterator = mBufferWrapList.begin(), end = mBufferWrapList.end(); iterator != end; ++iterator)
     {

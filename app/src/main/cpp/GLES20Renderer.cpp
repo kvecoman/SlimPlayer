@@ -126,7 +126,7 @@ GLES20Renderer::GLES20Renderer( jint curvePointsCount, jint transitionFrames, ji
 
         mInstance               = sInstanceNumber++;
 
-        __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "GLES20Renderer() - constructor for instance %i", mInstance );
+        //__android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "GLES20Renderer() - constructor for instance %i", mInstance );
 
         mCurvePointsCount       = curvePointsCount;
 
@@ -154,7 +154,7 @@ GLES20Renderer::~GLES20Renderer()
 
         mConstructorLock.lock();
 
-        __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "~GLES20Renderer() - destructor for instance %i", mInstance );
+        //__android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "~GLES20Renderer() - destructor for instance %i", mInstance );
 
 
 
@@ -192,7 +192,7 @@ void GLES20Renderer::initNVG( int width, int height, float density )
         //mNVGContextLock.lock();
 
         mConstructorLock.lock();
-        __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "initNVG() for instance %i", mInstance );
+        //__android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "initNVG() for instance %i", mInstance );
 
         mDensity = density;
 
@@ -231,7 +231,7 @@ void GLES20Renderer::releaseNVG()
     //mNVGContextLock.lock();
 
     mConstructorLock.lock();
-    __android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "releaseNVG() for instance %i", mInstance );
+    //__android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "releaseNVG() for instance %i", mInstance );
 
     mGLESReleased = true;
 

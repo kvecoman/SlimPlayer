@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
+import android.util.Log;
 
 /**
  * Created by miroslav on 16.04.17..
@@ -13,6 +14,7 @@ import android.util.AttributeSet;
 
 public class VisualizerGLSurfaceView extends GLSurfaceView
 {
+    private final String TAG = getClass().getSimpleName();
 
     private VisualizerGLRenderer mRenderer;
 
@@ -57,6 +59,7 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
 
     public void release()
     {
+        Log.v( TAG,"release()" );
         onResume();
         queueEvent( new ReleaseRunnable() );
     }

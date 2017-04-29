@@ -12,22 +12,22 @@ import com.google.android.exoplayer2.ExoPlayer;
 
 public class DirectPlayerAccess
 {
-    CustomMediaCodecAudioRenderer   audioRenderer;
-    ExoPlayer                       exoPlayer;
+    /*CustomMediaCodecAudioRenderer   audioRenderer;
+    ExoPlayer                       exoPlayer;*/
+    Player mPlayer;
     //VisualizerGLRenderer            visualizerGLRenderer;
 
     VisualizerGLSurfaceView         activeVisualizer;
 
-    public DirectPlayerAccess( CustomMediaCodecAudioRenderer audioRenderer, ExoPlayer exoPlayer/*, VisualizerGLRenderer visualizerGLRenderer*/ )
+    public DirectPlayerAccess( Player player )
     {
-        this.audioRenderer          = audioRenderer;
-        this.exoPlayer              = exoPlayer;
+        mPlayer = player;
         /*this.visualizerGLRenderer   = visualizerGLRenderer;*/
     }
 
     public boolean isNotNull()
     {
-        return audioRenderer != null && exoPlayer != null/* && visualizerGLRenderer != null*/;
+        return mPlayer != null;
     }
 
     public void setActiveVisualizer( VisualizerGLSurfaceView visualizer )
@@ -36,13 +36,13 @@ public class DirectPlayerAccess
 
         activeVisualizer = visualizer;
 
-        audioRenderer.setBufferReceiver( activeVisualizer.getRenderer() );
+        mPlayer.setBufferReceiver( activeVisualizer.getRenderer() );
     }
 
     public void enableActiveVisualizer()
     {
-        if ( audioRenderer != null )
-            audioRenderer.enableBufferProcessing();
+        if ( mPlayer != null )
+            mPlayer.enableBufferProcessing();
 
         if ( activeVisualizer != null )
         {
@@ -50,20 +50,26 @@ public class DirectPlayerAccess
             activeVisualizer.getRenderer().disableClear();
 
             //Enable in case we are paused
-            //activeVisualizer.onResume();
+            activeVisualizer.onResume(); //TODO - mybe this can be commented, it is not used for screen rotation, and not for page switching
         }
     }
 
     public void disableActiveVisualizer()
     {
-        if ( audioRenderer != null )
-            audioRenderer.disableBufferProcessing();
+        if ( mPlayer != null )
+            mPlayer.disableBufferProcessing();
 
         if ( activeVisualizer != null )
         {
             activeVisualizer.getRenderer().enableClear();
             activeVisualizer.getRenderer().disable();
         }
+    }
+
+
+    public long getCurrentPlayerPosition()
+    {
+        return mPlayer.getCurrentPosition();
     }
 
 }

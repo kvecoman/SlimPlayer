@@ -38,6 +38,7 @@ import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.LoadControl;
 import com.google.android.exoplayer2.Renderer;
+import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
@@ -48,6 +49,7 @@ import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
+import com.google.android.exoplayer2.upstream.DefaultAllocator;
 import com.google.android.exoplayer2.upstream.FileDataSourceFactory;
 
 import java.io.IOException;
@@ -60,7 +62,7 @@ import java.util.concurrent.Future;
 
 
 public class MediaPlayerService extends MediaBrowserServiceCompat implements AudioManager.OnAudioFocusChangeListener,
-                                                                             ExoPlayer.EventListener
+                                                                              Player.PlayerCallbacks
 {
 
     protected final String TAG = getClass().getSimpleName();
@@ -139,13 +141,15 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
     //We keep reference to list of used metadata so istances of it aren't garbage collected
     private List<MediaMetadataCompat> mMetadataList;
 
-    private ExoPlayer mExoPlayer;
+    //private ExoPlayer mExoPlayer;
 
     private CustomMediaCodecAudioRenderer mCustomAudioRenderer;
 
     private FileDataSourceFactory mDataSourceFactory;
 
     private ExtractorsFactory mExtractorsFactory;
+
+    private Player mPlayer;
 
     //private VisualizerGLRenderer mVisualizerGLRenderer;
 
@@ -172,7 +176,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
 
             //If headset is plugged out, pause the playback
-            if (intent.getIntExtra("state",0) == 0)
+            if (intent.getIntExtra( "state",0 ) == 0)
             {
                 if (mState == PlaybackStateCompat.STATE_PLAYING)
                 {
@@ -191,7 +195,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
             //If something is wrong just return
             if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals( intent.getAction() ))
             {
-                if (mState == PlaybackStateCompat.STATE_PLAYING)
+                if ( mState == PlaybackStateCompat.STATE_PLAYING )
                 {
                     pauseRunnable();
                 }
@@ -273,17 +277,21 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
         registerReceiver( mNoisyReceiver, new IntentFilter( AudioManager.ACTION_AUDIO_BECOMING_NOISY ) );
 
 
-        initExoPlayer();
+        //initExoPlayer();
+        mPlayer = new Player();
+        mPlayer.initPlayer( Player.PLAYER_EXO_PLAYER );
+        mPlayer.setCallbacksListener( this );
 
         //mVisualizerGLRenderer = new VisualizerGLRenderer(  );
 
         //mCustomAudioRenderer.setBufferReceiver( mVisualizerGLRenderer );
 
-        SlimPlayerApplication.getInstance().setDirectPlayerAccess( new DirectPlayerAccess( mCustomAudioRenderer, mExoPlayer ) );
+        //SlimPlayerApplication.getInstance().setDirectPlayerAccess( new DirectPlayerAccess( mCustomAudioRenderer, mExoPlayer ) );
+        SlimPlayerApplication.getInstance().setDirectPlayerAccess( new DirectPlayerAccess( mPlayer ) );
 
     }
 
-    private void initExoPlayer()
+    /*private void initExoPlayer()
     {
         TrackSelector       trackSelector;
         LoadControl         loadControl;
@@ -296,13 +304,15 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
         renderers       = new Renderer[] { mCustomAudioRenderer };
         trackSelector   = new DefaultTrackSelector();
-        loadControl     = new DefaultLoadControl();
+        loadControl     = new DefaultLoadControl( new DefaultAllocator( true, 128 * 1000 ), 30000, 45000, 2500, 5000 );
 
-        mExoPlayer = ExoPlayerFactory.newInstance( renderers, trackSelector, loadControl );
+        //mExoPlayer = ExoPlayerFactory.newInstance( renderers, trackSelector, loadControl );
+
+        mExoPlayer = ExoPlayerFactory.newSimpleInstance( this, trackSelector, loadControl, null, SimpleExoPlayer.EXTENSION_RENDERER_MODE_ON );
 
         mExoPlayer.addListener( this );
         mExoPlayer.setPlayWhenReady( false );
-    }
+    }*/
 
     public int onStartCommand(Intent intent, int flags, int startId)
     {
@@ -360,13 +370,16 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
             mPlayer = null;
         }*/
 
-        if ( mExoPlayer != null )
+        /*if ( mExoPlayer != null )
         {
             mExoPlayer.setPlayWhenReady( false );
             mExoPlayer.stop();
             mExoPlayer.release();
             mExoPlayer = null;
-        }
+        }*/
+
+        if ( mPlayer != null )
+            mPlayer.release();
 
 
         StatsDbHelper.closeInstance();
@@ -653,7 +666,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
                                                 | PlaybackStateCompat.ACTION_PAUSE
                                                 | PlaybackStateCompat.ACTION_PLAY_PAUSE
                                                 | PlaybackStateCompat.ACTION_SEEK_TO )
-                        .setState               ( mState, mExoPlayer.getCurrentPosition(), 1.0f )
+                        .setState               ( mState, mPlayer.getCurrentPosition(), 1.0f )
                         .setActiveQueueItemId   ( mPosition );
                 break;
             case PlaybackStateCompat.STATE_PAUSED:
@@ -666,7 +679,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
                                                 | PlaybackStateCompat.ACTION_PLAY
                                                 | PlaybackStateCompat.ACTION_PLAY_PAUSE
                                                 | PlaybackStateCompat.ACTION_SEEK_TO )
-                        .setState               ( mState, mExoPlayer.getCurrentPosition(), 1.0f )
+                        .setState               ( mState, mPlayer.getCurrentPosition(), 1.0f )
                         .setActiveQueueItemId   ( mPosition );
                 break;
             case PlaybackStateCompat.STATE_SKIPPING_TO_NEXT:
@@ -833,10 +846,10 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
         if ( !(mState == PlaybackStateCompat.STATE_PLAYING || mState == PlaybackStateCompat.STATE_PAUSED) )
             return;
 
-        if ( pos < 0 || pos >= mExoPlayer.getDuration() )
+        if ( pos < 0 || pos >= mPlayer.getDuration() )
             return;
 
-        mExoPlayer.seekTo( pos );
+        mPlayer.seekTo( pos );
         updateState( mState );
 
     }
@@ -1039,7 +1052,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
     {
         long position;
 
-        position = mExoPlayer.getCurrentPosition();
+        position = mPlayer.getCurrentPosition();
 
         position += FF_SPEED;
 
@@ -1063,7 +1076,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
     {
         long position;
 
-        position = mExoPlayer.getCurrentPosition();
+        position = mPlayer.getCurrentPosition();
 
         position -= FF_SPEED;
 
@@ -1162,10 +1175,24 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
         mediaSource = new ExtractorMediaSource( mediaFileUri, mDataSourceFactory, mExtractorsFactory, null, null );
 
-        mExoPlayer.stop();
+        /*mExoPlayer.stop();
         mExoPlayer.seekTo( 0L );
         mExoPlayer.prepare( mediaSource, true, true );
-        mExoPlayer.setPlayWhenReady( true );
+        mExoPlayer.setPlayWhenReady( true );*/
+
+        try
+        {
+            //Player is stop automatically when we start preparing
+            mPlayer.prepareAudioSource( mediaFileUri );
+            mPlayer.play();
+        }
+        catch ( IOException e )
+        {
+            e.printStackTrace();
+        }
+
+
+
 
 
 
@@ -1214,6 +1241,16 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
     }
 
     @Override
+    public void onCompletion()
+    {
+        if ( mState == PlaybackStateCompat.STATE_PLAYING )
+        {
+            MediaPlayerService.this.playNextRunnable();
+        }
+
+    }
+
+    /*@Override
     public void onPlayerStateChanged( boolean playWhenReady, int playbackState )
     {
         //This is called when song is finished playing
@@ -1224,10 +1261,10 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
             //Continue to next song only if we are set to be playing
             if ( mState == PlaybackStateCompat.STATE_PLAYING )
             {
-                MediaPlayerService.this.playNextRunnable();
+
             }
         }
-        /*else if ( playbackState == ExoPlayer.STATE_READY )
+        else if ( playbackState == ExoPlayer.STATE_READY )
         {
             //Update playback state
 
@@ -1249,10 +1286,10 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
 
             //SlimPlayerApplication.getInstance().getDirectPlayerAccess().enableActiveVisualizer();
-        }*/
-    }
+        }
+    }*/
 
-    @Override
+    /*@Override
     public void onTimelineChanged( Timeline timeline, Object manifest )
     {
 
@@ -1281,7 +1318,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
     public void onPositionDiscontinuity()
     {
 
-    }
+    }*/
 
     /*public void playAsync(final int position)
     {
@@ -1315,9 +1352,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
     public synchronized void pause()
     {
-        if ( mExoPlayer != null && ( mState == PlaybackStateCompat.STATE_PLAYING ) )
+        if ( mPlayer != null && ( mState == PlaybackStateCompat.STATE_PLAYING ) )
         {
-            mExoPlayer.setPlayWhenReady(false);
+            mPlayer.pause();
             giveUpAudioFocus();
             updateState( PlaybackStateCompat.STATE_PAUSED );
             showNotificationAsync( true, false );
@@ -1339,14 +1376,14 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
     public synchronized void resume()
     {
-        if ( mExoPlayer != null && ( mPosition != -1 || mState == PlaybackStateCompat.STATE_PAUSED ) )
+        if ( mPlayer != null && ( mPosition != -1 || mState == PlaybackStateCompat.STATE_PAUSED ) )
         {
             tryToGetAudioFocus();
 
             if (!mAudioFocus)
                 return;
 
-            mExoPlayer.setPlayWhenReady( true );
+            mPlayer.play();
             updateState( PlaybackStateCompat.STATE_PLAYING );
             showNotificationAsync( false, false );
         }
@@ -1372,6 +1409,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
         //If the player is not even started then just dont do anything
         if ( mPosition == -1 ||  mState == PlaybackStateCompat.STATE_NONE || mState == PlaybackStateCompat.STATE_STOPPED )
             return;
+
+        Log.v( TAG, "playNext()" );
 
         //NOTE - commented out because it makes lock screen controlls disappear
         //updateState( PlaybackStateCompat.STATE_SKIPPING_TO_NEXT );
@@ -1441,7 +1480,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
     public synchronized void stop()
     {
 
-        if ( mExoPlayer == null )
+        if ( mPlayer == null )
             return;
 
         updateState( PlaybackStateCompat.STATE_STOPPED );
@@ -1454,7 +1493,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
         mPosition = -1;
 
-        mExoPlayer.stop();
+        mPlayer.stop();
 
     }
 

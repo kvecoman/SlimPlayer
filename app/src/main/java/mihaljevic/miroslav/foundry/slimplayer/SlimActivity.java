@@ -25,7 +25,7 @@ public abstract class SlimActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu( Menu menu )
     {
-        Log.v(TAG,"onCreateOptionsMenu()");
+        //Log.v(TAG,"onCreateOptionsMenu()");
 
         //Inflate options menu
         getMenuInflater().inflate( R.menu.options_menu, menu );

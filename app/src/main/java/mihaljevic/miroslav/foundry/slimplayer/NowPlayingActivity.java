@@ -33,7 +33,7 @@ import com.google.android.exoplayer2.ExoPlayer;
 
 import java.util.List;
 
-//TODO - continue here- rotating stopped working in nowplaying activity
+//TODO - continue here- rotating stopped working in nowplaying activity - continue with that, problem is in release()
 
 public class NowPlayingActivity extends BackHandledFragmentActivity implements  ViewPager.OnPageChangeListener, View.OnClickListener, SeekBar.OnSeekBarChangeListener
 {
@@ -283,7 +283,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         mDirectPlayerAccess = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
         mSeekBarUpdater = new SeekBarUpdater( mSeekBar, mDirectPlayerAccess );
 
-        //initVisualizer();
+        initVisualizer();
 
         attachVisualizer();
 

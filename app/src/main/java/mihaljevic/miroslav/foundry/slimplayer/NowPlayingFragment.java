@@ -116,7 +116,7 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
     @Override
     public View onCreateView( LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState )
     {
-        Log.v(TAG,"onCreateView()");
+        //Log.v(TAG,"onCreateView()");
 
         // Inflate the layout for this fragment
         mContentView = inflater.inflate( R.layout.fragment_now_playing, container, false );
@@ -130,7 +130,7 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
     public void onActivityCreated(@Nullable Bundle savedInstanceState)
     {
         super.onActivityCreated(savedInstanceState);
-        Log.v(TAG,"onActivityCreated()");
+        //Log.v(TAG,"onActivityCreated()");
 
         Context context;
 
@@ -209,7 +209,7 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
     public void onStop()
     {
         super.onStop();
-        Log.v( TAG, "onStop() called for fragment with tag: " + mTag );
+        //Log.v( TAG, "onStop() called for fragment with tag: " + mTag );
 
 
         if ( mMediaController != null )
@@ -224,7 +224,7 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
     {
         super.onDestroy();
 
-        Log.v( TAG, "onDestroy() called for fragment with tag: " + mTag );
+        //Log.v( TAG, "onDestroy() called for fragment with tag: " + mTag );
 
 
         //releaseVisualizer();
@@ -252,7 +252,7 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
     private void loadSongInfo()
     {
         //Bind song info to this fragment
-        Log.v(TAG,"loadSongInfo()");
+        //Log.v(TAG,"loadSongInfo()");
 
         Bundle args;
 
@@ -275,7 +275,7 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
 
     private void displaySongInfo()
     {
-        Log.v(TAG,"displaySongInfo()");
+        //Log.v(TAG,"displaySongInfo()");
 
         TextView songTitleTextView;
         TextView songArtistTextView;
@@ -295,7 +295,7 @@ public class NowPlayingFragment extends Fragment implements ViewTreeObserver.OnG
     //Get album art and display it (if it exists)
     private void displayArtAsync()
     {
-        Log.v( TAG, "displayArtAsync()" );
+        //Log.v( TAG, "displayArtAsync()" );
 
         if ( mContentView.getWidth() <= 0 || mContentView.getHeight() <= 0 || !mHasArt || !isAdded() )
             return;

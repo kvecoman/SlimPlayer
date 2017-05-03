@@ -8,12 +8,12 @@
 
 JNIEXPORT jlong JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initNative
-        ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan/*, jint strokeWidth*/ )
+        ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan/*, jint strokeWidth*/, jboolean exoAudioBufferManager )
 {
 
         jlong instancePtr;
 
-        instancePtr = ( ( jlong )( new GLES20Renderer( curvePointsCount,  transitionFrames,  targetSamplesCount,  targetTimeSpan/*, strokeWidth */) ) );
+        instancePtr = ( ( jlong )( new GLES20Renderer( curvePointsCount,  transitionFrames,  targetSamplesCount,  targetTimeSpan/*, strokeWidth */, exoAudioBufferManager) ) );
 
         return instancePtr;
         
@@ -80,6 +80,38 @@ JNIEXPORT void JNICALL
 }
 
 
+//RAW ARRAY VERSION
+JNIEXPORT void JNICALL
+Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBufferArray
+        ( JNIEnv * env, jobject thiz, jlong objPtr, jarray samplesBuffer, jint samplesCount, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs )
+{
+    Buffer * buffer;
+
+    GLES20Renderer * instance;
+
+    jbyte * bufferPtr;
+    jint capacity;
+    jboolean isCopy;
+
+    instance = (GLES20Renderer*)objPtr;
+
+    capacity        = env->GetArrayLength( samplesBuffer );
+    bufferPtr       = (jbyte*)env->GetPrimitiveArrayCritical( samplesBuffer, &isCopy );
+
+
+    //__android_log_print( ANDROID_LOG_VERBOSE, "GLES20Renderer", "processBuffer() - capacity is %i for instance %i", capacity,instance->mInstance );
+
+    buffer = new Buffer( bufferPtr, samplesCount, capacity );
+
+    if ( /*instance->mEnabled &&*/ instance->mConstructed && !instance->mDeleted && instance->mAudioBufferManager != nullptr )
+        instance->mAudioBufferManager->processBuffer( buffer, presentationTimeUs, pcmFrameSize, sampleRate, currentTimeUs );
+
+    env->ReleasePrimitiveArrayCritical( samplesBuffer, bufferPtr, 0 );
+    delete buffer;
+
+}
+
+
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_render
@@ -120,7 +152,7 @@ Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_disable
 
 
 
-GLES20Renderer::GLES20Renderer( jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan/*, jint strokeWidth*/ )
+GLES20Renderer::GLES20Renderer( jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan/*, jint strokeWidth*/,jboolean exoAudioBufferManager )
 {
         mConstructorLock.lock();
 
@@ -136,7 +168,10 @@ GLES20Renderer::GLES20Renderer( jint curvePointsCount, jint transitionFrames, ji
 
         mWaveformPoints         = new Point[ targetSamplesCount ];
 
-        mAudioBufferManager     = new AudioBufferManager( targetSamplesCount, targetTimeSpan, mInstance );
+        if ( exoAudioBufferManager )
+            mAudioBufferManager     = new AudioBufferManagerExo( targetSamplesCount, targetTimeSpan, mInstance );
+        else
+            mAudioBufferManager     = new AudioBufferManagerMedia( targetSamplesCount, targetTimeSpan );
 
         //mStrokeWidth            = strokeWidth;
 
@@ -284,8 +319,8 @@ void GLES20Renderer::render( int drawOffset )
         samplesCount    = buffer->len;
         mSamplesCount   = samplesCount;
 
-        //Here the samples are absoluted
-        absoluteSamples( buffer );
+        //Here the samples are absoluted EDIT - samples are absoluted at their respective AudioBufferManager
+        //absoluteSamples( buffer );
 
         //calculateWaveformPoints(  buffer );
 

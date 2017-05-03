@@ -40,7 +40,7 @@ public class CustomMediaCodecAudioRenderer extends MediaCodecAudioRenderer
 
     private int mPcmFrameSize;
 
-    private BufferReceiver mBufferReceiver;
+    private Player.BufferReceiver mBufferReceiver;
 
     private boolean mEnabled = true;
 
@@ -77,12 +77,12 @@ public class CustomMediaCodecAudioRenderer extends MediaCodecAudioRenderer
 
 
 
-    public void setBufferReceiver( BufferReceiver bufferReceiver )
+    public void setBufferReceiver( Player.BufferReceiver bufferReceiver )
     {
         mBufferReceiver = bufferReceiver;
     }
 
-    public BufferReceiver getBufferReceiver()
+    public Player.BufferReceiver getBufferReceiver()
     {
         return mBufferReceiver;
     }
@@ -177,10 +177,7 @@ public class CustomMediaCodecAudioRenderer extends MediaCodecAudioRenderer
         return fullyProcessed;
     }
 
-    interface BufferReceiver
-    {
-       void processBuffer( ByteBuffer samplesBuffer, int samplesCount, long presentationTimeUs, int pcmFrameSize, int sampleRate, long currentTimeUs );
-    }
+
 
 
 

@@ -11,7 +11,6 @@
 
 #include <jni.h>
 #include <android/log.h>
-
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include "nanovg/nanovg.h"
@@ -21,8 +20,11 @@
 #include "Point.h"
 #include "CurveAnimator.h"
 #include "AudioBufferManager.h"
+#include "AudioBufferManagerExo.h"
+#include "AudioBufferManagerMedia.h"
 #include <vector>
 #include <mutex>
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,7 +32,7 @@ extern "C" {
 
 JNIEXPORT jlong JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initNative
-        ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan/*, jint strokeWidth*/ );
+        ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan/*, jint strokeWidth*/, jboolean exoAudioBufferManager );
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_deleteNativeInstance
@@ -47,6 +49,10 @@ JNIEXPORT void JNICALL
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBuffer
         ( JNIEnv * env, jobject thiz, jlong objPtr, jobject samplesBuffer, jint samplesCount, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs );
+
+JNIEXPORT void JNICALL
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBufferArray
+        ( JNIEnv * env, jobject thiz, jlong objPtr, jarray samplesBuffer, jint samplesCount, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs );
 
 
 JNIEXPORT void JNICALL
@@ -121,7 +127,7 @@ public:
 
 
 
-    GLES20Renderer( jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan/*, jint strokeWidth*/ );
+    GLES20Renderer( jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan/*, jint strokeWidth*/, jboolean exoAudioBufferManager );
 
     ~GLES20Renderer();
 

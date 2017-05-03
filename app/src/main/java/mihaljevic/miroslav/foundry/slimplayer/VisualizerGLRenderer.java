@@ -19,7 +19,7 @@ import javax.microedition.khronos.opengles.GL10;
  *
  */
 
-public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMediaCodecAudioRenderer.BufferReceiver
+public class VisualizerGLRenderer implements GLSurfaceView.Renderer, Player.BufferReceiver
 {
 
     protected final String TAG = getClass().getSimpleName();
@@ -33,6 +33,7 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
     private static final int DEFAULT_TARGET_TIME_SPAN = 500; //DEFAULT 500, in ms
 
     //private static final int DEFAULT_STROKE_WIDTH = 10;
+
 
 
 
@@ -64,7 +65,7 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
         System.loadLibrary( "visualizer" );
     }
 
-    private native long initNative( int curvePointsCount, int transitionFrames, int targetSamplesCount, int targetTimeSpan/*, int strokeWidth*/ );
+    private native long initNative( int curvePointsCount, int transitionFrames, int targetSamplesCount, int targetTimeSpan/*, int strokeWidth*/, boolean exoAudioBufferManager );
 
     private native void deleteNativeInstance( long objPtr );
 
@@ -75,6 +76,8 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
     private native void render( long objPtr, int drawOffset );
 
     public native void processBuffer( long objPtr, ByteBuffer samplesBuffer, int samplesCount, long presentationTimeUs, int pcmFrameSize, int sampleRate, long currentTimeUs );
+
+    public native void processBufferArray( long objPtr, byte[] samplesBuffer, int samplesCount, long presentationTimeUs, int pcmFrameSize, int sampleRate, long currentTimeUs );
 
     /*private native void enable( long objPtr );
 
@@ -89,7 +92,7 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
 
     public VisualizerGLRenderer()
     {
-        mNativeInstancePtr = initNative( CURVE_POINTS, TRANSITION_FRAMES, DEFAULT_TARGET_SAMPLES_TO_SHOW, DEFAULT_TARGET_TIME_SPAN/*, DEFAULT_STROKE_WIDTH*/ );
+        mNativeInstancePtr = initNative( CURVE_POINTS, TRANSITION_FRAMES, DEFAULT_TARGET_SAMPLES_TO_SHOW, DEFAULT_TARGET_TIME_SPAN/*, DEFAULT_STROKE_WIDTH*/, false );
     }
 
 
@@ -100,9 +103,9 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
      * @param targetSamplesToShow   - amount of samples that show targeted time span
      * @param targetTimeSpan        - amount of time we see at every moment on screen in curve or waveform
      */
-    public VisualizerGLRenderer( int curvePoints, int transitionFrames, int targetSamplesToShow, int targetTimeSpan/*, int strokeWidth*/ )
+    public VisualizerGLRenderer( int curvePoints, int transitionFrames, int targetSamplesToShow, int targetTimeSpan/*, int strokeWidth*/, boolean exoAudioBufferManager )
     {
-        mNativeInstancePtr = initNative( curvePoints, transitionFrames, targetSamplesToShow, targetTimeSpan/*, strokeWidth*/ );
+        mNativeInstancePtr = initNative( curvePoints, transitionFrames, targetSamplesToShow, targetTimeSpan/*, strokeWidth*/, exoAudioBufferManager );
     }
 
     @Override
@@ -147,8 +150,8 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
         /*else
             GLES20.glClear( GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT );*/
 
-        GLES20.glClearColor(0, 0, 0, 0);
-        //GLES20.glClearColor(230f / 255f, 207f / 255f, 0f, 0.5f);
+        //GLES20.glClearColor(0, 0, 0, 0);
+        GLES20.glClearColor(230f / 255f, 207f / 255f, 0f, 0.5f);
     }
 
     /**
@@ -209,5 +212,12 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, CustomMedia
     {
         if ( !mReleased && mEnabled )
             processBuffer( mNativeInstancePtr, samplesBuffer, samplesCount, presentationTimeUs, pcmFrameSize, sampleRate, currentTimeUs );
+    }
+
+    @Override
+    public void processBufferArray( byte[] samplesBuffer, int samplesCount, long presentationTimeUs, int pcmFrameSize, int sampleRate, long currentTimeUs )
+    {
+        if ( !mReleased && mEnabled )
+            processBufferArray( mNativeInstancePtr, samplesBuffer, samplesCount, presentationTimeUs, pcmFrameSize, sampleRate, currentTimeUs );
     }
 }

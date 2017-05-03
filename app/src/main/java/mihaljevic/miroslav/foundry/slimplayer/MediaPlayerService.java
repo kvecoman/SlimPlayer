@@ -279,7 +279,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
         //initExoPlayer();
         mPlayer = new Player();
-        mPlayer.initPlayer( Player.PLAYER_EXO_PLAYER );
+        mPlayer.initPlayer( Player.PLAYER_MEDIA_PLAYER );
         mPlayer.setCallbacksListener( this );
 
         //mVisualizerGLRenderer = new VisualizerGLRenderer(  );

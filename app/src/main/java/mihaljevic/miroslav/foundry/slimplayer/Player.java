@@ -1,6 +1,8 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
+import android.media.audiofx.Visualizer;
 import android.net.Uri;
+import android.os.Build;
 import android.support.annotation.IntDef;
 import android.util.Log;
 
@@ -26,6 +28,7 @@ import com.google.android.exoplayer2.upstream.FileDataSourceFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import io.vov.vitamio.MediaPlayer;
 
@@ -39,7 +42,7 @@ import io.vov.vitamio.MediaPlayer;
 
 
 
-public class Player
+public class Player implements Visualizer.OnDataCaptureListener
 {
     protected final String TAG = getClass().getSimpleName();
 
@@ -57,8 +60,10 @@ public class Player
 
     private PlayerCallbacks mListener;
 
-    private android.media.MediaPlayer   mMediaPlayer;
-    private MediaPlayer                 mVitamioPlayer;
+    private android.media.MediaPlayer                       mMediaPlayer;
+    private MediaPlayer                                     mVitamioPlayer;
+    private Visualizer                                      mVisualizer;
+    private BufferReceiver    mVisualizerBufferReceiver;
 
     private ExoPlayer                       mExoPlayer;
     private FileDataSourceFactory           mDataSourceFactory;
@@ -84,10 +89,14 @@ public class Player
             case PLAYER_MEDIA_PLAYER:
                 mMediaPlayer = new android.media.MediaPlayer();
                 mMediaPlayer.setOnCompletionListener( new MediaPlayerCallbacks() );
+                mVisualizer = new Visualizer( mMediaPlayer.getAudioSessionId() );
+                initVisualizer();
                 break;
             case PLAYER_VITAMIO_PLAYER:
                 mVitamioPlayer = new MediaPlayer( SlimPlayerApplication.getInstance(), true );
                 mVitamioPlayer.setOnCompletionListener( new VitamioPlayerCallbacks() );
+                mVisualizer = new Visualizer( 0 /*TODO: try to get session id from vitamio player */ );
+                initVisualizer();
                 break;
             case PLAYER_EXO_PLAYER:
                 initExoPlayer();
@@ -117,6 +126,16 @@ public class Player
 
         mExoPlayer.addListener( new ExoPlayerCallbacks() );
         mExoPlayer.setPlayWhenReady( false );
+    }
+
+    private synchronized void initVisualizer()
+    {
+        //TODO - continue here - implement player selector in settings, test vitamio player and see why it doesn't use normalized scaling mode
+        mVisualizer.setCaptureSize( Visualizer.getCaptureSizeRange()[1] );
+        if ( Build.VERSION.SDK_INT >= 16 )
+            mVisualizer.setScalingMode( Visualizer.SCALING_MODE_NORMALIZED );
+
+        mVisualizer.setDataCaptureListener( this, Visualizer.getMaxCaptureRate(), true, false );
     }
 
     public synchronized void prepareAudioSource( Uri uri ) throws IOException
@@ -257,6 +276,7 @@ public class Player
 
     public synchronized void release()
     {
+        //TODO - release visualizer components
         if ( mMediaPlayer != null )
         {
             mMediaPlayer.stop();
@@ -286,9 +306,17 @@ public class Player
         this.mListener = listener;
     }
 
-    public void setBufferReceiver( CustomMediaCodecAudioRenderer.BufferReceiver bufferReceiver )
+    public void setBufferReceiver( BufferReceiver bufferReceiver )
     {
-        if ( mExoPlayer != null && mCustomAudioRenderer != null )
+        if ( mMediaPlayer != null )
+        {
+            mVisualizerBufferReceiver = bufferReceiver;
+        }
+        else if ( mVitamioPlayer != null )
+        {
+            mVisualizerBufferReceiver = bufferReceiver;
+        }
+        else if ( mExoPlayer != null && mCustomAudioRenderer != null )
         {
             mCustomAudioRenderer.setBufferReceiver( bufferReceiver );
         }
@@ -296,7 +324,15 @@ public class Player
 
     public void enableBufferProcessing()
     {
-        if ( mExoPlayer != null && mCustomAudioRenderer != null )
+        if ( mMediaPlayer != null && mVisualizer != null )
+        {
+            mVisualizer.setEnabled( true );
+        }
+        else if( mVitamioPlayer != null && mVisualizer != null )
+        {
+            mVisualizer.setEnabled( true );
+        }
+        else if ( mExoPlayer != null && mCustomAudioRenderer != null )
         {
             mCustomAudioRenderer.enableBufferProcessing();
         }
@@ -304,14 +340,40 @@ public class Player
 
     public void disableBufferProcessing()
     {
-        if ( mExoPlayer != null && mCustomAudioRenderer != null )
+        if ( mMediaPlayer != null && mVisualizer != null )
+        {
+            mVisualizer.setEnabled( false );
+        }
+        else if( mVitamioPlayer != null && mVisualizer != null )
+        {
+            mVisualizer.setEnabled( false );
+        }
+        else if ( mExoPlayer != null && mCustomAudioRenderer != null )
         {
             mCustomAudioRenderer.disableBufferProcessing();
         }
     }
 
 
+    @Override
+    public void onFftDataCapture( Visualizer visualizer, byte[] fft, int samplingRate )
+    {
 
+    }
+
+    @Override
+    public void onWaveFormDataCapture( Visualizer visualizer, byte[] waveform, int samplingRate )
+    {
+        if ( mVisualizerBufferReceiver != null )
+            mVisualizerBufferReceiver.processBufferArray(  waveform, waveform.length, -1, 1, samplingRate, -1 );
+    }
+
+    interface BufferReceiver
+    {
+        void processBuffer( ByteBuffer samplesBuffer, int samplesCount, long presentationTimeUs, int pcmFrameSize, int sampleRate, long currentTimeUs );
+
+        void processBufferArray( byte[] samplesBuffer, int samplesCount, long presentationTimeUs, int pcmFrameSize, int sampleRate, long currentTimeUs );
+    }
 
     public interface PlayerCallbacks
     {

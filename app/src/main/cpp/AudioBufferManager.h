@@ -1,17 +1,11 @@
 //
-// Created by miroslav on 08.04.17..
+// Created by miroslav on 30.04.17..
 //
 
-#ifndef SLIMPLAYER_AUDIOBUFFERMANAGER2_H
-#define SLIMPLAYER_AUDIOBUFFERMANAGER2_H
+#ifndef SLIMPLAYER_AUDIOBUFFERMANAGER_H
+#define SLIMPLAYER_AUDIOBUFFERMANAGER_H
 
 #include <jni.h>
-#include <list>
-#include <string>
-#include <android/log.h>
-#include "Shared.h"
-#include <mutex>
-#include "SynchronizedLinkedList.h"
 
 class Buffer
 {
@@ -33,70 +27,19 @@ public:
 
 };
 
-class BufferWrap
-{
-public:
-    jlong presentationTimeUs;
-    Buffer * buffer;
-
-    BufferWrap( Buffer * buffer, jlong presentationTimeUs );
-
-    ~BufferWrap();
-};
 
 class AudioBufferManager
 {
-
-
-private:
-    int mTargetSamples;
-    int mTargetTimeSpan;
-
-    std::list<BufferWrap*> mBufferWrapList;
-    std::list<Buffer*>     mFreeBufferList;
-
-
-
-    Buffer * mResultBuffer;
-
-    jlong mLastCurrentTimeUs = 0;
-
-    std::mutex mResetLock; //Used to make sure reset() and some other delete operations don't go at same time
-    std::mutex mDestructorLock;
-
-    bool mReleased = false; //Indicates whether destructor has been called
-
-    int mInstance = -1;
-
-    //bool mEnabled = false;
-
-    bool mConstructed = false;
-
-
-
 public:
 
-    AudioBufferManager( int targetSamples, int targetTimeSpan, int instance );
 
-    ~AudioBufferManager();
 
-    void processBuffer( Buffer * buffer, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs );
+    virtual ~AudioBufferManager() {}
 
-    Buffer * createMonoSamples( Buffer * buffer, jint pcmFrameSize, jint sampleRate );
+    virtual void processBuffer( Buffer * buffer, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs ) = 0;
 
-    Buffer * getFreeByteBuffer( int minimalCapacity );
-
-    void deleteStaleBufferWraps();
-
-    Buffer * getSamples();
-
-    void reset();
-
-    //void enable();
-
-    //void disable();
-
+    virtual Buffer * getSamples() = 0;
 };
 
 
-#endif //SLIMPLAYER_AUDIOBUFFERMANAGER2_H
+#endif //SLIMPLAYER_AUDIOBUFFERMANAGER_H

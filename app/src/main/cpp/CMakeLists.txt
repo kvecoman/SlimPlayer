@@ -42,6 +42,10 @@ add_library( # Specifies the name of the library.
 
                AudioBufferManager.h
                AudioBufferManager.cpp
+               AudioBufferManagerExo.h
+               AudioBufferManagerExo.cpp
+               AudioBufferManagerMedia.h
+               AudioBufferManagerMedia.cpp
                CurveAnimator.h
                CurveAnimator.cpp
                Jrect.h

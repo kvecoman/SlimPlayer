@@ -50,7 +50,7 @@ public class DirectPlayerAccess
             activeVisualizer.getRenderer().disableClear();
 
             //Enable in case we are paused
-            activeVisualizer.onResume(); //TODO - mybe this can be commented, it is not used for screen rotation, and not for page switching
+            //activeVisualizer.onResume(); //TODO - maybe this can be commented, it is not used for screen rotation, and not for page switching
         }
     }
 

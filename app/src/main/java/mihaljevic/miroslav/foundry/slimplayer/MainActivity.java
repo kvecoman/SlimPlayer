@@ -28,6 +28,8 @@ import junit.framework.Test;
 //TODO - make the app
 //TODO - $$_PROFIT_$$
 
+//TODO - Blank - Disfigure for trailer song
+
 //TODO - make trial version of this app
 //TODO - indicate that tap paused or resumed the song
 //TODO - first time opening the app and home screen is empty, at least add indicators that there are more tabs
@@ -37,7 +39,7 @@ import junit.framework.Test;
 //TODO - load all songs from folder in queue when playing from file???
 //TODO - test again receiving a call while playing
 //TODO - hashSet with integers instead of sparse boolean array for selected items in lists
-//TODO - see licences for glide, commons-math and maybe some other stuff to put it somewhere
+//TODO - see licences for glide, commons-math and maybe some other stuff to put it somewhere EDIT: check license for vitamio player!!!!!!
 //TODO - bug when returning from song in all screen, either the cause is leaked service connection or illegal state that fragment is not attached to activity
 
 

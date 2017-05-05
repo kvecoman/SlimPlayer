@@ -14,19 +14,11 @@
 #include "SynchronizedLinkedList.h"
 #include "AudioBufferManager.h"
 #include <stdlib.h>
+#include "BufferWrap.h"
 
 
 
-class BufferWrap
-{
-public:
-    jlong presentationTimeUs;
-    Buffer * buffer;
 
-    BufferWrap( Buffer * buffer, jlong presentationTimeUs );
-
-    ~BufferWrap();
-};
 
 
 class AudioBufferManagerExo : public AudioBufferManager
@@ -40,20 +32,20 @@ private:
     std::list<BufferWrap*> mBufferWrapList;
     std::list<Buffer*>     mFreeBufferList;
 
-
-
     Buffer * mResultBuffer;
 
     jlong mLastCurrentTimeUs = 0;
 
-    std::mutex mResetLock; //Used to make sure reset() and some other delete operations don't go at same time
+    /**
+     * Used to make sure reset() and some other delete operations don't go at same time
+     */
+    std::mutex mResetLock;
     std::mutex mDestructorLock;
 
-    bool mReleased = false; //Indicates whether destructor has been called
-
-    int mInstance = -1;
-
-    //bool mEnabled = false;
+    /**
+     * Indicates whether destructor has been called
+     */
+    bool mReleased = false;
 
     bool mConstructed = false;
 
@@ -61,25 +53,44 @@ private:
 
 public:
 
-    AudioBufferManagerExo( int targetSamples, int targetTimeSpan, int instance );
+    /**
+     * @param targetSamples - number of samples we try to have at screen at single moment (draw)
+     * @param targetTimeSpan - time in miliseconds we try to represent in single moment
+     */
+    AudioBufferManagerExo( int targetSamples, int targetTimeSpan );
 
     virtual ~AudioBufferManagerExo();
 
     virtual void processBuffer( Buffer * buffer, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs );
 
+    /**
+     * Takes the most significant samples in aomount required to satisfy targetSamples and targetTimeSpan
+     *
+     * @param buffer - buffer with samples
+     * @param pcmFrameSize - how many bytes is signle sample
+     * @param sampleRate - how many samples represent 1 second
+     */
     Buffer * createMonoSamples( Buffer * buffer, jint pcmFrameSize, jint sampleRate );
 
+    /**
+     * Retrieves used buffer so we don't allocate new one
+     */
     Buffer * getFreeByteBuffer( int minimalCapacity );
 
+    /**
+     * Deletes all buffer wraps whose presentation time is stale in regard to current play position
+     * Also feeds used buffer for later retrieval using getFreebyteBuffer()
+     */
     void deleteStaleBufferWraps();
 
     virtual Buffer * getSamples();
 
+    /**
+     * Deletes all buffer wraps, to allow new ones to be shown ( used after seek is detected )
+     */
     void reset();
 
-    //void enable();
 
-    //void disable();
 
 };
 

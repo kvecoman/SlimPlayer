@@ -54,7 +54,7 @@ dependencies {
     compile 'com.google.android.exoplayer:exoplayer:r2.2.0'
     //compile 'org.apache.commons:commons-math3:3.6.1'
     compile 'com.android.support:percent:25.2.0'
-    compile project(":vitamio")
+    //compile project(":vitamio")
 
     testCompile 'junit:junit:4.12'
 

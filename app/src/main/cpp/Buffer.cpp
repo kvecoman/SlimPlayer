@@ -1,12 +1,10 @@
 //
-// Created by miroslav on 30.04.17..
+// Created by miroslav on 05.05.17..
 //
 
-#include "AudioBufferManager.h"
+#include "Buffer.h"
 
-/**
- * Replica of java's ByteBuffer class, has similar fields, used to transfer samples around
- */
+
 Buffer::Buffer( int cap )
 {
     //__android_log_print( ANDROID_LOG_VERBOSE, "Buffer", "Buffer(int) - constructor" );

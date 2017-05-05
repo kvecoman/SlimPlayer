@@ -34,10 +34,10 @@ import com.google.android.exoplayer2.upstream.FileDataSourceFactory;
 import java.io.File;
 import java.io.IOException;
 
-public class TestPlayerActivity extends AppCompatActivity implements Button.OnClickListener
+public class TestPlayerActivity /*extends AppCompatActivity implements Button.OnClickListener*/
 {
 
-
+/*
     protected final String TAG = getClass().getSimpleName();
 
     public static final String TEST_SONG_PATH           = "/storage/sdcard0/Samsung/Music/RELJA X COBY X STOJA - SAMO JAKO (OFFICIAL VIDEO) 4K.mp3";
@@ -66,17 +66,7 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
         button = ( Button ) findViewById( R.id.button );
         button.setOnClickListener( this );
 
-        /*mMediaPlayer = new MediaPlayer();
 
-        try
-        {
-            mMediaPlayer.setDataSource( this, Uri.fromFile( new File( TEST_SONG_PATH ) ) );
-            mMediaPlayer.prepare();
-            mMediaPlayer.start();
-        }catch (IOException e)
-        {
-            e.printStackTrace();
-        }*/
 
         mVitamioPlayer = new io.vov.vitamio.MediaPlayer( this, true );
         try
@@ -98,12 +88,6 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
     @Override
     public void onClick( View v )
     {
-        //TODO - continue here- everything is bullshit, but try to integrate vitamio media framework and see how it goes
-        //TODO - https://github.com/yixia/VitamioBundle/wiki
-
-
-
-
 
         if ( mMediaPlayer != null )
         {
@@ -122,6 +106,6 @@ public class TestPlayerActivity extends AppCompatActivity implements Button.OnCl
     }
 
 
-
+*/
 
 }

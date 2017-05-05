@@ -23,7 +23,9 @@ public:
 
 
 
-
+/**
+ * Thread safe list
+ */
 template <class T>
 class SynchronizedLinkedList
 {

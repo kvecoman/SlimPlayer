@@ -4,22 +4,18 @@
 
 #include "CurveAnimator.h"
 
-CurveAnimator::CurveAnimator( int pointCount, int frameCount/*, int strokeWidth*/ )
-{
-    //__android_log_print( ANDROID_LOG_VERBOSE, "CurveAnimator", "CurveAnimator() - constructor" );
 
+CurveAnimator::CurveAnimator( int pointCount, int frameCount )
+{
     mPointsCount    = pointCount;
     mFramesCount    = frameCount;
     mCurrentPoints  = new Point[ pointCount ];
     mStartPoints    = new Point[ pointCount ];
     mEndPoints      = new Point[ pointCount ];
-    //mStrokeWidth    = strokeWidth;
 }
 
 CurveAnimator::~CurveAnimator()
 {
-    //__android_log_print( ANDROID_LOG_VERBOSE, "CurveAnimator", "~CurveAnimator() - destructor" );
-
     delete [] mCurrentPoints;
     delete [] mStartPoints;
     delete [] mEndPoints;
@@ -27,7 +23,6 @@ CurveAnimator::~CurveAnimator()
 
 void CurveAnimator::copyPoints( Point * src, Point * dest, int count )
 {
-    //__android_log_print( ANDROID_LOG_VERBOSE, "CurveAnimator", "copyPoints()" );
 
     if ( src == nullptr || dest == nullptr )
         return;
@@ -50,30 +45,22 @@ void CurveAnimator::addPoints( Point points[] )
 {
 
     //NOTE - here we will always assume that we will receive correct number of points
-    /*if ( sizeof( points ) / sizeof( *points ) != mPointsCount )
-    {
-        __android_log_print( ANDROID_LOG_ERROR, "CurveAnimator", "Number of added points don't match expectations");
-        return;
-    }*/
 
-    //__android_log_print( ANDROID_LOG_VERBOSE, "CurveAnimator", "addPoints()" );
 
     if ( points == nullptr )
         return;
 
 
-    //mEndPoints = points;
+
     copyPoints( points, mEndPoints, mPointsCount );
 
     if ( mFirstAdd )
     {
         mFirstAdd = false;
-        //mStartPoints = points;
         copyPoints( points, mStartPoints, mPointsCount );
     }
     else
     {
-        //mStartPoints = mCurrentPoints;
         copyPoints( mCurrentPoints, mStartPoints, mPointsCount );
     }
 
@@ -134,10 +121,12 @@ void CurveAnimator::calculateNextFrame()
 
 }
 
-//Calculates value effect for current state x ( x is between 0 ( 0% ) and 1 ( 100% ) )
+
+/**
+ * Calculates value effect for current state x ( x is between 0 ( 0% ) and 1 ( 100% ) )
+ */
 float CurveAnimator::percentageFromCubicBezier( float x, Point bezierPoints[] )
 {
-    //__android_log_print( ANDROID_LOG_VERBOSE, "CurveAnimator", "percentageFromCubicBezier()" );
 
     float result;
 
@@ -153,9 +142,8 @@ float CurveAnimator::percentageFromCubicBezier( float x, Point bezierPoints[] )
 }
 
 
-void CurveAnimator::drawCurrentFrameCurve( NVGcontext * nvgContext, int drawOffset, const NVGcolor * color, int strokeWidth )
+void CurveAnimator::drawCurrentFrameCurve( NVGcontext * nvgContext, DrawParams * drawParams )
 {
-    //__android_log_print( ANDROID_LOG_VERBOSE, "CurveAnimator", "drawCurrentFrameCurve()" );
 
     Point start;
     Point ctrl1;
@@ -166,19 +154,19 @@ void CurveAnimator::drawCurrentFrameCurve( NVGcontext * nvgContext, int drawOffs
     nvgBeginPath( nvgContext );
 
 
-    nvgMoveTo( nvgContext, mCurrentPoints[0].x + drawOffset, mCurrentPoints[0].y );
+    nvgMoveTo( nvgContext, mCurrentPoints[0].x + drawParams->drawOffset, mCurrentPoints[0].y );
 
     for ( int i = 1; i < mPointsCount; i++ )
     {
         start.x = mCurrentPoints[ i - 1 ].x;
         start.y = mCurrentPoints[ i - 1 ].y;
 
-        start.x += drawOffset;
+        start.x += drawParams->drawOffset;
 
         end.x = mCurrentPoints[ i ].x;
         end.y = mCurrentPoints[ i ].y;
 
-        end.x += drawOffset;
+        end.x += drawParams->drawOffset;
 
         ctrl1.x = start.x - ( ( start.x - end.x ) / 2 );
         ctrl1.y = start.y;
@@ -189,8 +177,8 @@ void CurveAnimator::drawCurrentFrameCurve( NVGcontext * nvgContext, int drawOffs
         nvgBezierTo( nvgContext, ctrl1.x, ctrl1.y, ctrl2.x, ctrl2.y, end.x, end.y );
     }
 
-    nvgStrokeColor( nvgContext, *color/*nvgRGBA( 54, 194, 249, 255 )*/ );
-    nvgStrokeWidth( nvgContext, strokeWidth/*10*/ );
+    nvgStrokeColor( nvgContext, drawParams->strokeColor );
+    nvgStrokeWidth( nvgContext, drawParams->strokeWidth );
     nvgStroke( nvgContext );
 
 }

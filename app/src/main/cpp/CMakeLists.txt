@@ -16,68 +16,45 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 
 
-add_library( # Specifies the name of the library.
-             hello-jnicpp
-
-             # Sets the library as a shared library.
-             SHARED
-
-             # Provides a relative path to your source file(s).
-             hello-jni.cpp )
-
- add_library( # Specifies the name of the library.
-              hello-jnic
-
-              # Sets the library as a shared library.
-              SHARED
-
-              # Provides a relative path to your source file(s).
-              hello-jni.c )
-
-
-
-  add_library( visualizer
+    add_library( visualizer
 
                SHARED
 
                AudioBufferManager.h
-               AudioBufferManager.cpp
                AudioBufferManagerExo.h
                AudioBufferManagerExo.cpp
                AudioBufferManagerMedia.h
                AudioBufferManagerMedia.cpp
+               Buffer.h
+               Buffer.cpp
+               BufferWrap.h
+               BufferWrap.cpp
                CurveAnimator.h
                CurveAnimator.cpp
+               DrawParams.h
+               DrawParams.cpp
+               DrawWaveformExtension.h
+               DrawWaveformExtension.cpp
+               GLES20Renderer.h
+               GLES20Renderer.cpp
+               GLES20RendererJNILayer.h
+               GLES20RendererJNILayer.cpp
                Jrect.h
                Jrect.cpp
                Point.h
                Point.cpp
-               GLES20Renderer.h
-               GLES20Renderer.cpp
                Shared.h
-               SynchronizedLinkedList.h
                nanovg/fontstash.h
                nanovg/nanovg.c
                nanovg/nanovg.h
                nanovg/nanovg_gl.h
                nanovg/nanovg_gl_utils.h
                nanovg/stb_image.h
-               nanovg/stb_truetype.h)
+               nanovg/stb_truetype.h )
 
- add_library( demo
 
-               SHARED
 
-               demo.cpp
-               nanovg/fontstash.h
-               nanovg/nanovg.c
-               nanovg/nanovg.h
-               nanovg/nanovg_gl.h
-               nanovg/nanovg_gl_utils.h
-               nanovg/stb_image.h
-               nanovg/stb_truetype.h)
 
-  target_link_libraries( demo android log GLESv2 EGL )
 
   target_link_libraries( visualizer android log GLESv2 EGL )
 

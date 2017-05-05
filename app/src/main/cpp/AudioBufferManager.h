@@ -5,29 +5,14 @@
 #ifndef SLIMPLAYER_AUDIOBUFFERMANAGER_H
 #define SLIMPLAYER_AUDIOBUFFERMANAGER_H
 
-#include <jni.h>
 
-class Buffer
-{
-private:
-
-    //Some buffers are allocated on java side, and they will be cleaned there, so here we keep track only of those that are created here
-    bool needsDelete;
-
-public:
-    jbyte * buffer = nullptr;
-    int len;
-    int cap;
-
-    Buffer( int cap );
-
-    Buffer( jbyte * buffer, int len, int cap );
-
-    ~Buffer();
-
-};
+#include "Buffer.h"
 
 
+/**
+ * Abstract base class used to provide interface for
+ * taking in samples, processing them and preparing them for output
+ */
 class AudioBufferManager
 {
 public:
@@ -36,8 +21,14 @@ public:
 
     virtual ~AudioBufferManager() {}
 
+    /**
+     * Used to take in samples and store them for latter or immediately prepare them for use
+     */
     virtual void processBuffer( Buffer * buffer, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs ) = 0;
 
+    /**
+     * Get currently prepared samples for display use
+     */
     virtual Buffer * getSamples() = 0;
 };
 

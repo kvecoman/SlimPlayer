@@ -6,10 +6,15 @@
 #define SLIMPLAYER_CURVEANIMATOR_H
 
 #include "Point.h"
-#include "nanovg/nanovg.h"
+#include "Shared.h"
+#include "DrawParams.h"
 #include <math.h>
 #include <android/log.h>
 
+/**
+ * Helps in calculating animation mid frames and coordinates
+ * for curve
+ */
 class CurveAnimator
 {
 private:
@@ -37,7 +42,6 @@ private:
     //Are we adding points for first time
     bool mFirstAdd = true;
 
-    //int mStrokeWidth;
 
 public:
     Point CUBIC_BEZIER_EASE_IN_OUT[4] =  {
@@ -63,7 +67,7 @@ public:
 
 
 
-    CurveAnimator( int pointCount, int frameCount/*, int strokeWidth*/ );
+    CurveAnimator( int pointCount, int frameCount );
 
     ~CurveAnimator();
 
@@ -79,7 +83,7 @@ public:
     float percentageFromCubicBezier( float x, Point bezierPoints[] );
 
 
-    void drawCurrentFrameCurve( NVGcontext * nvgContext, int drawOffset, const NVGcolor * color, int strokeWidth );
+    void drawCurrentFrameCurve( NVGcontext * nvgContext, DrawParams * drawParams );
     
     
 };

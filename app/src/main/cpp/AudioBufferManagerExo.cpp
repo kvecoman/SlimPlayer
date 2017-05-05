@@ -7,38 +7,10 @@
 
 
 
-
-
-
-
-/**
- * BufferWrap is used to store buffer and its presentationTime property, so we know when to display it
- */
-BufferWrap::BufferWrap( Buffer * buffer, jlong presentationTimeUs )
-{
-    //__android_log_print( ANDROID_LOG_VERBOSE, "BufferWrap", "BufferWrap() - constructor" );
-
-    this->buffer                = buffer;
-    this->presentationTimeUs    = presentationTimeUs;
-}
-
-BufferWrap::~BufferWrap()
-{
-   //__android_log_print( ANDROID_LOG_VERBOSE, "BufferWrap", "~BufferWrap() - destructor" );
-
-    if ( buffer != nullptr )
-        delete buffer;
-}
-
-
-
-
-
-AudioBufferManagerExo::AudioBufferManagerExo( int targetSamples, int targetTimeSpan, int instance )
+AudioBufferManagerExo::AudioBufferManagerExo( int targetSamples, int targetTimeSpan)
 {
     mDestructorLock.lock();
 
-    mInstance = instance;
 
     //__android_log_print( ANDROID_LOG_VERBOSE, "AudioBufferManagerExo", "AudioBufferManagerExo() - constructor for instance %i", mInstance );
 

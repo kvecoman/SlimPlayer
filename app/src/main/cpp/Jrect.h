@@ -7,6 +7,9 @@
 
 #include <jni.h>
 
+/**
+ * Rectangle class
+ */
 class Jrect
 {
 public:

@@ -5,59 +5,41 @@
 #ifndef SLIMPLAYER_GLES20RENDERER_H
 #define SLIMPLAYER_GLES20RENDERER_H
 
+/*
 //#define NANOVG_GLES2
+#ifndef NANOVG_GLES2_IMPLEMENTATION
 #define NANOVG_GLES2_IMPLEMENTATION
-#define GLFW_INCLUDE_ES2
+#endif //NANOVG_GLES2_IMPLEMENTATION
 
-#include <jni.h>
-#include <android/log.h>
+#ifndef GLFW_INCLUDE_ES2
+#define GLFW_INCLUDE_ES2
+#endif //GLFW_INCLUDE_ES2
+
+
+
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include "nanovg/nanovg.h"
 #include "nanovg/nanovg_gl.h"
-#include "nanovg/nanovg_gl_utils.h"
+#include "nanovg/nanovg_gl_utils.h"*/
+#include <android/log.h>
+#include <mutex>
+#include "Shared.h"
 #include "Jrect.h"
 #include "Point.h"
 #include "CurveAnimator.h"
 #include "AudioBufferManager.h"
 #include "AudioBufferManagerExo.h"
 #include "AudioBufferManagerMedia.h"
-#include <vector>
-#include <mutex>
+#include "DrawParams.h"
+#include "DrawWaveformExtension.h"
+
 
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-JNIEXPORT jlong JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initNative
-        ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan/*, jint strokeWidth*/, jboolean exoAudioBufferManager );
-
-JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_deleteNativeInstance
-        ( JNIEnv * env, jobject thiz, jlong objPtr  );
-
-JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initNVG
-        ( JNIEnv * env, jobject thiz, jlong objPtr, jint width, jint height, jfloat density );
-
-JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseNVG ( JNIEnv * env, jobject thiz, jlong objPtr );
-
-
-JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBuffer
-        ( JNIEnv * env, jobject thiz, jlong objPtr, jobject samplesBuffer, jint samplesCount, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs );
-
-JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBufferArray
-        ( JNIEnv * env, jobject thiz, jlong objPtr, jarray samplesBuffer, jint samplesCount, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs );
-
-
-JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_render
-        ( JNIEnv * env, jobject thiz, jlong objPtr, jint drawOffset );
 
 /*JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_enable
@@ -79,9 +61,9 @@ JNIEXPORT void JNICALL
 
 //static std::mutex sNVGCreateLock;
 
-static int sInstanceNumber = 0;
 
-class GLES20Renderer
+
+class GLES20Renderer /*: public DrawWaveformExtension*/
 {
 public:
 
@@ -90,38 +72,29 @@ public:
 
     struct NVGcontext * mNVGCtx = nullptr;
 
-     jint mWidth;
-     jint mHeight;
-
-     jint mSamplesCount;
-
      jint mCurvePointsCount;
+
      Point * mCurvePoints = nullptr;
-     Point * mWaveformPoints = nullptr;
+
 
      CurveAnimator * mCurveAnimator = nullptr;
 
      AudioBufferManager * mAudioBufferManager = nullptr;
 
-    //jint mStrokeWidth;
-
-    //std::mutex mNVGContextLock;
-
-    int mInstance = -1;
 
     bool mDeleted = false;
 
     bool mGLESReleased = true;
 
-    //bool mEnabled = false;
-
     bool mConstructed = false;
 
     std::mutex mConstructorLock;
 
-    int mDrawOffset = 0;
-
+    //Screen density ratio
     float mDensity = 1.0;
+
+    //Holder for sceen size, draw color, stroke width and draw offset
+    DrawParams * mDrawParams;
 
 
 
@@ -137,19 +110,13 @@ public:
 
     void render( int drawOffset );
 
-    void drawWaveform(NVGcontext * nvgContext );
-
-    void calculateWaveformPoints( Buffer * buffer );
-
     void calculateCurvePoints( Buffer * buffer );
 
     jbyte findMaxByte( Buffer * buffer, int start, int end );
 
-    void absoluteSamples( Buffer * buffer );
+    //void absoluteSamples( Buffer * buffer );
 
-    //void enable();
 
-    //void disable();
 };
 
 

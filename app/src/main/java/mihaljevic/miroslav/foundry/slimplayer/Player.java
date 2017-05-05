@@ -26,11 +26,11 @@ import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.upstream.DefaultAllocator;
 import com.google.android.exoplayer2.upstream.FileDataSourceFactory;
 
-import java.io.File;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import io.vov.vitamio.MediaPlayer;
+
 
 /**
  * Created by miroslav on 28.04.17..
@@ -62,7 +62,7 @@ public class Player implements Visualizer.OnDataCaptureListener
     private PlayerCallbacks mListener;
 
     private android.media.MediaPlayer                       mMediaPlayer;
-    private MediaPlayer                                     mVitamioPlayer;
+    //private MediaPlayer                                     mVitamioPlayer;
     private Visualizer                                      mVisualizer;
     private BufferReceiver    mVisualizerBufferReceiver;
 
@@ -100,7 +100,7 @@ public class Player implements Visualizer.OnDataCaptureListener
                     return;
                 mVitamioPlayer = new MediaPlayer( SlimPlayerApplication.getInstance(), true );
                 mVitamioPlayer.setOnCompletionListener( new VitamioPlayerCallbacks() );
-                mVisualizer = new Visualizer( 0  ); //TODO: try to get session id from vitamio player
+                mVisualizer = new Visualizer( 0  );
                 initVisualizer();
                 break;*/
             case PLAYER_EXO_PLAYER:
@@ -136,7 +136,7 @@ public class Player implements Visualizer.OnDataCaptureListener
 
     private synchronized void initVisualizer()
     {
-        //TODO - continue here - implement player selector in settings, test vitamio player and see why it doesn't use normalized scaling mode
+        //TODO - see whats up with scaling mode, it is always "as played" on Galaxy S2
         mVisualizer.setCaptureSize( Visualizer.getCaptureSizeRange()[1] );
         if ( Build.VERSION.SDK_INT >= 16 )
             mVisualizer.setScalingMode( Visualizer.SCALING_MODE_NORMALIZED );
@@ -154,14 +154,14 @@ public class Player implements Visualizer.OnDataCaptureListener
             mMediaPlayer.setDataSource( SlimPlayerApplication.getInstance(), uri );
             mMediaPlayer.prepare();
         }
-        else if ( mVitamioPlayer != null )
+        /*else if ( mVitamioPlayer != null )
         {
             mState = STATE_PREPARING;
             mVitamioPlayer.stop();
             mVitamioPlayer.reset();
             mVitamioPlayer.setDataSource( SlimPlayerApplication.getInstance(),  uri );
             mVitamioPlayer.prepare();
-        }
+        }*/
         else if ( mExoPlayer != null )
         {
             MediaSource mediaSource;
@@ -184,11 +184,11 @@ public class Player implements Visualizer.OnDataCaptureListener
             mMediaPlayer.start();
             mState = STATE_PLAYING;
         }
-        else if ( mVitamioPlayer != null )
+        /*else if ( mVitamioPlayer != null )
         {
             mVitamioPlayer.start();
             mState = STATE_PLAYING;
-        }
+        }*/
         else if ( mExoPlayer != null )
         {
             mExoPlayer.setPlayWhenReady( true );
@@ -202,10 +202,10 @@ public class Player implements Visualizer.OnDataCaptureListener
         {
             mMediaPlayer.pause();
         }
-        else if ( mVitamioPlayer != null )
+        /*else if ( mVitamioPlayer != null )
         {
             mVitamioPlayer.pause();
-        }
+        }*/
         else if ( mExoPlayer != null )
         {
             mExoPlayer.setPlayWhenReady( false );
@@ -218,10 +218,10 @@ public class Player implements Visualizer.OnDataCaptureListener
         {
             mMediaPlayer.stop();
         }
-        else if ( mVitamioPlayer != null )
+        /*else if ( mVitamioPlayer != null )
         {
             mVitamioPlayer.stop();
-        }
+        }*/
         else if ( mExoPlayer != null )
         {
             mExoPlayer.stop();
@@ -234,10 +234,10 @@ public class Player implements Visualizer.OnDataCaptureListener
         {
             return mMediaPlayer.getCurrentPosition();
         }
-        else if ( mVitamioPlayer != null )
+        /*else if ( mVitamioPlayer != null )
         {
             return mVitamioPlayer.getCurrentPosition();
-        }
+        }*/
         else if ( mExoPlayer != null )
         {
             return mExoPlayer.getCurrentPosition();
@@ -252,10 +252,10 @@ public class Player implements Visualizer.OnDataCaptureListener
         {
             return mMediaPlayer.getDuration();
         }
-        else if ( mVitamioPlayer != null )
+        /*else if ( mVitamioPlayer != null )
         {
             return mVitamioPlayer.getDuration();
-        }
+        }*/
         else if ( mExoPlayer != null )
         {
             return mExoPlayer.getDuration();
@@ -270,10 +270,10 @@ public class Player implements Visualizer.OnDataCaptureListener
         {
             mMediaPlayer.seekTo( (int) position );
         }
-        else if ( mVitamioPlayer != null )
+        /*else if ( mVitamioPlayer != null )
         {
             mVitamioPlayer.seekTo( position );
-        }
+        }*/
         else if ( mExoPlayer != null )
         {
             mExoPlayer.seekTo( position );
@@ -282,19 +282,21 @@ public class Player implements Visualizer.OnDataCaptureListener
 
     public synchronized void release()
     {
-        //TODO - release visualizer components
         if ( mMediaPlayer != null )
         {
             mMediaPlayer.stop();
             mMediaPlayer.release();
             mMediaPlayer = null;
+
+            mVisualizer.setEnabled( false );
+            mVisualizer.release();
         }
-        if ( mVitamioPlayer != null )
+        /*if ( mVitamioPlayer != null )
         {
             mVitamioPlayer.stop();
             mVitamioPlayer.release();
             mVitamioPlayer = null;
-        }
+        }*/
         if ( mExoPlayer != null )
         {
             mExoPlayer.setPlayWhenReady( false );
@@ -318,10 +320,10 @@ public class Player implements Visualizer.OnDataCaptureListener
         {
             mVisualizerBufferReceiver = bufferReceiver;
         }
-        else if ( mVitamioPlayer != null )
+        /*else if ( mVitamioPlayer != null )
         {
             mVisualizerBufferReceiver = bufferReceiver;
-        }
+        }*/
         else if ( mExoPlayer != null && mCustomAudioRenderer != null )
         {
             mCustomAudioRenderer.setBufferReceiver( bufferReceiver );
@@ -334,10 +336,10 @@ public class Player implements Visualizer.OnDataCaptureListener
         {
             mVisualizer.setEnabled( true );
         }
-        else if( mVitamioPlayer != null && mVisualizer != null )
+        /*else if( mVitamioPlayer != null && mVisualizer != null )
         {
             mVisualizer.setEnabled( true );
-        }
+        }*/
         else if ( mExoPlayer != null && mCustomAudioRenderer != null )
         {
             mCustomAudioRenderer.enableBufferProcessing();
@@ -350,10 +352,10 @@ public class Player implements Visualizer.OnDataCaptureListener
         {
             mVisualizer.setEnabled( false );
         }
-        else if( mVitamioPlayer != null && mVisualizer != null )
+        /*else if( mVitamioPlayer != null && mVisualizer != null )
         {
             mVisualizer.setEnabled( false );
-        }
+        }*/
         else if ( mExoPlayer != null && mCustomAudioRenderer != null )
         {
             mCustomAudioRenderer.disableBufferProcessing();
@@ -399,7 +401,7 @@ public class Player implements Visualizer.OnDataCaptureListener
         }
     }
 
-    private class VitamioPlayerCallbacks implements MediaPlayer.OnCompletionListener
+    /*private class VitamioPlayerCallbacks implements MediaPlayer.OnCompletionListener
     {
         @Override
         public void onCompletion( MediaPlayer mp )
@@ -408,7 +410,7 @@ public class Player implements Visualizer.OnDataCaptureListener
             if ( mListener != null )
                 mListener.onCompletion();
         }
-    }
+    }*/
 
     private class ExoPlayerCallbacks implements ExoPlayer.EventListener
     {

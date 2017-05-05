@@ -52,6 +52,14 @@
 
     <Preference android:key="@string/pref_key_rescan"  android:title="@string/pref_title_rescan"/>
 
+    <ListPreference
+            android:key="@string/pref_key_player_engine"
+            android:title="@string/pref_title_player_engine"
+            android:entries="@array/player_engine_titles"
+            android:entryValues="@array/player_engines"
+            android:defaultValue="@string/code_exo_player"
+        />
+
     <!-- android:layout="@android:layout/simple_list_item_1" -->
 
 </PreferenceScreen>

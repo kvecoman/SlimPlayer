@@ -4,8 +4,8 @@
     <!--Options menu titles -->
     <string name="options_title_settings">Settings</string>
     <string name="options_title_exit">Exit</string>
-    <string name="options_title_playlist_add">Add to playlist...</string>
-    <string name="options_title_playlist_add_selected">Add selected to playlist...</string>
+    <string name="options_title_playlist_add">Add to playlist&#8230;</string>
+    <string name="options_title_playlist_add_selected">Add selected to playlist&#8230;</string>
     <string name="options_title_toggle_repeat">Toggle repeat</string>
     <string name="options_title_accept_selected">Confirm selected songs</string>
     <string name="options_title_cancel_selected">Cancel selected songs</string>
@@ -24,6 +24,8 @@
     <string name="pref_title_rescan">Rescan</string>
 
     <string name="pref_title_autoplay">Auto play last song on start-up</string>
+
+    <string name="pref_title_player_engine">Select internal player &#8230;</string>
 
     <!--Keys used in preferences and possibly in some other cases-->
     <string name="pref_key_tabs">pref_key_tabs</string>
@@ -46,6 +48,9 @@
     <string name="pref_key_playlist_number">pref_key_playlist_number</string>
 
     <string name="pref_key_autoplay">pref_key_autoplay</string>
+
+
+    <string name="pref_key_player_engine">pref_key_player_engine</string>
     <!-- There are also some other keys defined as constants in project files-->
 
     <!--Directory select dialog -->
@@ -123,5 +128,10 @@
         (Settings -> Apps -> SlimPlayer -> Permissions)
     </string>
 
+
+    <!-- Internal player codes -->
+    <string name="code_media_player">1</string>
+    <string name="code_vitamio_player">2</string>
+    <string name="code_exo_player">3</string>
 
 </resources>

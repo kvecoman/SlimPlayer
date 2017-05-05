@@ -36,7 +36,7 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
         if ( isInEditMode() )
             return;
 
-        mRenderer = new VisualizerGLRenderer();
+        mRenderer = new VisualizerGLRenderer( SlimPlayerApplication.getInstance().getSelectedPlayerEngine() == Player.PLAYER_EXO_PLAYER );
 
         setDebugFlags( DEBUG_CHECK_GL_ERROR | DEBUG_LOG_GL_CALLS );
         getHolder().setFormat( PixelFormat.TRANSLUCENT );

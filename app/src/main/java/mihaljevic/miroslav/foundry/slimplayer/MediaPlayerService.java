@@ -278,8 +278,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
 
         //initExoPlayer();
+
         mPlayer = new Player();
-        mPlayer.initPlayer( Player.PLAYER_MEDIA_PLAYER );
+        mPlayer.initPlayer( SlimPlayerApplication.getInstance().getSelectedPlayerEngine() );
         mPlayer.setCallbacksListener( this );
 
         //mVisualizerGLRenderer = new VisualizerGLRenderer(  );
@@ -290,6 +291,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
         SlimPlayerApplication.getInstance().setDirectPlayerAccess( new DirectPlayerAccess( mPlayer ) );
 
     }
+
 
     /*private void initExoPlayer()
     {

@@ -11,4 +11,8 @@
 
     <!-- Number of items shown in home screen -->
     <integer name="num_homescreen_items">5</integer>
+
+    <!--<integer name="code_media_player">1</integer>
+    <integer name="code_vitamio_player">2</integer>
+    <integer name="code_exo_player">3</integer>-->
 </resources>

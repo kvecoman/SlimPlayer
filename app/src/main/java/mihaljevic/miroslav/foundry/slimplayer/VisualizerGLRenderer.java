@@ -55,7 +55,7 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, Player.Buff
 
 
 
-
+    //TODO - optimize visualizer renderer
 
 
     //NATIVE METHODS *****************************************************************************************************
@@ -86,13 +86,13 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, Player.Buff
     //**************************************************************************************************************************
 
 
-
-
-
-
-    public VisualizerGLRenderer()
+    /**
+     *
+     * @param exoAudioBufferManager - whether to use AudioBufferManager intended for exo player (should be false if using default android media player and its visualizer)
+     */
+    public VisualizerGLRenderer( boolean exoAudioBufferManager )
     {
-        mNativeInstancePtr = initNative( CURVE_POINTS, TRANSITION_FRAMES, DEFAULT_TARGET_SAMPLES_TO_SHOW, DEFAULT_TARGET_TIME_SPAN/*, DEFAULT_STROKE_WIDTH*/, false );
+        mNativeInstancePtr = initNative( CURVE_POINTS, TRANSITION_FRAMES, DEFAULT_TARGET_SAMPLES_TO_SHOW, DEFAULT_TARGET_TIME_SPAN/*, DEFAULT_STROKE_WIDTH*/, exoAudioBufferManager );
     }
 
 
@@ -155,7 +155,7 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, Player.Buff
     }
 
     /**
-     * This can be called on non GL thread
+     * This also needs to be called on GL thread
      */
     public void release()
     {
@@ -174,11 +174,6 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, Player.Buff
         releaseNVG( mNativeInstancePtr );
     }
 
-
-    /*public void setAcceptSamples( boolean accept )
-    {
-        this.mEnabled = accept;
-    }*/
 
     public void enable()
     {

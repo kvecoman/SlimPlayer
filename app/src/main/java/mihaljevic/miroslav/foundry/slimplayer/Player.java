@@ -46,8 +46,9 @@ public class Player implements Visualizer.OnDataCaptureListener
 {
     protected final String TAG = getClass().getSimpleName();
 
+    //NOTE - these values need to be in sync with values used in settings
     public static final int PLAYER_MEDIA_PLAYER = 1;
-    public static final int PLAYER_VITAMIO_PLAYER = 2;
+    public static final int PLAYER_VITAMIO_PLAYER = 2; //Dropped support for this one because it requires activity for init and doesn't have better performance than exo player
     public static final int PLAYER_EXO_PLAYER = 3;
 
     public static final int STATE_NONE = 0;
@@ -87,18 +88,23 @@ public class Player implements Visualizer.OnDataCaptureListener
         {
 
             case PLAYER_MEDIA_PLAYER:
+                Log.i(TAG, "Initializing android media player");
                 mMediaPlayer = new android.media.MediaPlayer();
                 mMediaPlayer.setOnCompletionListener( new MediaPlayerCallbacks() );
                 mVisualizer = new Visualizer( mMediaPlayer.getAudioSessionId() );
                 initVisualizer();
                 break;
-            case PLAYER_VITAMIO_PLAYER:
+            /*case PLAYER_VITAMIO_PLAYER:
+                Log.i(TAG, "Initializing vitamio framework player");
+                if ( !io.vov.vitamio.LibsChecker.checkVitamioLibs( SlimPlayerApplication.getInstance() ) ) //This requires activity :(, droping support for vitamio
+                    return;
                 mVitamioPlayer = new MediaPlayer( SlimPlayerApplication.getInstance(), true );
                 mVitamioPlayer.setOnCompletionListener( new VitamioPlayerCallbacks() );
-                mVisualizer = new Visualizer( 0 /*TODO: try to get session id from vitamio player */ );
+                mVisualizer = new Visualizer( 0  ); //TODO: try to get session id from vitamio player
                 initVisualizer();
-                break;
+                break;*/
             case PLAYER_EXO_PLAYER:
+                Log.i(TAG, "Initializing exo player");
                 initExoPlayer();
                 break;
         }

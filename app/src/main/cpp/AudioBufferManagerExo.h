@@ -28,7 +28,7 @@ public:
     ~BufferWrap();
 };
 
-//TODO - continue here -check if extended class works with exo player and then create class for media visualizer :)
+
 class AudioBufferManagerExo : public AudioBufferManager
 {
 

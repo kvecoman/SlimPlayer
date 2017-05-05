@@ -8,6 +8,7 @@
 
 #include "AudioBufferManager.h"
 #include <mutex>
+#include <stdlib.h>
 
 class AudioBufferManagerMedia : public AudioBufferManager
 {

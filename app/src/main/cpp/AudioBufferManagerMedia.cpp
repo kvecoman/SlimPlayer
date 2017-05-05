@@ -31,9 +31,12 @@ AudioBufferManagerMedia::~AudioBufferManagerMedia()
 
 void AudioBufferManagerMedia::processBuffer( Buffer * buffer, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs )
 {
-    int     originalSamplesCount;
-    int     monoSamplesCount;
-    int     sampleJump;
+    int originalSamplesCount;
+    int monoSamplesCount;
+    int sampleJump;
+
+    /*unsigned int unsignedSample;
+    int sample;*/
 
 
     if ( mReleased || !mConstructed )
@@ -65,13 +68,23 @@ void AudioBufferManagerMedia::processBuffer( Buffer * buffer, jlong presentation
 
     sampleJump = originalSamplesCount / monoSamplesCount;
 
+
+
     for ( int i = 0; i < monoSamplesCount; i++ )
     {
-        //Optimized version
-        //mResultBuffer->buffer[i] = buffer->buffer[ ( i * pcmFrameSize * sampleJump ) + ( pcmFrameSize - 1 ) ];
+        /*unsignedSample = (jboolean)buffer->buffer[ ( i * pcmFrameSize * sampleJump ) + ( pcmFrameSize - 1 ) ];
 
+        sample = ((int)unsignedSample) - 127;
+
+        sample = abs( sample );
+
+        mResultBuffer->buffer[i] = (jbyte)sample;*/
+
+
+
+        //Optimized version
         //Here we take the unsigned sample and limit it to 8 bit signed format (to 127)
-        mResultBuffer->buffer[i] = static_cast<jbyte>( ( double( static_cast<jboolean> ( buffer->buffer[ ( i * pcmFrameSize * sampleJump ) + ( pcmFrameSize - 1 ) ] ) ) / 255.0 ) * 127.0 );
+        mResultBuffer->buffer[i] = (jbyte)abs( ( ( int )(jboolean)buffer->buffer[ ( i * pcmFrameSize * sampleJump ) + ( pcmFrameSize - 1 ) ] ) - 127 );
     }
 
     //mResultBuffer->len = monoSamplesCount;

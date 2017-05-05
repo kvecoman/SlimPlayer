@@ -10,6 +10,8 @@ import com.google.android.exoplayer2.ExoPlayer;
  * Class which allows direct access to some media player architecture components for performance and ease of use
  */
 
+//TODO - rename to direct player bridge
+
 public class DirectPlayerAccess
 {
     /*CustomMediaCodecAudioRenderer   audioRenderer;

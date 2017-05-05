@@ -19,4 +19,16 @@
         <item>@string/icon_next</item>
         <item>@string/icon_close</item>
     </array>
+
+    <array name="player_engines">
+        <item>@string/code_media_player</item>              <!-- Android media player-->
+        <!--<item>@string/code_vitamio_player</item> -->    <!-- Vitamio player-->
+        <item>@string/code_exo_player</item>                <!-- ExoPlayer-->
+    </array>
+
+    <array name="player_engine_titles">
+        <item>Android media player</item>               <!-- Android media player-->
+        <!--<item>Vitamio framework player</item> -->   <!-- Vitamio player EDIT: not supported anymore-->
+        <item>Google ExoPlayer</item>                   <!-- ExoPlayer-->
+    </array>
 </resources>

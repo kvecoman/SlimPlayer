@@ -15,6 +15,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -149,31 +150,31 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
 
                 //Get all checked positions
                 //NOTE - this looks a little bit messed after the migration to recycler view from list view
-                SparseBooleanArray                  checkedPositions;
+                HashSet<Integer>                    selectedPositions;
                 List<MediaBrowserCompat.MediaItem>  mediaItemsList;
                 ArrayList<String>                   selectedIDsList;
-                int                                 position;
+                //int                                 position;
                 boolean                             isPositionSelected;
                 String                              mediaID;
                 Intent                              addToPlaylistIntent;
 
-                checkedPositions = mSelectedItems;
+                selectedPositions = mSelectedItems;
 
 
                 mediaItemsList = mAdapter.getMediaItemsList();
                 selectedIDsList = new ArrayList<>();
 
                 //Transfer IDs from selected songs to ID list
-                for ( int i = 0; i < checkedPositions.size(); i++ )
+                //for ( int i = 0; i < selectedPositions.size(); i++ )
+                for ( Integer position : selectedPositions )
                 {
-                    position            = checkedPositions.keyAt    ( i );
-                    isPositionSelected  = checkedPositions.valueAt  ( i );
+                    /*position            = selectedPositions.keyAt    ( i );
+                    isPositionSelected  = selectedPositions.valueAt  ( i );*/
 
-                    if ( isPositionSelected )
-                    {
-                        mediaID = mediaItemsList.get(position).getMediaId();
-                        selectedIDsList.add( mediaID );
-                    }
+
+                    mediaID = mediaItemsList.get(position).getMediaId();
+                    selectedIDsList.add( mediaID );
+
                 }
 
                 //Here we call add to playlists activity and pass ID list

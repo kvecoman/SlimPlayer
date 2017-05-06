@@ -13,7 +13,7 @@ import javax.microedition.khronos.opengles.GL10;
 /**
  * Created by miroslav on 04.04.17..
  *
- * Renderer responsible for drawing visualization and its related operations
+ * Renderer controller responsible for drawing visualization and its related operations
  *
  * @author Miroslav Mihaljević
  *

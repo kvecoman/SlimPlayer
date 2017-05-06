@@ -22,6 +22,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -54,7 +55,8 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
     //Are we selecting something
     protected boolean mSelectMode = false;
 
-    protected SparseBooleanArray mSelectedItems;
+    //protected SparseBooleanArray mSelectedItems;
+    protected HashSet<Integer> mSelectedItems;
 
     protected MediaBrowserCompat    mMediaBrowser;
     protected MediaControllerCompat mMediaController;
@@ -215,7 +217,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         dividerDecoration   = new DividerItemDecoration( getContext(), layoutManager.getOrientation() );
 
         //Set up selection
-        mSelectedItems = new SparseBooleanArray();
+        mSelectedItems = new HashSet<>(  );
 
         //Adapter is initiated here, but data will be loaded later
         mAdapter = new MediaAdapter( getContext(), null, R.layout.recycler_item, this, mSelectedItems );
@@ -378,12 +380,14 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         if ( selected )
         {
             //If we are selecting item
-            mSelectedItems.put( pos, true );
+            //mSelectedItems.put( pos, true );
+            mSelectedItems.add( pos );
         }
         else
         {
             //If we are deselecting just delete that key
-            mSelectedItems.delete( pos );
+            //mSelectedItems.delete( pos );
+            mSelectedItems.remove( pos );
         }
 
         //Higlight or not the view
@@ -395,7 +399,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
 
     public boolean isItemSelected( int pos )
     {
-        return mSelectedItems.get( pos );
+        return mSelectedItems.contains( pos );
     }
 
     protected void refreshData()

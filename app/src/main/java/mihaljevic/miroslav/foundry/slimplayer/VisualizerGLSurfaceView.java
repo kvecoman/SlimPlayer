@@ -9,6 +9,10 @@ import android.util.Log;
 
 /**
  * Created by miroslav on 16.04.17..
+ *
+ * View on which visualization will be drawn
+ *
+ * @author Miroslav Mihaljević
  */
 
 

@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -32,9 +33,9 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.ViewHolder> 
     private View.OnClickListener mOnClickListener;
 
 
-    private SparseBooleanArray mSelectedItems; //Array of selected items, init is done outside
+    private HashSet<Integer> mSelectedItems; //Array of selected items, init is done outside
 
-    public MediaAdapter(Context context, List<MediaBrowserCompat.MediaItem> mediaItemList, int layoutId, @Nullable View.OnClickListener listener, @Nullable SparseBooleanArray selectedItemsArray)
+    public MediaAdapter(Context context, List<MediaBrowserCompat.MediaItem> mediaItemList, int layoutId, @Nullable View.OnClickListener listener, @Nullable HashSet<Integer> selectedItemsArray)
     {
         mContext            = context;
         mMediaItemsList     = mediaItemList;
@@ -70,7 +71,7 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.ViewHolder> 
         //Check if this item needs to be selected
         if ( mSelectedItems != null )
         {
-            if ( mSelectedItems.get( position ) )
+            if ( mSelectedItems.contains( position ) )
             {
                 holder.mParentView.setSelected( true );
             }

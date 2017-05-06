@@ -29,6 +29,7 @@ import android.widget.Toast;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -233,24 +234,25 @@ public final class Utils {
 
     }
 
-    public static int deleteFromList(List<MediaBrowserCompat.MediaItem> mediaItems, Uri listURI, SparseBooleanArray checkedPositions, String idField)
+    public static int deleteFromList( List<MediaBrowserCompat.MediaItem> mediaItems, Uri listURI, HashSet<Integer> selectedPositions, String idField)
     {
-        int     position;
+        //int     position;
         String  mediaID;
         int     deletedCount;
-        boolean isItemChecked;
+        //boolean isItemChecked;
 
         deletedCount = 0;
 
         if (mediaItems == null)
             return  0;
 
-        for (int i = 0; i < checkedPositions.size(); i++)
+        //for (int i = 0; i < checkedPositions.size(); i++)
+        for (Integer position : selectedPositions )
         {
-            position        = checkedPositions.keyAt( i );
-            isItemChecked   = checkedPositions.valueAt( i );
+            /*position        = checkedPositions.keyAt( i );
+            isItemChecked   = checkedPositions.valueAt( i );*/
 
-            if ( position >= 0 && position < mediaItems.size() && isItemChecked )
+            if ( position >= 0 && position < mediaItems.size() )
             {
                 mediaID = mediaItems.get(position).getMediaId();
 

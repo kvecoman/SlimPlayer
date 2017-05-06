@@ -12,9 +12,9 @@
 
 
 
-GLES20Renderer::GLES20Renderer( jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan/*, jint strokeWidth*/,jboolean exoAudioBufferManager )
+GLES20Renderer::GLES20Renderer( jint curvePointsCount, jint transitionFrames, AudioBufferManager * audioBufferManager )
 {
-        mConstructorLock.lock();
+        //mConstructorLock.lock();
 
         mCurvePointsCount           = curvePointsCount;
 
@@ -25,30 +25,27 @@ GLES20Renderer::GLES20Renderer( jint curvePointsCount, jint transitionFrames, ji
         //Comment out if we are drawing waveform
         //initWaveformPoints( targetSamplesCount );
 
-        if ( exoAudioBufferManager )
-            mAudioBufferManager     = new AudioBufferManagerExo( targetSamplesCount, targetTimeSpan );
-        else
-            mAudioBufferManager     = new AudioBufferManagerMedia( targetSamplesCount, targetTimeSpan );
+        mAudioBufferManager = audioBufferManager;
 
         mDrawParams                 = new DrawParams( -1, -1, STROKE_WIDTH, 0, STROKE_COLOR );
 
         mConstructed = true;
 
-        mConstructorLock.unlock();
+        //mConstructorLock.unlock();
 
 }
 
 GLES20Renderer::~GLES20Renderer()
 {
 
-        mConstructorLock.lock();
+        //mConstructorLock.lock();
 
 
         mDeleted = true;
 
         if ( !mConstructed )
         {
-            mConstructorLock.unlock();
+            //mConstructorLock.unlock();
             return;
         }
 
@@ -57,12 +54,11 @@ GLES20Renderer::~GLES20Renderer()
 
 
         delete mCurveAnimator;
-        delete mAudioBufferManager;
 
         delete mDrawParams;
 
 
-        mConstructorLock.unlock();
+        //mConstructorLock.unlock();
 
 }
 
@@ -75,7 +71,7 @@ void GLES20Renderer::initNVG( int width, int height, float density )
 
 
 
-        mConstructorLock.lock();
+        //mConstructorLock.lock();
 
         mDensity = density;
 
@@ -98,14 +94,14 @@ void GLES20Renderer::initNVG( int width, int height, float density )
         glClearColor( 0, 0, 0, 0 );
         glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
 
-        mConstructorLock.unlock();
+        //mConstructorLock.unlock();
 }
 
 
 void GLES20Renderer::releaseNVG()
 {
 
-    mConstructorLock.lock();
+    //mConstructorLock.lock();
 
 
     mGLESReleased = true;
@@ -113,7 +109,7 @@ void GLES20Renderer::releaseNVG()
     if ( mNVGCtx != nullptr )
         nvgDeleteGLES2( mNVGCtx );
 
-    mConstructorLock.unlock();
+    //mConstructorLock.unlock();
 
 }
 
@@ -123,50 +119,26 @@ void GLES20Renderer::releaseNVG()
 void GLES20Renderer::render( int drawOffset )
 {
 
-
-        //TODO - no need to lock if constructor and destructor are called on GL thread ( make sure they are )
-        mConstructorLock.lock();
+    //TODO - continue optimizing
 
         if ( mNVGCtx == nullptr || mDeleted || mGLESReleased )
-        {
-            mConstructorLock.unlock();
             return;
-        }
 
 
-
-
-        Buffer * samplesBuffer;                           //START BLOCK "BUFFER" - takes 3% out of 83% cpu time
+        Buffer * samplesBuffer;
 
         mDrawParams->drawOffset = drawOffset;
-
 
         samplesBuffer = mAudioBufferManager->getSamples();
 
         if ( samplesBuffer == nullptr )
-        {
-                mConstructorLock.unlock();
-                return;
-        }                                                //END BLOCK "BUFFER"
+            return;
 
 
-
-        //THIS - can be commented out, useful only to add background color
-        //glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT ); //takes out 4% out of 83% cpu time
-
-
-        nvgBeginFrame( mNVGCtx, mDrawParams->screenWidth, mDrawParams->screenHeight, mDensity );  //START BLOCK "FRAME" - takes 3% out of 83% cpu time
-
+        nvgBeginFrame( mNVGCtx, mDrawParams->screenWidth, mDrawParams->screenHeight, mDensity );
         //drawWaveform( mNVGCtx, samplesBuffer, mDrawParams );
-
-
         drawCurve( samplesBuffer ); //didn't take not 1% out of 83% cpu time for render
-
-
-
-        nvgEndFrame( mNVGCtx );                                                                     //END BLOCK "FRAME"
-
-        mConstructorLock.unlock();
+        nvgEndFrame( mNVGCtx );
 
 }
 
@@ -215,7 +187,7 @@ void GLES20Renderer::calculateCurvePoints( Buffer * buffer )
         //With stroke offset we make sure that strokes are'nt drawn outside of canvas
         yOffset = ( (double)STROKE_WIDTH ) / 2.0;
 
-        Jrect rect( 0, yOffset, mDrawParams->screenWidth, mDrawParams->screenHeight - yOffset );
+        Rect rect( 0, yOffset, mDrawParams->screenWidth, mDrawParams->screenHeight - yOffset );
 
 
         samplesCount = buffer->len;
@@ -239,7 +211,6 @@ void GLES20Renderer::calculateCurvePoints( Buffer * buffer )
 
                 x = i * pointDistance;
                 y = rect.getHeight() - scaledHeight + rect.starty;
-
 
 
                 mCurvePoints[ i ].x = x;

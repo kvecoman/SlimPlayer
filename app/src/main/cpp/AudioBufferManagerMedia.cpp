@@ -4,12 +4,11 @@
 
 #include "AudioBufferManagerMedia.h"
 
-AudioBufferManagerMedia::AudioBufferManagerMedia( int targetSamples, int targetTimeSpan )
+AudioBufferManagerMedia::AudioBufferManagerMedia( int targetSamples )
 {
     mLock.lock();
 
     mTargetSamples = targetSamples;
-    mTargetTimeSpan = targetTimeSpan;
 
     mResultBuffer = new Buffer( targetSamples );
 

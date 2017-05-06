@@ -25,7 +25,7 @@
 #include <android/log.h>
 #include <mutex>
 #include "Shared.h"
-#include "Jrect.h"
+#include "Rect.h"
 #include "Point.h"
 #include "CurveAnimator.h"
 #include "AudioBufferManager.h"
@@ -88,7 +88,7 @@ public:
 
     bool mConstructed = false;
 
-    std::mutex mConstructorLock;
+    //std::mutex mConstructorLock;
 
     //Screen density ratio
     float mDensity = 1.0;
@@ -100,7 +100,7 @@ public:
 
 
 
-    GLES20Renderer( jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan/*, jint strokeWidth*/, jboolean exoAudioBufferManager );
+    GLES20Renderer( jint curvePointsCount, jint transitionFrames, AudioBufferManager * audioBufferManager );
 
     ~GLES20Renderer();
 

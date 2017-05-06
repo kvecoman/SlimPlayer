@@ -3,7 +3,7 @@
 //
 
 #include "DrawWaveformExtension.h"
-#include "Jrect.h"
+#include "Rect.h"
 
 DrawWaveformExtension::~DrawWaveformExtension()
 {
@@ -51,7 +51,7 @@ void DrawWaveformExtension::calculateWaveformPoints( Buffer * buffer, DrawParams
 
     int samplesCount;
     jfloat scaling;
-    Jrect rect( 0, 0, drawParams->screenWidth, drawParams->screenHeight  );
+    Rect rect( 0, 0, drawParams->screenWidth, drawParams->screenHeight  );
 
 
     samplesCount    = buffer->len;

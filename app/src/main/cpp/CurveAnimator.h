@@ -44,7 +44,7 @@ private:
 
 
 public:
-    Point CUBIC_BEZIER_EASE_IN_OUT[4] =  {
+    /*Point CUBIC_BEZIER_EASE_IN_OUT[4] =  {
             Point( 0, 0 ),
             Point( 0.35f, 0 ),
             Point( 0.65f, 1 ),
@@ -56,7 +56,7 @@ public:
             Point( 0.35f, 0 ),
             Point( 1, 1 ),
             Point( 1, 1 )
-    };
+    };*/
 
     Point CUBIC_BEZIER_LINEAR[4] =  {
             Point( 0, 0 ),
@@ -80,7 +80,7 @@ public:
     void calculateNextFrame();
 
     //Calculates value effect for current state x ( x is between 0 ( 0% ) and 1 ( 100% ) )
-    float percentageFromCubicBezier( float x, Point bezierPoints[] );
+    //float percentageFromCubicBezier( float x, Point bezierPoints[] );
 
 
     void drawCurrentFrameCurve( NVGcontext * nvgContext, DrawParams * drawParams );

@@ -39,8 +39,8 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
                GLES20Renderer.cpp
                GLES20RendererJNILayer.h
                GLES20RendererJNILayer.cpp
-               Jrect.h
-               Jrect.cpp
+               Rect.h
+               Rect.cpp
                Point.h
                Point.cpp
                Shared.h

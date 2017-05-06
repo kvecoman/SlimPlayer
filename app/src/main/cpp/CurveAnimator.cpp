@@ -79,35 +79,38 @@ void CurveAnimator::calculateNextFrame()
 
 
     float   animationPercentage;
-    float   bezierPercentage;
-    float   midX;
-    float   midY;
-    Point  startPoint;
-    Point  endPoint;
-    Point  midPoint;
+    //float   bezierPercentage;
+    //float   midX;
+    //float   midY;
+    Point *  startPoint;
+    Point *  endPoint;
+    //Point  midPoint;
 
 
     animationPercentage = ( float ) mFrameIndex / ( float ) mFramesCount;
 
     //This percentage follows bezier curve that we defined
-    bezierPercentage = percentageFromCubicBezier( animationPercentage, CUBIC_BEZIER_LINEAR );
+    //bezierPercentage = percentageFromCubicBezier( animationPercentage, CUBIC_BEZIER_LINEAR );
 
 
 
     for ( int i = 0; i < mPointsCount; i++ )
     {
-        startPoint  = mStartPoints[ i ];
-        endPoint    = mEndPoints[ i ];
+        startPoint  = &mStartPoints[ i ];
+        endPoint    = &mEndPoints[ i ];
 
         //Thanks to DZone for those two lines ( https://dzone.com/articles/how-find-point-coordinates )
         //Calculate mid points accordingly by bezier curve
-        midX = ( 1 - bezierPercentage ) * startPoint.x + bezierPercentage * endPoint.x;
+        /*midX = ( 1 - bezierPercentage ) * startPoint.x + bezierPercentage * endPoint.x;
         midY = ( 1 - bezierPercentage ) * startPoint.y + bezierPercentage * endPoint.y;
 
         midPoint.x = midX;
         midPoint.y = midY;
 
-        mCurrentPoints[ i ] = midPoint;
+        mCurrentPoints[ i ] = midPoint;*/
+
+        mCurrentPoints[ i ].x = ( int )( ( 1 - animationPercentage ) * startPoint->x  + animationPercentage * endPoint->x );
+        mCurrentPoints[ i ].y = ( int )( ( 1 - animationPercentage ) * startPoint->y  + animationPercentage * endPoint->y );
     }
 
     //If we have come to the 100% of animation cycle, we set the DONE flag up
@@ -125,7 +128,7 @@ void CurveAnimator::calculateNextFrame()
 /**
  * Calculates value effect for current state x ( x is between 0 ( 0% ) and 1 ( 100% ) )
  */
-float CurveAnimator::percentageFromCubicBezier( float x, Point bezierPoints[] )
+/*float CurveAnimator::percentageFromCubicBezier( float x, Point bezierPoints[] )
 {
 
     float result;
@@ -139,7 +142,7 @@ float CurveAnimator::percentageFromCubicBezier( float x, Point bezierPoints[] )
             );
 
     return result;
-}
+}*/
 
 
 void CurveAnimator::drawCurrentFrameCurve( NVGcontext * nvgContext, DrawParams * drawParams )

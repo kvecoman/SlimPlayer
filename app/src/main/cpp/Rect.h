@@ -10,7 +10,7 @@
 /**
  * Rectangle class
  */
-class Jrect
+class Rect
 {
 public:
     int startx;
@@ -18,7 +18,7 @@ public:
     int endx;
     int endy;
 
-    Jrect( jint startx, jint starty, jint endx, jint endy );
+    Rect( int startx, int starty, int endx, int endy );
 
 
     int getWitdth();

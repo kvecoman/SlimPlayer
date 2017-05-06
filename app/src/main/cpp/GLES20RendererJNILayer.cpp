@@ -6,66 +6,81 @@
 
 
 
-JNIEXPORT jlong JNICALL
+JNIEXPORT void JNICALL
 Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initNative
         ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan/*, jint strokeWidth*/, jboolean exoAudioBufferManager )
 {
 
-    jlong instancePtr;
+    //jlong instancePtr;
 
-    instancePtr = ( ( jlong )( new GLES20Renderer( curvePointsCount,  transitionFrames,  targetSamplesCount,  targetTimeSpan/*, strokeWidth */, exoAudioBufferManager) ) );
+    if ( exoAudioBufferManager )
+        sAudioBufferManager = new AudioBufferManagerExo( targetSamplesCount, targetTimeSpan );
+    else
+        sAudioBufferManager = new AudioBufferManagerMedia( targetSamplesCount );
 
-    return instancePtr;
+    sRenderer = new GLES20Renderer( curvePointsCount,  transitionFrames, sAudioBufferManager );
+
+    /*instancePtr = ( ( jlong )( new GLES20Renderer( curvePointsCount,  transitionFrames, sAudioBufferManager ) ) );
+
+    return instancePtr;*/
 
 }
 
 JNIEXPORT void JNICALL
 Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_deleteNativeInstance
-        ( JNIEnv * env, jobject thiz, jlong objPtr )
+        ( JNIEnv * env, jobject thiz )
 {
-    GLES20Renderer * instance;
+    /*GLES20Renderer * instance;
 
-    instance = (GLES20Renderer*)objPtr;
+    instance = (GLES20Renderer*)objPtr;*/
 
-    delete instance;
+    delete sRenderer;
+    delete sAudioBufferManager;
 }
 
 JNIEXPORT void JNICALL
 Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initNVG
-        ( JNIEnv * env, jobject thiz, jlong objPtr, jint width, jint height, jfloat density )
+        ( JNIEnv * env, jobject thiz, jint width, jint height, jfloat density )
 {
-    GLES20Renderer * instance;
+    /*GLES20Renderer * instance;
 
     instance = (GLES20Renderer*)objPtr;
 
-    instance->initNVG( width, height, density );
+    instance->initNVG(  );*/
+
+    sRenderer->initNVG( width, height, density );
 
 }
 
 JNIEXPORT void JNICALL
-Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseNVG ( JNIEnv * env, jobject thiz, jlong objPtr )
+Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseNVG ( JNIEnv * env, jobject thiz )
 {
-    GLES20Renderer * instance;
+    /*GLES20Renderer * instance;
 
     instance = (GLES20Renderer*)objPtr;
 
-    instance->releaseNVG();
+    instance->releaseNVG();*/
+
+    sRenderer->releaseNVG();
 }
 
 
 
 JNIEXPORT void JNICALL
-Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBuffer
-        ( JNIEnv * env, jobject thiz, jlong objPtr, jobject samplesBuffer, jint samplesCount, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs )
+Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBufferNative
+        ( JNIEnv * env, jobject thiz, jobject samplesBuffer, jint samplesCount, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs )
 {
     Buffer * buffer;
 
-    GLES20Renderer * instance;
+    //GLES20Renderer * instance;
 
     jbyte * bufferPtr;
     jint capacity;
 
-    instance = (GLES20Renderer*)objPtr;
+    if ( sAudioBufferManager == nullptr )
+        return;
+
+    //instance = (GLES20Renderer*)objPtr;
 
     bufferPtr       = ( jbyte* )env->GetDirectBufferAddress( samplesBuffer );
     capacity        = env->GetDirectBufferCapacity( samplesBuffer );
@@ -74,26 +89,33 @@ Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBuffer
 
     buffer = new Buffer( bufferPtr, samplesCount, capacity );
 
-    if ( /*instance->mEnabled &&*/ instance->mConstructed && !instance->mDeleted && instance->mAudioBufferManager != nullptr )
-        instance->mAudioBufferManager->processBuffer( buffer, presentationTimeUs, pcmFrameSize, sampleRate, currentTimeUs );
+    /*if ( instance->mConstructed && !instance->mDeleted && instance->mAudioBufferManager != nullptr )
+        instance->mAudioBufferManager->processBuffer( buffer, presentationTimeUs, pcmFrameSize, sampleRate, currentTimeUs );*/
+
+
+    sAudioBufferManager->processBuffer( buffer, presentationTimeUs, pcmFrameSize, sampleRate, currentTimeUs );
+
 
 }
 
 
 //RAW ARRAY VERSION
 JNIEXPORT void JNICALL
-Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBufferArray
-        ( JNIEnv * env, jobject thiz, jlong objPtr, jarray samplesBuffer, jint samplesCount, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs )
+Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBufferArrayNative
+        ( JNIEnv * env, jobject thiz, jarray samplesBuffer, jint samplesCount, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs )
 {
     Buffer * buffer;
 
-    GLES20Renderer * instance;
+    //GLES20Renderer * instance;
 
     jbyte * bufferPtr;
     jint capacity;
     jboolean isCopy;
 
-    instance = (GLES20Renderer*)objPtr;
+    if ( sAudioBufferManager == nullptr )
+        return;
+
+    //instance = (GLES20Renderer*)objPtr;
 
     capacity        = env->GetArrayLength( samplesBuffer );
     bufferPtr       = (jbyte*)env->GetPrimitiveArrayCritical( samplesBuffer, &isCopy );
@@ -103,8 +125,10 @@ Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBufferAr
 
     buffer = new Buffer( bufferPtr, samplesCount, capacity );
 
-    if ( /*instance->mEnabled &&*/ instance->mConstructed && !instance->mDeleted && instance->mAudioBufferManager != nullptr )
-        instance->mAudioBufferManager->processBuffer( buffer, presentationTimeUs, pcmFrameSize, sampleRate, currentTimeUs );
+    /*if ( instance->mConstructed && !instance->mDeleted && instance->mAudioBufferManager != nullptr )
+        instance->mAudioBufferManager->processBuffer( buffer, presentationTimeUs, pcmFrameSize, sampleRate, currentTimeUs );*/
+
+    sAudioBufferManager->processBuffer( buffer, presentationTimeUs, pcmFrameSize, sampleRate, currentTimeUs );
 
     env->ReleasePrimitiveArrayCritical( samplesBuffer, bufferPtr, 0 );
     delete buffer;
@@ -115,13 +139,33 @@ Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBufferAr
 
 JNIEXPORT void JNICALL
 Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_render
-        ( JNIEnv * env, jobject thiz, jlong objPtr, jint drawOffset )
+        ( JNIEnv * env, jobject thiz, jint drawOffset )
 {
 
-    GLES20Renderer * instance;
+    /*GLES20Renderer * instance;
 
     instance = (GLES20Renderer*)objPtr;
 
-    instance->render( drawOffset );
+    instance->render( drawOffset );*/
+
+    sRenderer->render( drawOffset );
 
 }
+
+
+
+
+
+/*JNIEXPORT void JNICALL
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initExoAudioBufferManager
+        ( JNIEnv * env, jobject thiz, jint targetSamplesCount, jint targetTimeSpan )
+{
+    sAudioBufferManager = new AudioBufferManagerExo( targetSamplesCount, targetTimeSpan );
+}
+
+JNIEXPORT void JNICALL
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initMediaAudioBufferManager
+        ( JNIEnv * env, jobject thiz,   jint targetSamplesCount )
+{
+    sAudioBufferManager = new AudioBufferManagerMedia( targetSamplesCount );
+}*/

@@ -10,12 +10,12 @@
 class Point
 {
 public:
-    jfloat x;
-    jfloat y;
+    int x = -1;
+    int y = -1;
 
 
     Point (  );
-    Point ( jfloat x, jfloat y );
+    Point ( int x, int y );
 
 };
 

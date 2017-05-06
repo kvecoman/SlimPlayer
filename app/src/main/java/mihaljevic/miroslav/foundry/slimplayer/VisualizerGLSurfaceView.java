@@ -36,7 +36,7 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
         if ( isInEditMode() )
             return;
 
-        mRenderer = new VisualizerGLRenderer( SlimPlayerApplication.getInstance().getSelectedPlayerEngine() == Player.PLAYER_EXO_PLAYER );
+
 
         setDebugFlags( DEBUG_CHECK_GL_ERROR | DEBUG_LOG_GL_CALLS );
         getHolder().setFormat( PixelFormat.TRANSLUCENT );
@@ -45,6 +45,11 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
         setPreserveEGLContextOnPause( true );
         setZOrderOnTop( true );
 
+        //queueEvent( new InitRunnable() );
+
+        mRenderer = new VisualizerGLRenderer( SlimPlayerApplication.getInstance().getSelectedPlayerEngine() == Player.PLAYER_EXO_PLAYER );
+
+        //NOTE - GL thread is created in setRenderer()
         setRenderer( mRenderer );
         setRenderMode( GLSurfaceView.RENDERMODE_WHEN_DIRTY );
         onPause();
@@ -61,6 +66,8 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
     {
         Log.v( TAG,"release()" );
         onResume();
+        mRenderer.disable();
+        mRenderer.disableBufferProcessing();
         queueEvent( new ReleaseRunnable() );
     }
 
@@ -72,6 +79,7 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
 
         super.onDraw( canvas );
     }
+
 
     /**
      * Runnable that cleans up native instance of renderer, supposed to be run on GL thread

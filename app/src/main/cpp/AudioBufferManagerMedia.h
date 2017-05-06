@@ -14,7 +14,6 @@ class AudioBufferManagerMedia : public AudioBufferManager
 {
 private:
     int mTargetSamples;
-    int mTargetTimeSpan;
 
     Buffer * mResultBuffer;
 
@@ -26,7 +25,7 @@ private:
 
 
 public:
-    AudioBufferManagerMedia( int targetSamples, int targetTimeSpan );
+    AudioBufferManagerMedia( int targetSamples );
 
     virtual ~AudioBufferManagerMedia();
 

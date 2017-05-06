@@ -45,8 +45,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     private NowPlayingPagerAdapter  mPagerAdapter;
 
     private SeekBar     mSeekBar;
-    /*private Handler     mSeekBarHandler;
-    private Runnable    mSeekBarRunnable;*/
+
 
     private String mQueueSource;
     private String mQueueParameter;
@@ -219,26 +218,6 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         }
     };
 
-    /*private class SeekBarRunnable implements Runnable
-    {
-
-        @Override
-        public void run()
-        {
-
-            if ( !isSelectedSongActive() || mDirectPlayerAccess == null || !mDirectPlayerAccess.isNotNull()  )
-            {
-                mSeekBar.setProgress( 0 );
-            }
-            else
-            {
-                mSeekBar.setProgress( ( int ) mDirectPlayerAccess.mPlayer.getCurrentPosition() );
-            }
-
-
-            mSeekBarHandler.postDelayed( this, SEEK_BAR_UPDATE_TIME );
-        }
-    }*/
 
 
     @Override
@@ -268,8 +247,6 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         mSeekBar.setProgress( 0 );
         mSeekBar.setOnSeekBarChangeListener( this );
 
-        //mSeekBarHandler     = new Handler(  );
-        //mSeekBarRunnable    = new SeekBarRunnable();
 
         rewindButton        = ( ImageButton ) findViewById( R.id.rewind_button );
         fastForwardButton   = ( ImageButton ) findViewById( R.id.fast_forward_button );

@@ -4,13 +4,9 @@
 
 #include "Point.h"
 
-Point::Point()
-{
-    x = -1;
-    y = -1;
-}
+Point::Point() { }
 
-Point::Point( jfloat x, jfloat y )
+Point::Point( int x, int y )
 {
     this->x = x;
     this->y = y;

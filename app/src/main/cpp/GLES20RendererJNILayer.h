@@ -17,34 +17,51 @@ extern "C" {
  * This is communication layer between java GLES20Renderer instance and native c++ GLES20Renderer instance
  */
 
-JNIEXPORT jlong JNICALL
+
+static AudioBufferManager * sAudioBufferManager = nullptr;
+static GLES20Renderer *     sRenderer = nullptr;
+
+
+JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initNative
-        ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan/*, jint strokeWidth*/, jboolean exoAudioBufferManager );
+        ( JNIEnv * env, jobject thiz, jint curvePointsCount, jint transitionFrames, jint targetSamplesCount, jint targetTimeSpan, jboolean exoAudioBufferManager );
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_deleteNativeInstance
-        ( JNIEnv * env, jobject thiz, jlong objPtr  );
+        ( JNIEnv * env, jobject thiz );
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initNVG
-        ( JNIEnv * env, jobject thiz, jlong objPtr, jint width, jint height, jfloat density );
+        ( JNIEnv * env, jobject thiz, jint width, jint height, jfloat density );
 
 JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseNVG ( JNIEnv * env, jobject thiz, jlong objPtr );
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_releaseNVG ( JNIEnv * env, jobject thiz );
 
 
 JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBuffer
-        ( JNIEnv * env, jobject thiz, jlong objPtr, jobject samplesBuffer, jint samplesCount, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs );
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBufferNative
+        ( JNIEnv * env, jobject thiz, jobject samplesBuffer, jint samplesCount, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs );
 
 JNIEXPORT void JNICALL
-        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBufferArray
-        ( JNIEnv * env, jobject thiz, jlong objPtr, jarray samplesBuffer, jint samplesCount, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs );
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_processBufferArrayNative
+        ( JNIEnv * env, jobject thiz, jarray samplesBuffer, jint samplesCount, jlong presentationTimeUs, jint pcmFrameSize, jint sampleRate, jlong currentTimeUs );
 
 
 JNIEXPORT void JNICALL
         Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_render
-        ( JNIEnv * env, jobject thiz, jlong objPtr, jint drawOffset );
+        ( JNIEnv * env, jobject thiz, jint drawOffset );
+
+
+
+
+
+/*JNIEXPORT void JNICALL
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initExoAudioBufferManager
+        ( JNIEnv * env, jobject thiz, jint targetSamplesCount, jint targetTimeSpan );
+
+JNIEXPORT void JNICALL
+        Java_mihaljevic_miroslav_foundry_slimplayer_VisualizerGLRenderer_initMediaAudioBufferManager
+        ( JNIEnv * env, jobject thiz,jint targetSamplesCount );*/
 
 
 #ifdef __cplusplus

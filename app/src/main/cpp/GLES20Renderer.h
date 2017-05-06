@@ -110,6 +110,8 @@ public:
 
     void render( int drawOffset );
 
+    void drawCurve( Buffer * samplesBuffer );
+
     void calculateCurvePoints( Buffer * buffer );
 
     jbyte findMaxByte( Buffer * buffer, int start, int end );

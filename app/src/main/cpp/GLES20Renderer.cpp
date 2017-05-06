@@ -119,11 +119,12 @@ void GLES20Renderer::releaseNVG()
 
 
 
-
+//This whole method takes out 79% out of 83% cpu time consumption
 void GLES20Renderer::render( int drawOffset )
 {
 
 
+        //TODO - no need to lock if constructor and destructor are called on GL thread ( make sure they are )
         mConstructorLock.lock();
 
         if ( mNVGCtx == nullptr || mDeleted || mGLESReleased )
@@ -135,7 +136,7 @@ void GLES20Renderer::render( int drawOffset )
 
 
 
-        Buffer * samplesBuffer;
+        Buffer * samplesBuffer;                           //START BLOCK "BUFFER" - takes 3% out of 83% cpu time
 
         mDrawParams->drawOffset = drawOffset;
 
@@ -146,35 +147,41 @@ void GLES20Renderer::render( int drawOffset )
         {
                 mConstructorLock.unlock();
                 return;
-        }
+        }                                                //END BLOCK "BUFFER"
 
 
 
-        glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
+        //THIS - can be commented out, useful only to add background color
+        //glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT ); //takes out 4% out of 83% cpu time
 
 
-        nvgBeginFrame( mNVGCtx, mDrawParams->screenWidth, mDrawParams->screenHeight, mDensity );
+        nvgBeginFrame( mNVGCtx, mDrawParams->screenWidth, mDrawParams->screenHeight, mDensity );  //START BLOCK "FRAME" - takes 3% out of 83% cpu time
 
         //drawWaveform( mNVGCtx, samplesBuffer, mDrawParams );
 
 
-        if ( mCurveAnimator->isDone() )
-        {
-                calculateCurvePoints( samplesBuffer);
-                mCurveAnimator->addPoints( mCurvePoints );
-        }
-
-
-        mCurveAnimator->calculateNextFrame();
-        mCurveAnimator->drawCurrentFrameCurve( mNVGCtx, mDrawParams );
+        drawCurve( samplesBuffer ); //didn't take not 1% out of 83% cpu time for render
 
 
 
-
-        nvgEndFrame( mNVGCtx );
+        nvgEndFrame( mNVGCtx );                                                                     //END BLOCK "FRAME"
 
         mConstructorLock.unlock();
 
+}
+
+
+void GLES20Renderer::drawCurve( Buffer * samplesBuffer )
+{
+    if ( mCurveAnimator->isDone() )
+    {
+        calculateCurvePoints( samplesBuffer);
+        mCurveAnimator->addPoints( mCurvePoints );
+    }
+
+
+    mCurveAnimator->calculateNextFrame();
+    mCurveAnimator->drawCurrentFrameCurve( mNVGCtx, mDrawParams );
 }
 
 

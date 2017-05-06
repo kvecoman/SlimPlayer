@@ -79,9 +79,7 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, Player.Buff
 
     public native void processBufferArray( long objPtr, byte[] samplesBuffer, int samplesCount, long presentationTimeUs, int pcmFrameSize, int sampleRate, long currentTimeUs );
 
-    /*private native void enable( long objPtr );
 
-    private native void disable( long objPtr );*/
 
     //**************************************************************************************************************************
 

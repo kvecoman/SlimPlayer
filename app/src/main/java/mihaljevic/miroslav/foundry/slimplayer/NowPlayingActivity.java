@@ -6,19 +6,21 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
+import android.support.v4.app.NavUtils;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBar;
 import android.support.v7.preference.PreferenceManager;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,11 +31,9 @@ import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 
-import com.google.android.exoplayer2.ExoPlayer;
-
 import java.util.List;
 
-//TODO - continue here- rotating stopped working in nowplaying activity - continue with that, problem is in release()
+
 
 public class NowPlayingActivity extends BackHandledFragmentActivity implements  ViewPager.OnPageChangeListener, View.OnClickListener, SeekBar.OnSeekBarChangeListener
 {
@@ -49,6 +49,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
     private String mQueueSource;
     private String mQueueParameter;
+    private String mQueueDisplayName;
 
     protected MediaBrowserCompat    mMediaBrowser;
     protected MediaControllerCompat mMediaController;
@@ -120,9 +121,11 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
                 mMediaController = new MediaControllerCompat( NowPlayingActivity.this, mMediaBrowser.getSessionToken() );
                 mMediaController.registerCallback( mMediaControllerCallbacks );
 
+                updateQueueTitle();
 
 
                 startFilePlayingIfNeeded();
+
 
                 initQueue();
 
@@ -179,6 +182,8 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         {
             super.onQueueChanged( queue );
 
+            updateQueueTitle();
+
             //This will update queue if needed or appropriate
             initQueue();
 
@@ -228,6 +233,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         Intent      intent;
         ImageButton rewindButton;
         ImageButton fastForwardButton;
+        ActionBar   actionBar;
 
         intent = getIntent();
 
@@ -235,8 +241,9 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
         if (intent != null && intent.hasExtra( Const.SOURCE_KEY ))
         {
-            mQueueSource    = intent.getStringExtra( Const.SOURCE_KEY );
-            mQueueParameter = intent.getStringExtra( Const.PARAMETER_KEY );
+            mQueueSource        = intent.getStringExtra( Const.SOURCE_KEY );
+            mQueueParameter     = intent.getStringExtra( Const.PARAMETER_KEY );
+            mQueueDisplayName   = intent.getStringExtra( Const.DISPLAY_NAME );
         }
 
         mPager = ( ViewPager )findViewById( R.id.pager );
@@ -264,6 +271,13 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
         attachVisualizer();
 
+        actionBar = getSupportActionBar();
+
+        if ( actionBar != null )
+        {
+            actionBar.setTitle( mQueueDisplayName );
+            actionBar.setDisplayHomeAsUpEnabled( true );
+        }
 
     }
 
@@ -305,18 +319,40 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         return true;
     }
 
+    @Override
+    public boolean onOptionsItemSelected( MenuItem item )
+    {
+        int id;
+
+        id = item.getItemId();
+
+        switch ( id )
+        {
+            case android.R.id.home:
+                goUp();
+                break;
+            default:
+                return super.onOptionsItemSelected( item );
+        }
+
+        return true;
+    }
 
     @Override
     public void onBackPressed()
     {
-        Intent intent;
+
 
         if ( isTaskRoot() )
         {
+            //TODO - recreate SongListActivity here if we come from notification using NavUtils
             //If we came from notification and this activity is task root then we want back button to return (open) Main activity
-            intent = new Intent(this,MainActivity.class);
-            intent.setFlags( Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
-            startActivity( intent );
+
+            if ( TextUtils.equals( mQueueSource, Const.FILE_URI_KEY ) )
+                goToMainActivity();
+            else
+                goUp(); //TODO - continue here - this is not working
+
             return;
         }
 
@@ -397,6 +433,60 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         }
 
         super.onRequestPermissionsResult( requestCode, permissions, grantResults );
+    }
+
+
+
+
+    private Bundle songListBundle()
+    {
+        Bundle bundle;
+
+        bundle = new Bundle();
+
+        bundle.putString( Const.SOURCE_KEY, mQueueSource );
+        bundle.putString( Const.PARAMETER_KEY, mQueueParameter );
+        bundle.putString( Const.DISPLAY_NAME, mQueueDisplayName );
+
+        return bundle;
+    }
+
+    private void updateQueueTitle()
+    {
+        if ( mMediaBrowser == null || !mMediaBrowser.isConnected() || mMediaController == null )
+            return;
+
+        ActionBar actionBar;
+
+        actionBar = getSupportActionBar();
+
+        mQueueDisplayName = mMediaController.getQueueTitle().toString();
+
+        if ( actionBar != null )
+            actionBar.setTitle( mQueueDisplayName );
+    }
+
+    private void goToMainActivity()
+    {
+        Intent intent;
+
+        intent = new Intent(this, MainActivity.class);
+        intent.setFlags( Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK );
+        startActivity( intent );
+    }
+
+
+    private void goUp()
+    {
+        Intent intent;
+
+        intent = NavUtils.getParentActivityIntent( this );
+        intent.putExtras( songListBundle() );
+
+        //NavUtils.navigateUpTo( this, intent );
+
+        finish();
+        startActivity( intent );
     }
 
 
@@ -799,14 +889,6 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     {
         if ( state == ViewPager.SCROLL_STATE_IDLE )
             updateDrawOffset( 0 );
-        /*else if ( state == ViewPager.SCROLL_STATE_SETTLING )
-        {
-            //This is first hint of songs changing, time to
-            if ( mPosition != mPager.getCurrentItem() )
-            {
-
-            }
-        }*/
     }
 
 

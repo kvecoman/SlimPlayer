@@ -30,7 +30,15 @@
         <activity
             android:name=".SettingsActivity"
             android:screenOrientation="portrait"/>
-        <activity android:name=".SongListActivity"/>
+
+        <activity android:name=".SongListActivity"
+                  android:parentActivityName=".MainActivity">
+
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
+
 
         <service
             android:name=".MediaPlayerService"
@@ -42,16 +50,15 @@
         </service>
 
         <activity android:name=".AddToPlaylistActivity"/>
+
         <activity
             android:name=".NowPlayingActivity"
-            android:launchMode="singleTop">
-
-            <!--
-            android:parentActivityName=".MainActivity">
+            android:launchMode="singleTop"
+            android:parentActivityName=".SongListActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
-            -->
+                android:value=".SongListActivity" />
+
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
 

@@ -21,6 +21,7 @@ import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
@@ -182,13 +183,13 @@ public class UtilsTest
         List<MediaBrowserCompat.MediaItem>  mediaItems;
         MusicProvider                       musicProvider;
         Uri                                 listURI;
-        SparseBooleanArray                  selection;
+        HashSet<Integer>                    selection;
         int                                 targetPosition;
         boolean                             deleted;
 
         Utils.createPlaylist( CREATED_TEST_PLAYLIST );
 
-        selection       = new SparseBooleanArray( 1 );
+        selection       = new HashSet<>( 1 );
         musicProvider   = MusicProvider.getInstance();
         listURI         = MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI;
         mediaItems      = musicProvider.loadMedia( Const.PLAYLISTS_SCREEN, null );
@@ -201,7 +202,7 @@ public class UtilsTest
                 targetPosition = i;
         }
 
-        selection.put( targetPosition, true );
+        selection.add( targetPosition );
 
 
         Utils.deleteFromList( mediaItems, listURI, selection, MediaStore.Audio.Playlists._ID );

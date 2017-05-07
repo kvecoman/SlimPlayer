@@ -79,9 +79,10 @@ public abstract class SlimActivity extends AppCompatActivity
                 //Exit the app
                 System.exit( 1 );
                 break;
+            default:
+                return super.onOptionsItemSelected( item );
         }
 
-
-        return super.onOptionsItemSelected( item );
+        return true;
     }
 }

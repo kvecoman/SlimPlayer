@@ -235,6 +235,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         mSource     = getArguments().getString( Const.SOURCE_KEY );
         mParameter  = getArguments().getString( Const.PARAMETER_KEY );
 
+        //TODO - aparently, this is used nowhere
         mSubscriptionBundle = new Bundle();
         mSubscriptionBundle.putString( Const.SOURCE_KEY, mSource );
         mSubscriptionBundle.putString( Const.PARAMETER_KEY, mParameter );
@@ -251,6 +252,7 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
 
         //Init media browser
         mMediaBrowser = new MediaBrowserCompat( getContext(), MediaPlayerService.COMPONENT_NAME, mConnectionCallbacks, null );
+
 
     }
 

@@ -273,6 +273,7 @@ public class SongRecyclerFragment extends SlimRecyclerFragment{
             intent = new Intent(context,NowPlayingActivity.class);
             intent.putExtra( Const.SOURCE_KEY, mSource );
             intent.putExtra( Const.PARAMETER_KEY, mParameter );
+            intent.putExtra( Const.DISPLAY_NAME, mDisplayName );
             intent.putExtra( Const.POSITION_KEY, position );
 
             startActivity( intent );

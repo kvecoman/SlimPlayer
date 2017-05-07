@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBar;
 import android.view.View;
 import android.widget.TextView;
 
@@ -28,7 +29,7 @@ import junit.framework.Test;
 //TODO - make the app
 //TODO - $$_PROFIT_$$
 
-//TODO - Blank - Disfigure for trailer song
+//TODO - Blank - Disfigure for trailer/promo song
 
 //TODO - make trial version of this app
 //TODO - indicate that tap paused or resumed the song
@@ -36,11 +37,12 @@ import junit.framework.Test;
 //TODO - make visual style for project
 //TODO - ability for some code parts/methods to fail without throwing exception (or with catching exception) ( add checks for things you connect to in onStart() )
 //TODO - add optimizations for screen rotations ( already done for NowPlayingFragment )
-//TODO - load all songs from folder in queue when playing from file???
 //TODO - test again receiving a call while playing
-//TODO - hashSet with integers instead of sparse boolean array for selected items in lists
-//TODO - see licences for glide, commons-math and maybe some other stuff to put it somewhere EDIT: check license for vitamio player!!!!!!
+//TODO - see licences for glide and maybe some other stuff to put it somewhere
 //TODO - bug when returning from song in all screen, either the cause is leaked service connection or illegal state that fragment is not attached to activity
+//TODO - icon that you can go back in action bar title
+//TODO - handle not having GL ES 2.0
+//TODO - text for rescan option ( toast )
 
 
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener
@@ -151,6 +153,16 @@ public class MainActivity extends SelectSongsActivity implements TextView.OnClic
             initPager();
             ( ( SlimPlayerApplication ) getApplicationContext() ).consumePreferenceChange();
         }
+    }
+
+
+    private void setActionBarTitle()
+    {
+        ActionBar actionBar;
+
+        actionBar = getSupportActionBar();
+
+        actionBar.setTitle( getString( R.string.app_name ) );
     }
 
     //Empty page click handler, opens preferences so user can select screens to be shown

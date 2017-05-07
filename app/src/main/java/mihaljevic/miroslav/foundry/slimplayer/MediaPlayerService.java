@@ -143,6 +143,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
     //private ExoPlayer mExoPlayer;
 
+    //TODO - cleanup this
     private CustomMediaCodecAudioRenderer mCustomAudioRenderer;
 
     private FileDataSourceFactory mDataSourceFactory;
@@ -563,6 +564,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
             mediaItems.add( mediaItem );
 
+            mMediaSession.setQueueTitle( mediaItem.getDescription().getTitle() );
+
         }
         else
         {
@@ -604,7 +607,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
         mMediaSession.setExtras ( sessionExtras );
         mMediaSession.setQueue  ( mQueue );
 
-        if (queueTitle != null)
+        if ( queueTitle != null && !TextUtils.equals( source, Const.FILE_URI_KEY )  )
             mMediaSession.setQueueTitle( queueTitle );
 
         isSourceChanged = Utils.isSourceDifferent( source, oldSource, parameter, oldParameter );

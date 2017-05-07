@@ -1,10 +1,14 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.NavUtils;
+import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 
 /**
  * Activity that is used to display SongListFragment after one of categories is selected from CategoryListFragment
@@ -26,6 +30,8 @@ public class SongListActivity extends SelectSongsActivity {
 
         Fragment    fragment;
         Bundle      args;
+        String      displayName;
+        ActionBar   actionBar;
 
 
         //Retrieve bundle intended to be sent with SlimListFragment
@@ -41,16 +47,29 @@ public class SongListActivity extends SelectSongsActivity {
             args        = new Bundle();
             args.putString(EmptyMessageFragment.MESSAGE_KEY,getString(R.string.empty_songlist));
         }
-
-
-
-        mSource = args.getString( Const.SOURCE_KEY);
-
-        //If we are opening playlist then load PlaylistSongsFragment
-        if ( TextUtils.equals( mSource, getString( R.string.pref_key_playlists_screen ) ) )
-            fragment = new PlaylistSongsRecyclerFragment();
         else
-            fragment = new SongRecyclerFragment();
+        {
+            mSource = args.getString( Const.SOURCE_KEY );
+
+            //Here we set display name to action bar
+            displayName = args.getString( Const.DISPLAY_NAME );
+            actionBar = getSupportActionBar();
+            if ( actionBar != null )
+            {
+                actionBar.setTitle( displayName );
+                actionBar.setDisplayHomeAsUpEnabled( true );
+            }
+
+            //If we are opening playlist then load PlaylistSongsFragment
+            if ( TextUtils.equals( mSource, getString( R.string.pref_key_playlists_screen ) ) )
+                fragment = new PlaylistSongsRecyclerFragment();
+            else
+                fragment = new SongRecyclerFragment();
+        }
+
+
+
+
 
         fragment.setArguments( args );
 
@@ -72,5 +91,37 @@ public class SongListActivity extends SelectSongsActivity {
 
 
         return super.onCreateOptionsMenu(menu);
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected( MenuItem item )
+    {
+        int id;
+
+        id = item.getItemId();
+
+        switch ( id )
+        {
+            case android.R.id.home:
+                goUp();
+                break;
+            default:
+                return super.onOptionsItemSelected( item );
+        }
+
+        return true;
+    }
+
+
+    private void goUp()
+    {
+        Intent intent;
+
+        intent = NavUtils.getParentActivityIntent( this );
+
+
+        finish();
+        startActivity( intent );
     }
 }

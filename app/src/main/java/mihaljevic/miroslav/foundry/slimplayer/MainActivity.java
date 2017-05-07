@@ -33,16 +33,17 @@ import junit.framework.Test;
 
 //TODO - make trial version of this app
 //TODO - indicate that tap paused or resumed the song
-//TODO - first time opening the app and home screen is empty, at least add indicators that there are more tabs
+//TODO - first time opening the app and home screen is empty, at least add indicators that there are more tabs ( or add all songs option )
 //TODO - make visual style for project
 //TODO - ability for some code parts/methods to fail without throwing exception (or with catching exception) ( add checks for things you connect to in onStart() )
 //TODO - add optimizations for screen rotations ( already done for NowPlayingFragment )
 //TODO - test again receiving a call while playing
 //TODO - see licences for glide and maybe some other stuff to put it somewhere
 //TODO - bug when returning from song in all screen, either the cause is leaked service connection or illegal state that fragment is not attached to activity
-//TODO - icon that you can go back in action bar title
 //TODO - handle not having GL ES 2.0
 //TODO - text for rescan option ( toast )
+//TODO - visual indicator song is paused in NowPlayingScreen
+//TODO - on newer android versions, selected directory should be automatically songs directory
 
 
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener

@@ -12,6 +12,11 @@
         android:title="@string/pref_title_autoplay"
         android:defaultValue="true"/>
 
+    <CheckBoxPreference
+        android:key="@string/pref_key_visualization"
+        android:title="@string/pref_title_visualization"
+        android:defaultValue="true"/>
+
     <PreferenceCategory
             android:title="@string/pref_title_tabs"
             android:key="@string/pref_key_tabs"

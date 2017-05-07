@@ -99,6 +99,7 @@ public class SettingsFragment extends PreferenceFragmentCompat
 
                 getContext().sendBroadcast( scanIntent );
             }
+            Utils.toastShort( getString( R.string.toast_rescan_directories ) );
             Log.d(TAG, "Scanning selected directories for new songs");
         }
         else
@@ -109,6 +110,8 @@ public class SettingsFragment extends PreferenceFragmentCompat
 
 
             getContext().sendBroadcast( scanIntent );
+
+            Utils.toastShort( getString( R.string.toast_rescan_storage ) );
 
             Log.d(TAG, "Scanning storage for new songs");
         }

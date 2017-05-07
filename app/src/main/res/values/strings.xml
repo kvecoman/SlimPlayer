@@ -21,11 +21,13 @@
     <string name="pref_title_artists">Artists screen</string>
     <string name="pref_title_genres">Genres screen</string>
 
-    <string name="pref_title_rescan">Rescan</string>
+    <string name="pref_title_rescan">Start storage scanning</string>
 
     <string name="pref_title_autoplay">Auto play last song on start-up</string>
 
-    <string name="pref_title_player_engine">Select internal player &#8230;</string>
+    <string name="pref_title_player_engine">Select internal player&#8230;</string>
+
+    <string name="pref_title_visualization">Display audio visualization</string>
 
     <!--Keys used in preferences and possibly in some other cases-->
     <string name="pref_key_tabs">pref_key_tabs</string>
@@ -48,6 +50,8 @@
     <string name="pref_key_playlist_number">pref_key_playlist_number</string>
 
     <string name="pref_key_autoplay">pref_key_autoplay</string>
+
+    <string name="pref_key_visualization">pref_key_visualization</string>
 
 
     <string name="pref_key_player_engine">pref_key_player_engine</string>
@@ -96,6 +100,8 @@
     <string name="toast_playlist_create_failed">Could not create playlists</string>
     <string name="toast_exit_confirm">Press back again to exit</string>
     <string name="toast_items_deleted">items deleted</string>
+    <string name="toast_rescan_storage">Started scanning internal storage for new songs</string>
+    <string name="toast_rescan_directories">Started scanning selected directories for new songs</string>
 
     <!-- Used as display name in home screen-->
     <string name="all_songs_screen_title">All songs</string>

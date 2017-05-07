@@ -491,10 +491,21 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
 
 
+    private boolean isVisualizerEnabled()
+    {
+        SharedPreferences prefs;
+
+        prefs = PreferenceManager.getDefaultSharedPreferences( this );
+
+        return prefs.getBoolean( getString( R.string.pref_key_visualization ), false );
+    }
 
 
     private void initVisualizer()
     {
+        if ( !isVisualizerEnabled() )
+            return;
+
         if ( !Utils.hasGLES20() )
         {
             Log.w( TAG, "GLES 2.0 not supported" );

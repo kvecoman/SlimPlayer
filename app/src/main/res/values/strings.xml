@@ -51,11 +51,16 @@
 
     <string name="pref_key_autoplay">pref_key_autoplay</string>
 
+    <string name="pref_key_player_engine">pref_key_player_engine</string>
+
     <string name="pref_key_visualization">pref_key_visualization</string>
 
+    <string name="pref_key_first_run">pref_key_first_run</string>
 
-    <string name="pref_key_player_engine">pref_key_player_engine</string>
+
     <!-- There are also some other keys defined as constants in project files-->
+
+
 
     <!--Directory select dialog -->
     <string name="directory_pref_button_select">Select...</string>
@@ -90,8 +95,8 @@
 
     <!--Empty screen texts-->
     <string name="empty_placeholder">Nothing to be found here...</string>
-    <string name="empty_main_screen">None of the home screens are turned on to show, click here to review your preferences</string>
-    <string name="empty_songlist">A problem occured with data loading</string>
+    <string name="empty_main_screen">None of the song list screens are turned on to show, click here to review your preferences</string>
+    <string name="empty_list">A problem occurred with data loading</string>
     <string name="empty_connection_failed">Failed to connect to media</string>
     <string name="empty_connection_suspended">A problem occurred while connecting to media</string>
 

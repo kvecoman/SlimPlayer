@@ -1,4 +1,4 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.activities;
 
 import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
@@ -12,6 +12,8 @@ import android.widget.RelativeLayout;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+
+import mihaljevic.miroslav.foundry.slimplayer.R;
 
 public class DemoActivity extends AppCompatActivity implements View.OnClickListener
 {

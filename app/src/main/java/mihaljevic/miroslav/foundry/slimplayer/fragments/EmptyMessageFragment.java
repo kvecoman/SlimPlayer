@@ -1,4 +1,4 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.fragments;
 
 
 import android.os.Bundle;
@@ -8,6 +8,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import mihaljevic.miroslav.foundry.slimplayer.R;
 
 /**
  * A fragment used to display an empty message

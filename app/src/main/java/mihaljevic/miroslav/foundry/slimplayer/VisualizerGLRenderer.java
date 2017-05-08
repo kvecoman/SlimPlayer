@@ -56,7 +56,7 @@ public class VisualizerGLRenderer implements GLSurfaceView.Renderer, Player.Buff
 
 
 
-    //TODO - optimize visualizer renderer
+
 
 
     //NATIVE METHODS *****************************************************************************************************

@@ -1,4 +1,4 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.fragments;
 
 
 import android.net.Uri;
@@ -14,7 +14,6 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -24,6 +23,15 @@ import android.widget.TextView;
 
 import java.util.HashSet;
 import java.util.List;
+
+import mihaljevic.miroslav.foundry.slimplayer.Const;
+import mihaljevic.miroslav.foundry.slimplayer.MediaPlayerService;
+import mihaljevic.miroslav.foundry.slimplayer.MusicProvider;
+import mihaljevic.miroslav.foundry.slimplayer.R;
+import mihaljevic.miroslav.foundry.slimplayer.Utils;
+import mihaljevic.miroslav.foundry.slimplayer.activities.SelectSongsActivity;
+import mihaljevic.miroslav.foundry.slimplayer.adapters.MediaAdapter;
+import mihaljevic.miroslav.foundry.slimplayer.fragments.BackHandledRecyclerFragment;
 
 /**
  *
@@ -235,14 +243,14 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         mSource     = getArguments().getString( Const.SOURCE_KEY );
         mParameter  = getArguments().getString( Const.PARAMETER_KEY );
 
-        //TODO - aparently, this is used nowhere
+        //This is used in connection callbacks
         mSubscriptionBundle = new Bundle();
         mSubscriptionBundle.putString( Const.SOURCE_KEY, mSource );
         mSubscriptionBundle.putString( Const.PARAMETER_KEY, mParameter );
 
 
         //Check if we are selecting songs for playlists
-        if (getContext() instanceof SelectSongsActivity)
+        if (getContext() instanceof SelectSongsActivity )
         {
             if (((SelectSongsActivity)getContext()).isSelectSongsForResult())
             {

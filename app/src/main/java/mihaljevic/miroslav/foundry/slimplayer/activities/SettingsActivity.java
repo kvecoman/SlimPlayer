@@ -1,9 +1,12 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.activities;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.preference.PreferenceManager;
+
+import mihaljevic.miroslav.foundry.slimplayer.fragments.SettingsFragment;
+import mihaljevic.miroslav.foundry.slimplayer.SlimPlayerApplication;
 
 public class SettingsActivity extends AppCompatActivity  implements SharedPreferences.OnSharedPreferenceChangeListener
 {

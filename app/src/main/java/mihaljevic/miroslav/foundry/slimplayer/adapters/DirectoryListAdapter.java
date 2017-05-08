@@ -1,4 +1,4 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.adapters;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
@@ -10,6 +10,8 @@ import android.widget.TextView;
 
 import java.io.File;
 import java.util.TreeMap;
+
+import mihaljevic.miroslav.foundry.slimplayer.Utils;
 
 /**
  * Created by Miroslav on 28.11.2016..

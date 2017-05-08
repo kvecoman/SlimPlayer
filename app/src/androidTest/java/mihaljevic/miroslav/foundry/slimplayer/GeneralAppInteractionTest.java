@@ -1,29 +1,21 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
-import android.content.ComponentName;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.ViewAssertion;
-import android.support.test.espresso.assertion.ViewAssertions;
 import android.support.test.espresso.contrib.RecyclerViewActions;
-import android.support.test.espresso.intent.Intents;
 import android.support.test.espresso.intent.rule.IntentsTestRule;
-import android.support.test.espresso.matcher.ViewMatchers;
-import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.view.ViewPager;
-import android.support.v7.widget.RecyclerView;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.Arrays;
 import java.util.List;
+
+import mihaljevic.miroslav.foundry.slimplayer.activities.MainActivity;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.action.ViewActions.scrollTo;
 import static android.support.test.espresso.action.ViewActions.swipeLeft;
 import static android.support.test.espresso.action.ViewActions.swipeRight;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
@@ -33,7 +25,6 @@ import static android.support.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static android.support.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.isDescendantOfA;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayingAtLeast;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static junit.framework.Assert.assertEquals;
@@ -53,7 +44,7 @@ public class GeneralAppInteractionTest
             new ActivityTestRule< MainActivity >( MainActivity.class );*/
 
     @Rule
-    public IntentsTestRule<MainActivity> mActivityRule =
+    public IntentsTestRule<MainActivity > mActivityRule =
             new IntentsTestRule< MainActivity >( MainActivity.class );
 
     @Test

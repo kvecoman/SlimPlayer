@@ -1,35 +1,34 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
-import android.opengl.GLSurfaceView;
-
-import com.google.android.exoplayer2.ExoPlayer;
-
 /**
  * Created by miroslav on 11.04.17..
  *
  * Class which allows direct access to some media player architecture components for performance and ease of use
+ * Mostly used for visualizer purposes
+ *
+ * @author Miroslav Mihaljević
  */
 
-//TODO - rename to direct player bridge
 
-public class DirectPlayerAccess
+
+public class DirectPlayerBridge
 {
     /*CustomMediaCodecAudioRenderer   audioRenderer;
     ExoPlayer                       exoPlayer;*/
-    Player mPlayer;
+    public Player player;
     //VisualizerGLRenderer            visualizerGLRenderer;
 
-    VisualizerGLSurfaceView         activeVisualizer;
+    public VisualizerGLSurfaceView         activeVisualizer;
 
-    public DirectPlayerAccess( Player player )
+    public DirectPlayerBridge( Player player )
     {
-        mPlayer = player;
+        this.player = player;
         /*this.visualizerGLRenderer   = visualizerGLRenderer;*/
     }
 
     public boolean isNotNull()
     {
-        return mPlayer != null;
+        return player != null;
     }
 
     public void setActiveVisualizer( VisualizerGLSurfaceView visualizer )
@@ -38,13 +37,13 @@ public class DirectPlayerAccess
 
         activeVisualizer = visualizer;
 
-        mPlayer.setBufferReceiver( activeVisualizer.getRenderer() );
+        player.setBufferReceiver( activeVisualizer.getRenderer() );
     }
 
     public void enableActiveVisualizer()
     {
-        if ( mPlayer != null )
-            mPlayer.enableBufferProcessing();
+        if ( player != null )
+            player.enableBufferProcessing();
 
         if ( activeVisualizer != null )
         {
@@ -55,8 +54,8 @@ public class DirectPlayerAccess
 
     public void disableActiveVisualizer()
     {
-        if ( mPlayer != null )
-            mPlayer.disableBufferProcessing();
+        if ( player != null )
+            player.disableBufferProcessing();
 
         if ( activeVisualizer != null )
         {
@@ -68,7 +67,7 @@ public class DirectPlayerAccess
 
     public long getCurrentPlayerPosition()
     {
-        return mPlayer.getCurrentPosition();
+        return player.getCurrentPosition();
     }
 
 }

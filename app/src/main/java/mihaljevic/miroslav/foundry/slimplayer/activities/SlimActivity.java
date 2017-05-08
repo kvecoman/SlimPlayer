@@ -1,12 +1,16 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.preference.PreferenceManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import mihaljevic.miroslav.foundry.slimplayer.Const;
+import mihaljevic.miroslav.foundry.slimplayer.R;
+import mihaljevic.miroslav.foundry.slimplayer.activities.SettingsActivity;
+import mihaljevic.miroslav.foundry.slimplayer.activities.TestPlayerActivity;
 
 /**
  *Base activity that shares common options in options menu

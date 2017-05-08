@@ -10,6 +10,10 @@ import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v7.preference.PreferenceManager;
 
+import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
+
 import static mihaljevic.miroslav.foundry.slimplayer.MediaPlayerService.LAST_PARAMETER_KEY;
 import static mihaljevic.miroslav.foundry.slimplayer.MediaPlayerService.LAST_POSITION_KEY;
 import static mihaljevic.miroslav.foundry.slimplayer.MediaPlayerService.LAST_SOURCE_KEY;
@@ -38,7 +42,7 @@ public class SlimPlayerApplication extends Application
 
     private MediaBrowserCompat mMediaBrowser;
 
-    private DirectPlayerAccess mDirectPlayerAccess;
+    private DirectPlayerBridge mDirectPlayerBridge;
 
     protected class ConnectionCallbacks extends MediaBrowserCompat.ConnectionCallback
     {
@@ -54,17 +58,24 @@ public class SlimPlayerApplication extends Application
             {
                 mediaController = new MediaControllerCompat( SlimPlayerApplication.this, mMediaBrowser.getSessionToken() );
 
-                if ( shouldAutoplay() )
-                {
+                /**
+                 * NOTE - currently the only reason we connect to service now is because of autoplay,
+                 * so we can move that check right before the start of connection in onCreate()
+                 */
 
+
+
+
+                    //If it happens that last auto-play failed, this check will prevent from trying again
                     if ( isLastPlaySuccess() )
                     {
                         setLastPlayFailed();
                         playLastState( mediaController );
                     }
 
+                    //If the exception is not thrown of any kind, it probably means we succeeded at play
                     setLastPlaySuccess();
-                }
+
 
             }
             catch (RemoteException e)
@@ -91,17 +102,25 @@ public class SlimPlayerApplication extends Application
 
         mMediaBrowser = new MediaBrowserCompat( this, MediaPlayerService.COMPONENT_NAME, new ConnectionCallbacks(), null );
 
-        mMediaBrowser.connect();
+        //NOTE - this is disconnected in connection callback and we need it only for autoplay purposes
+        if ( shouldAutoplay() )
+            mMediaBrowser.connect();
+
+        if ( isThisFirstRunEver() )
+        {
+            insertDefaultSongsDirectory();
+            setFirstRunEverFalse();
+        }
     }
 
-    public DirectPlayerAccess getDirectPlayerAccess()
+    public DirectPlayerBridge getDirectPlayerAccess()
     {
-        return mDirectPlayerAccess;
+        return mDirectPlayerBridge;
     }
 
-    public void setDirectPlayerAccess( DirectPlayerAccess mDirectPlayerAccess )
+    public void setDirectPlayerAccess( DirectPlayerBridge mDirectPlayerBridge )
     {
-        this.mDirectPlayerAccess = mDirectPlayerAccess;
+        this.mDirectPlayerBridge = mDirectPlayerBridge;
     }
 
     private void playLastState( MediaControllerCompat mediaController)
@@ -203,6 +222,45 @@ public class SlimPlayerApplication extends Application
 
     //Components notify that the have responded to changes
     public void consumePreferenceChange() { mPreferencesChanged = false; }
+
+    //Return whether this is first time this app is started
+    private boolean isThisFirstRunEver()
+    {
+        SharedPreferences prefs;
+
+        prefs = PreferenceManager.getDefaultSharedPreferences( this );
+
+        return prefs.getBoolean( getString( R.string.pref_key_first_run ), true );
+    }
+
+    private void setFirstRunEverFalse()
+    {
+        SharedPreferences prefs;
+
+        prefs = PreferenceManager.getDefaultSharedPreferences( this );
+
+        prefs.edit().putBoolean( getString( R.string.pref_key_first_run ), false ).apply();
+    }
+
+    private void insertDefaultSongsDirectory()
+    {
+        SharedPreferences   prefs;
+        File                directoryPath;
+        Set<String>         directories;
+
+        prefs = PreferenceManager.getDefaultSharedPreferences( this );
+
+        directoryPath = new File( Const.DEFAULT_ANDROID_SONGS_DIRECTORY );
+
+        if ( !directoryPath.exists() || !directoryPath.isDirectory() )
+            return;
+
+        directories = prefs.getStringSet( getString( R.string.pref_key_directories_set ), new HashSet< String >( 1 ) );
+
+        directories.add( Const.DEFAULT_ANDROID_SONGS_DIRECTORY );
+
+        prefs.edit().putStringSet( getString( R.string.pref_key_directories_set ), directories ).apply();
+    }
 
 
 

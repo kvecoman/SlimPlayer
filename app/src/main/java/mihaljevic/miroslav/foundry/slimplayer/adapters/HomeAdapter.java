@@ -1,9 +1,6 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.adapters;
 
 import android.content.Context;
-import android.content.Intent;
-import android.database.Cursor;
-import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -12,6 +9,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+
+import mihaljevic.miroslav.foundry.slimplayer.R;
 
 /**
  * Adapter for recycler view in home screen

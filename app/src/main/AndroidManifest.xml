@@ -20,7 +20,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity android:name=".activities.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
@@ -28,15 +28,15 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SettingsActivity"
+            android:name=".activities.SettingsActivity"
             android:screenOrientation="portrait"/>
 
-        <activity android:name=".SongListActivity"
-                  android:parentActivityName=".MainActivity">
+        <activity android:name=".activities.SongListActivity"
+                  android:parentActivityName=".activities.MainActivity">
 
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
+                android:value=".activities.MainActivity" />
         </activity>
 
 
@@ -49,15 +49,15 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".AddToPlaylistActivity"/>
+        <activity android:name=".activities.AddToPlaylistActivity"/>
 
         <activity
-            android:name=".NowPlayingActivity"
+            android:name=".activities.NowPlayingActivity"
             android:launchMode="singleTop"
-            android:parentActivityName=".SongListActivity">
+            android:parentActivityName=".activities.SongListActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".SongListActivity" />
+                android:value=".activities.SongListActivity" />
 
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
@@ -82,9 +82,9 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name=".TestPlayerActivity">
+        <activity android:name=".activities.TestPlayerActivity">
         </activity>
-        <activity android:name=".DemoActivity">
+        <activity android:name=".activities.DemoActivity">
         </activity>
     </application>
 

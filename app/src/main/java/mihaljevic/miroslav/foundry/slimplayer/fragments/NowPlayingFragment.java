@@ -1,4 +1,4 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.fragments;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -25,6 +25,12 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
+
+import mihaljevic.miroslav.foundry.slimplayer.Const;
+import mihaljevic.miroslav.foundry.slimplayer.EmbeddedArtGlide;
+import mihaljevic.miroslav.foundry.slimplayer.MediaPlayerService;
+import mihaljevic.miroslav.foundry.slimplayer.R;
+import mihaljevic.miroslav.foundry.slimplayer.SlimPlayerApplication;
 
 /**
  *

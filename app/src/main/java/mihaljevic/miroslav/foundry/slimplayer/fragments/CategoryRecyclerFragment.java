@@ -1,4 +1,4 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.fragments;
 
 
 import android.content.Context;
@@ -8,12 +8,17 @@ import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
+import mihaljevic.miroslav.foundry.slimplayer.Const;
+import mihaljevic.miroslav.foundry.slimplayer.activities.SlimActivity;
+import mihaljevic.miroslav.foundry.slimplayer.activities.SongListActivity;
+
 /**
  * Fragment used for displaying of different categories like all genres, all abums etc.
  *
  * @author Miroslav Mihaljević
  */
-public class CategoryRecyclerFragment extends SlimRecyclerFragment {
+public class CategoryRecyclerFragment extends SlimRecyclerFragment
+{
 
 
 

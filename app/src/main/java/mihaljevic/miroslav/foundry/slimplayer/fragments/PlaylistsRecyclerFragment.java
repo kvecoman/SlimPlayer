@@ -1,4 +1,4 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.fragments;
 
 
 import android.content.Context;
@@ -17,12 +17,18 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
+import mihaljevic.miroslav.foundry.slimplayer.Const;
+import mihaljevic.miroslav.foundry.slimplayer.R;
+import mihaljevic.miroslav.foundry.slimplayer.Utils;
+import mihaljevic.miroslav.foundry.slimplayer.fragments.CategoryRecyclerFragment;
+
 /**
  * Fragment that displays list of playlists + options to create new one or delete one
  *
  * @author Miroslav Mihaljević
  */
-public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment {
+public class PlaylistsRecyclerFragment extends CategoryRecyclerFragment
+{
 
     private AlertDialog mCreatePlaylistDialog;
     private EditText    mCreatePlaylistEditText;

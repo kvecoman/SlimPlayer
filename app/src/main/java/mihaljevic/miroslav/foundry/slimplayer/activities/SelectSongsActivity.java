@@ -1,28 +1,30 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.activities;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static mihaljevic.miroslav.foundry.slimplayer.PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY;
-import static mihaljevic.miroslav.foundry.slimplayer.PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST;
-import static mihaljevic.miroslav.foundry.slimplayer.PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2;
+import mihaljevic.miroslav.foundry.slimplayer.fragments.PlaylistSongsRecyclerFragment;
+import mihaljevic.miroslav.foundry.slimplayer.R;
+
+import static mihaljevic.miroslav.foundry.slimplayer.fragments.PlaylistSongsRecyclerFragment.SELECTED_SONGS_KEY;
+import static mihaljevic.miroslav.foundry.slimplayer.fragments.PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST;
+import static mihaljevic.miroslav.foundry.slimplayer.fragments.PlaylistSongsRecyclerFragment.SELECT_SONGS_REQUEST_2;
 
 /**
  *
  *
  */
 
-public abstract class SelectSongsActivity extends BackHandledFragmentActivity {
+public abstract class SelectSongsActivity extends BackHandledFragmentActivity
+{
 
     //Key used to identify whether the user has finished selecting and it is time to exit all selection activities
     public static final String SELECTING_FINISHED_KEY = "selecting_finished";
@@ -37,7 +39,7 @@ public abstract class SelectSongsActivity extends BackHandledFragmentActivity {
         super.onCreate(savedInstanceState);
 
         //Check if we have started this activity only to select songs
-        if ( TextUtils.equals(getIntent().getAction(),PlaylistSongsRecyclerFragment.ACTION_SELECT_SONGS))
+        if ( TextUtils.equals(getIntent().getAction(), PlaylistSongsRecyclerFragment.ACTION_SELECT_SONGS))
         {
             mSelectSongsForResult   = true;
             mSelectedSongIdsList    = new HashSet<>();

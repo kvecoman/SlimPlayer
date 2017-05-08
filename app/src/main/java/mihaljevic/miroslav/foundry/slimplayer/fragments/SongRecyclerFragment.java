@@ -1,4 +1,4 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.fragments;
 
 
 import android.content.Context;
@@ -9,7 +9,6 @@ import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
-import android.util.SparseBooleanArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,13 +17,22 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import mihaljevic.miroslav.foundry.slimplayer.Const;
+import mihaljevic.miroslav.foundry.slimplayer.R;
+import mihaljevic.miroslav.foundry.slimplayer.Utils;
+import mihaljevic.miroslav.foundry.slimplayer.activities.AddToPlaylistActivity;
+import mihaljevic.miroslav.foundry.slimplayer.activities.NowPlayingActivity;
+import mihaljevic.miroslav.foundry.slimplayer.activities.SelectSongsActivity;
+import mihaljevic.miroslav.foundry.slimplayer.fragments.SlimRecyclerFragment;
+
 /**
  * Fragment that displays only songs, and responds appropriately to click
  *
  * @author Miroslav Mihaljević
  */
 
-public class SongRecyclerFragment extends SlimRecyclerFragment{
+public class SongRecyclerFragment extends SlimRecyclerFragment
+{
 
 
     //Indicate whether this list/queue is loaded in MediaPlayerService

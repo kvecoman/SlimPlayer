@@ -5,7 +5,7 @@
                                                android:layout_width="match_parent"
                                                android:layout_height="match_parent"
                                                android:id="@+id/now_playing_activity"
-                                               tools:context="mihaljevic.miroslav.foundry.slimplayer.NowPlayingActivity">
+                                               tools:context="mihaljevic.miroslav.foundry.slimplayer.activities.NowPlayingActivity">
 
 
   <android.support.v4.view.ViewPager

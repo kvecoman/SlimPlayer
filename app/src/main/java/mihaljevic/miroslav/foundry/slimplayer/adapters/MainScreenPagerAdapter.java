@@ -1,4 +1,4 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.adapters;
 
 import android.Manifest;
 import android.content.Context;
@@ -12,8 +12,17 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.preference.PreferenceManager;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+
+import mihaljevic.miroslav.foundry.slimplayer.Const;
+import mihaljevic.miroslav.foundry.slimplayer.R;
+import mihaljevic.miroslav.foundry.slimplayer.ScreenBundles;
+import mihaljevic.miroslav.foundry.slimplayer.fragments.SongRecyclerFragment;
+import mihaljevic.miroslav.foundry.slimplayer.Utils;
+import mihaljevic.miroslav.foundry.slimplayer.fragments.CategoryRecyclerFragment;
+import mihaljevic.miroslav.foundry.slimplayer.fragments.EmptyMessageFragment;
+import mihaljevic.miroslav.foundry.slimplayer.fragments.HomeFragment;
+import mihaljevic.miroslav.foundry.slimplayer.fragments.PlaylistsRecyclerFragment;
 
 /**
  * Created by Miroslav on 25.9.2016..
@@ -64,7 +73,7 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
         //Remove home screen if we don't want to show it
         if (!mShowHomeScreen)
         {
-            mScreensList.remove(Const.HOME_SCREEN);
+            mScreensList.remove( Const.HOME_SCREEN);
         }
 
         mNumScreens = ((ArrayList) mScreensList).size();
@@ -118,7 +127,7 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
         String [] allScreenKeys;
 
         resources       = mContext.getResources();
-        allScreenKeys   = resources.getStringArray(R.array.pref_screens_set_default);
+        allScreenKeys   = resources.getStringArray( R.array.pref_screens_set_default);
 
         mScreensList = new ArrayList<>(6);
 

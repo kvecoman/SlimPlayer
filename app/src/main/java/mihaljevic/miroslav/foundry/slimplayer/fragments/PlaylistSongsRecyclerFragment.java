@@ -1,4 +1,4 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.fragments;
 
 
 import android.content.Intent;
@@ -9,14 +9,20 @@ import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import java.util.List;
+
+import mihaljevic.miroslav.foundry.slimplayer.Const;
+import mihaljevic.miroslav.foundry.slimplayer.R;
+import mihaljevic.miroslav.foundry.slimplayer.activities.SlimActivity;
+import mihaljevic.miroslav.foundry.slimplayer.Utils;
+import mihaljevic.miroslav.foundry.slimplayer.activities.MainActivity;
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class PlaylistSongsRecyclerFragment extends SongRecyclerFragment {
+public class PlaylistSongsRecyclerFragment extends SongRecyclerFragment
+{
 
     public static final int SELECT_SONGS_REQUEST = 23; //Random number
 
@@ -42,7 +48,7 @@ public class PlaylistSongsRecyclerFragment extends SongRecyclerFragment {
             MenuItem addToThisPlaylistItem;
             MenuItem deleteItem;
 
-            addToThisPlaylistItem   = menu.findItem(R.id.playlist_add_to_this);
+            addToThisPlaylistItem   = menu.findItem( R.id.playlist_add_to_this);
             deleteItem              = menu.findItem(R.id.delete_item);
 
             if ( mSelectMode && mSelectedItems.size() > 0 )

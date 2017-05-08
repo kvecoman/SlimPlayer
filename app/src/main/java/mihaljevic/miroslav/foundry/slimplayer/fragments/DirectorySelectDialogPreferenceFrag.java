@@ -1,4 +1,4 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.fragments;
 
 import android.content.Context;
 import android.os.Environment;
@@ -14,11 +14,12 @@ import android.widget.ListView;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.TreeMap;
+
+import mihaljevic.miroslav.foundry.slimplayer.DirectorySelectPreference;
+import mihaljevic.miroslav.foundry.slimplayer.R;
+import mihaljevic.miroslav.foundry.slimplayer.Utils;
+import mihaljevic.miroslav.foundry.slimplayer.adapters.DirectoryListAdapter;
 
 /**
  * Created by Miroslav on 29.9.2016..
@@ -86,7 +87,7 @@ public class DirectorySelectDialogPreferenceFrag extends PreferenceDialogFragmen
     @Override
     public void onItemClick( AdapterView<?> parent, View view, int position, long id )
     {
-        mCurrentDir = ( File )Utils.getByIndex( mDirectoriesList2, position );
+        mCurrentDir = ( File ) Utils.getByIndex( mDirectoriesList2, position );
         updateDirectories();
     }
 

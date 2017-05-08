@@ -1,18 +1,16 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
-import android.app.Application;
-import android.support.test.espresso.Espresso;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
-import android.test.ApplicationTestCase;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import mihaljevic.miroslav.foundry.slimplayer.activities.MainActivity;
+
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.swipeLeft;
-import static android.support.test.espresso.action.ViewActions.swipeRight;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 
 /**
@@ -23,7 +21,7 @@ public class TestTest
 {
 
     @Rule
-    public ActivityTestRule<MainActivity> mActivityRule =
+    public ActivityTestRule<MainActivity > mActivityRule =
             new ActivityTestRule< MainActivity >( MainActivity.class );
 
     @Test

@@ -1,4 +1,4 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.activities;
 
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;

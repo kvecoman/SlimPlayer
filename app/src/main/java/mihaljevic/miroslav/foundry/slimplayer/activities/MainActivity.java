@@ -1,4 +1,4 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.activities;
 
 import android.Manifest;
 import android.content.Intent;
@@ -6,14 +6,17 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.view.View;
 import android.widget.TextView;
 
-import junit.framework.Test;
+import mihaljevic.miroslav.foundry.slimplayer.Const;
+import mihaljevic.miroslav.foundry.slimplayer.adapters.MainScreenPagerAdapter;
+import mihaljevic.miroslav.foundry.slimplayer.R;
+import mihaljevic.miroslav.foundry.slimplayer.SlimPlayerApplication;
+import mihaljevic.miroslav.foundry.slimplayer.Utils;
 
 
 /**
@@ -40,10 +43,8 @@ import junit.framework.Test;
 //TODO - test again receiving a call while playing
 //TODO - see licences for glide and maybe some other stuff to put it somewhere
 //TODO - bug when returning from song in all screen, either the cause is leaked service connection or illegal state that fragment is not attached to activity
-//TODO - handle not having GL ES 2.0
-//TODO - text for rescan option ( toast )
 //TODO - visual indicator song is paused in NowPlayingScreen
-//TODO - on newer android versions, selected directory should be automatically songs directory
+//TODO - test auto adding directory na Igorovom mobitelu
 
 
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener

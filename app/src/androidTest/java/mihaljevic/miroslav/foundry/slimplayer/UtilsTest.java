@@ -1,6 +1,5 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
-import android.app.Activity;
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.net.Uri;
@@ -10,10 +9,6 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.v4.media.MediaBrowserCompat;
-import android.support.v4.media.session.MediaControllerCompat;
-import android.util.SparseBooleanArray;
-
-import com.bumptech.glide.load.model.stream.MediaStoreStreamLoader;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -26,9 +21,8 @@ import java.util.List;
 import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
+import mihaljevic.miroslav.foundry.slimplayer.activities.MainActivity;
+
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -47,7 +41,7 @@ public class UtilsTest
     private CountDownLatch signal = new CountDownLatch( 1 );
 
     @Rule
-    public ActivityTestRule<MainActivity> mActivityRule =
+    public ActivityTestRule<MainActivity > mActivityRule =
             new ActivityTestRule< MainActivity >( MainActivity.class );
 
     @Test

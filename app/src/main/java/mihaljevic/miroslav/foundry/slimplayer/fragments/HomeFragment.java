@@ -1,7 +1,6 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.fragments;
 
 
-import android.content.ComponentName;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -24,6 +23,15 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import mihaljevic.miroslav.foundry.slimplayer.Const;
+import mihaljevic.miroslav.foundry.slimplayer.adapters.HomeAdapter;
+import mihaljevic.miroslav.foundry.slimplayer.MediaPlayerService;
+import mihaljevic.miroslav.foundry.slimplayer.R;
+import mihaljevic.miroslav.foundry.slimplayer.activities.SongListActivity;
+import mihaljevic.miroslav.foundry.slimplayer.StatsContract;
+import mihaljevic.miroslav.foundry.slimplayer.StatsDbHelper;
+import mihaljevic.miroslav.foundry.slimplayer.Utils;
 
 
 /**

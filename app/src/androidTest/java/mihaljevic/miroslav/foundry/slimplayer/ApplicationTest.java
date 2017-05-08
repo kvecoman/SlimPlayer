@@ -1,27 +1,22 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
-import android.app.Application;
 import android.support.test.espresso.contrib.RecyclerViewActions;
 import android.support.test.espresso.intent.rule.IntentsTestRule;
 import android.support.test.runner.AndroidJUnit4;
-import android.test.ApplicationTestCase;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import mihaljevic.miroslav.foundry.slimplayer.activities.MainActivity;
+
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.swipeLeft;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.hasDescendant;
-import static android.support.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static junit.framework.Assert.fail;
-import static mihaljevic.miroslav.foundry.slimplayer.TestData.EXPECTED_DISPLAY_NAME;
-import static mihaljevic.miroslav.foundry.slimplayer.TestData.TEST_SOURCE;
 import static org.hamcrest.CoreMatchers.allOf;
 
 /**
@@ -33,7 +28,7 @@ public class ApplicationTest
 
 
     @Rule
-    public IntentsTestRule<MainActivity> mActivityRule =
+    public IntentsTestRule<MainActivity > mActivityRule =
             new IntentsTestRule< MainActivity >( MainActivity.class );
 
 

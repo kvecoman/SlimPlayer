@@ -154,14 +154,6 @@ public class Player implements Visualizer.OnDataCaptureListener
             mMediaPlayer.setDataSource( SlimPlayerApplication.getInstance(), uri );
             mMediaPlayer.prepare();
         }
-        /*else if ( mVitamioPlayer != null )
-        {
-            mState = STATE_PREPARING;
-            mVitamioPlayer.stop();
-            mVitamioPlayer.reset();
-            mVitamioPlayer.setDataSource( SlimPlayerApplication.getInstance(),  uri );
-            mVitamioPlayer.prepare();
-        }*/
         else if ( mExoPlayer != null )
         {
             MediaSource mediaSource;
@@ -184,11 +176,6 @@ public class Player implements Visualizer.OnDataCaptureListener
             mMediaPlayer.start();
             mState = STATE_PLAYING;
         }
-        /*else if ( mVitamioPlayer != null )
-        {
-            mVitamioPlayer.start();
-            mState = STATE_PLAYING;
-        }*/
         else if ( mExoPlayer != null )
         {
             mExoPlayer.setPlayWhenReady( true );
@@ -202,10 +189,6 @@ public class Player implements Visualizer.OnDataCaptureListener
         {
             mMediaPlayer.pause();
         }
-        /*else if ( mVitamioPlayer != null )
-        {
-            mVitamioPlayer.pause();
-        }*/
         else if ( mExoPlayer != null )
         {
             mExoPlayer.setPlayWhenReady( false );
@@ -218,10 +201,6 @@ public class Player implements Visualizer.OnDataCaptureListener
         {
             mMediaPlayer.stop();
         }
-        /*else if ( mVitamioPlayer != null )
-        {
-            mVitamioPlayer.stop();
-        }*/
         else if ( mExoPlayer != null )
         {
             mExoPlayer.stop();
@@ -234,10 +213,6 @@ public class Player implements Visualizer.OnDataCaptureListener
         {
             return mMediaPlayer.getCurrentPosition();
         }
-        /*else if ( mVitamioPlayer != null )
-        {
-            return mVitamioPlayer.getCurrentPosition();
-        }*/
         else if ( mExoPlayer != null )
         {
             return mExoPlayer.getCurrentPosition();
@@ -252,10 +227,6 @@ public class Player implements Visualizer.OnDataCaptureListener
         {
             return mMediaPlayer.getDuration();
         }
-        /*else if ( mVitamioPlayer != null )
-        {
-            return mVitamioPlayer.getDuration();
-        }*/
         else if ( mExoPlayer != null )
         {
             return mExoPlayer.getDuration();
@@ -270,10 +241,6 @@ public class Player implements Visualizer.OnDataCaptureListener
         {
             mMediaPlayer.seekTo( (int) position );
         }
-        /*else if ( mVitamioPlayer != null )
-        {
-            mVitamioPlayer.seekTo( position );
-        }*/
         else if ( mExoPlayer != null )
         {
             mExoPlayer.seekTo( position );
@@ -291,12 +258,6 @@ public class Player implements Visualizer.OnDataCaptureListener
             mVisualizer.setEnabled( false );
             mVisualizer.release();
         }
-        /*if ( mVitamioPlayer != null )
-        {
-            mVitamioPlayer.stop();
-            mVitamioPlayer.release();
-            mVitamioPlayer = null;
-        }*/
         if ( mExoPlayer != null )
         {
             mExoPlayer.setPlayWhenReady( false );
@@ -320,10 +281,6 @@ public class Player implements Visualizer.OnDataCaptureListener
         {
             mVisualizerBufferReceiver = bufferReceiver;
         }
-        /*else if ( mVitamioPlayer != null )
-        {
-            mVisualizerBufferReceiver = bufferReceiver;
-        }*/
         else if ( mExoPlayer != null && mCustomAudioRenderer != null )
         {
             mCustomAudioRenderer.setBufferReceiver( bufferReceiver );
@@ -336,10 +293,6 @@ public class Player implements Visualizer.OnDataCaptureListener
         {
             mVisualizer.setEnabled( true );
         }
-        /*else if( mVitamioPlayer != null && mVisualizer != null )
-        {
-            mVisualizer.setEnabled( true );
-        }*/
         else if ( mExoPlayer != null && mCustomAudioRenderer != null )
         {
             mCustomAudioRenderer.enableBufferProcessing();
@@ -352,10 +305,6 @@ public class Player implements Visualizer.OnDataCaptureListener
         {
             mVisualizer.setEnabled( false );
         }
-        /*else if( mVitamioPlayer != null && mVisualizer != null )
-        {
-            mVisualizer.setEnabled( false );
-        }*/
         else if ( mExoPlayer != null && mCustomAudioRenderer != null )
         {
             mCustomAudioRenderer.disableBufferProcessing();
@@ -401,16 +350,7 @@ public class Player implements Visualizer.OnDataCaptureListener
         }
     }
 
-    /*private class VitamioPlayerCallbacks implements MediaPlayer.OnCompletionListener
-    {
-        @Override
-        public void onCompletion( MediaPlayer mp )
-        {
-            mState = STATE_STOPPED;
-            if ( mListener != null )
-                mListener.onCompletion();
-        }
-    }*/
+
 
     private class ExoPlayerCallbacks implements ExoPlayer.EventListener
     {

@@ -1,4 +1,4 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.activities;
 
 import android.Manifest;
 import android.content.DialogInterface;
@@ -33,16 +33,25 @@ import android.widget.SeekBar;
 
 import java.util.List;
 
+import mihaljevic.miroslav.foundry.slimplayer.Const;
+import mihaljevic.miroslav.foundry.slimplayer.DirectPlayerBridge;
+import mihaljevic.miroslav.foundry.slimplayer.MediaPlayerService;
+import mihaljevic.miroslav.foundry.slimplayer.MusicProvider;
+import mihaljevic.miroslav.foundry.slimplayer.adapters.NowPlayingPagerAdapter;
+import mihaljevic.miroslav.foundry.slimplayer.R;
+import mihaljevic.miroslav.foundry.slimplayer.SlimPlayerApplication;
+import mihaljevic.miroslav.foundry.slimplayer.Utils;
+import mihaljevic.miroslav.foundry.slimplayer.VisualizerGLSurfaceView;
 
 
-public class NowPlayingActivity extends BackHandledFragmentActivity implements  ViewPager.OnPageChangeListener, View.OnClickListener, SeekBar.OnSeekBarChangeListener
+public class NowPlayingActivity extends BackHandledFragmentActivity implements ViewPager.OnPageChangeListener, View.OnClickListener, SeekBar.OnSeekBarChangeListener
 {
 
-    private static final int SEEK_BAR_UPDATE_TIME = /*16*/1000; //Update time in ms EDIT - not used at this moment
+    private static final int SEEK_BAR_UPDATE_TIME = 1000;
 
 
     private ViewPager               mPager;
-    private NowPlayingPagerAdapter  mPagerAdapter;
+    private NowPlayingPagerAdapter mPagerAdapter;
 
     private SeekBar     mSeekBar;
 
@@ -58,7 +67,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
     private VisualizerGLSurfaceView mGLSurfaceView;
 
-    private DirectPlayerAccess mDirectPlayerAccess;
+    private DirectPlayerBridge mDirectPlayerBridge;
 
     private int mPosition = -1;
 
@@ -67,7 +76,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     private class SeekBarUpdater
     {
         private SeekBar mSeekBar;
-        private DirectPlayerAccess mDirectPlayerAccess;
+        private DirectPlayerBridge mDirectPlayerBridge;
         private boolean mEnabled = false;
 
         private Handler mHandler;
@@ -76,18 +85,18 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
             @Override
             public void run()
             {
-                mSeekBar.setProgress( (int) mDirectPlayerAccess.getCurrentPlayerPosition() );
+                mSeekBar.setProgress( (int) mDirectPlayerBridge.getCurrentPlayerPosition() );
 
                 if ( mEnabled )
-                    mHandler.postDelayed( this, 1000 );
+                    mHandler.postDelayed( this, SEEK_BAR_UPDATE_TIME );
             }
         };
 
 
-        SeekBarUpdater(@NonNull SeekBar seekBar, @NonNull DirectPlayerAccess directPlayerAccess )
+        SeekBarUpdater(@NonNull SeekBar seekBar, @NonNull DirectPlayerBridge directPlayerBridge )
         {
             mSeekBar = seekBar;
-            mDirectPlayerAccess = directPlayerAccess;
+            mDirectPlayerBridge = directPlayerBridge;
             mHandler = new Handler(  );
         }
 
@@ -237,7 +246,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
         intent = getIntent();
 
-        setContentView(R.layout.activity_now_playing);
+        setContentView( R.layout.activity_now_playing);
 
         if (intent != null && intent.hasExtra( Const.SOURCE_KEY ))
         {
@@ -264,8 +273,8 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
         mMediaBrowser = new MediaBrowserCompat( this, MediaPlayerService.COMPONENT_NAME, mConnectionCallbacks, null );
 
 
-        mDirectPlayerAccess = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
-        mSeekBarUpdater = new SeekBarUpdater( mSeekBar, mDirectPlayerAccess );
+        mDirectPlayerBridge = SlimPlayerApplication.getInstance().getDirectPlayerAccess();
+        mSeekBarUpdater = new SeekBarUpdater( mSeekBar, mDirectPlayerBridge );
 
         initVisualizer();
 
@@ -345,13 +354,11 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
         if ( isTaskRoot() )
         {
-            //TODO - recreate SongListActivity here if we come from notification using NavUtils
-            //If we came from notification and this activity is task root then we want back button to return (open) Main activity
-
+            //If we came from notification and this activity is task root then we want back button to return (open) Song list activity except when we are playing from file
             if ( TextUtils.equals( mQueueSource, Const.FILE_URI_KEY ) )
                 goToMainActivity();
             else
-                goUp(); //TODO - continue here - this is not working
+                goUp();
 
             return;
         }
@@ -553,8 +560,8 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
             return;
 
 
-        mDirectPlayerAccess.setActiveVisualizer( mGLSurfaceView );
-        mDirectPlayerAccess.enableActiveVisualizer();
+        mDirectPlayerBridge.setActiveVisualizer( mGLSurfaceView );
+        mDirectPlayerBridge.enableActiveVisualizer();
         mGLSurfaceView.onResume();
         mGLSurfaceView.setRenderMode( VisualizerGLSurfaceView.RENDERMODE_CONTINUOUSLY );
 
@@ -564,15 +571,15 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
     {
 
         //mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_WHEN_DIRTY );
-        if ( mDirectPlayerAccess != null && mDirectPlayerAccess.mPlayer != null )
-            mDirectPlayerAccess.mPlayer.disableBufferProcessing();
+        if ( mDirectPlayerBridge != null && mDirectPlayerBridge.player != null )
+            mDirectPlayerBridge.player.disableBufferProcessing();
     }
 
     private void resumeVisualizer()
     {
         //mGLSurfaceView.setRenderMode( GLSurfaceView.RENDERMODE_CONTINUOUSLY );
-        if ( mDirectPlayerAccess != null && mDirectPlayerAccess.mPlayer != null )
-            mDirectPlayerAccess.mPlayer.enableBufferProcessing();
+        if ( mDirectPlayerBridge != null && mDirectPlayerBridge.player != null )
+            mDirectPlayerBridge.player.enableBufferProcessing();
     }
 
 
@@ -772,21 +779,18 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
             case PlaybackStateCompat.STATE_PLAYING:
                 //Pause playback
                 mMediaController.getTransportControls().pause();
-                //notifyPlayPauseListener( false );
                 pauseVisualizer();
                 mSeekBarUpdater.stop();
                 break;
             case PlaybackStateCompat.STATE_PAUSED:
                 //Resume playback
                 mMediaController.getTransportControls().play();
-                //notifyPlayPauseListener( true );
                 resumeVisualizer();
                 mSeekBarUpdater.start();
                 break;
             case PlaybackStateCompat.STATE_STOPPED:
                 mMediaController.getTransportControls().skipToQueueItem( mPager.getCurrentItem() );
-                //notifyPlayPauseListener( true );
-                resumeVisualizer(); //TODO - might produce bugs
+                resumeVisualizer();
                 mSeekBarUpdater.start();
                 break;
             case PlaybackStateCompat.STATE_NONE:
@@ -805,8 +809,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
                 mMediaController.getTransportControls().playFromMediaId( mediaId, bundle );
 
-                //notifyPlayPauseListener( true );
-                resumeVisualizer(); //TODO - might produce bugs
+                resumeVisualizer();
                 mSeekBarUpdater.start();
                 break;
         }
@@ -881,7 +884,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements  
 
         //TODO - remove this for release, this is fix only for rooted phones/invalid codecs (doesn't work every time)
         //Here we stop buffer processing so stuff don't get messed up while changing songs
-        mDirectPlayerAccess.disableActiveVisualizer();
+        mDirectPlayerBridge.disableActiveVisualizer();
 
         //Play this position when user selects it
         mMediaController.getTransportControls().skipToQueueItem( mPager.getCurrentItem() );

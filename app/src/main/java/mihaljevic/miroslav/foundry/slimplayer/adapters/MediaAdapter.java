@@ -1,11 +1,9 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.adapters;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.support.annotation.Nullable;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v7.widget.RecyclerView;
-import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +11,8 @@ import android.widget.TextView;
 
 import java.util.HashSet;
 import java.util.List;
+
+import mihaljevic.miroslav.foundry.slimplayer.R;
 
 /**
  * Created by Miroslav on 17.1.2017..

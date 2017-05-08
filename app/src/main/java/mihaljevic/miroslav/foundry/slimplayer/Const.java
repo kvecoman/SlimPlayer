@@ -2,9 +2,13 @@ package mihaljevic.miroslav.foundry.slimplayer;
 
 /**
  * Created by Miroslav on 16.1.2017..
+ *
+ * Some app constants, there are more in resource files, some are here for ease of use
+ *
+ * @author Miroslav Mihaljević
  */
 
-//TODO - some of this strings should be loaded from resource files
+
 public final class Const {
     //Keys that are used when transferring data about different screens
     public static final String SOURCE_KEY           = "source"; //Which screen, like all songs, genres etc
@@ -46,6 +50,8 @@ public final class Const {
     public static final String AUTOPLAY_PREF_KEY        = "pref_key_autoplay";
 
     public static final int STORAGE_PERMISSIONS_REQUEST = 36; //Random number
+
+    public static final String DEFAULT_ANDROID_SONGS_DIRECTORY = "/storage/sdcard0/Music";
 
     //public static final String AUDIO_SESSION_KEY = "audio_session";
 }

@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v7.app.AlertDialog;
@@ -32,6 +33,8 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.TreeMap;
+
+import mihaljevic.miroslav.foundry.slimplayer.fragments.EmptyMessageFragment;
 
 /**
  * Created by Miroslav on 23.11.2016..
@@ -632,6 +635,18 @@ public final class Utils {
 
         return configurationInfo.reqGlEsVersion >= 0x20000;
 
+    }
+
+    public static Fragment createEmptyMessageFragment( String message )
+    {
+        Fragment    fragment;
+        Bundle      args;
+
+        fragment    = new EmptyMessageFragment();
+        args        = new Bundle();
+        args.putString( EmptyMessageFragment.MESSAGE_KEY, message);
+
+        return fragment;
     }
 
 

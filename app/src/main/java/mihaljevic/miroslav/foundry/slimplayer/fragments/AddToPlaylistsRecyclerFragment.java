@@ -1,4 +1,4 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.fragments;
 
 
 import android.os.AsyncTask;
@@ -7,13 +7,18 @@ import android.view.View;
 
 import java.util.List;
 
+import mihaljevic.miroslav.foundry.slimplayer.R;
+import mihaljevic.miroslav.foundry.slimplayer.Utils;
+import mihaljevic.miroslav.foundry.slimplayer.activities.AddToPlaylistActivity;
+
 /**
  *
  * Fragment with functionality to add previously selected songs to playlist
  *
  * @author Miroslav Mihaljević
  */
-public class AddToPlaylistsRecyclerFragment extends PlaylistsRecyclerFragment {
+public class AddToPlaylistsRecyclerFragment extends PlaylistsRecyclerFragment
+{
 
 
     public AddToPlaylistsRecyclerFragment() {
@@ -49,7 +54,7 @@ public class AddToPlaylistsRecyclerFragment extends PlaylistsRecyclerFragment {
             @Override
             protected void onPostExecute( Integer result )
             {
-                Utils.toastShort(result + " " + getString(R.string.playlist_add_succes));
+                Utils.toastShort(result + " " + getString( R.string.playlist_add_succes));
                 refreshData();
             }
         }.execute();

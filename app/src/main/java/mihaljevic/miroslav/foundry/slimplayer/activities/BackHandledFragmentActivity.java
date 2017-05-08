@@ -1,7 +1,11 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.activities;
 
 import android.os.Handler;
-import android.widget.Toast;
+
+import mihaljevic.miroslav.foundry.slimplayer.fragments.BackHandledRecyclerFragment;
+import mihaljevic.miroslav.foundry.slimplayer.R;
+import mihaljevic.miroslav.foundry.slimplayer.SlimPlayerApplication;
+import mihaljevic.miroslav.foundry.slimplayer.Utils;
 
 /**
  * Activity used to host fragments that need to handle back button press
@@ -11,7 +15,9 @@ import android.widget.Toast;
  *
  */
 
-public abstract class BackHandledFragmentActivity extends SlimActivity implements BackHandledRecyclerFragment.BackHandlerInterface {
+public abstract class BackHandledFragmentActivity extends SlimActivity implements
+                                                                       BackHandledRecyclerFragment.BackHandlerInterface
+{
 
     //Fragment which needs to handle back button press
     protected BackHandledRecyclerFragment backHandledRecyclerFragment;
@@ -47,7 +53,7 @@ public abstract class BackHandledFragmentActivity extends SlimActivity implement
                 else
                 {
                     mBackPressedOnce = true;
-                    Utils.toastShort( getString(R.string.toast_exit_confirm) );
+                    Utils.toastShort( getString( R.string.toast_exit_confirm) );
                 }
 
                 handler = SlimPlayerApplication.getInstance().getHandler();

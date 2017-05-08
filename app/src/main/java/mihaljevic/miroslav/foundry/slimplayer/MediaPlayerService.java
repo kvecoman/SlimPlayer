@@ -11,12 +11,10 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.media.MediaBrowserCompat;
@@ -32,25 +30,6 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.bumptech.glide.Glide;
-import com.google.android.exoplayer2.DefaultLoadControl;
-import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.ExoPlayerFactory;
-import com.google.android.exoplayer2.LoadControl;
-import com.google.android.exoplayer2.Renderer;
-import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.Timeline;
-import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
-import com.google.android.exoplayer2.extractor.ExtractorsFactory;
-import com.google.android.exoplayer2.mediacodec.MediaCodecSelector;
-import com.google.android.exoplayer2.source.ExtractorMediaSource;
-import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.source.TrackGroupArray;
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
-import com.google.android.exoplayer2.trackselection.TrackSelector;
-import com.google.android.exoplayer2.upstream.DefaultAllocator;
-import com.google.android.exoplayer2.upstream.FileDataSourceFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -59,6 +38,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import mihaljevic.miroslav.foundry.slimplayer.activities.NowPlayingActivity;
 
 
 public class MediaPlayerService extends MediaBrowserServiceCompat implements AudioManager.OnAudioFocusChangeListener,
@@ -90,11 +71,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
     public static final int FF_SPEED = 4000; //Fast forward rewind speed in ms
 
 
-    //Machinery that actually plays our music
-    //private MediaPlayer mPlayer;
-
-    //Audio session of media player, used for retrieving audio data for visualization
-    //private int mAudioSessionID;
 
     //AudioManager notifies us whenever phone is receiving call or when headset is plugged out
     private AudioManager mAudioManager;
@@ -141,23 +117,11 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
     //We keep reference to list of used metadata so istances of it aren't garbage collected
     private List<MediaMetadataCompat> mMetadataList;
 
-    //private ExoPlayer mExoPlayer;
-
-    //TODO - cleanup this
-    private CustomMediaCodecAudioRenderer mCustomAudioRenderer;
-
-    private FileDataSourceFactory mDataSourceFactory;
-
-    private ExtractorsFactory mExtractorsFactory;
-
+    //Frontend for either ExoPlayer or Android Media Player (or some other if defined in future)
     private Player mPlayer;
 
-    //private VisualizerGLRenderer mVisualizerGLRenderer;
 
-    /**
-     * This is set on when we need to finish part of play() function in onPlayStateChangedListener()
-     */
-    //private boolean mFinishPlay = false;
+
 
 
 
@@ -226,12 +190,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
         sessionExtras = new Bundle(  );
 
-        //mPlayer = new MediaPlayer();
-        //mPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
-
-        //mAudioSessionID = mPlayer.getAudioSessionId();
-
-        //sessionExtras.putInt( Const.AUDIO_SESSION_KEY, mAudioSessionID );
 
 
         mMediaSession = new MediaSessionCompat( this, TAG );
@@ -278,44 +236,17 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
         registerReceiver( mNoisyReceiver, new IntentFilter( AudioManager.ACTION_AUDIO_BECOMING_NOISY ) );
 
 
-        //initExoPlayer();
 
         mPlayer = new Player();
         mPlayer.initPlayer( SlimPlayerApplication.getInstance().getSelectedPlayerEngine() );
         mPlayer.setCallbacksListener( this );
 
-        //mVisualizerGLRenderer = new VisualizerGLRenderer(  );
 
-        //mCustomAudioRenderer.setBufferReceiver( mVisualizerGLRenderer );
-
-        //SlimPlayerApplication.getInstance().setDirectPlayerAccess( new DirectPlayerAccess( mCustomAudioRenderer, mExoPlayer ) );
-        SlimPlayerApplication.getInstance().setDirectPlayerAccess( new DirectPlayerAccess( mPlayer ) );
+        SlimPlayerApplication.getInstance().setDirectPlayerAccess( new DirectPlayerBridge( mPlayer ) );
 
     }
 
 
-    /*private void initExoPlayer()
-    {
-        TrackSelector       trackSelector;
-        LoadControl         loadControl;
-        Renderer[]          renderers;
-
-        mDataSourceFactory = new FileDataSourceFactory();
-        mExtractorsFactory = new DefaultExtractorsFactory();
-
-        mCustomAudioRenderer = new CustomMediaCodecAudioRenderer( MediaCodecSelector.DEFAULT );
-
-        renderers       = new Renderer[] { mCustomAudioRenderer };
-        trackSelector   = new DefaultTrackSelector();
-        loadControl     = new DefaultLoadControl( new DefaultAllocator( true, 128 * 1000 ), 30000, 45000, 2500, 5000 );
-
-        //mExoPlayer = ExoPlayerFactory.newInstance( renderers, trackSelector, loadControl );
-
-        mExoPlayer = ExoPlayerFactory.newSimpleInstance( this, trackSelector, loadControl, null, SimpleExoPlayer.EXTENSION_RENDERER_MODE_ON );
-
-        mExoPlayer.addListener( this );
-        mExoPlayer.setPlayWhenReady( false );
-    }*/
 
     public int onStartCommand(Intent intent, int flags, int startId)
     {
@@ -366,20 +297,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
         mMediaSession.release();
         mExecutorService.shutdown();
 
-        /*if (mPlayer != null)
-        {
-            mPlayer.stop();
-            mPlayer.release();
-            mPlayer = null;
-        }*/
-
-        /*if ( mExoPlayer != null )
-        {
-            mExoPlayer.setPlayWhenReady( false );
-            mExoPlayer.stop();
-            mExoPlayer.release();
-            mExoPlayer = null;
-        }*/
 
         if ( mPlayer != null )
             mPlayer.release();
@@ -577,7 +494,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
         if ( mediaItems == null || mediaItems.size() <= 0 )
             return true;
 
-        //dbgMediaItemList = mediaItems;
+
 
 
         mQueue = new ArrayList<>( mediaItems.size() );
@@ -598,7 +515,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
         sessionExtras.putString ( Const.SOURCE_KEY,      source );
         sessionExtras.putString ( Const.PARAMETER_KEY,   parameter );
-        //sessionExtras.putInt    ( Const.AUDIO_SESSION_KEY, mAudioSessionID );
+
 
         //State stopped means that nothing is playing but we have media loaded
         updateState( PlaybackStateCompat.STATE_STOPPED );
@@ -765,7 +682,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
         final String                        source;
         final String                        parameter;
         String[]                            split;
-        List<MediaMetadataCompat>           metadataList;
         List<MediaBrowserCompat.MediaItem>  mediaItems;
 
 
@@ -1132,11 +1048,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
         Intent                  startedServiceIntent;
         MediaMetadataCompat     metadata;
         MediaDescriptionCompat  mediaDescription;
-        MediaSource             mediaSource;
 
-        //mVisualizerGLRenderer.setAcceptSamples( false );
-
-        //mCustomAudioRenderer.disableActiveVisualizer();
 
         //If something is wrong then do nothing
         if ( mState == PlaybackStateCompat.STATE_NONE || position < 0 || position >= mCount || mQueue == null )
@@ -1178,12 +1090,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
 
 
-        mediaSource = new ExtractorMediaSource( mediaFileUri, mDataSourceFactory, mExtractorsFactory, null, null );
-
-        /*mExoPlayer.stop();
-        mExoPlayer.seekTo( 0L );
-        mExoPlayer.prepare( mediaSource, true, true );
-        mExoPlayer.setPlayWhenReady( true );*/
 
         try
         {
@@ -1198,17 +1104,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
 
 
-
-
-
-
-       /* startService( startedServiceIntent );
-
-        metadata = mMusicProvider.getMetadata( mediaDescription.getMediaId() );
-
-        mMediaSession.setMetadata( metadata );
-
-        mFinishPlay = true;*/
 
 
 
@@ -1233,7 +1128,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
     }
 
-    public void playRunnable(final int position)
+    /*public void playRunnable(final int position)
     {
         mExecutorService.submit( new Runnable()
         {
@@ -1243,7 +1138,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
                 play( position );
             }
         } );
-    }
+    }*/
 
     @Override
     public void onCompletion()
@@ -1254,92 +1149,6 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
         }
 
     }
-
-    /*@Override
-    public void onPlayerStateChanged( boolean playWhenReady, int playbackState )
-    {
-        //This is called when song is finished playing
-        if ( playbackState == ExoPlayer.STATE_ENDED )
-        {
-            Log.v(TAG,"exo player completed");
-
-            //Continue to next song only if we are set to be playing
-            if ( mState == PlaybackStateCompat.STATE_PLAYING )
-            {
-
-            }
-        }
-        else if ( playbackState == ExoPlayer.STATE_READY )
-        {
-            //Update playback state
-
-
-            //Are we finishing up play() function
-            if ( mFinishPlay )
-            {
-                showNotificationAsync( false, true );
-
-                updateState( PlaybackStateCompat.STATE_PLAYING );
-
-                mStatsDbHelper.updateLastPositionAsync( mQueueSource, mQueueParameter, mPosition );
-
-                SlimPlayerApplication.getInstance().setLastPlaySuccess();
-
-                mFinishPlay = false;
-            }
-
-
-
-            //SlimPlayerApplication.getInstance().getDirectPlayerAccess().enableActiveVisualizer();
-        }
-    }*/
-
-    /*@Override
-    public void onTimelineChanged( Timeline timeline, Object manifest )
-    {
-
-    }
-
-    @Override
-    public void onTracksChanged( TrackGroupArray trackGroups, TrackSelectionArray trackSelections )
-    {
-
-    }
-
-    @Override
-    public void onLoadingChanged( boolean isLoading )
-    {
-
-    }
-
-    @Override
-    public void onPlayerError( ExoPlaybackException error )
-    {
-        Log.e(TAG, "exoPlayer reported error");
-        error.printStackTrace();
-    }
-
-    @Override
-    public void onPositionDiscontinuity()
-    {
-
-    }*/
-
-    /*public void playAsync(final int position)
-    {
-        new AsyncTask<Void,Void,Void>()
-        {
-            @Override
-            protected Void doInBackground( Void... params )
-            {
-                play(position);
-
-                return null;
-            }
-        }.execute();
-    }*/
-
-
 
 
 
@@ -1502,7 +1311,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
     }
 
-    private void stopAndClearListRunnable()
+    /*private void stopAndClearListRunnable()
     {
         cancelCurrentTask();
 
@@ -1514,7 +1323,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
                 stopAndClearList();
             }
         } );
-    }
+    }*/
 
     //Stop playing and clear list
     public synchronized void stopAndClearList()

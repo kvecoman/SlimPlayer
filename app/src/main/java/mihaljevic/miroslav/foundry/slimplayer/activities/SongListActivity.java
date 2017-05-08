@@ -1,4 +1,4 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,6 +10,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import mihaljevic.miroslav.foundry.slimplayer.Const;
+import mihaljevic.miroslav.foundry.slimplayer.R;
+import mihaljevic.miroslav.foundry.slimplayer.Utils;
+import mihaljevic.miroslav.foundry.slimplayer.fragments.PlaylistSongsRecyclerFragment;
+import mihaljevic.miroslav.foundry.slimplayer.fragments.SongRecyclerFragment;
+
 /**
  * Activity that is used to display SongListFragment after one of categories is selected from CategoryListFragment
  *
@@ -17,7 +23,8 @@ import android.view.MenuItem;
  */
 
 
-public class SongListActivity extends SelectSongsActivity {
+public class SongListActivity extends SelectSongsActivity
+{
     protected final String TAG = getClass().getSimpleName();
 
 
@@ -26,7 +33,7 @@ public class SongListActivity extends SelectSongsActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_fragment_holder);
+        setContentView( R.layout.activity_fragment_holder);
 
         Fragment    fragment;
         Bundle      args;
@@ -43,9 +50,7 @@ public class SongListActivity extends SelectSongsActivity {
         {
             Log.i(TAG, "onCreate() - Could not load data list fragment, loading empty one instead");
             //If something is wrong with bundle just show empty fragment
-            fragment    = new EmptyMessageFragment();
-            args        = new Bundle();
-            args.putString(EmptyMessageFragment.MESSAGE_KEY,getString(R.string.empty_songlist));
+            fragment = Utils.createEmptyMessageFragment( getString(R.string.empty_list ) );
         }
         else
         {
@@ -65,13 +70,15 @@ public class SongListActivity extends SelectSongsActivity {
                 fragment = new PlaylistSongsRecyclerFragment();
             else
                 fragment = new SongRecyclerFragment();
+
+            fragment.setArguments( args );
         }
 
 
 
 
 
-        fragment.setArguments( args );
+
 
 
 

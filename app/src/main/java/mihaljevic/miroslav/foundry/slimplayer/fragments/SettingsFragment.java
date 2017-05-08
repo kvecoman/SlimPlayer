@@ -1,4 +1,4 @@
-package mihaljevic.miroslav.foundry.slimplayer;
+package mihaljevic.miroslav.foundry.slimplayer.fragments;
 
 
 import android.content.Intent;
@@ -8,13 +8,19 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.os.EnvironmentCompat;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceFragmentCompat;
 import android.util.Log;
 
 import java.io.File;
 import java.util.Set;
+
+import mihaljevic.miroslav.foundry.slimplayer.Const;
+import mihaljevic.miroslav.foundry.slimplayer.DirectorySelectPreference;
+import mihaljevic.miroslav.foundry.slimplayer.MusicProvider;
+import mihaljevic.miroslav.foundry.slimplayer.R;
+import mihaljevic.miroslav.foundry.slimplayer.Utils;
+import mihaljevic.miroslav.foundry.slimplayer.fragments.DirectorySelectDialogPreferenceFrag;
 
 /**
  * Fragment that load preferences from xml file and display it to user
@@ -35,10 +41,10 @@ public class SettingsFragment extends PreferenceFragmentCompat
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey)
     {
-        setPreferencesFromResource(R.xml.settings, rootKey);
+        setPreferencesFromResource( R.xml.settings, rootKey);
 
         //OnClick listener for Refresh preference
-        findPreference(Const.RESCAN_PREF_KEY).setOnPreferenceClickListener( new RescanClickListener() );
+        findPreference( Const.RESCAN_PREF_KEY).setOnPreferenceClickListener( new RescanClickListener() );
     }
 
     @Override

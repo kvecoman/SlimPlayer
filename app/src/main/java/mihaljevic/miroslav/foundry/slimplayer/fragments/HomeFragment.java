@@ -254,7 +254,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
                 }
                 else
                 {
-                    adapterData = new ArrayList<>( cursor.getCount() ); //TODO - continue here - connection gets closed because of concurency and multithreading
+                    adapterData = new ArrayList<>( cursor.getCount() );
 
                     while ( cursor.moveToNext() )
                     {
@@ -274,6 +274,18 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
 
                 if ( database.isOpen() )
                     database.close();
+
+                //Here we make sure that there is always item in HomeScreen
+                if ( adapterData.size() == 0 )
+                {
+                    row                 = new HomeAdapter.StatRow();
+                    row.source          = Const.ALL_SCREEN;
+                    row.parameter       = "";
+                    row.displayName     = Utils.getDisplayName( row.source, row.parameter );
+                    row.lastPosition    = -1;
+
+                    adapterData.add( row );
+                }
 
 
                 mAdapter.setData( adapterData );

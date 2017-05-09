@@ -55,6 +55,7 @@ dependencies {
     //compile 'org.apache.commons:commons-math3:3.6.1'
     compile 'com.android.support:percent:25.2.0'
     //compile project(":vitamio")
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
 
     testCompile 'junit:junit:4.12'
 

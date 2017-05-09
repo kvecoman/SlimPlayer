@@ -21,7 +21,7 @@ public class EmptyMessageFragment extends Fragment
 
     public static final String MESSAGE_KEY = "message_key";
 
-    private View mView;
+    private View mContentView;
 
 
     public EmptyMessageFragment()
@@ -34,8 +34,8 @@ public class EmptyMessageFragment extends Fragment
     public View onCreateView( LayoutInflater inflater, ViewGroup container,
                               Bundle savedInstanceState )
     {
-        mView = inflater.inflate( R.layout.empty_page, container, false );
-        return mView;
+        mContentView = inflater.inflate( R.layout.empty_page, container, false );
+        return mContentView;
     }
 
     @Override
@@ -49,7 +49,7 @@ public class EmptyMessageFragment extends Fragment
         args = getArguments();
 
 
-        textView = ( ( TextView ) mView.findViewById( R.id.empty_text ) );
+        textView = ( ( TextView ) mContentView.findViewById( R.id.empty_text ) );
 
         //Set empty message if one was provided
         if ( args != null && args.containsKey( MESSAGE_KEY ) )

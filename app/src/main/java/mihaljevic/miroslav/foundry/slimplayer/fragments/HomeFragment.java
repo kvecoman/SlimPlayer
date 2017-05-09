@@ -246,13 +246,15 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
                                             sortOrder,
                                             limit );
 
-                if ( cursor == null )
+
+
+                if ( cursor == null || cursor.isClosed() || !database.isOpen() )
                 {
                     adapterData = new ArrayList<>( 0 );
                 }
                 else
                 {
-                    adapterData = new ArrayList<>( cursor.getCount() );
+                    adapterData = new ArrayList<>( cursor.getCount() ); //TODO - continue here - connection gets closed because of concurency and multithreading
 
                     while ( cursor.moveToNext() )
                     {
@@ -264,11 +266,17 @@ public class HomeFragment extends Fragment implements View.OnClickListener /*, S
 
                         adapterData.add( row );
                     }
+
+                    cursor.close();
+
+                    database.close();
                 }
 
-                mAdapter.setData( adapterData );
+                if ( database.isOpen() )
+                    database.close();
 
-                cursor.close();
+
+                mAdapter.setData( adapterData );
 
                 return null;
             }

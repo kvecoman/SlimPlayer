@@ -319,8 +319,8 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
     {
         //This method doesn't have runnable version because it is fast, and also complicated to make it to runnable, so no need
 
-        if ( mPackageValidator.validate( clientPackageName, clientUid ) )
-            return new BrowserRoot( MEDIA_ROOT_ID, rootHints );
+        /*if ( mPackageValidator.validate( clientPackageName, clientUid ) )
+            return new BrowserRoot( MEDIA_ROOT_ID, rootHints );*/ //TODO - uncomment this, for debug only
 
         return null;
     }

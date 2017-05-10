@@ -222,6 +222,11 @@ public class MainScreenPagerAdapter extends FragmentPagerAdapter {
     }
 
 
+    @Override
+    public CharSequence getPageTitle( int position )
+    {
+        return Utils.getDisplayName( mScreensList.get( position ), null );
+    }
 
     @Override
     public int getCount() {

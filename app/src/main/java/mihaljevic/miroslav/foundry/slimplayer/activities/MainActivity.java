@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.TabLayout;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
@@ -36,9 +37,7 @@ import mihaljevic.miroslav.foundry.slimplayer.Utils;
 
 //TODO - make trial version of this app
 //TODO - indicate that tap paused or resumed the song
-//TODO - first time opening the app and home screen is empty, at least add indicators that there are more tabs ( or add all songs option )
 //TODO - make visual style for project
-//TODO - ability for some code parts/methods to fail without throwing exception (or with catching exception) ( add checks for things you connect to in onStart() )
 //TODO - add optimizations for screen rotations ( already done for NowPlayingFragment )
 //TODO - test again receiving a call while playing
 //TODO - see licences for glide and maybe some other stuff to put it somewhere
@@ -57,12 +56,14 @@ public class MainActivity extends SelectSongsActivity implements TextView.OnClic
     private ViewPager       mPager;
     private PagerAdapter    mPagerAdapter;
 
+    private TabLayout mTabLayout;
+
 
     @Override
     protected void onCreate( Bundle savedInstanceState )
     {
         super.onCreate( savedInstanceState );
-        setContentView( R.layout.activity_pager );
+        setContentView( R.layout.activity_main );
 
 
         //Init pager and show screens
@@ -140,11 +141,20 @@ public class MainActivity extends SelectSongsActivity implements TextView.OnClic
     {
         //Set up pager and adapter to show list screens
         mPager          = ( ViewPager ) findViewById( R.id.pager );
+
+        if ( mPager == null )
+            return;
+
         mPagerAdapter   = new MainScreenPagerAdapter( this, getSupportFragmentManager(), R.id.pager, !mSelectSongsForResult );
         mPager.setAdapter( mPagerAdapter );
 
         mPagerAdapter.notifyDataSetChanged();
         mPager.setCurrentItem( 0 );
+
+        mTabLayout = ( TabLayout ) findViewById( R.id.tab_layout );
+
+        if ( mTabLayout != null )
+            mTabLayout.setupWithViewPager( mPager );
     }
 
 

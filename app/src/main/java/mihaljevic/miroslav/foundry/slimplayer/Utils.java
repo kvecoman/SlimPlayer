@@ -372,75 +372,113 @@ public final class Utils {
         if ( source == null)
             return null;
 
-        switch ( source )
+        if ( parameter == null || parameter.isEmpty() )
         {
-            case Const.ALL_SCREEN:
+            switch ( source )
+            {
+                case Const.HOME_SCREEN: //NOTE - technically, this isn't source but we still need to get display name for it
+                    displayName = sAppContext.getString( R.string.home_screen_title );
+                    break;
+                case Const.ALL_SCREEN:
+                    displayName = sAppContext.getString( R.string.all_songs_screen_title );
+                    break;
+                case Const.PLAYLISTS_SCREEN:
 
-                displayName = sAppContext.getString(R.string.all_songs_screen_title);
-                break;
-            case Const.PLAYLISTS_SCREEN:
+                    displayName = sAppContext.getString( R.string.playlists_screen_title );
+                    break;
+                case Const.ALBUMS_SCREEN:
 
-                uri         = MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI;
-                projection  = new String[]{ MediaStore.Audio.Playlists.NAME };
-                selection   = MediaStore.Audio.Playlists._ID + "=" + parameter;
+                    displayName = sAppContext.getString( R.string.albums_screen_title );
+                    break;
+                case Const.ARTISTS_SCREEN:
 
-                cursor = resolver.query( uri, projection, selection, null, null );
+                    displayName = sAppContext.getString( R.string.artists_screen_title );
+                    break;
+                case Const.GENRES_SCREEN:
 
-                if ( cursor == null || cursor.getCount() == 0)
-                    return null;
+                    displayName = sAppContext.getString( R.string.genres_screen_title );
+                    break;
+                case Const.FILE_URI_KEY:
+                    displayName = sAppContext.getString( R.string.music_title );
+                    break;
+            }
+        }
+        else
+        {
+            switch ( source )
+            {
+                case Const.ALL_SCREEN:
 
-                cursor.moveToFirst();
-                displayName = cursor.getString( 0 );
-                break;
-            case Const.ALBUMS_SCREEN:
+                    displayName = sAppContext.getString(R.string.all_songs_screen_title);
+                    break;
+                case Const.PLAYLISTS_SCREEN:
 
-                uri         = MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI;
-                projection  = new String[]{MediaStore.Audio.Albums.ALBUM};
-                selection   = MediaStore.Audio.Albums._ID + "=" + parameter;
+                    uri         = MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI;
+                    projection  = new String[]{ MediaStore.Audio.Playlists.NAME };
+                    selection   = MediaStore.Audio.Playlists._ID + "=" + parameter;
 
-                cursor = resolver.query( uri, projection, selection, null, null );
+                    cursor = resolver.query( uri, projection, selection, null, null );
 
-                if ( cursor == null || cursor.getCount() == 0 )
-                    return null;
+                    if ( cursor == null || cursor.getCount() == 0)
+                        return null;
 
-                cursor.moveToFirst();
-                displayName = cursor.getString( 0 );
-                break;
-            case Const.ARTISTS_SCREEN:
+                    cursor.moveToFirst();
+                    displayName = cursor.getString( 0 );
+                    break;
+                case Const.ALBUMS_SCREEN:
 
-                uri         = MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI;
-                projection  = new String[]{ MediaStore.Audio.Artists.ARTIST };
-                selection   = MediaStore.Audio.Artists._ID + "=" + parameter;
+                    uri         = MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI;
+                    projection  = new String[]{MediaStore.Audio.Albums.ALBUM};
+                    selection   = MediaStore.Audio.Albums._ID + "=" + parameter;
 
-                cursor = resolver.query( uri, projection, selection, null, null );
+                    cursor = resolver.query( uri, projection, selection, null, null );
 
-                if ( cursor == null || cursor.getCount() == 0 )
-                    return null;
+                    if ( cursor == null || cursor.getCount() == 0 )
+                        return null;
 
-                cursor.moveToFirst();
-                displayName = cursor.getString(0);
-                break;
-            case Const.GENRES_SCREEN:
+                    cursor.moveToFirst();
+                    displayName = cursor.getString( 0 );
+                    break;
+                case Const.ARTISTS_SCREEN:
 
-                uri         = MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI;
-                projection  = new String[]{MediaStore.Audio.Genres.NAME};
-                selection   = MediaStore.Audio.Genres._ID + "=" + parameter;
+                    uri         = MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI;
+                    projection  = new String[]{ MediaStore.Audio.Artists.ARTIST };
+                    selection   = MediaStore.Audio.Artists._ID + "=" + parameter;
 
-                cursor = resolver.query( uri, projection, selection, null, null );
+                    cursor = resolver.query( uri, projection, selection, null, null );
 
-                if ( cursor == null || cursor.getCount() == 0 )
-                    return null;
+                    if ( cursor == null || cursor.getCount() == 0 )
+                        return null;
 
-                cursor.moveToFirst();
-                displayName = cursor.getString(0);
-                break;
-            case Const.FILE_URI_KEY:
-                displayName = sAppContext.getString(R.string.music_title);
-                break;
+                    cursor.moveToFirst();
+                    displayName = cursor.getString(0);
+                    break;
+                case Const.GENRES_SCREEN:
+
+                    uri         = MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI;
+                    projection  = new String[]{MediaStore.Audio.Genres.NAME};
+                    selection   = MediaStore.Audio.Genres._ID + "=" + parameter;
+
+                    cursor = resolver.query( uri, projection, selection, null, null );
+
+                    if ( cursor == null || cursor.getCount() == 0 )
+                        return null;
+
+                    cursor.moveToFirst();
+                    displayName = cursor.getString(0);
+                    break;
+                case Const.FILE_URI_KEY:
+                    displayName = sAppContext.getString(R.string.music_title);
+                    break;
+            }
+
+            if ( cursor != null && !cursor.isClosed() )
+                cursor.close();
         }
 
-        if ( cursor != null && !cursor.isClosed() )
-            cursor.close();
+
+
+
 
 
         return displayName;

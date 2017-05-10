@@ -109,7 +109,12 @@
     <string name="toast_rescan_directories">Started scanning selected directories for new songs</string>
 
     <!-- Used as display name in home screen-->
+    <string name="home_screen_title">Home</string>
     <string name="all_songs_screen_title">All songs</string>
+    <string name="playlists_screen_title">Playlists</string>
+    <string name="albums_screen_title">Albums</string>
+    <string name="artists_screen_title">Artists</string>
+    <string name="genres_screen_title">Genres</string>
 
     <!-- Default text-->
     <string name="hello_blank_fragment">Nothing to show</string>

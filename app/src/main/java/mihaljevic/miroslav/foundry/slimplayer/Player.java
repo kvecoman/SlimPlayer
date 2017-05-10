@@ -1,5 +1,6 @@
 package mihaljevic.miroslav.foundry.slimplayer;
 
+import android.Manifest;
 import android.media.audiofx.Visualizer;
 import android.net.Uri;
 import android.os.Build;
@@ -12,7 +13,6 @@ import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.LoadControl;
 import com.google.android.exoplayer2.Renderer;
-import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
@@ -29,7 +29,6 @@ import com.google.android.exoplayer2.upstream.FileDataSourceFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-
 
 
 /**
@@ -91,8 +90,7 @@ public class Player implements Visualizer.OnDataCaptureListener
                 Log.i(TAG, "Initializing android media player");
                 mMediaPlayer = new android.media.MediaPlayer();
                 mMediaPlayer.setOnCompletionListener( new MediaPlayerCallbacks() );
-                mVisualizer = new Visualizer( mMediaPlayer.getAudioSessionId() );
-                initVisualizer();
+                initMediaVisualizer();
                 break;
             /*case PLAYER_VITAMIO_PLAYER:
                 Log.i(TAG, "Initializing vitamio framework player");
@@ -101,7 +99,7 @@ public class Player implements Visualizer.OnDataCaptureListener
                 mVitamioPlayer = new MediaPlayer( SlimPlayerApplication.getInstance(), true );
                 mVitamioPlayer.setOnCompletionListener( new VitamioPlayerCallbacks() );
                 mVisualizer = new Visualizer( 0  );
-                initVisualizer();
+                initMediaVisualizer();
                 break;*/
             case PLAYER_EXO_PLAYER:
                 Log.i(TAG, "Initializing exo player");
@@ -134,8 +132,14 @@ public class Player implements Visualizer.OnDataCaptureListener
         mExoPlayer.setPlayWhenReady( false );
     }
 
-    private synchronized void initVisualizer()
+    private synchronized void initMediaVisualizer()
     {
+        if ( !Utils.checkPermission( Manifest.permission.RECORD_AUDIO ) || !Utils.isVisualizerEnabled() || mVisualizer != null )
+            return;
+
+
+        mVisualizer = new Visualizer( mMediaPlayer.getAudioSessionId() );
+
         //TODO - see whats up with scaling mode, it is always "as played" on Galaxy S2
         mVisualizer.setCaptureSize( Visualizer.getCaptureSizeRange()[1] );
         if ( Build.VERSION.SDK_INT >= 16 )
@@ -255,8 +259,12 @@ public class Player implements Visualizer.OnDataCaptureListener
             mMediaPlayer.release();
             mMediaPlayer = null;
 
-            mVisualizer.setEnabled( false );
-            mVisualizer.release();
+            if ( mVisualizer != null )
+            {
+                mVisualizer.setEnabled( false );
+                mVisualizer.release();
+            }
+
         }
         if ( mExoPlayer != null )
         {

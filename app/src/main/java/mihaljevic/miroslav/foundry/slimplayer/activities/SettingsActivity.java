@@ -2,6 +2,7 @@ package mihaljevic.miroslav.foundry.slimplayer.activities;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.preference.PreferenceManager;
 
@@ -11,7 +12,9 @@ import mihaljevic.miroslav.foundry.slimplayer.SlimPlayerApplication;
 public class SettingsActivity extends AppCompatActivity  implements SharedPreferences.OnSharedPreferenceChangeListener
 {
 
-    @Override
+    //private PermissionListener mPermissionListener;
+
+
     protected void onCreate( Bundle savedInstanceState )
     {
         super.onCreate(savedInstanceState);
@@ -46,4 +49,26 @@ public class SettingsActivity extends AppCompatActivity  implements SharedPrefer
         SlimPlayerApplication.getInstance().notifyPreferencesChanged();
 
     }
+
+    /*@Override
+    public void onRequestPermissionsResult( int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults )
+    {
+        super.onRequestPermissionsResult( requestCode, permissions, grantResults );
+
+        if ( mPermissionListener != null )
+            mPermissionListener.onRequestPermissionsResult( requestCode, permissions, grantResults );
+    }
+
+    public void registerPermissionListener( PermissionListener permissionListener )
+    {
+        mPermissionListener = permissionListener;
+    }
+
+
+
+    //Interface used to pass on permission request result
+    public interface PermissionListener
+    {
+        void onRequestPermissionsResult( int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults );
+    }*/
 }

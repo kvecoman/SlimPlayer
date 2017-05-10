@@ -138,6 +138,8 @@
 
     <!--Permission explanations-->
     <string name="permission_storage_explanation">Access to storage is needed for the ability to play music</string>
+    <string name="record_audio_explanation">Access to all audio channels, including microphone is needed for visualizer to work.
+        You can reject, and continue to use player without visualizer.</string>
 
     <!--Missing permission message-->
     <string name="permission_storage_none">Please allow storage permissions in your phone settings

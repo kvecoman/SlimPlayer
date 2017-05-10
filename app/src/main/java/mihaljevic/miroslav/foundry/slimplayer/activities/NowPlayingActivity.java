@@ -498,19 +498,12 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements V
 
 
 
-    private boolean isVisualizerEnabled()
-    {
-        SharedPreferences prefs;
 
-        prefs = PreferenceManager.getDefaultSharedPreferences( this );
-
-        return prefs.getBoolean( getString( R.string.pref_key_visualization ), false );
-    }
 
 
     private void initVisualizer()
     {
-        if ( !isVisualizerEnabled() )
+        if ( !Utils.isVisualizerEnabled() )
             return;
 
         if ( !Utils.hasGLES20() )

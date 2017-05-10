@@ -238,7 +238,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
 
         mPlayer = new Player();
-        mPlayer.initPlayer( SlimPlayerApplication.getInstance().getSelectedPlayerEngine() );
+        mPlayer.initPlayer( Utils.getSelectedPlayerEngine() );
         mPlayer.setCallbacksListener( this );
 
 

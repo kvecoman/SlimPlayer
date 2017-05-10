@@ -7,6 +7,7 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.content.pm.ConfigurationInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -20,6 +21,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseBooleanArray;
@@ -607,6 +609,38 @@ public final class Utils {
         }
     }
 
+
+    public static void askPermission ( Context context, final Fragment fragment, final String permission, String explanation,final int requestCode )
+    {
+        askPermission(context, fragment, permission, explanation, requestCode, null );
+    }
+
+
+    public static void askPermission(Context context,  final Fragment fragment, final String permission, String explanation,final int requestCode, DialogInterface.OnClickListener cancelListener )
+    {
+        if ( Build.VERSION.SDK_INT >= 16 &&  !checkPermission( permission ) )
+        {
+
+            if ( fragment.shouldShowRequestPermissionRationale( permission ) )
+            {
+                showMessageOKCancel( context, explanation, new DialogInterface.OnClickListener()
+                        {
+                            @Override
+                            public void onClick( DialogInterface dialog, int which )
+                            {
+                                fragment.requestPermissions( new String[]{permission}, requestCode );
+                            }
+                        },
+                        cancelListener);
+            }
+            else
+            {
+                fragment.requestPermissions( new String[] { permission }, requestCode );
+            }
+
+        }
+    }
+
     public static void showMessageOKCancel( Context context, String message, DialogInterface.OnClickListener okListener )
     {
         showMessageOKCancel( context, message, okListener, null );
@@ -685,6 +719,31 @@ public final class Utils {
         args.putString( EmptyMessageFragment.MESSAGE_KEY, message);
 
         return fragment;
+    }
+
+
+    public static boolean isVisualizerEnabled()
+    {
+        SharedPreferences prefs;
+
+        prefs = PreferenceManager.getDefaultSharedPreferences( sAppContext );
+
+        return prefs.getBoolean( sAppContext.getString( R.string.pref_key_visualization ), false );
+    }
+
+    public static @Player.InternalPlayer int getSelectedPlayerEngine()
+    {
+        SharedPreferences preferences;
+        int selectedEngine;
+
+        preferences = PreferenceManager.getDefaultSharedPreferences( sAppContext );
+
+        selectedEngine = Integer.parseInt( preferences.getString( sAppContext.getString( R.string.pref_key_player_engine ), sAppContext.getString( R.string.code_exo_player ) ) );
+
+        //selectedEngine = Player.PLAYER_EXO_PLAYER;
+
+        //noinspection ResourceType
+        return selectedEngine;
     }
 
 

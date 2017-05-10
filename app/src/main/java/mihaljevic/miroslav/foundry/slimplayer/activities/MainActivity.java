@@ -45,6 +45,7 @@ import mihaljevic.miroslav.foundry.slimplayer.Utils;
 //TODO - visual indicator song is paused in NowPlayingScreen
 //TODO - test auto adding directory na Igorovom mobitelu
 //TODO - make gitHub repository private at launch
+//TODO - auto add directory should use some function get sdcard path
 
 
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener

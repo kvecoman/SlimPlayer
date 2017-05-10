@@ -51,7 +51,7 @@ public class VisualizerGLSurfaceView extends GLSurfaceView
 
         //queueEvent( new InitRunnable() );
 
-        mRenderer = new VisualizerGLRenderer( SlimPlayerApplication.getInstance().getSelectedPlayerEngine() == Player.PLAYER_EXO_PLAYER );
+        mRenderer = new VisualizerGLRenderer( Utils.getSelectedPlayerEngine() == Player.PLAYER_EXO_PLAYER );
 
         //NOTE - GL thread is created in setRenderer()
         setRenderer( mRenderer );

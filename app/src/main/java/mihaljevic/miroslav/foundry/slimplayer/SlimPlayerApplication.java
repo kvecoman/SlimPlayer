@@ -264,20 +264,7 @@ public class SlimPlayerApplication extends Application
 
 
 
-    public @Player.InternalPlayer int getSelectedPlayerEngine()
-    {
-        SharedPreferences preferences;
-        int selectedEngine;
 
-        preferences = PreferenceManager.getDefaultSharedPreferences( this );
-
-        selectedEngine = Integer.parseInt( preferences.getString( getString( R.string.pref_key_player_engine ), getString( R.string.code_exo_player ) ) );
-
-        //selectedEngine = Player.PLAYER_EXO_PLAYER;
-
-        //noinspection ResourceType
-        return selectedEngine;
-    }
 
 
 

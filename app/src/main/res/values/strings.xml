@@ -8,8 +8,9 @@
     <string name="options_title_playlist_add_selected">Add selected to playlist&#8230;</string>
     <string name="options_title_toggle_repeat">Toggle repeat</string>
     <string name="options_title_accept_selected">Confirm selected songs</string>
-    <string name="options_title_cancel_selected">Cancel selected songs</string>
+    <string name="options_title_cancel_selected">Cancel selected songs</string> <!-- This one is used when we are adding songs to playlist -->
     <string name="options_title_delete_item">Delete</string>
+    <string name="options_title_cancel_selection">Cancel selection</string>
 
 
     <!--Titles used in settings screen -->
@@ -151,5 +152,9 @@
     <string name="code_media_player">1</string>
     <string name="code_vitamio_player">2</string>
     <string name="code_exo_player">3</string>
+
+
+    <!--General UI texts-->
+    <string name="selected">selected</string>
 
 </resources>

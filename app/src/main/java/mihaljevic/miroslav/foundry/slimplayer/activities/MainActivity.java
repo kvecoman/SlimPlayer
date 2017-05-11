@@ -46,8 +46,8 @@ import mihaljevic.miroslav.foundry.slimplayer.Utils;
 //TODO - test auto adding directory na Igorovom mobitelu
 //TODO - make gitHub repository private at launch
 //TODO - auto add directory should use some function get sdcard path
-//TODO - show number of selected items at every momment
-//TODO - no x button on notification on S5 mini
+//TODO - no x button on notification on S5 mini - this is not bug it's a feature
+//TODO - set title for AddToPlaylistActivity
 
 
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener
@@ -87,6 +87,8 @@ public class MainActivity extends SelectSongsActivity implements TextView.OnClic
             }
 
         }
+
+        mActionBarTitle = getString( R.string.app_name );
 
 
     }

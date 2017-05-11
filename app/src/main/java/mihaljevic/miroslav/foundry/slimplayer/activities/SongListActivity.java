@@ -58,10 +58,13 @@ public class SongListActivity extends SelectSongsActivity
 
             //Here we set display name to action bar
             displayName = args.getString( Const.DISPLAY_NAME );
+
+            mActionBarTitle = displayName;
+
             actionBar = getSupportActionBar();
             if ( actionBar != null )
             {
-                actionBar.setTitle( displayName );
+                actionBar.setTitle( mActionBarTitle );
                 actionBar.setDisplayHomeAsUpEnabled( true );
             }
 

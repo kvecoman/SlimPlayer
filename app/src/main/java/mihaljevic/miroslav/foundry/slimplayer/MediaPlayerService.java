@@ -114,7 +114,7 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
     //Used to hold type of task of which can be only one in queue
     private Future<?> mCancelableTask;
 
-    //We keep reference to list of used metadata so istances of it aren't garbage collected
+    //We keep reference to list of used metadata so instances of it aren't garbage collected
     private List<MediaMetadataCompat> mMetadataList;
 
     //Frontend for either ExoPlayer or Android Media Player (or some other if defined in future)

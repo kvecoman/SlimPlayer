@@ -2,6 +2,7 @@ package mihaljevic.miroslav.foundry.slimplayer.activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.preference.PreferenceManager;
 import android.view.Menu;
@@ -24,6 +25,8 @@ public abstract class SlimActivity extends AppCompatActivity
     protected final String TAG = getClass().getSimpleName();
 
     public static String REQUEST_CODE_KEY = "request_code";
+
+    protected String mActionBarTitle;
 
 
     @Override
@@ -88,5 +91,19 @@ public abstract class SlimActivity extends AppCompatActivity
         }
 
         return true;
+    }
+
+
+    public void restoreActionBarTitle()
+    {
+        if ( mActionBarTitle == null || mActionBarTitle.isEmpty() )
+            return;
+
+        ActionBar actionBar;
+
+        actionBar = getSupportActionBar();
+
+        if ( actionBar != null )
+            actionBar.setTitle( mActionBarTitle );
     }
 }

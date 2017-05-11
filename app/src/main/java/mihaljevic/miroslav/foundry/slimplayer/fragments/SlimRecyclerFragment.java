@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -17,6 +18,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -30,6 +32,7 @@ import mihaljevic.miroslav.foundry.slimplayer.MusicProvider;
 import mihaljevic.miroslav.foundry.slimplayer.R;
 import mihaljevic.miroslav.foundry.slimplayer.Utils;
 import mihaljevic.miroslav.foundry.slimplayer.activities.SelectSongsActivity;
+import mihaljevic.miroslav.foundry.slimplayer.activities.SlimActivity;
 import mihaljevic.miroslav.foundry.slimplayer.adapters.MediaAdapter;
 import mihaljevic.miroslav.foundry.slimplayer.fragments.BackHandledRecyclerFragment;
 
@@ -72,6 +75,8 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
     protected MediaBrowserCompat.ConnectionCallback     mConnectionCallbacks;
     protected MediaBrowserCompat.SubscriptionCallback   mSubscriptionCallbacks;
     protected MediaControllerCompat.Callback            mControllerCallbacks;
+
+    protected ActionBar mActionBar;
 
 
     protected class ConnectionCallbacks extends MediaBrowserCompat.ConnectionCallback
@@ -256,10 +261,15 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
             {
                 mSelectSongsForResult = true;
             }
+
+            mActionBar = ((SelectSongsActivity)getContext()).getSupportActionBar();
         }
 
         //Init media browser
         mMediaBrowser = new MediaBrowserCompat( getContext(), MediaPlayerService.COMPONENT_NAME, mConnectionCallbacks, null );
+
+
+
 
 
     }
@@ -292,9 +302,12 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
     {
 
+
         //In this callback we know that fragment is really visible/selected in pager, so notify hosting activity
         if ( getContext() instanceof BackHandledRecyclerFragment.BackHandlerInterface )
             ( ( BackHandledRecyclerFragment.BackHandlerInterface ) getContext() ).setBackHandledFragment( this );
+
+
     }
 
     @Override
@@ -317,7 +330,49 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         return backConsumed;
     }
 
-   protected void updateContentDisplay()
+    @Override
+    public void onPrepareOptionsMenu( Menu menu )
+    {
+        MenuItem cancelSelectionItem;
+
+        cancelSelectionItem = menu.findItem( R.id.cancel_selection );
+
+        if ( mSelectMode )
+        {
+            if ( cancelSelectionItem != null )
+                cancelSelectionItem.setVisible( true );
+        }
+        else
+        {
+            if ( cancelSelectionItem != null )
+                cancelSelectionItem.setVisible( false );
+        }
+
+        super.onPrepareOptionsMenu( menu );
+    }
+
+    @Override
+    public boolean onOptionsItemSelected( MenuItem item )
+    {
+
+        int id;
+
+        id = item.getItemId();
+
+        switch( id )
+        {
+            case R.id.cancel_selection:
+                deselect();
+                item.setVisible( false );
+                break;
+            default:
+                return super.onOptionsItemSelected( item );
+        }
+
+        return true;
+    }
+
+    protected void updateContentDisplay()
    {
        updateContentDisplay( null );
    }
@@ -359,6 +414,8 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         if (getContext() instanceof AppCompatActivity) {
             ((AppCompatActivity) getContext()).invalidateOptionsMenu();
         }
+
+
     }
 
     //Deselects selection in recycler
@@ -377,6 +434,16 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
             listItem = mRecyclerView.getChildAt( i );
             listItem.setSelected( false );
         }
+
+        if ( getContext() instanceof SlimActivity )
+        {
+            ( ( SlimActivity ) getContext() ).restoreActionBarTitle();
+            ( ( SlimActivity ) getContext() ).invalidateOptionsMenu();
+        }
+
+
+
+
 
     }
 
@@ -403,7 +470,11 @@ public abstract class SlimRecyclerFragment extends BackHandledRecyclerFragment i
         //Higlight or not the view
         view.setSelected( selected );
 
-
+        //Update number of selected items on title bar
+        if ( mActionBar != null )
+        {
+            mActionBar.setTitle( mSelectedItems.size() + " " + getString( R.string.selected ) );
+        }
 
     }
 

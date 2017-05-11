@@ -19,8 +19,10 @@
         />
     <item
         android:id="@+id/playlist_create"
+        android:icon="@drawable/ic_add_ltgray_36dp"
         android:title="@string/playlist_create"
         android:visible="false"
+        app:showAsAction="ifRoom"
         />
     <item
         android:id="@+id/delete_item"

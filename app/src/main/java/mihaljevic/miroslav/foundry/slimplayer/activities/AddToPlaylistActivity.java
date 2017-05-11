@@ -29,6 +29,9 @@ public class AddToPlaylistActivity extends SlimActivity
 
         createAddToPlaylistFragment();
 
+
+        setupActionBarTitle( getString( R.string.add_to_playlist_title ) );
+
     }
 
     //Creates and displays AddToPlaylist fragment

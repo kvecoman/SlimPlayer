@@ -156,5 +156,6 @@
 
     <!--General UI texts-->
     <string name="selected">selected</string>
+    <string name="add_to_playlist_title">Add songs to playlist</string>
 
 </resources>

@@ -93,6 +93,21 @@ public abstract class SlimActivity extends AppCompatActivity
         return true;
     }
 
+    public void setupActionBarTitle( String title )
+    {
+        mActionBarTitle = title;
+
+        if ( mActionBarTitle == null || mActionBarTitle.isEmpty() )
+            return;
+
+        ActionBar actionBar;
+
+        actionBar = getSupportActionBar();
+
+        if ( actionBar != null )
+            actionBar.setTitle( mActionBarTitle );
+    }
+
 
     public void restoreActionBarTitle()
     {

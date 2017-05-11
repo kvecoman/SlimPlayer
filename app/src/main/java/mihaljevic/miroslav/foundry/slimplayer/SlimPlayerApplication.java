@@ -3,6 +3,7 @@ package mihaljevic.miroslav.foundry.slimplayer;
 import android.app.Application;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.RemoteException;
@@ -250,14 +251,14 @@ public class SlimPlayerApplication extends Application
 
         prefs = PreferenceManager.getDefaultSharedPreferences( this );
 
-        directoryPath = new File( Const.DEFAULT_ANDROID_SONGS_DIRECTORY );
+        directoryPath = new File( Environment.getExternalStorageDirectory().getAbsolutePath() + "/Music" );
 
         if ( !directoryPath.exists() || !directoryPath.isDirectory() )
             return;
 
         directories = prefs.getStringSet( getString( R.string.pref_key_directories_set ), new HashSet< String >( 1 ) );
 
-        directories.add( Const.DEFAULT_ANDROID_SONGS_DIRECTORY );
+        directories.add( directoryPath.getAbsolutePath() );
 
         prefs.edit().putStringSet( getString( R.string.pref_key_directories_set ), directories ).apply();
     }

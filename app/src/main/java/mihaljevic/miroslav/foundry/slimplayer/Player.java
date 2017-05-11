@@ -132,9 +132,9 @@ public class Player implements Visualizer.OnDataCaptureListener
         mExoPlayer.setPlayWhenReady( false );
     }
 
-    private synchronized void initMediaVisualizer()
+    public synchronized void initMediaVisualizer()
     {
-        if ( !Utils.checkPermission( Manifest.permission.RECORD_AUDIO ) || !Utils.isVisualizerEnabled() || mVisualizer != null )
+        if ( !Utils.checkPermission( Manifest.permission.RECORD_AUDIO ) || !Utils.isVisualizerEnabled() || mVisualizer != null || mMediaPlayer == null )
             return;
 
 

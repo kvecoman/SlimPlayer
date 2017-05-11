@@ -50,6 +50,7 @@ public final class Const {
     public static final String AUTOPLAY_PREF_KEY        = "pref_key_autoplay";
 
     public static final int STORAGE_PERMISSIONS_REQUEST = 36; //Random number
+    public static final int RECORD_AUDIO_PERMISSION_REQUEST = 96; //Random number
 
     public static final String DEFAULT_ANDROID_SONGS_DIRECTORY = "/storage/sdcard0/Music";
 

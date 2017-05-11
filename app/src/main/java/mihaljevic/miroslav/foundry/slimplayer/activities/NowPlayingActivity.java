@@ -37,6 +37,7 @@ import mihaljevic.miroslav.foundry.slimplayer.Const;
 import mihaljevic.miroslav.foundry.slimplayer.DirectPlayerBridge;
 import mihaljevic.miroslav.foundry.slimplayer.MediaPlayerService;
 import mihaljevic.miroslav.foundry.slimplayer.MusicProvider;
+import mihaljevic.miroslav.foundry.slimplayer.Player;
 import mihaljevic.miroslav.foundry.slimplayer.adapters.NowPlayingPagerAdapter;
 import mihaljevic.miroslav.foundry.slimplayer.R;
 import mihaljevic.miroslav.foundry.slimplayer.SlimPlayerApplication;
@@ -298,6 +299,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements V
         super.onStart();
 
 
+
         assertStoragePermission();
 
         mMediaBrowser.connect();
@@ -437,6 +439,18 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements V
 
 
                 break;
+
+            case Const.RECORD_AUDIO_PERMISSION_REQUEST:
+                if (permissions.length != 0 && permissions[0].equals( Manifest.permission.RECORD_AUDIO ))
+                {
+                    if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                    {
+                        recordAudioPermissionGranted(); //TODO - continue here - visualizer needs to be enabled in setting after selecting media player to test this
+                    }
+                }
+                break;
+
+
         }
 
         super.onRequestPermissionsResult( requestCode, permissions, grantResults );
@@ -503,7 +517,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements V
 
     private void initVisualizer()
     {
-        if ( !Utils.isVisualizerEnabled() )
+        if ( !Utils.isVisualizerEnabled() || !Utils.checkPermission( Manifest.permission.RECORD_AUDIO ) || mGLSurfaceView != null )
             return;
 
         if ( !Utils.hasGLES20() )
@@ -549,6 +563,10 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements V
 
     private void startVisualizer()
     {
+
+        if ( Utils.isVisualizerEnabled() && !Utils.checkPermission( Manifest.permission.RECORD_AUDIO ) )
+            askRecordAudioPermission();
+
         if ( mGLSurfaceView == null )
             return;
 
@@ -558,6 +576,26 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements V
         mGLSurfaceView.onResume();
         mGLSurfaceView.setRenderMode( VisualizerGLSurfaceView.RENDERMODE_CONTINUOUSLY );
 
+    }
+
+    private void askRecordAudioPermission()
+    {
+        if ( Utils.getSelectedPlayerEngine() != Player.PLAYER_MEDIA_PLAYER || Utils.checkPermission( Manifest.permission.RECORD_AUDIO ) )
+            return;
+
+        Utils.askPermission( this, Manifest.permission.RECORD_AUDIO, getString( R.string.record_audio_explanation ), Const.RECORD_AUDIO_PERMISSION_REQUEST );
+    }
+
+    private void recordAudioPermissionGranted()
+    {
+        if ( mDirectPlayerBridge == null || mDirectPlayerBridge.player == null )
+            return;
+
+        initVisualizer();
+        startVisualizer();
+
+        mDirectPlayerBridge.player.initMediaVisualizer();
+        mDirectPlayerBridge.player.enableBufferProcessing();
     }
 
     private void pauseVisualizer()

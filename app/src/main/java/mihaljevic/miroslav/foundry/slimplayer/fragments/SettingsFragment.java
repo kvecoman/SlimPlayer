@@ -42,7 +42,7 @@ public class SettingsFragment extends PreferenceFragmentCompat
 
     //private final int DIRECTORY_SELECT_REQUEST_CODE = 28;
 
-    public static final int RECORD_AUDIO_PERMISSION_CODE = 96;
+    //public static final int RECORD_AUDIO_PERMISSION_CODE = 96;
 
 
     public SettingsFragment() {
@@ -97,7 +97,7 @@ public class SettingsFragment extends PreferenceFragmentCompat
 
         switch ( requestCode )
         {
-            case RECORD_AUDIO_PERMISSION_CODE:
+            case Const.RECORD_AUDIO_PERMISSION_REQUEST:
                 if ( permissions.length != 0 && permissions[ 0 ].equals( Manifest.permission.RECORD_AUDIO ) )
                 {
                     if ( grantResults.length != 0 && grantResults[ 0 ] == PackageManager.PERMISSION_DENIED )
@@ -226,7 +226,7 @@ public class SettingsFragment extends PreferenceFragmentCompat
                         SettingsFragment.this,
                         android.Manifest.permission.RECORD_AUDIO,
                         getString( R.string.record_audio_explanation ),
-                        RECORD_AUDIO_PERMISSION_CODE,
+                        Const.RECORD_AUDIO_PERMISSION_REQUEST,
                         new DialogInterface.OnClickListener()
                         {
                             @Override
@@ -263,14 +263,14 @@ public class SettingsFragment extends PreferenceFragmentCompat
                         SettingsFragment.this,
                         android.Manifest.permission.RECORD_AUDIO,
                         getString( R.string.record_audio_explanation ),
-                        RECORD_AUDIO_PERMISSION_CODE,
+                        Const.RECORD_AUDIO_PERMISSION_REQUEST,
                         new DialogInterface.OnClickListener()
                         {
                             @Override
                             public void onClick( DialogInterface dialog, int which )
                             {
                                 //If we don't get permission, then turn off visualizer
-                                turnOffVisualizerPreference();
+                                recordAudioPermissionDenied();
                             }
                         } );
             }

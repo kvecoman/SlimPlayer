@@ -44,6 +44,7 @@ import mihaljevic.miroslav.foundry.slimplayer.Utils;
 //TODO - bug when returning from song in all screen, either the cause is leaked service connection or illegal state that fragment is not attached to activity
 //TODO - visual indicator song is paused in NowPlayingScreen - different color of overlay for background picture that will be shown
 //TODO - make gitHub repository private at launch
+//TODO - save deleted feature branch
 
 
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener

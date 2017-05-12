@@ -381,8 +381,6 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements V
         if ( mMediaBrowser.isConnected() )
             mMediaBrowser.disconnect();
 
-        /*if (mSeekBarHandler != null && mSeekBarRunnable != null)
-            mSeekBarHandler.removeCallbacks( mSeekBarRunnable );*/
 
 
 
@@ -445,7 +443,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements V
                 {
                     if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
                     {
-                        recordAudioPermissionGranted(); //TODO - continue here - visualizer needs to be enabled in setting after selecting media player to test this
+                        recordAudioPermissionGranted();
                     }
                 }
                 break;
@@ -517,7 +515,9 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements V
 
     private void initVisualizer()
     {
-        if ( !Utils.isVisualizerEnabled() || !Utils.checkPermission( Manifest.permission.RECORD_AUDIO ) || mGLSurfaceView != null )
+        if (    !Utils.isVisualizerEnabled() ||
+                ( Utils.getSelectedPlayerEngine() == Player.PLAYER_MEDIA_PLAYER && !Utils.checkPermission( Manifest.permission.RECORD_AUDIO ) ) ||
+                mGLSurfaceView != null )
             return;
 
         if ( !Utils.hasGLES20() )
@@ -564,7 +564,7 @@ public class NowPlayingActivity extends BackHandledFragmentActivity implements V
     private void startVisualizer()
     {
 
-        if ( Utils.isVisualizerEnabled() && !Utils.checkPermission( Manifest.permission.RECORD_AUDIO ) )
+        if ( Utils.isVisualizerEnabled() && Utils.getSelectedPlayerEngine() == Player.PLAYER_MEDIA_PLAYER && !Utils.checkPermission( Manifest.permission.RECORD_AUDIO ) )
             askRecordAudioPermission();
 
         if ( mGLSurfaceView == null )

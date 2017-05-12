@@ -1455,9 +1455,9 @@ public class MediaPlayerService extends MediaBrowserServiceCompat implements Aud
 
 
         //Add play actions (previous, play/pause, next)
-        builder.addAction( generateAction( R.drawable.ic_skip_previous_ltgray_36dp, getString( R.string.title_play_previous ), NOTIFICATION_ACTION_PREVIOUS ) );
-        builder.addAction( generateAction( playIcon ? R.drawable.ic_play_arrow_ltgray_36dp : R.drawable.ic_pause_ltgray_36dp, playIcon ? getString( R.string.title_play ) : getString( R.string.title_pause ), NOTIFICATION_ACTION_PLAY_PAUSE ) );
-        builder.addAction( generateAction( R.drawable.ic_skip_next_ltgray_36dp, getString( R.string.title_play_next), NOTIFICATION_ACTION_NEXT ) );
+        builder.addAction( generateAction( R.drawable.ic_notification_previous_ltgray_36dp, getString( R.string.title_play_previous ), NOTIFICATION_ACTION_PREVIOUS ) );
+        builder.addAction( generateAction( playIcon ? R.drawable.ic_notification_play_ltgray_36dp : R.drawable.ic_notification_pause_ltgray_36dp, playIcon ? getString( R.string.title_play ) : getString( R.string.title_pause ), NOTIFICATION_ACTION_PLAY_PAUSE ) );
+        builder.addAction( generateAction( R.drawable.ic_notification_next_ltgray_36dp, getString( R.string.title_play_next), NOTIFICATION_ACTION_NEXT ) );
 
 
         notification = builder.build();

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="BitbucketRepositoryProperties">
+    <repository relativeRootPath="/">
+      <properties>
+        <property name="always_link_to_remote">https://github.com/kvecoman/slimplayer</property>
+      </properties>
+    </repository>
+  </component>
+</project>

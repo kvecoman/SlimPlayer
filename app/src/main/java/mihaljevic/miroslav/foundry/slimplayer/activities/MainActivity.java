@@ -42,12 +42,8 @@ import mihaljevic.miroslav.foundry.slimplayer.Utils;
 //TODO - test again receiving a call while playing
 //TODO - see licences for glide and maybe some other stuff to put it somewhere
 //TODO - bug when returning from song in all screen, either the cause is leaked service connection or illegal state that fragment is not attached to activity
-//TODO - visual indicator song is paused in NowPlayingScreen
-//TODO - test auto adding directory na Igorovom mobitelu
+//TODO - visual indicator song is paused in NowPlayingScreen - different color of overlay for background picture that will be shown
 //TODO - make gitHub repository private at launch
-//TODO - auto add directory should use some function get sdcard path
-//TODO - no x button on notification on S5 mini - this is not bug it's a feature
-//TODO - change repeat icon
 
 
 public class MainActivity extends SelectSongsActivity implements TextView.OnClickListener
